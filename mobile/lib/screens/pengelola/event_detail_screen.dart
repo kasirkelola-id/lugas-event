@@ -5,6 +5,7 @@ import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import 'edit_event_screen.dart';
+import 'attendance_list_screen.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -210,16 +211,35 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
           ),
           const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => AttendanceListScreen(event: _event!)),
+              );
+            },
+            icon: const Icon(Icons.people),
+            label: const Text('Lihat Daftar Hadir'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+          const SizedBox(height: 16),
           if (_event!.isActive)
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, 
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
               onPressed: _isLoading ? null : _closeEvent,
-              child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Tutup Acara'),
+              child: _isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Tutup Acara'),
             )
           else
             const Center(
               child: Text('Acara sudah selesai', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
             ),
+          const SizedBox(height: 32),
         ],
       ),
     );

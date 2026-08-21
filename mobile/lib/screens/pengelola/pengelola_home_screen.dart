@@ -55,7 +55,9 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
   void _handleError(String message) {
     setState(() {
       _isLoading = false;
-      _errorMessage = message;
+      _errorMessage = (message.toLowerCase().contains('sesi') || message.toLowerCase().contains('berakhir')) 
+          ? message 
+          : 'Data acara gagal dimuat.';
     });
     if (message.toLowerCase().contains('sesi') || message.toLowerCase().contains('berakhir')) {
       _logout();

@@ -39,7 +39,10 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = result['message'];
+        _errorMessage = (result['message'].toString().toLowerCase().contains('sesi') || 
+                         result['message'].toString().toLowerCase().contains('berakhir'))
+            ? result['message']
+            : 'Riwayat absensi gagal dimuat.';
       });
       if (result['statusCode'] == 401) {
         await AuthService.logout();

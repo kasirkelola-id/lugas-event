@@ -54,4 +54,19 @@ class AttendanceService {
       return {'success': false, 'message': 'Server tidak dapat dihubungi. Periksa koneksi internet Anda.'};
     }
   }
+
+  static Future<Map<String, dynamic>> getEventAttendance(int eventId) async {
+    try {
+      final response = await ApiClient.get('/events/$eventId/absensi');
+      final result = await _handleResponse(response);
+      if (result['success']) {
+        final List<dynamic> list = result['data'];
+        final attendees = list.map((e) => AttendanceModel.fromJson(e)).toList();
+        return {'success': true, 'attendees': attendees};
+      }
+      return result;
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
+  }
 }
