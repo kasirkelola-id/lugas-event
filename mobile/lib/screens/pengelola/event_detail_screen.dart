@@ -6,6 +6,7 @@ import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import 'edit_event_screen.dart';
 import 'attendance_list_screen.dart';
+import 'bluetooth_printer_dialog.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -211,6 +212,24 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
           ),
           const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : () {
+              showDialog(
+                context: context,
+                builder: (_) => BluetoothPrinterDialog(
+                  namaAcara: _event!.namaAcara,
+                  tanggalAcara: _event!.tanggalAcara,
+                  kodeQr: _event!.kodeQr,
+                ),
+              );
+            },
+            icon: const Icon(Icons.print),
+            label: const Text('Cetak QR'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+          const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _isLoading ? null : () {
               Navigator.push(
