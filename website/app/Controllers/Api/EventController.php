@@ -26,7 +26,7 @@ class EventController extends BaseApiController
                 'id' => (int)$event['id'],
                 'nama_acara' => $event['nama_acara'],
                 'tanggal_acara' => $event['tanggal_acara'],
-                'status_aktif' => (int)$event['status_aktif'],
+                'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
                 'created_at' => $event['created_at'],
             ];
         }, $events);
@@ -52,8 +52,9 @@ class EventController extends BaseApiController
             'nama_acara' => $event['nama_acara'],
             'tanggal_acara' => $event['tanggal_acara'],
             'kode_qr' => $event['kode_qr'],
-            'status_aktif' => (int)$event['status_aktif'],
+            'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
             'dibuat_oleh' => (int)$event['dibuat_oleh'],
+            'jumlah_hadir' => (new \App\Models\AbsensiModel())->where('event_id', $id)->countAllResults(),
             'created_at' => $event['created_at'],
             'updated_at' => $event['updated_at'],
         ];
@@ -93,7 +94,7 @@ class EventController extends BaseApiController
             'tanggal_acara' => $tanggalAcara,
             'kode_qr'       => $kodeQr,
             'dibuat_oleh'   => $user['id'],
-            'status_aktif'  => 1
+            'status_aktif'  => 'aktif'
         ];
 
         $eventModel->insert($eventData);
@@ -158,7 +159,7 @@ class EventController extends BaseApiController
             return $this->sendError('Event tidak ditemukan', null, 404);
         }
 
-        $eventModel->update($id, ['status_aktif' => 0]);
+        $eventModel->update($id, ['status_aktif' => 'selesai']);
 
         return $this->sendSuccess('Event berhasil ditutup');
     }

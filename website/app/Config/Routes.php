@@ -15,6 +15,11 @@ $routes->group('api', function ($routes) {
     $routes->get('events/(:num)', 'Api\EventController::show/$1', ['filter' => 'auth']);
     $routes->put('events/(:num)', 'Api\EventController::update/$1', ['filter' => 'auth']);
     $routes->patch('events/(:num)/status', 'Api\EventController::close/$1', ['filter' => 'auth']);
+    
+    // Attendance
+    $routes->post('absensi', 'Api\AbsensiController::create', ['filter' => 'auth']);
+    $routes->get('absensi/my', 'Api\AbsensiController::myHistory', ['filter' => 'auth']);
+    $routes->get('events/(:num)/absensi', 'Api\AbsensiController::eventAttendees/$1', ['filter' => 'auth']);
 });
 
 /** @var RouteCollection $routes */
