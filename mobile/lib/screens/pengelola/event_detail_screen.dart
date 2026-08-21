@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
@@ -168,7 +169,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Jumlah Hadir: ${_event!.jumlahHadir ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(_event!.jumlahHadir == null || _event!.jumlahHadir == 0 
+                       ? 'Belum ada peserta' 
+                       : 'Jumlah Hadir: ${_event!.jumlahHadir} peserta', 
+                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -176,14 +180,31 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           const SizedBox(height: 16),
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Kode QR', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text('QR CODE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const SizedBox(height: 16),
+                  if (_event!.kodeQr.isEmpty)
+                    const Text('QR Code tidak tersedia.', style: TextStyle(color: Colors.red))
+                  else
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(16),
+                      child: QrImageView(
+                        data: _event!.kodeQr,
+                        version: QrVersions.auto,
+                        size: 250.0,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  Text(_event!.kodeQr, style: const TextStyle(fontFamily: 'monospace', fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  Text(_event!.kodeQr.isNotEmpty ? _event!.kodeQr : 'Tidak tersedia', 
-                       style: const TextStyle(fontFamily: 'monospace', fontSize: 16)),
+                  if (_event!.isActive)
+                    const Text('Scan QR untuk melakukan absensi', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
+                  else
+                    const Text('Acara sudah selesai', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
