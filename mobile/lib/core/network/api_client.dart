@@ -4,7 +4,9 @@ import '../config/api_config.dart';
 import '../../storage/auth_storage.dart';
 
 class ApiClient {
-  static Future<Map<String, String>> _getHeaders() async {
+  static String get baseUrl => ApiConfig.baseUrl;
+
+  static Future<Map<String, String>> getHeaders() async {
     final token = await AuthStorage.getToken();
     final headers = {
       'Content-Type': 'application/json',
@@ -17,12 +19,12 @@ class ApiClient {
   }
 
   static Future<http.Response> get(String endpoint) async {
-    final headers = await _getHeaders();
+    final headers = await getHeaders();
     return await http.get(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers);
   }
 
   static Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
-    final headers = await _getHeaders();
+    final headers = await getHeaders();
     return await http.post(
       Uri.parse('${ApiConfig.baseUrl}$endpoint'),
       headers: headers,
