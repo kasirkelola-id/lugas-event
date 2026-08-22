@@ -9,17 +9,30 @@ class UserSeeder extends Seeder
     public function run()
     {
         $data = [
-            'nama_lengkap'   => 'Administrator Pengelola',
-            'nama_panggilan' => 'Admin',
-            'username'       => 'pengelola',
-            'password'       => password_hash('lugasjosjis', PASSWORD_BCRYPT),
-            'no_whatsapp'    => '081234567890',
-            'role_level'     => 'pengelola',
-            'status_aktif'   => 1,
-            'created_at'     => date('Y-m-d H:i:s'),
-            'updated_at'     => date('Y-m-d H:i:s'),
+            [
+                'nama_lengkap'   => 'Administrator Pengelola',
+                'nama_panggilan' => 'Pengelola',
+                'username'       => 'pengelola',
+                'password'       => password_hash('lugasjosjis', PASSWORD_BCRYPT),
+                'no_whatsapp'    => '081234567890',
+                'role_level'     => 'pengelola',
+                'status_aktif'   => 1,
+                'created_at'     => date('Y-m-d H:i:s'),
+                'updated_at'     => date('Y-m-d H:i:s'),
+            ],
+            [
+                'nama_lengkap'   => 'Super Administrator',
+                'nama_panggilan' => 'Admin',
+                'username'       => 'admin',
+                'password'       => password_hash('lugasjosjis', PASSWORD_BCRYPT),
+                'no_whatsapp'    => '081234567891',
+                'role_level'     => 'admin',
+                'status_aktif'   => 1,
+                'created_at'     => date('Y-m-d H:i:s'),
+                'updated_at'     => date('Y-m-d H:i:s'),
+            ]
         ];
 
-        $this->db->table('users')->insert($data);
+        $this->db->table('users')->insertBatch($data);
     }
 }

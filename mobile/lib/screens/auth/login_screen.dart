@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../pengelola/pengelola_home_screen.dart';
 import '../anggota/anggota_home_screen.dart';
+import '../admin/admin_home_screen.dart';
 import '../../models/user_model.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -55,6 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const PengelolaHomeScreen()),
+        );
+      } else if (user.roleLevel == 'admin') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
         );
       } else {
         Navigator.pushReplacement(

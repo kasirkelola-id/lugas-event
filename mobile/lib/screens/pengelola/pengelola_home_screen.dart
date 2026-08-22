@@ -4,6 +4,7 @@ import '../../services/event_service.dart';
 import '../../models/user_model.dart';
 import '../../models/event_model.dart';
 import '../auth/login_screen.dart';
+import '../widgets/app_drawer.dart';
 import 'create_event_screen.dart';
 import 'event_detail_screen.dart';
 
@@ -80,14 +81,8 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Beranda Pengelola'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: 'Logout',
-          )
-        ],
       ),
+      drawer: _user != null ? AppDrawer(user: _user!) : null,
       body: RefreshIndicator(
         onRefresh: _loadData,
         child: _buildBody(),
