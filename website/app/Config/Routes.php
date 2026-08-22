@@ -20,6 +20,14 @@ $routes->group('api', function ($routes) {
     $routes->post('absensi', 'Api\AbsensiController::create', ['filter' => 'auth']);
     $routes->get('absensi/my', 'Api\AbsensiController::myHistory', ['filter' => 'auth']);
     $routes->get('events/(:num)/absensi', 'Api\AbsensiController::eventAttendees/$1', ['filter' => 'auth']);
+    
+    // User Management (Admin Only)
+    $routes->get('users', 'Api\UserController::index', ['filter' => 'auth']);
+    $routes->post('users', 'Api\UserController::create', ['filter' => 'auth']);
+    $routes->put('users/(:num)', 'Api\UserController::update/$1', ['filter' => 'auth']);
+    $routes->patch('users/(:num)/status', 'Api\UserController::toggleStatus/$1', ['filter' => 'auth']);
+    $routes->patch('users/(:num)/role', 'Api\UserController::changeRole/$1', ['filter' => 'auth']);
+    $routes->patch('users/(:num)/reset-password', 'Api\UserController::resetPassword/$1', ['filter' => 'auth']);
 });
 
 /** @var RouteCollection $routes */
