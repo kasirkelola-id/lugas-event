@@ -26,6 +26,8 @@ class EventController extends BaseApiController
                 'id' => (int)$event['id'],
                 'nama_acara' => $event['nama_acara'],
                 'tanggal_acara' => $event['tanggal_acara'],
+                'kode_qr' => $event['kode_qr'],
+                'dibuat_oleh' => (int)$event['dibuat_oleh'],
                 'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
                 'created_at' => $event['created_at'],
             ];
