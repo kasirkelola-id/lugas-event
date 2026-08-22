@@ -9,6 +9,10 @@ $routes->group('api', function ($routes) {
     $routes->post('logout', 'Api\AuthController::logout', ['filter' => 'auth']);
     $routes->get('me', 'Api\AuthController::me', ['filter' => 'auth']);
     
+    // Profile Management
+    $routes->put('profile', 'Api\ProfileController::update', ['filter' => 'auth']);
+    $routes->patch('profile/password', 'Api\ProfileController::updatePassword', ['filter' => 'auth']);
+    
     // Event Management
     $routes->get('events', 'Api\EventController::index', ['filter' => 'auth']);
     $routes->post('events', 'Api\EventController::create', ['filter' => 'auth']);
