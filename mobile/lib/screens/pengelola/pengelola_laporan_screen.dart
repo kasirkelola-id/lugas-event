@@ -121,35 +121,24 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
             Expanded(
               child: _buildStatCard('Acara Aktif', _report!.acaraAktif.toString(), Icons.event_available, AppTheme.success),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard('Selesai', _report!.acaraSelesai.toString(), Icons.history, AppTheme.textSecondary),
-            ),
           ],
         ),
-        
-        const SizedBox(height: 24),
-        
-        // Block 2: Participant Stats
-        const Text('Data Kehadiran Peserta', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Total Peserta', _report!.totalPeserta.toString(), Icons.people_alt, AppTheme.info),
+              child: _buildStatCard('Total Hadir', _report!.totalHadir.toString(), Icons.how_to_reg, AppTheme.primary),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
-              child: _buildStatCard('Hadir', _report!.totalHadir.toString(), Icons.check_circle_outline, AppTheme.success),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard('Belum Hadir', _report!.totalBelumHadir.toString(), Icons.pending_actions, AppTheme.warning),
+              child: _buildStatCard('Acara Selesai', _report!.acaraSelesai.toString(), Icons.event_busy, AppTheme.textSecondary),
             ),
           ],
         ),
         
         const SizedBox(height: 24),
+        
+
         
         // Block 3: Percentage
         Container(
@@ -161,29 +150,22 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
           ),
           child: Column(
             children: [
-              const Text('Persentase Kehadiran', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text('Rata-rata Kehadiran', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _report!.persentaseKehadiran.toStringAsFixed(1),
+                    _report!.totalAcara > 0 ? (_report!.totalHadir / _report!.totalAcara).toStringAsFixed(1) : '0',
                     style: const TextStyle(color: Colors.white, fontSize: 56, fontWeight: FontWeight.bold, height: 1),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8.0, left: 4.0),
-                    child: Text('%', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              LinearProgressIndicator(
-                value: _report!.totalPeserta == 0 ? 0 : (_report!.totalHadir / _report!.totalPeserta),
-                backgroundColor: Colors.white.withValues(alpha: 0.3),
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                minHeight: 12,
-                borderRadius: BorderRadius.circular(6),
+              const SizedBox(height: 16),
+              const Text(
+                'orang / acara',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ],
           ),

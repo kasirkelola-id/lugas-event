@@ -67,11 +67,14 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
         content: Text('Apakah Anda yakin ingin menghapus ${participant.namaLengkap} dari daftar peserta?'),
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false), 
+            child: const Text('Batalkan', style: TextStyle(color: AppTheme.textSecondary))
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('Hapus', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -176,9 +179,11 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  Icon(Icons.people_outline, size: 64, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
+                  Icon(Icons.people_outline, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  const Text('Belum ada peserta terdaftar', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+                  const Text('Belum Ada Peserta', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('Belum ada peserta yang didaftarkan.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                 ],
               ),
             ),

@@ -118,7 +118,7 @@ class ApiClient {
       return http.Response(jsonEncode({'status': false, 'message': 'Tidak dapat terhubung ke server'}), 503);
     } catch (e) {
       _logException(fullUrl, e);
-      return http.Response(jsonEncode({'status': false, 'message': 'Terjadi kesalahan internal'}), 500);
+      return http.Response(jsonEncode({'status': false, 'message': 'Terjadi gangguan pada server. Silakan coba lagi.'}), 500);
     }
   }
 

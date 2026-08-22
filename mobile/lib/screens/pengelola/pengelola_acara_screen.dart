@@ -119,9 +119,30 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
+            Icon(Icons.event_busy, size: 80, color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            const Text('Belum ada acara.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+            const Text('Belum Ada Acara', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Acara yang Anda kelola akan tampil di sini.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateEventScreen()),
+                );
+                if (result == true) {
+                  _loadData();
+                }
+              },
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text('Buat Acara', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
           ],
         ),
       );

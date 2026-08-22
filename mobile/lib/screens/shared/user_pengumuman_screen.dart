@@ -92,13 +92,17 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
     }
 
     if (_announcements.isEmpty) {
-      return ListView(
-        children: const [
-          SizedBox(height: 100),
-          Icon(Icons.campaign_outlined, size: 80, color: Colors.black12),
-          SizedBox(height: 16),
-          Text('Belum ada pengumuman untuk Anda.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
-        ],
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.campaign_outlined, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            const Text('Belum Ada Pengumuman', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Belum ada pengumuman untuk Anda.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+          ],
+        ),
       );
     }
 

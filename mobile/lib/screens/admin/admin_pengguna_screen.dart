@@ -276,7 +276,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false), 
-            child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))
+            child: const Text('Batalkan', style: TextStyle(color: AppTheme.textSecondary))
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -285,7 +285,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
               shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Ya, Lanjutkan', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

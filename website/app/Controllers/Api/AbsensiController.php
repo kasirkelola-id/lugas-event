@@ -46,7 +46,7 @@ class AbsensiController extends BaseApiController
         $event = $eventModel->where('kode_qr', $kodeQr)->first();
 
         if (!$event) {
-            return $this->sendError('Acara tidak ditemukan', null, 404);
+            return $this->sendError('QR Code Tidak Valid', null, 404);
         }
 
         $statusAktif = $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0;

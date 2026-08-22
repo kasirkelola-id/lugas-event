@@ -54,13 +54,20 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('Konfirmasi Absensi'),
-        content: Text('Apakah Anda ingin melakukan absensi pada acara dengan kode:\n\n$qrCode?'),
+        title: const Text('Catat Kehadiran', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Apakah Anda yakin ingin memverifikasi kehadiran untuk acara ini?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batalkan', style: TextStyle(color: Colors.grey)),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Absen Sekarang'),
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Konfirmasi'),
           ),
         ],
       ),
@@ -71,7 +78,15 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+      builder: (ctx) => AlertDialog(
+        content: Row(
+          children: const [
+            CircularProgressIndicator(),
+            SizedBox(width: 24),
+            Text('Memverifikasi absensi...'),
+          ],
+        ),
+      ),
     );
 
     final result = await AttendanceService.submitAttendance(qrCode);
@@ -84,28 +99,64 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text('Absensi berhasil!'),
-          content: Text('Anda telah tercatat hadir pada acara:\n${result['data']['nama_acara'] ?? qrCode}'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.green, size: 28),
+              SizedBox(width: 8),
+              Text('Absensi Berhasil', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: Text('Anda telah tercatat hadir pada acara ini.'),
           actions: [
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
                 Navigator.pop(context); // close scanner screen and return to dashboard
               },
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
               child: const Text('Selesai'),
             ),
           ],
         ),
       );
     } else {
+      String title = 'Absensi Gagal';
+      IconData iconData = Icons.error_outline;
+      Color iconColor = Colors.red;
+      
+      final msg = (result['message'] ?? '').toString().toLowerCase();
+      if (msg.contains('sudah melakukan absensi')) {
+        title = 'Absensi Sudah Tercatat';
+        iconData = Icons.info_outline;
+        iconColor = Colors.orange;
+      } else if (msg.contains('acara sudah ditutup')) {
+        title = 'Acara Sudah Ditutup';
+      } else if (msg.contains('tidak valid')) {
+        title = 'QR Code Tidak Valid';
+      }
+
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Absensi Gagal'),
-          content: Text(result['message'] ?? 'Terjadi kesalahan.'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(iconData, color: iconColor, size: 28),
+              const SizedBox(width: 8),
+              Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+            ],
+          ),
+          content: Text(result['message'] ?? 'Koneksi Bermasalah'),
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
               child: const Text('OK'),
             ),
           ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../models/attendance_model.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
@@ -55,9 +56,16 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Absensi')),
+      appBar: AppBar(
+        title: const Text('Riwayat Absensi'),
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadHistory,
+        color: AppTheme.primary,
         child: _buildBody(),
       ),
     );
@@ -65,7 +73,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _history.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _history.isEmpty) {
@@ -73,7 +81,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            const SizedBox(height: 16),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: _loadHistory, child: const Text('Coba Lagi')),
           ],
@@ -82,29 +92,99 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
 
     if (_history.isEmpty) {
-      return const Center(child: Text('Belum ada riwayat absensi.'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            const Text('Belum Ada Riwayat', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Anda belum memiliki riwayat absensi.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+          ],
+        ),
+      );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 80),
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: _history.length,
       itemBuilder: (context, index) {
         final item = _history[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            title: Text(item.namaAcara, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('Waktu: ${item.waktuAbsen}\nTanggal Acara: ${item.tanggalAcara}'),
-            isThreeLine: true,
-            trailing: Chip(
-              label: Text(item.isActive ? 'AKTIF' : 'SELESAI'),
-              backgroundColor: item.isActive ? Colors.green.shade100 : Colors.grey.shade200,
-              labelStyle: TextStyle(
-                color: item.isActive ? Colors.green.shade800 : Colors.grey.shade700,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: AppTheme.radiusMedium,
+            boxShadow: AppTheme.shadowSoft,
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_circle, color: AppTheme.primary),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.namaAcara,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: item.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              item.isActive ? 'AKTIF' : 'SELESAI',
+                              style: TextStyle(
+                                color: item.isActive ? AppTheme.success : AppTheme.textSecondary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.access_time, size: 14, color: AppTheme.textSecondary),
+                          const SizedBox(width: 4),
+                          Text(item.waktuAbsen, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_month, size: 14, color: AppTheme.textSecondary),
+                          const SizedBox(width: 4),
+                          Text(item.tanggalAcara, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         );

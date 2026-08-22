@@ -64,10 +64,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Registrasi berhasil. Silakan login.'), backgroundColor: AppTheme.success),
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Row(
+              children: const [
+                Icon(Icons.check_circle, color: AppTheme.success, size: 28),
+                SizedBox(width: 8),
+                Text('Pendaftaran Berhasil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
+            ),
+            content: const Text('Akun Anda berhasil dibuat. Silakan masuk untuk melanjutkan.'),
+            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  Navigator.pop(context); // back to login
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
+                ),
+                child: const Text('Selesai'),
+              ),
+            ],
+          ),
         );
-        Navigator.pop(context);
       } else {
         setState(() {
           _errorMessage = result['message'];

@@ -41,13 +41,6 @@ class ReportController extends BaseApiController
             }
         }
 
-        // Hitung total peserta berdasarkan event_participants
-        $totalPeserta = 0;
-        if (!empty($eventIds)) {
-            $participantModel = new \App\Models\EventParticipantModel();
-            $totalPeserta = $participantModel->whereIn('event_id', $eventIds)->countAllResults();
-        }
-
         // Hitung total hadir dari event in scope
         $totalHadir = 0;
         if (!empty($eventIds)) {
@@ -55,8 +48,10 @@ class ReportController extends BaseApiController
             $totalHadir = $absensiModel->whereIn('event_id', $eventIds)->countAllResults();
         }
 
-        // Since attendance is open to all members, "belum hadir" and "persentase" relative to event_participants 
-        // are no longer logically sound. Default to 0 to prevent misleading metrics.
+        // Since attendance is open to all members, "peserta terdaftar", "belum hadir", and 
+        // "persentase" relative to event_participants are no longer logically sound. 
+        // Default to 0 to prevent misleading metrics.
+        $totalPeserta = 0;
         $totalBelumHadir = 0;
         $persentaseKehadiran = 0;
 
@@ -64,10 +59,10 @@ class ReportController extends BaseApiController
             'total_acara' => $totalAcara,
             'acara_aktif' => $acaraAktif,
             'acara_selesai' => $acaraSelesai,
-            'total_peserta' => $totalPeserta,
+            'total_peserta' => $totalPeserta, // legacy compatibility
             'total_hadir' => $totalHadir,
-            'total_belum_hadir' => $totalBelumHadir,
-            'persentase_kehadiran' => round($persentaseKehadiran, 2),
+            'total_belum_hadir' => $totalBelumHadir, // legacy compatibility
+            'persentase_kehadiran' => round($persentaseKehadiran, 2), // legacy compatibility
         ];
 
         return $this->sendSuccess('Ringkasan laporan', $data);

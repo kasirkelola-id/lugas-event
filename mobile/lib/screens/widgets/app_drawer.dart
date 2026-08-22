@@ -212,7 +212,7 @@ class AppDrawer extends StatelessWidget {
           } else {
             Navigator.pop(context); // close drawer
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Fitur belum tersedia / Coming Soon')),
+              const SnackBar(content: Text('Fitur ini akan tersedia pada pembaruan berikutnya.')),
             );
           }
         },

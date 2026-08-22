@@ -107,9 +107,11 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  Icon(Icons.history_toggle_off, size: 64, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
+                  Icon(Icons.history_toggle_off, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  const Text('Belum ada peserta yang hadir.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+                  const Text('Belum Ada Kehadiran', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('Belum ada peserta yang hadir.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                 ],
               ),
             ),

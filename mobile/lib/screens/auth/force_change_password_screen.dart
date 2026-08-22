@@ -51,11 +51,35 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
     if (!mounted) return;
 
     if (result['success']) {
-      // Re-login required or just navigate to login to refresh token state cleanly
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password berhasil diperbarui. Silakan login kembali.'), backgroundColor: AppTheme.success),
+      
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: Row(
+            children: const [
+              Icon(Icons.check_circle, color: AppTheme.success, size: 28),
+              SizedBox(width: 8),
+              Text('Pembaruan Berhasil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            ],
+          ),
+          content: const Text('Password berhasil diperbarui. Silakan masuk kembali.'),
+          shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
+              ),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
+
       await AuthService.logout();
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(

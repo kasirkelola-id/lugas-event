@@ -5,7 +5,7 @@ import '../../services/event_service.dart';
 import '../../models/user_model.dart';
 import '../../models/event_model.dart';
 import '../widgets/app_drawer.dart';
-import '../pengelola/participant_list_screen.dart';
+import '../pengelola/attendance_list_screen.dart';
 
 class AdminPesertaScreen extends StatefulWidget {
   const AdminPesertaScreen({super.key});
@@ -63,7 +63,7 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kelola Seluruh Peserta'),
+        title: const Text('Peserta & Absensi'),
         backgroundColor: AppTheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -103,9 +103,11 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
+            Icon(Icons.event_busy, size: 80, color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            const Text('Belum ada acara di sistem.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+            const Text('Belum Ada Acara', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Belum ada acara di sistem untuk dilihat daftar hadirnya.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
           ],
         ),
       );
@@ -114,19 +116,52 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: _events.length + 1,
+      itemCount: _events.length + 2,
       itemBuilder: (context, index) {
         if (index == 0) {
+          int totalKehadiran = _events.fold(0, (sum, event) => sum + (event.jumlahHadir ?? 0));
+          return Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: AppTheme.primaryGradient,
+              borderRadius: AppTheme.radiusLarge,
+              boxShadow: AppTheme.shadowMedium,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Column(
+                  children: [
+                    const Text('Total Acara', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    const SizedBox(height: 4),
+                    Text('${_events.length}', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                Container(width: 1, height: 40, color: Colors.white24),
+                Column(
+                  children: [
+                    const Text('Total Kehadiran', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    const SizedBox(height: 4),
+                    Text('$totalKehadiran', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (index == 1) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.only(bottom: 16),
             child: Text(
-              'Pilih Acara untuk Kelola Peserta',
+              'Pilih Acara untuk Lihat Kehadiran',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
             ),
           );
         }
 
-        final event = _events[index - 1];
+        final event = _events[index - 2];
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
@@ -140,7 +175,7 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => ParticipantListScreen(event: event)),
+                MaterialPageRoute(builder: (_) => AttendanceListScreen(event: event)),
               );
             },
             child: Padding(
@@ -186,6 +221,16 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                             ),
                           ],
                         ),
+                        if (event.jumlahHadir != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.people, size: 14, color: AppTheme.primary),
+                              const SizedBox(width: 4),
+                              Text('${event.jumlahHadir} hadir', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                            ],
+                          ),
+                        ]
                       ],
                     ),
                   ),

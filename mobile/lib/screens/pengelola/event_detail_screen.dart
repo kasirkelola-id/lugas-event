@@ -59,15 +59,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Tutup Acara', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Apakah Anda yakin ingin menutup acara ini? Acara yang ditutup tidak dapat menerima absensi lagi.'),
+        title: const Text('Tutup Acara?', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Setelah acara ditutup, anggota tidak dapat melakukan absensi lagi.'),
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))),
           TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batalkan', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('Tutup Acara', style: TextStyle(fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.error,
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+            child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

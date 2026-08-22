@@ -200,7 +200,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false), 
-            child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))
+            child: const Text('Batalkan', style: TextStyle(color: AppTheme.textSecondary))
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true), 
@@ -209,7 +209,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
             ),
-            child: const Text('Hapus', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -282,13 +282,28 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     }
 
     if (_announcements.isEmpty) {
-      return ListView(
-        children: const [
-          SizedBox(height: 100),
-          Icon(Icons.campaign_outlined, size: 80, color: Colors.black12),
-          SizedBox(height: 16),
-          Text('Belum ada pengumuman', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
-        ],
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.campaign_outlined, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            const Text('Belum Ada Pengumuman', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Pengumuman yang dibuat akan tampil di sini.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => _showFormDialog(),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text('Buat Pengumuman', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
