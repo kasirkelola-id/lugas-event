@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../../core/theme/app_theme.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
@@ -58,14 +59,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Tutup Acara'),
-        content: const Text('Apakah Anda yakin ingin menutup acara ini?'),
+        title: const Text('Tutup Acara', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text('Apakah Anda yakin ingin menutup acara ini? Acara yang ditutup tidak dapat menerima absensi lagi.'),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Tutup Acara'),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Tutup Acara', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -82,7 +84,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     if (!mounted) return;
 
     if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Acara berhasil ditutup.')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Acara berhasil ditutup.'), backgroundColor: AppTheme.success));
       _loadEvent(); // Refresh data
     } else {
       setState(() { _isLoading = false; });
@@ -91,7 +93,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         if (!mounted) return;
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message']), backgroundColor: AppTheme.error));
       }
     }
   }
@@ -101,10 +103,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detail Acara'),
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           if (_event != null)
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit_outlined, color: AppTheme.primary),
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
@@ -117,13 +122,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             )
         ],
       ),
+      backgroundColor: AppTheme.background,
       body: _buildBody(),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading && _event == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _event == null) {
@@ -131,7 +137,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            const SizedBox(height: 16),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: _loadEvent, child: const Text('Coba Lagi')),
           ],
@@ -143,124 +151,254 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadEvent,
+      color: AppTheme.primary,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
+          _buildHeroSection(),
+          const SizedBox(height: 24),
+          _buildQuickActions(),
+          const SizedBox(height: 24),
+          _buildQrSection(),
+          const SizedBox(height: 40), // Spacing
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: AppTheme.shadowSoft,
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  _event!.namaAcara,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary, height: 1.2),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _event!.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: _event!.isActive ? AppTheme.success.withValues(alpha: 0.5) : AppTheme.textSecondary.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  _event!.isActive ? 'AKTIF' : 'SELESAI',
+                  style: TextStyle(
+                    color: _event!.isActive ? AppTheme.success : AppTheme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: AppTheme.radiusSmall,
+                ),
+                child: const Icon(Icons.calendar_month, color: AppTheme.primary, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_event!.namaAcara, style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 8),
-                  Text('Tanggal: ${_event!.tanggalAcara}'),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Text('Status: '),
-                      Chip(
-                        label: Text(_event!.isActive ? 'AKTIF' : 'SELESAI'),
-                        backgroundColor: _event!.isActive ? Colors.green.shade100 : Colors.grey.shade200,
-                        labelStyle: TextStyle(
-                          color: _event!.isActive ? Colors.green.shade800 : Colors.grey.shade700,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(_event!.jumlahHadir == null || _event!.jumlahHadir == 0 
-                       ? 'Belum ada peserta' 
-                       : 'Jumlah Hadir: ${_event!.jumlahHadir} peserta', 
-                       style: const TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('Tanggal Acara', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(_event!.tanggalAcara, style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
                 ],
               ),
-            ),
+            ],
           ),
+          const SizedBox(height: 24),
+          const Divider(color: Colors.black12),
           const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  const Text('QR CODE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  const SizedBox(height: 16),
-                  if (_event!.kodeQr.isEmpty)
-                    const Text('QR Code tidak tersedia.', style: TextStyle(color: Colors.red))
-                  else
-                    Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.all(16),
-                      child: QrImageView(
-                        data: _event!.kodeQr,
-                        version: QrVersions.auto,
-                        size: 250.0,
-                        backgroundColor: Colors.white,
-                      ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildMiniStat('Total Hadir', _event!.jumlahHadir?.toString() ?? '0', Icons.how_to_reg, AppTheme.success),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniStat(String title, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 8),
+        Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        const SizedBox(height: 4),
+        Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Aksi Cepat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionBtn(
+                'Daftar Hadir',
+                Icons.people_alt,
+                AppTheme.primary,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AttendanceListScreen(event: _event!)),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionBtn(
+                'Cetak QR',
+                Icons.print,
+                AppTheme.secondary,
+                () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => BluetoothPrinterDialog(
+                      namaAcara: _event!.namaAcara,
+                      tanggalAcara: _event!.tanggalAcara,
+                      kodeQr: _event!.kodeQr,
                     ),
-                  const SizedBox(height: 16),
-                  Text(_event!.kodeQr, style: const TextStyle(fontFamily: 'monospace', fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  if (_event!.isActive)
-                    const Text('Scan QR untuk melakukan absensi', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
-                  else
-                    const Text('Acara sudah selesai', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        if (_event!.isActive) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isLoading ? null : _closeEvent,
+              icon: _isLoading 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.error))
+                : const Icon(Icons.close, color: AppTheme.error),
+              label: Text(_isLoading ? 'Menutup...' : 'Tutup Acara', style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppTheme.error.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: AppTheme.error.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildActionBtn(String title, IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: AppTheme.radiusMedium,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: AppTheme.radiusMedium,
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQrSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: AppTheme.shadowSoft,
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        children: [
+          const Text('QR Code Absensi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
+          const SizedBox(height: 8),
+          Text(
+            _event!.isActive ? 'Peserta dapat memindai QR ini untuk absensi' : 'Acara sudah selesai',
+            style: TextStyle(color: _event!.isActive ? AppTheme.textSecondary : AppTheme.error, fontSize: 14),
+          ),
+          const SizedBox(height: 24),
+          if (_event!.kodeQr.isEmpty)
+            const Text('QR Code tidak tersedia.', style: TextStyle(color: AppTheme.error))
+          else
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: AppTheme.radiusMedium,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, spreadRadius: 2),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: _isLoading ? null : () {
-              showDialog(
-                context: context,
-                builder: (_) => BluetoothPrinterDialog(
-                  namaAcara: _event!.namaAcara,
-                  tanggalAcara: _event!.tanggalAcara,
-                  kodeQr: _event!.kodeQr,
-                ),
-              );
-            },
-            icon: const Icon(Icons.print),
-            label: const Text('Cetak QR'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _isLoading ? null : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => AttendanceListScreen(event: _event!)),
-              );
-            },
-            icon: const Icon(Icons.people),
-            label: const Text('Lihat Daftar Hadir'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (_event!.isActive)
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, 
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+              child: QrImageView(
+                data: _event!.kodeQr,
+                version: QrVersions.auto,
+                size: 200.0,
+                backgroundColor: Colors.white,
               ),
-              onPressed: _isLoading ? null : _closeEvent,
-              child: _isLoading ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Tutup Acara'),
-            )
-          else
-            const Center(
-              child: Text('Acara sudah selesai', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
             ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppTheme.background,
+              borderRadius: AppTheme.radiusMedium,
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.qr_code, size: 20, color: AppTheme.textSecondary),
+                const SizedBox(width: 12),
+                Text(_event!.kodeQr, style: const TextStyle(fontFamily: 'monospace', fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 2, color: AppTheme.primary)),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
+

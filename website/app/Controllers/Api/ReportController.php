@@ -41,12 +41,12 @@ class ReportController extends BaseApiController
             }
         }
 
-        // Hitung total anggota
-        $userModel = new UserModel();
-        $totalAnggotaAktif = $userModel->where('role_level', 'anggota')->where('status_aktif', 1)->countAllResults();
-
-        // Hitung total peserta berdasarkan rule (semua anggota aktif * jumlah event in scope)
-        $totalPeserta = $totalAcara * $totalAnggotaAktif;
+        // Hitung total peserta berdasarkan event_participants
+        $totalPeserta = 0;
+        if (!empty($eventIds)) {
+            $participantModel = new \App\Models\EventParticipantModel();
+            $totalPeserta = $participantModel->whereIn('event_id', $eventIds)->countAllResults();
+        }
 
         // Hitung total hadir dari event in scope
         $totalHadir = 0;

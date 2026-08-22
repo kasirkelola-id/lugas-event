@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../models/user_model.dart';
@@ -53,11 +54,17 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Role & Hak Akses')),
+      appBar: AppBar(
+        title: const Text('Role & Hak Akses'),
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       drawer: _user != null ? AppDrawer(user: _user!) : null,
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
+        color: AppTheme.primary,
         child: _buildBody(),
       ),
     );
@@ -65,7 +72,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null) {
@@ -73,9 +80,9 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
             const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
           ],
@@ -85,21 +92,21 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSummaryHeader(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           const Text(
             'Informasi Hak Akses',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
           ),
           const SizedBox(height: 16),
           _buildRoleCard(
             title: 'Admin (Administrator)',
-            color: Colors.red.shade700,
-            icon: Icons.admin_panel_settings,
+            color: AppTheme.error,
+            icon: Icons.admin_panel_settings_outlined,
             count: _summary?['admin'] ?? 0,
             description: 'Memiliki kontrol penuh atas seluruh sistem Lugas.',
             capabilities: [
@@ -113,8 +120,8 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
           const SizedBox(height: 16),
           _buildRoleCard(
             title: 'Pengelola',
-            color: Colors.blue.shade700,
-            icon: Icons.manage_accounts,
+            color: AppTheme.primary,
+            icon: Icons.manage_accounts_outlined,
             count: _summary?['pengelola'] ?? 0,
             description: 'Bertanggung jawab mengelola acara masing-masing.',
             capabilities: [
@@ -129,8 +136,8 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
           const SizedBox(height: 16),
           _buildRoleCard(
             title: 'Anggota',
-            color: Colors.green.shade700,
-            icon: Icons.people,
+            color: AppTheme.success,
+            icon: Icons.people_outline,
             count: _summary?['anggota'] ?? 0,
             description: 'Pengguna reguler yang mengikuti acara.',
             capabilities: [
@@ -142,21 +149,21 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
           ),
           const SizedBox(height: 32),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange.shade200),
+              color: AppTheme.warning.withValues(alpha: 0.1),
+              borderRadius: AppTheme.radiusLarge,
+              border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline, color: Colors.orange.shade800),
-                const SizedBox(width: 12),
+                const Icon(Icons.info_outline, color: AppTheme.warning),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     'Sistem keamanan secara otomatis mencegah penghapusan/penonaktifan jika hanya tersisa 1 Admin aktif di dalam sistem (Lockout Prevention).',
-                    style: TextStyle(color: Colors.orange.shade900, fontSize: 13),
+                    style: TextStyle(color: Colors.orange.shade900, fontSize: 13, height: 1.5),
                   ),
                 ),
               ],
@@ -170,17 +177,11 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
 
   Widget _buildSummaryHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.indigo.shade800, Colors.indigo.shade500],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.indigo.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        gradient: AppTheme.primaryGradient,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: AppTheme.shadowMedium,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -188,21 +189,21 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Total Pengguna', style: TextStyle(color: Colors.white70, fontSize: 14)),
-              const SizedBox(height: 4),
+              const Text('Total Pengguna', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 8),
               Text(
                 '${_summary?['total'] ?? 0}',
-                style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold),
               ),
             ],
           ),
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.analytics, color: Colors.white, size: 32),
+            child: const Icon(Icons.analytics_outlined, color: Colors.white, size: 40),
           ),
         ],
       ),
@@ -217,49 +218,56 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
     required String description,
     required List<String> capabilities,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: AppTheme.shadowSoft,
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          collapsedBackgroundColor: Colors.white,
-          backgroundColor: Colors.white,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          collapsedBackgroundColor: Colors.transparent,
+          backgroundColor: Colors.transparent,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           leading: Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppTheme.radiusMedium,
             ),
             child: Icon(icon, color: color, size: 24),
           ),
-          title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color)),
+          title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary)),
           subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4.0),
-            child: Text('$count Akun terdaftar', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Text('$count Akun terdaftar', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
           ),
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
-              color: Colors.grey.shade50,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              ),
               width: double.infinity,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(description, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  Text(description, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textPrimary)),
+                  const SizedBox(height: 16),
+                  const Text('HAK AKSES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.textSecondary, letterSpacing: 1)),
                   const SizedBox(height: 12),
-                  const Text('Hak Akses:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
-                  const SizedBox(height: 8),
                   ...capabilities.map((cap) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6.0),
+                    padding: const EdgeInsets.only(bottom: 10.0),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.check_circle, color: color, size: 16),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(cap, style: const TextStyle(fontSize: 13))),
+                        Icon(Icons.check_circle_outline, color: color, size: 18),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(cap, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4))),
                       ],
                     ),
                   )),
@@ -272,3 +280,4 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
     );
   }
 }
+

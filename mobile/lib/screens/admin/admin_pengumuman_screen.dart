@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/announcement_service.dart';
 import '../../models/user_model.dart';
@@ -56,8 +57,9 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
+        backgroundColor: isError ? AppTheme.error : AppTheme.success,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
       ),
     );
   }
@@ -78,7 +80,8 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: Text(announcement == null ? 'Buat Pengumuman' : 'Edit Pengumuman'),
+              title: Text(announcement == null ? 'Buat Pengumuman' : 'Edit Pengumuman', style: const TextStyle(fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
               content: SingleChildScrollView(
                 child: Form(
                   key: formKey,
@@ -87,20 +90,29 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                     children: [
                       TextFormField(
                         controller: judulController,
-                        decoration: const InputDecoration(labelText: 'Judul', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Judul', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: isiController,
-                        decoration: const InputDecoration(labelText: 'Isi Pengumuman', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Isi Pengumuman', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         maxLines: 4,
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         initialValue: targetRole,
-                        decoration: const InputDecoration(labelText: 'Target Pengguna', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Target Pengguna', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         items: const [
                           DropdownMenuItem(value: 'semua', child: Text('Semua Pengguna')),
                           DropdownMenuItem(value: 'pengelola', child: Text('Hanya Pengelola')),
@@ -110,12 +122,14 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                           if (val != null) setStateDialog(() => targetRole = val);
                         },
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       SwitchListTile(
-                        title: const Text('Status Aktif'),
+                        title: const Text('Status Aktif', style: TextStyle(fontWeight: FontWeight.w500)),
                         value: statusAktif,
                         onChanged: (val) => setStateDialog(() => statusAktif = val),
                         contentPadding: EdgeInsets.zero,
+                        activeTrackColor: AppTheme.primary.withValues(alpha: 0.5),
+                        activeThumbColor: AppTheme.primary,
                       ),
                     ],
                   ),
@@ -124,7 +138,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
               actions: [
                 TextButton(
                   onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                  child: const Text('Batal'),
+                  child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
                 ),
                 ElevatedButton(
                   onPressed: isLoadingSubmit
@@ -159,7 +173,14 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                             }
                           }
                         },
-                  child: isLoadingSubmit ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Simpan'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                  ),
+                  child: isLoadingSubmit 
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
+                      : const Text('Simpan'),
                 ),
               ],
             );
@@ -173,14 +194,22 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hapus Pengumuman?'),
+        title: const Text('Hapus Pengumuman?', style: TextStyle(fontWeight: FontWeight.bold)),
         content: Text('Anda yakin ingin menghapus "${announcement.judul}"?'),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), 
+            child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true), 
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+            ),
+            child: const Text('Hapus', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -210,16 +239,23 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengumuman')),
-      drawer: _user != null ? AppDrawer(user: _user!) : null,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showFormDialog(),
-        backgroundColor: Colors.indigo,
-        child: const Icon(Icons.add, color: Colors.white),
+      appBar: AppBar(
+        title: const Text('Pengumuman'),
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
-      backgroundColor: Colors.grey.shade50,
+      drawer: _user != null ? AppDrawer(user: _user!) : null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showFormDialog(),
+        backgroundColor: AppTheme.primary,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Buat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      ),
+      backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
+        color: AppTheme.primary,
         child: _buildBody(),
       ),
     );
@@ -227,7 +263,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null) {
@@ -235,9 +271,9 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
             const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
           ],
@@ -249,96 +285,137 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
       return ListView(
         children: const [
           SizedBox(height: 100),
-          Icon(Icons.campaign_outlined, size: 64, color: Colors.grey),
+          Icon(Icons.campaign_outlined, size: 80, color: Colors.black12),
           SizedBox(height: 16),
-          Text('Belum ada pengumuman', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 16)),
+          Text('Belum ada pengumuman', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
         ],
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       itemCount: _announcements.length,
       itemBuilder: (context, index) {
         final a = _announcements[index];
-        return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: AppTheme.radiusLarge,
+            boxShadow: AppTheme.shadowSoft,
+            border: Border.all(color: Colors.grey.shade200),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: a.statusAktif == 1 ? Colors.indigo.shade50 : Colors.grey.shade200,
-                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+                  color: a.statusAktif == 1 ? AppTheme.primary.withValues(alpha: 0.05) : Colors.grey.shade100,
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: a.targetRole == 'semua' ? Colors.blue.shade100 : (a.targetRole == 'pengelola' ? Colors.orange.shade100 : Colors.green.shade100),
-                        borderRadius: BorderRadius.circular(12),
+                        color: a.targetRole == 'semua' 
+                            ? Colors.blue.shade50 
+                            : (a.targetRole == 'pengelola' ? Colors.orange.shade50 : Colors.green.shade50),
+                        borderRadius: AppTheme.radiusSmall,
+                        border: Border.all(
+                          color: a.targetRole == 'semua' 
+                              ? Colors.blue.shade200 
+                              : (a.targetRole == 'pengelola' ? Colors.orange.shade200 : Colors.green.shade200),
+                        ),
                       ),
                       child: Text(
                         'Target: ${a.targetRole.toUpperCase()}',
                         style: TextStyle(
                           fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: a.targetRole == 'semua' ? Colors.blue.shade800 : (a.targetRole == 'pengelola' ? Colors.orange.shade800 : Colors.green.shade800),
+                          fontWeight: FontWeight.w700,
+                          color: a.targetRole == 'semua' 
+                              ? Colors.blue.shade700 
+                              : (a.targetRole == 'pengelola' ? Colors.orange.shade700 : Colors.green.shade700),
                         ),
                       ),
                     ),
-                    Text(
-                      a.statusAktif == 1 ? 'AKTIF' : 'NONAKTIF',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: a.statusAktif == 1 ? Colors.green.shade700 : Colors.red.shade700,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: a.statusAktif == 1 ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.error.withValues(alpha: 0.1),
+                        borderRadius: AppTheme.radiusSmall,
+                      ),
+                      child: Text(
+                        a.statusAktif == 1 ? 'AKTIF' : 'NONAKTIF',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: a.statusAktif == 1 ? AppTheme.success : AppTheme.error,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(a.judul, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text(a.isi, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                    Text(a.judul, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                     const SizedBox(height: 12),
-                    Text('Dibuat oleh: ${a.pembuat}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text(
+                      a.isi, 
+                      style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
+                        const SizedBox(width: 4),
+                        Text('Dibuat oleh: ${a.pembuat}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              const Divider(height: 1),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => _toggleStatus(a),
-                    icon: Icon(a.statusAktif == 1 ? Icons.visibility_off : Icons.visibility, size: 18),
-                    label: Text(a.statusAktif == 1 ? 'Nonaktifkan' : 'Aktifkan'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _showFormDialog(announcement: a),
-                    icon: const Icon(Icons.edit, size: 18),
-                    label: const Text('Edit'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.blue.shade700),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => _deleteAnnouncement(a),
-                    icon: const Icon(Icons.delete, size: 18),
-                    label: const Text('Hapus'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red.shade700),
-                  ),
-                ],
+              const Divider(height: 1, color: Colors.black12),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: TextButton.icon(
+                        onPressed: () => _toggleStatus(a),
+                        icon: Icon(a.statusAktif == 1 ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
+                        label: Text(a.statusAktif == 1 ? 'Nonaktifkan' : 'Aktifkan'),
+                        style: TextButton.styleFrom(foregroundColor: AppTheme.textSecondary),
+                      ),
+                    ),
+                    Container(width: 1, height: 24, color: Colors.grey.shade300),
+                    Expanded(
+                      child: TextButton.icon(
+                        onPressed: () => _showFormDialog(announcement: a),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: const Text('Edit'),
+                        style: TextButton.styleFrom(foregroundColor: AppTheme.info),
+                      ),
+                    ),
+                    Container(width: 1, height: 24, color: Colors.grey.shade300),
+                    Expanded(
+                      child: TextButton.icon(
+                        onPressed: () => _deleteAnnouncement(a),
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        label: const Text('Hapus'),
+                        style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -347,3 +424,4 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     );
   }
 }
+

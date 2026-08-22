@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../models/user_model.dart';
@@ -49,8 +50,9 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
+        backgroundColor: isError ? AppTheme.error : AppTheme.success,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
       ),
     );
   }
@@ -72,7 +74,8 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text('Edit Profil'),
+              title: const Text('Edit Profil', style: TextStyle(fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
               content: SingleChildScrollView(
                 child: Form(
                   key: formKey,
@@ -81,25 +84,37 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                     children: [
                       TextFormField(
                         controller: namaLengkapController,
-                        decoration: const InputDecoration(labelText: 'Nama Lengkap', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Nama Lengkap', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: namaPanggilanController,
-                        decoration: const InputDecoration(labelText: 'Nama Panggilan', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Nama Panggilan', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: usernameController,
-                        decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Username', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: whatsappController,
-                        decoration: const InputDecoration(labelText: 'No. WhatsApp', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'No. WhatsApp', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                       ),
                     ],
                   ),
@@ -108,7 +123,7 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
               actions: [
                 TextButton(
                   onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                  child: const Text('Batal'),
+                  child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
                 ),
                 ElevatedButton(
                   onPressed: isLoadingSubmit
@@ -138,7 +153,14 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                             }
                           }
                         },
-                  child: isLoadingSubmit ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Simpan'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                  ),
+                  child: isLoadingSubmit 
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
+                      : const Text('Simpan'),
                 ),
               ],
             );
@@ -162,7 +184,8 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: const Text('Ubah Password'),
+              title: const Text('Ubah Password', style: TextStyle(fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
               content: SingleChildScrollView(
                 child: Form(
                   key: formKey,
@@ -171,14 +194,20 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                     children: [
                       TextFormField(
                         controller: oldPasswordController,
-                        decoration: const InputDecoration(labelText: 'Password Lama', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Password Lama', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         obscureText: true,
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: newPasswordController,
-                        decoration: const InputDecoration(labelText: 'Password Baru', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Password Baru', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         obscureText: true,
                         validator: (value) {
                           if (value == null || value.length < 6) return 'Minimal 6 karakter';
@@ -186,10 +215,13 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: confirmPasswordController,
-                        decoration: const InputDecoration(labelText: 'Konfirmasi Password', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Konfirmasi Password', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         obscureText: true,
                         validator: (value) => value != newPasswordController.text ? 'Password tidak sama' : null,
                       ),
@@ -200,7 +232,7 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
               actions: [
                 TextButton(
                   onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                  child: const Text('Batal'),
+                  child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
                 ),
                 ElevatedButton(
                   onPressed: isLoadingSubmit
@@ -228,10 +260,14 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                             }
                           }
                         },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade700),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.warning,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                  ),
                   child: isLoadingSubmit 
                       ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
-                      : const Text('Ganti Password', style: TextStyle(color: Colors.white)),
+                      : const Text('Ganti Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
             );
@@ -244,10 +280,19 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil Saya')),
+      appBar: AppBar(
+        title: const Text('Profil Saya'),
+        backgroundColor: AppTheme.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       drawer: _user != null ? AppDrawer(user: _user!) : null,
+      backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadUser,
+        color: AppTheme.primary,
         child: _buildBody(),
       ),
     );
@@ -255,7 +300,7 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _user == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _user == null) {
@@ -263,9 +308,9 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
             const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: _loadUser, child: const Text('Coba Lagi')),
           ],
@@ -281,22 +326,30 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+            padding: const EdgeInsets.only(top: 32, bottom: 48, left: 24, right: 24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.indigo.shade800, Colors.blue.shade600],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+              gradient: AppTheme.primaryGradient,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
               ),
+              boxShadow: AppTheme.shadowMedium,
             ),
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.white,
-                  child: Text(
-                    _user!.namaPanggilan.isNotEmpty ? _user!.namaPanggilan.substring(0, 1).toUpperCase() : '?',
-                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.indigo.shade800),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      _user!.namaPanggilan.isNotEmpty ? _user!.namaPanggilan.substring(0, 1).toUpperCase() : '?',
+                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -305,64 +358,92 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     _user!.roleLevel.toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 1),
                   ),
                 ),
               ],
             ),
           ),
+          
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Informasi Akun', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text('Informasi Akun', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
                 const SizedBox(height: 16),
-                _buildInfoTile(Icons.person, 'Username', _user!.username),
-                const Divider(),
-                _buildInfoTile(Icons.phone, 'WhatsApp', _user!.noWhatsapp.isEmpty ? '-' : _user!.noWhatsapp),
-                const Divider(),
-                _buildInfoTile(
-                  Icons.verified_user, 
-                  'Status Akun', 
-                  _user!.statusAktif == 1 ? 'Aktif' : 'Nonaktif',
-                  valueColor: _user!.statusAktif == 1 ? Colors.green.shade700 : Colors.red.shade700
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: AppTheme.radiusLarge,
+                    boxShadow: AppTheme.shadowSoft,
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildInfoTile(Icons.person_outline, 'Username', _user!.username),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1, color: Colors.black12),
+                      ),
+                      _buildInfoTile(Icons.phone_outlined, 'WhatsApp', _user!.noWhatsapp.isEmpty ? '-' : _user!.noWhatsapp),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1, color: Colors.black12),
+                      ),
+                      _buildInfoTile(
+                        Icons.verified_user_outlined, 
+                        'Status Akun', 
+                        _user!.statusAktif == 1 ? 'Aktif' : 'Nonaktif',
+                        valueColor: _user!.statusAktif == 1 ? AppTheme.success : AppTheme.error
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 32),
+                
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: _showEditProfileDialog,
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Edit Profil'),
+                    icon: const Icon(Icons.edit_outlined),
+                    label: const Text('Edit Profil', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                      elevation: 0,
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: _showUpdatePasswordDialog,
                     icon: const Icon(Icons.lock_reset),
-                    label: const Text('Ubah Password'),
+                    label: const Text('Ubah Password', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      foregroundColor: Colors.orange.shade700,
-                      side: BorderSide(color: Colors.orange.shade700),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      foregroundColor: AppTheme.warning,
+                      side: BorderSide(color: AppTheme.warning.withValues(alpha: 0.5)),
+                      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
                     ),
                   ),
                 ),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -372,24 +453,29 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
   }
 
   Widget _buildInfoTile(IconData icon, String title, String value, {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade600, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                const SizedBox(height: 4),
-                Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: valueColor ?? Colors.black87)),
-              ],
-            ),
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withValues(alpha: 0.1),
+            borderRadius: AppTheme.radiusSmall,
           ),
-        ],
-      ),
+          child: Icon(icon, color: AppTheme.primary, size: 20),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 2),
+              Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: valueColor ?? AppTheme.textPrimary)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
+

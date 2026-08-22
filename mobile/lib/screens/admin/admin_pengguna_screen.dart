@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../models/user_model.dart';
@@ -100,8 +101,9 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
+        backgroundColor: isError ? AppTheme.error : AppTheme.success,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
       ),
     );
   }
@@ -133,7 +135,8 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: Text(isEditing ? 'Edit Pengguna' : 'Tambah Pengguna'),
+              title: Text(isEditing ? 'Edit Pengguna' : 'Tambah Pengguna', style: const TextStyle(fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
               content: SingleChildScrollView(
                 child: Form(
                   key: _formKey,
@@ -142,39 +145,57 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                     children: [
                       TextFormField(
                         controller: _namaLengkapController,
-                        decoration: const InputDecoration(labelText: 'Nama Lengkap', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Nama Lengkap', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         validator: (value) => value == null || value.isEmpty ? 'Nama lengkap wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _namaPanggilanController,
-                        decoration: const InputDecoration(labelText: 'Nama Panggilan', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Nama Panggilan', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         validator: (value) => value == null || value.isEmpty ? 'Nama panggilan wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _usernameController,
-                        decoration: const InputDecoration(labelText: 'Username', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'Username', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                         validator: (value) => value == null || value.isEmpty ? 'Username wajib diisi' : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _whatsappController,
-                        decoration: const InputDecoration(labelText: 'No. WhatsApp', border: OutlineInputBorder()),
+                        decoration: InputDecoration(
+                          labelText: 'No. WhatsApp', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       if (!isEditing)
                         TextFormField(
                           controller: _passwordController,
-                          decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                          decoration: InputDecoration(
+                            labelText: 'Password', 
+                            border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                          ),
                           obscureText: true,
                           validator: (value) => value == null || value.length < 6 ? 'Password min. 6 karakter' : null,
                         ),
-                      if (!isEditing) const SizedBox(height: 12),
+                      if (!isEditing) const SizedBox(height: 16),
                       if (!isEditing)
                         DropdownButtonFormField<String>(
                           initialValue: _selectedRole,
-                          decoration: const InputDecoration(labelText: 'Role', border: OutlineInputBorder()),
+                          decoration: InputDecoration(
+                            labelText: 'Role', 
+                            border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                          ),
                           items: const [
                             DropdownMenuItem(value: 'admin', child: Text('Admin')),
                             DropdownMenuItem(value: 'pengelola', child: Text('Pengelola')),
@@ -191,7 +212,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
               actions: [
                 TextButton(
                   onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                  child: const Text('Batal'),
+                  child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
                 ),
                 ElevatedButton(
                   onPressed: isLoadingSubmit
@@ -228,7 +249,14 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                             }
                           }
                         },
-                  child: isLoadingSubmit ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Simpan'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                  ),
+                  child: isLoadingSubmit 
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
+                      : const Text('Simpan'),
                 ),
               ],
             );
@@ -242,14 +270,22 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         content: Text(content),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), 
+            child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: isDestructive ? Colors.red : Colors.indigo),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDestructive ? AppTheme.error : AppTheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+            ),
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Ya, Lanjutkan', style: TextStyle(color: isDestructive ? Colors.white : Colors.white)),
+            child: const Text('Ya, Lanjutkan', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -272,10 +308,14 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Ubah Role'),
+        title: const Text('Ubah Role', style: TextStyle(fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
         content: DropdownButtonFormField<String>(
           initialValue: selectedRole,
-          decoration: const InputDecoration(labelText: 'Pilih Role Baru', border: OutlineInputBorder()),
+          decoration: InputDecoration(
+            labelText: 'Pilih Role Baru', 
+            border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium)
+          ),
           items: const [
             DropdownMenuItem(value: 'admin', child: Text('Admin')),
             DropdownMenuItem(value: 'pengelola', child: Text('Pengelola')),
@@ -286,7 +326,10 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
           },
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.pop(context), 
+            child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
@@ -298,6 +341,11 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                 );
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+            ),
             child: const Text('Simpan'),
           ),
         ],
@@ -308,22 +356,42 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Kelola Pengguna')),
+      appBar: AppBar(
+        title: const Text('Kelola Pengguna'),
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
+      backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
+        color: AppTheme.primary,
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: [
                   TextField(
                     decoration: InputDecoration(
                       hintText: 'Cari nama atau username...',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                      filled: true,
+                      fillColor: AppTheme.surface,
+                      border: OutlineInputBorder(
+                        borderRadius: AppTheme.radiusLarge,
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: AppTheme.radiusLarge,
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: AppTheme.radiusLarge,
+                        borderSide: const BorderSide(color: AppTheme.primary),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
                     onChanged: (val) {
                       setState(() {
@@ -332,7 +400,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                       });
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
@@ -343,6 +411,19 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                           child: FilterChip(
                             label: Text(role),
                             selected: isSelected,
+                            selectedColor: AppTheme.primary.withValues(alpha: 0.15),
+                            checkmarkColor: AppTheme.primary,
+                            labelStyle: TextStyle(
+                              color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                            backgroundColor: AppTheme.surface,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: AppTheme.radiusLarge,
+                              side: BorderSide(
+                                color: isSelected ? AppTheme.primary.withValues(alpha: 0.5) : Colors.grey.shade300,
+                              ),
+                            ),
                             onSelected: (selected) {
                               setState(() {
                                 _roleFilter = role;
@@ -363,15 +444,16 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showUserForm(),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Tambah Pengguna'),
+        backgroundColor: AppTheme.primary,
+        icon: const Icon(Icons.person_add_outlined, color: Colors.white),
+        label: const Text('Tambah', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
       ),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading && _users.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _users.isEmpty) {
@@ -379,7 +461,9 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            const SizedBox(height: 16),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
           ],
@@ -388,11 +472,20 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     }
 
     if (_filteredUsers.isEmpty) {
-      return const Center(child: Text('Tidak ada pengguna yang sesuai.'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off_outlined, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            const Text('Tidak ada pengguna yang sesuai.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+          ],
+        ),
+      );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80),
+      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 80),
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: _filteredUsers.length,
       itemBuilder: (context, index) {
@@ -400,54 +493,108 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
         final isActive = user.statusAktif == 1;
         final isMe = _currentUser?.id == user.id;
 
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ExpansionTile(
-            leading: CircleAvatar(
-              backgroundColor: isActive ? Colors.indigo.shade100 : Colors.grey.shade300,
-              child: Text(
-                user.namaPanggilan.isNotEmpty ? user.namaPanggilan.substring(0, 1).toUpperCase() : '?',
-                style: TextStyle(color: isActive ? Colors.indigo : Colors.grey.shade600, fontWeight: FontWeight.bold),
-              ),
-            ),
-            title: Text(
-              '${user.namaLengkap} ${isMe ? '(Anda)' : ''}', 
-              style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? Colors.black87 : Colors.grey),
-            ),
-            subtitle: Text(
-              '${user.username} • ${user.roleLevel.toUpperCase()}',
-              style: TextStyle(color: isActive ? Colors.grey.shade700 : Colors.grey),
-            ),
-            childrenPadding: const EdgeInsets.all(16),
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildActionButton(Icons.edit, 'Edit', Colors.blue, () => _showUserForm(user: user)),
-                  _buildActionButton(Icons.manage_accounts, 'Ubah Role', Colors.orange, () => _showRoleDialog(user)),
-                  _buildActionButton(Icons.lock_reset, 'Reset Pass', Colors.brown, () {
-                    _confirmAction(
-                      'Reset Password', 
-                      'Anda yakin ingin mengembalikan password ${user.namaLengkap} ke "lugasjosjis"?', 
-                      () => UserService.resetPassword(user.id)
-                    );
-                  }),
-                  _buildActionButton(
-                    isActive ? Icons.block : Icons.check_circle, 
-                    isActive ? 'Nonaktifkan' : 'Aktifkan', 
-                    isActive ? Colors.red : Colors.green, 
-                    () {
-                      _confirmAction(
-                        isActive ? 'Nonaktifkan Pengguna' : 'Aktifkan Pengguna', 
-                        'Anda yakin ingin ${isActive ? 'menonaktifkan' : 'mengaktifkan'} ${user.namaLengkap}?', 
-                        () => UserService.toggleStatus(user.id),
-                        isDestructive: isActive,
-                      );
-                    }
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: AppTheme.radiusLarge,
+            boxShadow: AppTheme.shadowSoft,
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              collapsedBackgroundColor: Colors.transparent,
+              backgroundColor: Colors.transparent,
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isActive ? AppTheme.primary.withValues(alpha: 0.3) : Colors.grey.shade300, 
+                    width: 2
                   ),
+                ),
+                child: CircleAvatar(
+                  backgroundColor: isActive ? AppTheme.primary.withValues(alpha: 0.1) : Colors.grey.shade100,
+                  radius: 22,
+                  child: Text(
+                    user.namaPanggilan.isNotEmpty ? user.namaPanggilan.substring(0, 1).toUpperCase() : '?',
+                    style: TextStyle(
+                      color: isActive ? AppTheme.primary : Colors.grey.shade500, 
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${user.namaLengkap} ${isMe ? '(Anda)' : ''}', 
+                      style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? AppTheme.textPrimary : Colors.grey),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (!isActive) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppTheme.error.withValues(alpha: 0.1),
+                        borderRadius: AppTheme.radiusSmall,
+                      ),
+                      child: const Text('NONAKTIF', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: AppTheme.error)),
+                    )
+                  ]
                 ],
               ),
-            ],
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  '${user.username} • ${user.roleLevel.toUpperCase()}',
+                  style: TextStyle(color: isActive ? AppTheme.textSecondary : Colors.grey.shade400, fontSize: 13),
+                ),
+              ),
+              childrenPadding: const EdgeInsets.all(0),
+              children: [
+                Container(
+                  color: Colors.grey.shade50,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildActionButton(Icons.edit_outlined, 'Edit', AppTheme.info, () => _showUserForm(user: user)),
+                      _buildActionButton(Icons.manage_accounts_outlined, 'Role', AppTheme.warning, () => _showRoleDialog(user)),
+                      _buildActionButton(Icons.lock_reset, 'Password', Colors.brown.shade600, () {
+                        _confirmAction(
+                          'Reset Password', 
+                          'Anda yakin ingin mengembalikan password ${user.namaLengkap} ke "lugasjosjis"?', 
+                          () => UserService.resetPassword(user.id)
+                        );
+                      }),
+                      _buildActionButton(
+                        isActive ? Icons.block : Icons.check_circle_outline, 
+                        isActive ? 'Nonaktifkan' : 'Aktifkan', 
+                        isActive ? AppTheme.error : AppTheme.success, 
+                        () {
+                          _confirmAction(
+                            isActive ? 'Nonaktifkan Pengguna' : 'Aktifkan Pengguna', 
+                            'Anda yakin ingin ${isActive ? 'menonaktifkan' : 'mengaktifkan'} ${user.namaLengkap}?', 
+                            () => UserService.toggleStatus(user.id),
+                            isDestructive: isActive,
+                          );
+                        }
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -457,17 +604,25 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: AppTheme.radiusSmall,
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 6),
+            Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
     );
   }
 }
+

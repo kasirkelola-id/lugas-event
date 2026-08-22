@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/event_service.dart';
 import '../../models/user_model.dart';
@@ -62,10 +63,17 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Kelola Seluruh Acara')),
+      appBar: AppBar(
+        title: const Text('Kelola Seluruh Acara'),
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       drawer: _user != null ? AppDrawer(user: _user!) : null,
+      backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
+        color: AppTheme.primary,
         child: _buildBody(),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -78,15 +86,17 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
             _loadData();
           }
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Buat Acara Baru'),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Buat Acara Baru', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        backgroundColor: AppTheme.primary,
+        elevation: 4,
       ),
     );
   }
 
   Widget _buildBody() {
     if (_isLoading && _events.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _events.isEmpty) {
@@ -94,7 +104,9 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            const SizedBox(height: 16),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
           ],
@@ -103,11 +115,20 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
     }
 
     if (_events.isEmpty) {
-      return const Center(child: Text('Belum ada acara di dalam sistem.'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
+            const SizedBox(height: 16),
+            const Text('Belum ada acara di dalam sistem.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+          ],
+        ),
+      );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 80),
+      padding: const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 80),
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: _events.length,
       itemBuilder: (context, index) {
@@ -118,16 +139,16 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
   }
 
   Widget _buildEventCard(EventModel event) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.radiusMedium,
+        boxShadow: AppTheme.shadowSoft,
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.radiusMedium,
         onTap: () async {
           final result = await Navigator.push(
             context,
@@ -138,7 +159,7 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -148,48 +169,47 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
                   Expanded(
                     child: Text(
                       event.namaAcara,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: event.isActive ? Colors.teal.shade50 : Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: event.isActive ? Colors.teal.shade200 : Colors.grey.shade300),
+                      color: event.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       event.isActive ? 'AKTIF' : 'SELESAI',
                       style: TextStyle(
-                        color: event.isActive ? Colors.teal.shade700 : Colors.grey.shade600,
+                        color: event.isActive ? AppTheme.success : AppTheme.textSecondary,
                         fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
+                  const Icon(Icons.calendar_month, size: 16, color: AppTheme.textSecondary),
                   const SizedBox(width: 8),
                   Text(
                     event.tanggalAcara,
-                    style: TextStyle(color: Colors.grey.shade700),
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.people_outline, size: 16, color: Colors.grey.shade600),
+                  const Icon(Icons.people_alt_outlined, size: 16, color: AppTheme.textSecondary),
                   const SizedBox(width: 8),
                   Text(
                     'Jumlah Hadir: ${event.jumlahHadir ?? 0}',
-                    style: TextStyle(color: Colors.grey.shade700),
+                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
                   ),
                 ],
               ),
@@ -200,3 +220,4 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
     );
   }
 }
+

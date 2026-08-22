@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/report_service.dart';
 import '../../models/user_model.dart';
@@ -60,11 +61,17 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Laporan')),
+      appBar: AppBar(
+        title: const Text('Laporan'),
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
       drawer: _user != null ? AppDrawer(user: _user!) : null,
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
+        color: AppTheme.primary,
         child: _buildBody(),
       ),
     );
@@ -72,7 +79,7 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _report == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _report == null) {
@@ -80,9 +87,9 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
             const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
             ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
           ],
@@ -93,30 +100,30 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
     if (_report == null) return const SizedBox();
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         const Text(
           'Ringkasan Laporan Kegiatan',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.indigo),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
         ),
         const SizedBox(height: 24),
         
         // Block 1: Event Stats
-        const Text('Data Acara Anda', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+        const Text('Data Acara Anda', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Total Acara', _report!.totalAcara.toString(), Icons.event_note, Colors.indigo),
+              child: _buildStatCard('Total Acara', _report!.totalAcara.toString(), Icons.event_note, AppTheme.primary),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildStatCard('Acara Aktif', _report!.acaraAktif.toString(), Icons.event_available, Colors.teal),
+              child: _buildStatCard('Acara Aktif', _report!.acaraAktif.toString(), Icons.event_available, AppTheme.success),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildStatCard('Selesai', _report!.acaraSelesai.toString(), Icons.history, Colors.grey.shade700),
+              child: _buildStatCard('Selesai', _report!.acaraSelesai.toString(), Icons.history, AppTheme.textSecondary),
             ),
           ],
         ),
@@ -124,20 +131,20 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
         const SizedBox(height: 24),
         
         // Block 2: Participant Stats
-        const Text('Data Kehadiran Peserta', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+        const Text('Data Kehadiran Peserta', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Total Peserta', _report!.totalPeserta.toString(), Icons.people_alt, Colors.blue.shade700),
+              child: _buildStatCard('Total Peserta', _report!.totalPeserta.toString(), Icons.people_alt, AppTheme.info),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildStatCard('Hadir', _report!.totalHadir.toString(), Icons.check_circle_outline, Colors.green.shade600),
+              child: _buildStatCard('Hadir', _report!.totalHadir.toString(), Icons.check_circle_outline, AppTheme.success),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildStatCard('Belum Hadir', _report!.totalBelumHadir.toString(), Icons.pending_actions, Colors.orange.shade700),
+              child: _buildStatCard('Belum Hadir', _report!.totalBelumHadir.toString(), Icons.pending_actions, AppTheme.warning),
             ),
           ],
         ),
@@ -146,25 +153,23 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
         
         // Block 3: Percentage
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.indigo.shade600, Colors.blue.shade500]),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(color: Colors.blue.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 5)),
-            ],
+            gradient: AppTheme.primaryGradient,
+            borderRadius: AppTheme.radiusLarge,
+            boxShadow: AppTheme.shadowMedium,
           ),
           child: Column(
             children: [
-              const Text('Persentase Kehadiran', style: TextStyle(color: Colors.white70, fontSize: 16)),
-              const SizedBox(height: 8),
+              const Text('Persentase Kehadiran', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     _report!.persentaseKehadiran.toStringAsFixed(1),
-                    style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Colors.white, fontSize: 56, fontWeight: FontWeight.bold, height: 1),
                   ),
                   const Padding(
                     padding: EdgeInsets.only(bottom: 8.0, left: 4.0),
@@ -172,13 +177,13 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 24),
               LinearProgressIndicator(
                 value: _report!.totalPeserta == 0 ? 0 : (_report!.totalHadir / _report!.totalPeserta),
                 backgroundColor: Colors.white.withValues(alpha: 0.3),
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
+                minHeight: 12,
+                borderRadius: BorderRadius.circular(6),
               ),
             ],
           ),
@@ -189,32 +194,38 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.surface,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: color.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(0, 2)),
-        ],
+        boxShadow: AppTheme.shadowSoft,
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: AppTheme.radiusSmall,
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 16),
           Text(
             value,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade700, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600),
           ),
         ],
       ),
     );
   }
 }
+
 

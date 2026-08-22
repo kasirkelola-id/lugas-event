@@ -54,6 +54,13 @@ class AbsensiController extends BaseApiController
             return $this->sendError('Acara sudah ditutup', null, 422);
         }
 
+        // Check if user is registered for this event
+        $participantModel = new \App\Models\EventParticipantModel();
+        $isRegistered = $participantModel->where('event_id', $event['id'])->where('user_id', $user['id'])->first();
+        if (!$isRegistered) {
+            return $this->sendError('Anda belum terdaftar pada acara ini. Silakan hubungi panitia.', null, 403);
+        }
+
         $absensiModel = new AbsensiModel();
         
         $existing = $absensiModel->where('event_id', $event['id'])
