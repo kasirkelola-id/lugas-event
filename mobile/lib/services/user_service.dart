@@ -44,6 +44,15 @@ class UserService {
     }
   }
 
+  static Future<Map<String, dynamic>> getRolesSummary() async {
+    try {
+      final response = await ApiClient.get('/users/roles-summary');
+      return await _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
+  }
+
   static Future<Map<String, dynamic>> createUser(Map<String, dynamic> data) async {
     try {
       final response = await ApiClient.post('/users', data);

@@ -16,10 +16,40 @@ class EventController extends BaseApiController
         return true;
     }
 
+    private function checkEventOwnership($eventId)
+    {
+        $user = AuthService::getUser();
+        if ($user['role_level'] === 'admin') {
+            return true; // Admin can access any event
+        }
+        $eventModel = new EventModel();
+        $event = $eventModel->find($eventId);
+        if ($event && (int)$event['dibuat_oleh'] === (int)$user['id']) {
+            return true;
+        }
+        return false;
+    }
+
     public function index()
     {
+        $user = AuthService::getUser();
         $eventModel = new EventModel();
-        $events = $eventModel->orderBy('created_at', 'DESC')->findAll();
+        $builder = $eventModel->builder();
+
+        if ($user['role_level'] === 'pengelola') {
+            $builder->where('dibuat_oleh', $user['id']);
+        } elseif ($user['role_level'] === 'anggota') {
+            // Anggota can only see active events (if they need to list them)
+            $builder->groupStart()
+                    ->where('status_aktif', 1)
+                    ->orWhere('status_aktif', '1')
+                    ->orWhere('LOWER(status_aktif)', 'aktif')
+                    ->groupEnd();
+        }
+        // Admin sees all, so no filter needed
+
+        $builder->orderBy('created_at', 'DESC');
+        $events = $builder->get()->getResultArray();
 
         $data = array_map(function ($event) {
             return [
@@ -40,6 +70,10 @@ class EventController extends BaseApiController
     {
         if (!$this->checkPengelola()) {
             return $this->sendError('Forbidden', null, 403);
+        }
+
+        if (!$this->checkEventOwnership($id)) {
+            return $this->sendError('Forbidden: Anda bukan pengelola acara ini', null, 403);
         }
 
         $eventModel = new EventModel();
@@ -113,6 +147,10 @@ class EventController extends BaseApiController
             return $this->sendError('Forbidden', null, 403);
         }
 
+        if (!$this->checkEventOwnership($id)) {
+            return $this->sendError('Forbidden: Anda bukan pengelola acara ini', null, 403);
+        }
+
         $eventModel = new EventModel();
         $event = $eventModel->find($id);
 
@@ -146,6 +184,10 @@ class EventController extends BaseApiController
     {
         if (!$this->checkPengelola()) {
             return $this->sendError('Forbidden', null, 403);
+        }
+
+        if (!$this->checkEventOwnership($id)) {
+            return $this->sendError('Forbidden: Anda bukan pengelola acara ini', null, 403);
         }
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();

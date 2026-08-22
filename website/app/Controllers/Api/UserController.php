@@ -207,4 +207,28 @@ class UserController extends BaseApiController
 
         return $this->sendSuccess('Password pengguna berhasil direset ke password default.');
     }
+
+    public function rolesSummary()
+    {
+        // Allowed for admin and pengelola (pengelola might want to see how many members they have, though the UI is currently admin only)
+        // Let's restrict it to admin
+        if (!$this->checkAdmin()) {
+            return $this->sendError('Forbidden', null, 403);
+        }
+
+        $userModel = new UserModel();
+        
+        $totalAdmin = $userModel->where('role_level', 'admin')->countAllResults();
+        $totalPengelola = $userModel->where('role_level', 'pengelola')->countAllResults();
+        $totalAnggota = $userModel->where('role_level', 'anggota')->countAllResults();
+
+        $data = [
+            'admin' => $totalAdmin,
+            'pengelola' => $totalPengelola,
+            'anggota' => $totalAnggota,
+            'total' => $totalAdmin + $totalPengelola + $totalAnggota
+        ];
+
+        return $this->sendSuccess('Ringkasan role', $data);
+    }
 }

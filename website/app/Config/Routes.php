@@ -22,6 +22,7 @@ $routes->group('api', function ($routes) {
     $routes->get('events/(:num)/absensi', 'Api\AbsensiController::eventAttendees/$1', ['filter' => 'auth']);
     
     // User Management (Admin Only)
+    $routes->get('users/roles-summary', 'Api\UserController::rolesSummary', ['filter' => 'auth']);
     $routes->get('users', 'Api\UserController::index', ['filter' => 'auth']);
     $routes->post('users', 'Api\UserController::create', ['filter' => 'auth']);
     $routes->put('users/(:num)', 'Api\UserController::update/$1', ['filter' => 'auth']);
