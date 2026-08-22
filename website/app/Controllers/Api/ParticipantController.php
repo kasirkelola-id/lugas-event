@@ -21,7 +21,7 @@ class ParticipantController extends BaseApiController
     private function checkEventOwnership($eventId)
     {
         $user = AuthService::getUser();
-        if ($user['role_level'] === 'admin') {
+        if (in_array($user['role_level'], ['admin', 'pengelola'])) {
             return true;
         }
         $eventModel = new EventModel();

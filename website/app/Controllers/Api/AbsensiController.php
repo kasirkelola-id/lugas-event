@@ -127,10 +127,6 @@ class AbsensiController extends BaseApiController
             return $this->sendError('Acara tidak ditemukan', null, 404);
         }
 
-        if ($user['role_level'] === 'pengelola' && (int)$event['dibuat_oleh'] !== (int)$user['id']) {
-            return $this->sendError('Forbidden: Anda bukan pengelola acara ini', null, 403);
-        }
-
         $absensiModel = new AbsensiModel();
         $builder = $absensiModel->builder();
         $builder->select('absensi.id as absensi_id, absensi.user_id, absensi.waktu_absen, users.nama_lengkap, users.nama_panggilan');

@@ -20,9 +20,7 @@ class ReportController extends BaseApiController
         $eventModel = new EventModel();
         $builder = $eventModel->builder();
         
-        if ($user['role_level'] === 'pengelola') {
-            $builder->where('dibuat_oleh', $user['id']);
-        }
+        // Admin and Pengelola can view report for all events
 
         // Hitung acara
         $events = $builder->get()->getResultArray();

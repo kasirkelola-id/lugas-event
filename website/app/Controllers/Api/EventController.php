@@ -19,8 +19,8 @@ class EventController extends BaseApiController
     private function checkEventOwnership($eventId)
     {
         $user = AuthService::getUser();
-        if ($user['role_level'] === 'admin') {
-            return true; // Admin can access any event
+        if (in_array($user['role_level'], ['admin', 'pengelola'])) {
+            return true; // Admin and pengelola can access any event
         }
         $eventModel = new EventModel();
         $event = $eventModel->find($eventId);
@@ -36,9 +36,7 @@ class EventController extends BaseApiController
         $eventModel = new EventModel();
         $builder = $eventModel->builder();
 
-        if ($user['role_level'] === 'pengelola') {
-            $builder->where('dibuat_oleh', $user['id']);
-        } elseif ($user['role_level'] === 'anggota') {
+        if ($user['role_level'] === 'anggota') {
             // Anggota can only see active events (if they need to list them)
             $builder->groupStart()
                     ->where('status_aktif', 1)
@@ -46,7 +44,7 @@ class EventController extends BaseApiController
                     ->orWhere('LOWER(status_aktif)', 'aktif')
                     ->groupEnd();
         }
-        // Admin sees all, so no filter needed
+        // Admin and Pengelola sees all, so no filter needed
 
         $builder->orderBy('created_at', 'DESC');
         $events = $builder->get()->getResultArray();
