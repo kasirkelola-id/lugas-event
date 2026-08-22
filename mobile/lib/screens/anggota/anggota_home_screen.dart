@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
+import '../../services/event_service.dart';
+import '../../services/announcement_service.dart';
+import '../../services/attendance_service.dart';
 import '../../models/user_model.dart';
+import '../../models/event_model.dart';
+import '../../models/announcement_model.dart';
+import '../../models/attendance_model.dart';
 import '../auth/login_screen.dart';
 import 'scan_qr_screen.dart';
 import 'attendance_history_screen.dart';
+import '../shared/user_pengumuman_screen.dart';
+import '../widgets/app_drawer.dart';
 
 class AnggotaHomeScreen extends StatefulWidget {
   const AnggotaHomeScreen({super.key});
@@ -14,27 +23,82 @@ class AnggotaHomeScreen extends StatefulWidget {
 
 class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
   UserModel? _user;
+  List<EventModel> _activeEvents = [];
+  List<AnnouncementModel> _announcements = [];
+  List<AttendanceModel> _recentAttendances = [];
+  
   bool _isLoading = true;
+  bool _isError = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    _loadData();
   }
 
-  Future<void> _loadUser() async {
-    final result = await AuthService.getMe();
-    if (!mounted) return;
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _isError = false;
+    });
 
-    if (result['success']) {
+    try {
+      final userResult = await AuthService.getMe();
+      if (!mounted) return;
+
+      if (!userResult['success']) {
+        if (userResult['message'].toString().toLowerCase().contains('sesi') || 
+            userResult['message'].toString().toLowerCase().contains('berakhir')) {
+          _logout();
+          return;
+        }
+        setState(() => _isError = true);
+        return;
+      }
+
+      final user = userResult['user'] as UserModel;
+
+      // Load other data in parallel
+      final results = await Future.wait([
+        EventService.getEvents(), // will return active events for anggota
+        AnnouncementService.getAnnouncements(),
+        AttendanceService.getMyHistory(),
+      ]);
+
+      if (!mounted) return;
+
+      final eventsResult = results[0];
+      final annResult = results[1];
+      final attResult = results[2];
+
+      List<EventModel> events = [];
+      if (eventsResult['success']) {
+        events = (eventsResult['events'] as List<EventModel>).where((e) => e.isActive).toList();
+      }
+
+      List<AnnouncementModel> announcements = [];
+      if (annResult['success']) {
+        announcements = (annResult['data'] as List<AnnouncementModel>).take(2).toList();
+      }
+
+      List<AttendanceModel> attendances = [];
+      if (attResult['success']) {
+        attendances = (attResult['data'] as List<AttendanceModel>).take(3).toList();
+      }
+
       setState(() {
-        _user = result['user'];
+        _user = user;
+        _activeEvents = events;
+        _announcements = announcements;
+        _recentAttendances = attendances;
         _isLoading = false;
       });
-    } else {
-      if (result['message'].toString().toLowerCase().contains('sesi') || 
-          result['message'].toString().toLowerCase().contains('berakhir')) {
-        _logout();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isError = true;
+        });
       }
     }
   }
@@ -42,169 +106,425 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
   void _logout() async {
     await AuthService.logout();
     if (!mounted) return;
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Beranda Anggota'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: 'Logout',
-          )
-        ],
+        backgroundColor: AppTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_user != null)
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.indigo.shade400, Colors.indigo.shade700],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.indigo.shade200,
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 36,
-                            backgroundColor: Colors.white,
-                            child: Text(
-                              _user!.namaPanggilan.substring(0, 1).toUpperCase(),
-                              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.indigo.shade700),
-                            ),
-                          ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Halo,',
-                                  style: TextStyle(fontSize: 16, color: Colors.white70),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _user!.namaPanggilan,
-                                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Aksi Cepat',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildActionButton(
-                    context,
-                    title: 'Scan QR Absensi',
-                    subtitle: 'Gunakan kamera untuk absen',
-                    icon: Icons.qr_code_scanner,
-                    color: Colors.indigo,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ScanQrScreen()),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildActionButton(
-                    context,
-                    title: 'Riwayat Absensi',
-                    subtitle: 'Lihat daftar kehadiran Anda',
-                    icon: Icons.history,
-                    color: Colors.teal,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const AttendanceHistoryScreen()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
+      drawer: _user != null ? AppDrawer(user: _user!) : null,
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        color: AppTheme.primary,
+        child: _buildBody(),
+      ),
     );
   }
 
-  Widget _buildActionButton(BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: AppTheme.primary),
+            SizedBox(height: 16),
+            Text('Memuat informasi...', style: TextStyle(color: AppTheme.textSecondary)),
+          ],
+        ),
+      );
+    }
+
+    if (_isError || _user == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off_outlined, size: 64, color: AppTheme.error),
+            const SizedBox(height: 16),
+            const Text('Koneksi Bermasalah', style: TextStyle(color: AppTheme.error, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('Periksa koneksi internet Anda lalu coba lagi.', style: TextStyle(color: AppTheme.textSecondary)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadData,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+              ),
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeaderSection(),
+          _buildPrimaryCTA(),
+          
+          if (_activeEvents.isNotEmpty)
+            _buildActiveEventsSection(),
+
+          _buildAnnouncementsSection(),
+          _buildRecentAttendanceSection(),
+          
+          const SizedBox(height: 40),
+        ],
       ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Container(
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 24),
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          )
+        ]
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+            child: Text(
+              _user!.namaPanggilan.isNotEmpty ? _user!.namaPanggilan.substring(0, 1).toUpperCase() : 'U',
+              style: const TextStyle(fontSize: 28, color: AppTheme.primary, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Halo, ${_user!.namaPanggilan} 👋',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Siap mengikuti kegiatan hari ini?',
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrimaryCTA() {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
       child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ScanQrScreen()),
+          );
+        },
+        borderRadius: AppTheme.radiusLarge,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+            borderRadius: AppTheme.radiusLarge,
+            boxShadow: AppTheme.shadowMedium,
+          ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: AppTheme.radiusMedium,
                 ),
-                child: Icon(icon, size: 36, color: color),
+                child: const Icon(Icons.qr_code_scanner, size: 40, color: Colors.white),
               ),
               const SizedBox(width: 20),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: const [
                     Text(
-                      title,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+                      'Scan QR Absensi',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                      'Scan QR Code untuk mencatat kehadiran Anda.',
+                      style: TextStyle(fontSize: 13, color: Colors.white70),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: Colors.grey.shade400, size: 20),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildActiveEventsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          child: Text('Acara Sedang Berlangsung', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+          itemCount: _activeEvents.length,
+          itemBuilder: (context, index) {
+            final event = _activeEvents[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: AppTheme.radiusMedium,
+                border: Border.all(color: AppTheme.success.withValues(alpha: 0.3)),
+                boxShadow: AppTheme.shadowSoft,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.success.withValues(alpha: 0.1),
+                      borderRadius: AppTheme.radiusSmall,
+                    ),
+                    child: const Icon(Icons.event_available, color: AppTheme.success),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(event.namaAcara, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary)),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.calendar_today, size: 12, color: AppTheme.textSecondary),
+                            const SizedBox(width: 4),
+                            Text(event.tanggalAcara, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAnnouncementsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Pengumuman Terbaru', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              if (_announcements.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const UserPengumumanScreen()));
+                  },
+                  child: const Text('Lihat Semua', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                ),
+            ],
+          ),
+        ),
+        if (_announcements.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: AppTheme.radiusMedium,
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: const [
+                  Icon(Icons.campaign_outlined, size: 48, color: AppTheme.textSecondary),
+                  SizedBox(height: 12),
+                  Text('Belum Ada Pengumuman', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 16)),
+                  SizedBox(height: 4),
+                  Text('Informasi terbaru akan muncul di sini.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13), textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            itemCount: _announcements.length,
+            itemBuilder: (context, index) {
+              final ann = _announcements[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: AppTheme.radiusMedium,
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: AppTheme.shadowSoft,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.campaign, color: AppTheme.primary, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(ann.judul, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppTheme.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      ann.isi,
+                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildRecentAttendanceSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Absensi Terakhir', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+              if (_recentAttendances.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceHistoryScreen()));
+                  },
+                  child: const Text('Lihat Riwayat', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                ),
+            ],
+          ),
+        ),
+        if (_recentAttendances.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: AppTheme.radiusMedium,
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: const [
+                  Icon(Icons.history_outlined, size: 48, color: AppTheme.textSecondary),
+                  SizedBox(height: 12),
+                  Text('Belum Ada Riwayat', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 16)),
+                  SizedBox(height: 4),
+                  Text('Absensi yang Anda lakukan akan muncul di sini.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13), textAlign: TextAlign.center),
+                ],
+              ),
+            ),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            itemCount: _recentAttendances.length,
+            itemBuilder: (context, index) {
+              final att = _recentAttendances[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: AppTheme.radiusMedium,
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: AppTheme.shadowSoft,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.success.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check, color: AppTheme.success, size: 16),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(att.namaAcara, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
+                          const SizedBox(height: 4),
+                          Text('${att.tanggalAcara} · ${att.waktuAbsen}', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 }

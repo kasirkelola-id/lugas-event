@@ -4,6 +4,8 @@ import '../../models/attendance_model.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class AttendanceHistoryScreen extends StatefulWidget {
   const AttendanceHistoryScreen({super.key});
@@ -20,7 +22,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    initializeDateFormatting('id_ID', null).then((_) {
+      _loadHistory();
+    });
   }
 
   Future<void> _loadHistory() async {
@@ -170,7 +174,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         children: [
                           const Icon(Icons.access_time, size: 14, color: AppTheme.textSecondary),
                           const SizedBox(width: 4),
-                          Text(item.waktuAbsen, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                          Text(_formatTime(item.waktuAbsen), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -178,7 +182,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         children: [
                           const Icon(Icons.calendar_month, size: 14, color: AppTheme.textSecondary),
                           const SizedBox(width: 4),
-                          Text(item.tanggalAcara, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                          Text(_formatDate(item.tanggalAcara), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                         ],
                       ),
                     ],
@@ -190,5 +194,25 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         );
       },
     );
+  }
+
+  String _formatTime(String timeString) {
+    try {
+      if (timeString.isEmpty) return '-';
+      final dateTime = DateTime.parse('1970-01-01 $timeString');
+      return '${DateFormat('HH.mm', 'id_ID').format(dateTime)} WIB';
+    } catch (e) {
+      return timeString;
+    }
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      if (dateString.isEmpty) return '-';
+      final dateTime = DateTime.parse(dateString);
+      return DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(dateTime);
+    } catch (e) {
+      return dateString;
+    }
   }
 }

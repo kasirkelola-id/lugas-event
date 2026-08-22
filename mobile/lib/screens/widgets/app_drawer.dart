@@ -24,6 +24,11 @@ import '../admin/admin_printer_screen.dart';
 import '../admin/admin_pengaturan_screen.dart';
 import '../admin/admin_profil_screen.dart';
 
+import '../anggota/anggota_home_screen.dart';
+import '../anggota/scan_qr_screen.dart';
+import '../anggota/attendance_history_screen.dart';
+import '../anggota/anggota_profil_screen.dart';
+
 class AppDrawer extends StatelessWidget {
   final UserModel user;
 
@@ -53,7 +58,9 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = user.roleLevel.toLowerCase() == 'admin';
+    final role = user.roleLevel.toLowerCase();
+    final isAdmin = role == 'admin';
+    final isAnggota = role == 'anggota';
 
     return Drawer(
       backgroundColor: AppTheme.background,
@@ -63,7 +70,9 @@ class AppDrawer extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              children: isAdmin ? _buildAdminMenu(context) : _buildPengelolaMenu(context),
+              children: isAdmin 
+                  ? _buildAdminMenu(context) 
+                  : (isAnggota ? _buildAnggotaMenu(context) : _buildPengelolaMenu(context)),
             ),
           ),
           const Divider(height: 1, color: Colors.black12),
@@ -171,6 +180,21 @@ class AppDrawer extends StatelessWidget {
       _buildSectionLabel('Lainnya'),
       _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const UserPengumumanScreen()),
       _buildItem(context, Icons.person_outline, 'Profil', const PengelolaProfilScreen()),
+    ];
+  }
+
+  List<Widget> _buildAnggotaMenu(BuildContext context) {
+    return [
+      _buildSectionLabel('Utama'),
+      _buildItem(context, Icons.dashboard_outlined, 'Beranda', const AnggotaHomeScreen()),
+      _buildItem(context, Icons.qr_code_scanner, 'Scan Absensi', const ScanQrScreen()),
+      
+      _buildSectionLabel('Kegiatan'),
+      _buildItem(context, Icons.history_outlined, 'Riwayat Absensi', const AttendanceHistoryScreen()),
+      _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const UserPengumumanScreen()),
+      
+      _buildSectionLabel('Akun'),
+      _buildItem(context, Icons.person_outline, 'Profil', const AnggotaProfilScreen()),
     ];
   }
 
