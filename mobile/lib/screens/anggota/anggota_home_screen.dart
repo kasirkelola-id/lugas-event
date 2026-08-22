@@ -51,6 +51,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('Beranda Anggota'),
         actions: [
@@ -63,50 +64,147 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Selamat datang,\n${_user?.namaPanggilan ?? 'Anggota'}',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
+                  if (_user != null)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.indigo.shade400, Colors.indigo.shade700],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.indigo.shade200,
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 36,
+                            backgroundColor: Colors.white,
+                            child: Text(
+                              _user!.namaPanggilan.substring(0, 1).toUpperCase(),
+                              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.indigo.shade700),
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Halo,',
+                                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _user!.namaPanggilan,
+                                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 40),
+                  const Text(
+                    'Aksi Cepat',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo),
                   ),
-                  const SizedBox(height: 48),
-                  ElevatedButton.icon(
-                    onPressed: () {
+                  const SizedBox(height: 16),
+                  _buildActionButton(
+                    context,
+                    title: 'Scan QR Absensi',
+                    subtitle: 'Gunakan kamera untuk absen',
+                    icon: Icons.qr_code_scanner,
+                    color: Colors.indigo,
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const ScanQrScreen()),
                       );
                     },
-                    icon: const Icon(Icons.camera_alt, size: 32),
-                    label: const Text('SCAN QR', style: TextStyle(fontSize: 20)),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
                   ),
-                  const SizedBox(height: 24),
-                  OutlinedButton.icon(
-                    onPressed: () {
+                  const SizedBox(height: 16),
+                  _buildActionButton(
+                    context,
+                    title: 'Riwayat Absensi',
+                    subtitle: 'Lihat daftar kehadiran Anda',
+                    icon: Icons.history,
+                    color: Colors.teal,
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const AttendanceHistoryScreen()),
                       );
                     },
-                    icon: const Icon(Icons.history, size: 24),
-                    label: const Text('Riwayat Absensi', style: TextStyle(fontSize: 18)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
                   ),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildActionButton(BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, size: 36, color: color),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios, color: Colors.grey.shade400, size: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

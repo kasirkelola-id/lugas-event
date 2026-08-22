@@ -12,7 +12,7 @@ class UserSeeder extends Seeder
             'nama_lengkap'   => 'Administrator Pengelola',
             'nama_panggilan' => 'Admin',
             'username'       => 'pengelola',
-            'password'       => password_hash('rahasia123', PASSWORD_BCRYPT),
+            'password'       => password_hash('lugasjosjis', PASSWORD_BCRYPT),
             'no_whatsapp'    => '081234567890',
             'role_level'     => 'pengelola',
             'status_aktif'   => 1,
