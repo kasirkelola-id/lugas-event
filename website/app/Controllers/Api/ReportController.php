@@ -55,13 +55,10 @@ class ReportController extends BaseApiController
             $totalHadir = $absensiModel->whereIn('event_id', $eventIds)->countAllResults();
         }
 
-        $totalBelumHadir = $totalPeserta - $totalHadir;
-        if ($totalBelumHadir < 0) $totalBelumHadir = 0; // Guard terhadap anomali
-
+        // Since attendance is open to all members, "belum hadir" and "persentase" relative to event_participants 
+        // are no longer logically sound. Default to 0 to prevent misleading metrics.
+        $totalBelumHadir = 0;
         $persentaseKehadiran = 0;
-        if ($totalPeserta > 0) {
-            $persentaseKehadiran = ($totalHadir / $totalPeserta) * 100;
-        }
 
         $data = [
             'total_acara' => $totalAcara,
