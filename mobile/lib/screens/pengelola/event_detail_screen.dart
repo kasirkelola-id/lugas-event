@@ -287,6 +287,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   showDialog(
                     context: context,
                     builder: (_) => BluetoothPrinterDialog(
+                      eventId: widget.eventId,
                       namaAcara: _event!.namaAcara,
                       tanggalAcara: _event!.tanggalAcara,
                       kodeQr: _event!.kodeQr,
