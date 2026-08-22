@@ -34,9 +34,18 @@ class EventService {
       final response = await ApiClient.get('/events');
       final result = await _handleResponse(response);
       if (result['success']) {
-        final List<dynamic> list = result['data'];
-        final events = list.map((e) => EventModel.fromJson(e)).toList();
-        return {'success': true, 'events': events};
+        print('[DEBUG] API response events diterima. Memulai parsing...');
+        try {
+          final List<dynamic> list = result['data'];
+          final events = list.map((e) => EventModel.fromJson(e)).toList();
+          print('[DEBUG] Parsing events berhasil.');
+          return {'success': true, 'events': events};
+        } catch (e, stackTrace) {
+          print('[DEBUG] Parsing events GAGAL!');
+          print('Exception: $e');
+          print('StackTrace: $stackTrace');
+          return {'success': false, 'message': 'Data aplikasi tidak dapat dimuat (Error Parsing Event)', 'isParsingError': true};
+        }
       }
       return result;
     } catch (e) {

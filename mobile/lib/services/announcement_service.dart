@@ -35,9 +35,18 @@ class AnnouncementService {
       final result = await _handleResponse(response);
       
       if (result['success']) {
-        final List<dynamic> list = result['data'];
-        final announcements = list.map((e) => AnnouncementModel.fromJson(e)).toList();
-        return {'success': true, 'data': announcements};
+        print('[DEBUG] API response announcements diterima. Memulai parsing...');
+        try {
+          final List<dynamic> list = result['data'];
+          final announcements = list.map((e) => AnnouncementModel.fromJson(e)).toList();
+          print('[DEBUG] Parsing announcements berhasil.');
+          return {'success': true, 'data': announcements};
+        } catch (e, stackTrace) {
+          print('[DEBUG] Parsing announcements GAGAL!');
+          print('Exception: $e');
+          print('StackTrace: $stackTrace');
+          return {'success': false, 'message': 'Data aplikasi tidak dapat dimuat (Error Parsing Announcement)', 'isParsingError': true};
+        }
       }
       return result;
     } catch (e) {

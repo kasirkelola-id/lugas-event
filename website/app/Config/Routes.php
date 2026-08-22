@@ -49,6 +49,10 @@ $routes->group('api', function ($routes) {
     $routes->patch('users/(:num)/status', 'Api\UserController::toggleStatus/$1', ['filter' => 'auth']);
     $routes->patch('users/(:num)/role', 'Api\UserController::changeRole/$1', ['filter' => 'auth']);
     $routes->patch('users/(:num)/reset-password', 'Api\UserController::resetPassword/$1', ['filter' => 'auth']);
+
+    // Temporary Migration Endpoints
+    $routes->get('system/migrate/status', 'Api\MigrateController::status');
+    $routes->get('system/migrate/run', 'Api\MigrateController::run');
 });
 
 /** @var RouteCollection $routes */

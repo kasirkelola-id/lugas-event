@@ -3,7 +3,9 @@ import '../../core/theme/app_theme.dart';
 import '../../models/attendance_model.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
+import '../../models/user_model.dart';
 import '../auth/login_screen.dart';
+import '../widgets/app_drawer.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -16,6 +18,7 @@ class AttendanceHistoryScreen extends StatefulWidget {
 
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   List<AttendanceModel> _history = [];
+  UserModel? _user;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -33,8 +36,13 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       _errorMessage = null;
     });
 
+    final userResult = await AuthService.getMe();
     final result = await AttendanceService.getMyHistory();
     if (!mounted) return;
+
+    if (userResult['success']) {
+      _user = userResult['user'] as UserModel;
+    }
 
     if (result['success']) {
       setState(() {
@@ -66,6 +74,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
+      drawer: _user != null ? AppDrawer(user: _user!) : null,
       backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadHistory,

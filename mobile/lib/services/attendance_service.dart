@@ -34,9 +34,18 @@ class AttendanceService {
       final response = await ApiClient.get('/absensi/my');
       final result = await _handleResponse(response);
       if (result['success']) {
-        final List<dynamic> list = result['data'];
-        final history = list.map((e) => AttendanceModel.fromJson(e)).toList();
-        return {'success': true, 'history': history};
+        print('[DEBUG] API response attendance my_history diterima. Memulai parsing...');
+        try {
+          final List<dynamic> list = result['data'];
+          final history = list.map((e) => AttendanceModel.fromJson(e)).toList();
+          print('[DEBUG] Parsing attendance my_history berhasil.');
+          return {'success': true, 'history': history};
+        } catch (e, stackTrace) {
+          print('[DEBUG] Parsing attendance my_history GAGAL!');
+          print('Exception: $e');
+          print('StackTrace: $stackTrace');
+          return {'success': false, 'message': 'Data aplikasi tidak dapat dimuat (Error Parsing Attendance)', 'isParsingError': true};
+        }
       }
       return result;
     } catch (e) {
@@ -60,9 +69,18 @@ class AttendanceService {
       final response = await ApiClient.get('/events/$eventId/absensi');
       final result = await _handleResponse(response);
       if (result['success']) {
-        final List<dynamic> list = result['data'];
-        final attendees = list.map((e) => AttendanceModel.fromJson(e)).toList();
-        return {'success': true, 'attendees': attendees};
+        print('[DEBUG] API response event_attendance diterima. Memulai parsing...');
+        try {
+          final List<dynamic> list = result['data'];
+          final attendees = list.map((e) => AttendanceModel.fromJson(e)).toList();
+          print('[DEBUG] Parsing event_attendance berhasil.');
+          return {'success': true, 'attendees': attendees};
+        } catch (e, stackTrace) {
+          print('[DEBUG] Parsing event_attendance GAGAL!');
+          print('Exception: $e');
+          print('StackTrace: $stackTrace');
+          return {'success': false, 'message': 'Data aplikasi tidak dapat dimuat (Error Parsing Event Attendance)', 'isParsingError': true};
+        }
       }
       return result;
     } catch (e) {

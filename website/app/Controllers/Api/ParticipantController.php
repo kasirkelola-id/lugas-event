@@ -32,7 +32,7 @@ class ParticipantController extends BaseApiController
         return false;
     }
 
-    public function index($eventId)
+    public function index($eventId = null)
     {
         if (!$this->checkPengelola()) {
             return $this->sendError('Forbidden', null, 403);

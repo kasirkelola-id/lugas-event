@@ -29,6 +29,8 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
   
   bool _isLoading = true;
   bool _isError = false;
+  String _errorMessage = 'Koneksi bermasalah. Periksa koneksi internet Anda lalu coba lagi.';
+  bool _isParsingError = false;
 
   @override
   void initState() {
@@ -73,17 +75,20 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
 
       List<EventModel> events = [];
       if (eventsResult['success']) {
-        events = (eventsResult['events'] as List<EventModel>).where((e) => e.isActive).toList();
+        final List<EventModel>? eventsList = eventsResult['events'] as List<EventModel>?;
+        events = (eventsList ?? []).where((e) => e.isActive).toList();
       }
 
       List<AnnouncementModel> announcements = [];
       if (annResult['success']) {
-        announcements = (annResult['data'] as List<AnnouncementModel>).take(2).toList();
+        final List<AnnouncementModel>? annList = annResult['data'] as List<AnnouncementModel>?;
+        announcements = (annList ?? []).take(2).toList();
       }
 
       List<AttendanceModel> attendances = [];
       if (attResult['success']) {
-        attendances = (attResult['data'] as List<AttendanceModel>).take(3).toList();
+        final List<AttendanceModel>? attList = attResult['history'] as List<AttendanceModel>?;
+        attendances = (attList ?? []).take(3).toList();
       }
 
       setState(() {
@@ -92,12 +97,33 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         _announcements = announcements;
         _recentAttendances = attendances;
         _isLoading = false;
+        
+        // Cek jika ada yg parsing error
+        if ((eventsResult['isParsingError'] == true) || 
+            (annResult['isParsingError'] == true) || 
+            (attResult['isParsingError'] == true)) {
+          _isError = true;
+          _isParsingError = true;
+          _errorMessage = 'Data aplikasi tidak dapat dimuat karena format tidak sesuai. Pastikan versi aplikasi Anda terbaru.';
+        } else if (!eventsResult['success'] || !annResult['success'] || !attResult['success']) {
+          _isError = true;
+          _isParsingError = false;
+          // Ambil salah satu pesan error API
+          _errorMessage = (!eventsResult['success'] ? eventsResult['message'] : null) ?? 
+                          (!annResult['success'] ? annResult['message'] : null) ?? 
+                          (!attResult['success'] ? attResult['message'] : null) ?? 
+                          'Koneksi bermasalah';
+        }
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('[DEBUG] AnggotaHomeScreen _loadData catch Exception: $e');
+      print('[DEBUG] StackTrace: $stackTrace');
       if (mounted) {
         setState(() {
           _isLoading = false;
           _isError = true;
+          _isParsingError = false;
+          _errorMessage = 'Koneksi bermasalah. Periksa koneksi internet Anda lalu coba lagi.';
         });
       }
     }
@@ -151,11 +177,14 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.wifi_off_outlined, size: 64, color: AppTheme.error),
+            Icon(_isParsingError ? Icons.warning_amber_rounded : Icons.wifi_off_outlined, size: 64, color: AppTheme.error),
             const SizedBox(height: 16),
-            const Text('Koneksi Bermasalah', style: TextStyle(color: AppTheme.error, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(_isParsingError ? 'Data Aplikasi Tidak Dapat Dimuat' : 'Koneksi Bermasalah', style: const TextStyle(color: AppTheme.error, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const Text('Periksa koneksi internet Anda lalu coba lagi.', style: TextStyle(color: AppTheme.textSecondary)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Text(_errorMessage, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textSecondary)),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadData,

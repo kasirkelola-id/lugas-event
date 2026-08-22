@@ -1,5 +1,7 @@
-# Disable directory browsing
-Options -Indexes
+# Disable directory browsing (if allowed by host)
+<IfModule mod_autoindex.c>
+	Options -Indexes
+</IfModule>
 
 # ----------------------------------------------------------------------
 # Rewrite engine
@@ -8,8 +10,16 @@ Options -Indexes
 # Turning on the rewrite engine is necessary for the following rules and features.
 # FollowSymLinks must be enabled for this to work.
 <IfModule mod_rewrite.c>
-	Options +FollowSymlinks
+	# Use SymLinksIfOwnerMatch instead of FollowSymlinks for better shared hosting compatibility
+	Options +SymLinksIfOwnerMatch
 	RewriteEngine On
+
+	# ----------------------------------------------------------------------
+	# SECURITY RULES
+	# ----------------------------------------------------------------------
+	# Protect CodeIgniter sensitive folders and files from direct HTTP access
+	RewriteRule ^(app|system|writable|vendor)(/.*)?$ - [F,L]
+	RewriteRule ^(\.env|composer\.json|composer\.lock)$ - [F,L]
 
 	# If you installed CodeIgniter in a subfolder, you will need to
 	# change the following line to match the subfolder you need.
@@ -41,7 +51,7 @@ Options -Indexes
 <IfModule !mod_rewrite.c>
 	# If we don't have mod_rewrite installed, all 404's
 	# can be sent to index.php, and everything works as normal.
-	ErrorDocument 404 index.php
+	ErrorDocument 404 /index.php
 </IfModule>
 
 # Disable server signature start
