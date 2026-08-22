@@ -9,6 +9,7 @@ import '../pengelola/pengelola_riwayat_screen.dart';
 import '../pengelola/pengelola_peserta_screen.dart';
 import '../pengelola/pengelola_laporan_screen.dart';
 import '../pengelola/pengelola_profil_screen.dart';
+import '../shared/user_pengumuman_screen.dart';
 
 import '../admin/admin_home_screen.dart';
 import '../admin/admin_pengguna_screen.dart';
@@ -97,7 +98,7 @@ class AppDrawer extends StatelessWidget {
       // But we will point Absensi to PengelolaPesertaScreen for now since it handles attendees.
       _buildItem(context, Icons.checklist, 'Absensi', const PengelolaPesertaScreen()),
       _buildItem(context, Icons.bar_chart, 'Laporan', const PengelolaLaporanScreen()),
-      _buildItem(context, Icons.notifications, 'Notifikasi', null), // Placeholder
+      _buildItem(context, Icons.campaign, 'Pengumuman', const UserPengumumanScreen()),
       _buildItem(context, Icons.person, 'Profil', const PengelolaProfilScreen()),
     ];
   }

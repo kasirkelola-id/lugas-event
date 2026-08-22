@@ -31,4 +31,13 @@ class ApiClient {
       body: jsonEncode(body),
     );
   }
+
+  static Future<http.Response> put(String endpoint, Map<String, dynamic> body) async {
+    final headers = await getHeaders();
+    return await http.put(
+      Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+      headers: headers,
+      body: jsonEncode(body),
+    );
+  }
 }

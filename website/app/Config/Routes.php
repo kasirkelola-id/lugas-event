@@ -12,6 +12,13 @@ $routes->group('api', function ($routes) {
     // Profile Management
     $routes->put('profile', 'Api\ProfileController::update', ['filter' => 'auth']);
     $routes->patch('profile/password', 'Api\ProfileController::updatePassword', ['filter' => 'auth']);
+
+    // Announcements
+    $routes->get('announcements', 'Api\AnnouncementController::index', ['filter' => 'auth']);
+    $routes->post('announcements', 'Api\AnnouncementController::create', ['filter' => 'auth']);
+    $routes->put('announcements/(:num)', 'Api\AnnouncementController::update/$1', ['filter' => 'auth']);
+    $routes->patch('announcements/(:num)/status', 'Api\AnnouncementController::toggleStatus/$1', ['filter' => 'auth']);
+    $routes->delete('announcements/(:num)', 'Api\AnnouncementController::delete/$1', ['filter' => 'auth']);
     
     // Event Management
     $routes->get('events', 'Api\EventController::index', ['filter' => 'auth']);
