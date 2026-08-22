@@ -176,6 +176,9 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
     bool isLoadingSubmit = false;
+    bool obscureOld = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
 
     await showDialog(
       context: context,
@@ -197,8 +200,12 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                         decoration: InputDecoration(
                           labelText: 'Password Lama', 
                           border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureOld ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                            onPressed: () => setStateDialog(() => obscureOld = !obscureOld),
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: obscureOld,
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
                       const SizedBox(height: 16),
@@ -207,8 +214,12 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                         decoration: InputDecoration(
                           labelText: 'Password Baru', 
                           border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                            onPressed: () => setStateDialog(() => obscureNew = !obscureNew),
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: obscureNew,
                         validator: (value) {
                           if (value == null || value.length < 6) return 'Minimal 6 karakter';
                           if (value == 'lugasjosjis') return 'Tidak boleh gunakan password bawaan';
@@ -221,8 +232,12 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                         decoration: InputDecoration(
                           labelText: 'Konfirmasi Password', 
                           border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                            onPressed: () => setStateDialog(() => obscureConfirm = !obscureConfirm),
+                          ),
                         ),
-                        obscureText: true,
+                        obscureText: obscureConfirm,
                         validator: (value) => value != newPasswordController.text ? 'Password tidak sama' : null,
                       ),
                     ],

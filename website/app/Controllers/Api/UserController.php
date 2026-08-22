@@ -16,6 +16,15 @@ class UserController extends BaseApiController
         return true;
     }
 
+    private function checkAdminOrPengelola()
+    {
+        $user = AuthService::getUser();
+        if (!$user || !in_array($user['role_level'], ['admin', 'pengelola'])) {
+            return false;
+        }
+        return true;
+    }
+
     private function countActiveAdmins()
     {
         $userModel = new UserModel();
@@ -26,12 +35,19 @@ class UserController extends BaseApiController
 
     public function index()
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkAdminOrPengelola()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
+        $currentUser = AuthService::getUser();
         $userModel = new UserModel();
-        $users = $userModel->orderBy('nama_lengkap', 'ASC')->findAll();
+        $builder = $userModel->orderBy('nama_lengkap', 'ASC');
+        
+        if ($currentUser['role_level'] === 'pengelola') {
+            $builder->where('role_level', 'anggota');
+        }
+
+        $users = $builder->findAll();
 
         $data = array_map(function ($u) {
             return [
@@ -188,7 +204,7 @@ class UserController extends BaseApiController
 
     public function resetPassword($id = null)
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkAdminOrPengelola()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -198,11 +214,19 @@ class UserController extends BaseApiController
         if (!$user) {
             return $this->sendError('Pengguna tidak ditemukan', null, 404);
         }
+
+        $currentUser = AuthService::getUser();
+        if ($currentUser['role_level'] === 'pengelola') {
+            if ($user['role_level'] !== 'anggota') {
+                return $this->sendError('Forbidden: Hanya dapat mereset password anggota', null, 403);
+            }
+        }
         
         $newPassword = 'lugasjosjis';
 
         $userModel->update($id, [
-            'password' => password_hash($newPassword, PASSWORD_BCRYPT)
+            'password' => password_hash($newPassword, PASSWORD_BCRYPT),
+            'password_must_change' => 1
         ]);
 
         return $this->sendSuccess('Password pengguna berhasil direset ke password default.');

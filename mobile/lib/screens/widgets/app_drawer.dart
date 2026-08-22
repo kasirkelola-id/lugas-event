@@ -10,6 +10,7 @@ import '../pengelola/pengelola_riwayat_screen.dart';
 import '../pengelola/pengelola_peserta_screen.dart';
 import '../pengelola/pengelola_laporan_screen.dart';
 import '../pengelola/pengelola_profil_screen.dart';
+import '../pengelola/pengelola_pengguna_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 
 import '../admin/admin_home_screen.dart';
@@ -156,6 +157,9 @@ class AppDrawer extends StatelessWidget {
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Beranda', const PengelolaHomeScreen()),
       
+      _buildSectionLabel('Manajemen'),
+      _buildItem(context, Icons.manage_accounts_outlined, 'Anggota', const PengelolaPenggunaScreen()),
+
       _buildSectionLabel('Kegiatan'),
       _buildItem(context, Icons.event_note_outlined, 'Acara', const PengelolaAcaraScreen()),
       _buildItem(context, Icons.history_outlined, 'Riwayat Acara', const PengelolaRiwayatScreen()),

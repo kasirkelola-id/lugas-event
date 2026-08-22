@@ -5,14 +5,14 @@ import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
 
-class AdminPenggunaScreen extends StatefulWidget {
-  const AdminPenggunaScreen({super.key});
+class PengelolaPenggunaScreen extends StatefulWidget {
+  const PengelolaPenggunaScreen({super.key});
 
   @override
-  State<AdminPenggunaScreen> createState() => _AdminPenggunaScreenState();
+  State<PengelolaPenggunaScreen> createState() => _PengelolaPenggunaScreenState();
 }
 
-class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
+class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   UserModel? _currentUser;
   List<UserModel> _users = [];
   List<UserModel> _filteredUsers = [];
@@ -23,13 +23,11 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   String _searchQuery = '';
   String _roleFilter = 'Semua';
 
-  final _formKey = GlobalKey<FormState>();
   final _namaLengkapController = TextEditingController();
   final _namaPanggilanController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _whatsappController = TextEditingController();
-  String _selectedRole = 'pengelola';
 
   @override
   void initState() {
@@ -108,164 +106,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     );
   }
 
-  Future<void> _showUserForm({UserModel? user}) async {
-    final isEditing = user != null;
-    
-    if (isEditing) {
-      _namaLengkapController.text = user.namaLengkap;
-      _namaPanggilanController.text = user.namaPanggilan;
-      _usernameController.text = user.username;
-      _whatsappController.text = user.noWhatsapp;
-      _selectedRole = user.roleLevel;
-    } else {
-      _namaLengkapController.clear();
-      _namaPanggilanController.clear();
-      _usernameController.clear();
-      _passwordController.clear();
-      _whatsappController.clear();
-      _selectedRole = 'pengelola';
-    }
-
-    bool isLoadingSubmit = false;
-
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: Text(isEditing ? 'Edit Pengguna' : 'Tambah Pengguna', style: const TextStyle(fontWeight: FontWeight.bold)),
-              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-              content: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: _namaLengkapController,
-                        decoration: InputDecoration(
-                          labelText: 'Nama Lengkap', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                        ),
-                        validator: (value) => value == null || value.isEmpty ? 'Nama lengkap wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _namaPanggilanController,
-                        decoration: InputDecoration(
-                          labelText: 'Nama Panggilan', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                        ),
-                        validator: (value) => value == null || value.isEmpty ? 'Nama panggilan wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _usernameController,
-                        decoration: InputDecoration(
-                          labelText: 'Username', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                        ),
-                        validator: (value) => value == null || value.isEmpty ? 'Username wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _whatsappController,
-                        decoration: InputDecoration(
-                          labelText: 'No. WhatsApp', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      if (!isEditing)
-                        TextFormField(
-                          controller: _passwordController,
-                          decoration: InputDecoration(
-                            labelText: 'Password', 
-                            border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                          ),
-                          obscureText: true,
-                          validator: (value) => value == null || value.length < 6 ? 'Password min. 6 karakter' : null,
-                        ),
-                      if (!isEditing) const SizedBox(height: 16),
-                      if (!isEditing)
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedRole,
-                          decoration: InputDecoration(
-                            labelText: 'Role', 
-                            border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                            DropdownMenuItem(value: 'pengelola', child: Text('Pengelola')),
-                            DropdownMenuItem(value: 'anggota', child: Text('Anggota')),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) setStateDialog(() => _selectedRole = val);
-                          },
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                  child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
-                ),
-                ElevatedButton(
-                  onPressed: isLoadingSubmit
-                      ? null
-                      : () async {
-                          if (_formKey.currentState!.validate()) {
-                            setStateDialog(() => isLoadingSubmit = true);
-                            
-                            final data = {
-                              'nama_lengkap': _namaLengkapController.text,
-                              'nama_panggilan': _namaPanggilanController.text,
-                              'username': _usernameController.text,
-                              'no_whatsapp': _whatsappController.text,
-                            };
-
-                            Map<String, dynamic> result;
-                            if (isEditing) {
-                              result = await UserService.updateUser(user.id, data);
-                            } else {
-                              data['password'] = _passwordController.text;
-                              data['role_level'] = _selectedRole;
-                              result = await UserService.createUser(data);
-                            }
-
-                            if (result['success']) {
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                                _showSnackbar(isEditing ? 'Pengguna berhasil diupdate' : 'Pengguna berhasil dibuat');
-                                _loadData();
-                              }
-                            } else {
-                              setStateDialog(() => isLoadingSubmit = false);
-                              _showSnackbar(result['message'], isError: true);
-                            }
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-                  ),
-                  child: isLoadingSubmit 
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
-                      : const Text('Simpan'),
-                ),
-              ],
-            );
-          }
-        );
-      },
-    );
-  }
-
   Future<void> _confirmAction(String title, String content, Future<Map<String, dynamic>> Function() action, {bool isDestructive = false}) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -303,61 +143,11 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     }
   }
   
-  void _showRoleDialog(UserModel user) {
-    String selectedRole = user.roleLevel;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Ubah Role', style: TextStyle(fontWeight: FontWeight.bold)),
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-        content: DropdownButtonFormField<String>(
-          initialValue: selectedRole,
-          decoration: InputDecoration(
-            labelText: 'Pilih Role Baru', 
-            border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium)
-          ),
-          items: const [
-            DropdownMenuItem(value: 'admin', child: Text('Admin')),
-            DropdownMenuItem(value: 'pengelola', child: Text('Pengelola')),
-            DropdownMenuItem(value: 'anggota', child: Text('Anggota')),
-          ],
-          onChanged: (val) {
-            if (val != null) selectedRole = val;
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (selectedRole != user.roleLevel) {
-                _confirmAction(
-                  'Ubah Role', 
-                  'Anda yakin ingin mengubah role ${user.namaLengkap} menjadi $selectedRole?', 
-                  () => UserService.changeRole(user.id, selectedRole)
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-            ),
-            child: const Text('Simpan'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kelola Pengguna'),
+        title: const Text('Kelola Anggota'),
         backgroundColor: AppTheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -441,12 +231,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
             Expanded(child: _buildBody()),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showUserForm(),
-        backgroundColor: AppTheme.primary,
-        icon: const Icon(Icons.person_add_outlined, color: Colors.white),
-        label: const Text('Tambah', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -568,28 +352,13 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildActionButton(Icons.edit_outlined, 'Edit', AppTheme.info, () => _showUserForm(user: user)),
-                      _buildActionButton(Icons.manage_accounts_outlined, 'Role', AppTheme.warning, () => _showRoleDialog(user)),
-                      _buildActionButton(Icons.lock_reset, 'Password', Colors.brown.shade600, () {
+                      _buildActionButton(Icons.lock_reset, 'Reset Password', Colors.brown.shade600, () {
                         _confirmAction(
                           'Reset Password', 
                           'Password pengguna akan direset ke password sementara. Pengguna harus mengganti password saat login berikutnya.', 
                           () => UserService.resetPassword(user.id)
                         );
                       }),
-                      _buildActionButton(
-                        isActive ? Icons.block : Icons.check_circle_outline, 
-                        isActive ? 'Nonaktifkan' : 'Aktifkan', 
-                        isActive ? AppTheme.error : AppTheme.success, 
-                        () {
-                          _confirmAction(
-                            isActive ? 'Nonaktifkan Pengguna' : 'Aktifkan Pengguna', 
-                            'Anda yakin ingin ${isActive ? 'menonaktifkan' : 'mengaktifkan'} ${user.namaLengkap}?', 
-                            () => UserService.toggleStatus(user.id),
-                            isDestructive: isActive,
-                          );
-                        }
-                      ),
                     ],
                   ),
                 ),
@@ -625,4 +394,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     );
   }
 }
+
+
 

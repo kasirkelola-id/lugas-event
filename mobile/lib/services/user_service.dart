@@ -56,63 +56,45 @@ class UserService {
   static Future<Map<String, dynamic>> createUser(Map<String, dynamic> data) async {
     try {
       final response = await ApiClient.post('/users', data);
-      return _handleResponse(response);
+      return await _handleResponse(response);
     } catch (e) {
-      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
     }
   }
 
   static Future<Map<String, dynamic>> updateUser(int id, Map<String, dynamic> data) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.put(
-        Uri.parse('${ApiClient.baseUrl}/users/$id'),
-        headers: headers,
-        body: jsonEncode(data),
-      );
+      final response = await ApiClient.put('/users/$id', data);
       return _handleResponse(response);
     } catch (e) {
-      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
     }
   }
 
   static Future<Map<String, dynamic>> toggleStatus(int id) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.patch(
-        Uri.parse('${ApiClient.baseUrl}/users/$id/status'),
-        headers: headers,
-      );
+      final response = await ApiClient.patch('/users/$id/status');
       return _handleResponse(response);
     } catch (e) {
-      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
     }
   }
 
   static Future<Map<String, dynamic>> changeRole(int id, String role) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.patch(
-        Uri.parse('${ApiClient.baseUrl}/users/$id/role'),
-        headers: headers,
-        body: jsonEncode({'role_level': role}),
-      );
+      final response = await ApiClient.patch('/users/$id/role', {'role_level': role});
       return _handleResponse(response);
     } catch (e) {
-      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
     }
   }
 
   static Future<Map<String, dynamic>> resetPassword(int id) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.patch(
-        Uri.parse('${ApiClient.baseUrl}/users/$id/reset-password'),
-        headers: headers,
-      );
+      final response = await ApiClient.patch('/users/$id/reset-password');
       return _handleResponse(response);
     } catch (e) {
-      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
     }
   }
 }

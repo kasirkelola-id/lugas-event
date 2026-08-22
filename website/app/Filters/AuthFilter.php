@@ -51,6 +51,26 @@ class AuthFilter implements FilterInterface
                 ->setStatusCode(401);
         }
 
+        // Force password change check
+        if ((int)($user['password_must_change'] ?? 0) === 1) {
+            // Allow only specific paths
+            $allowedPaths = ['api/me', 'api/logout', 'api/profile/password'];
+            $currentPath = $request->uri->getPath();
+            $isAllowed = false;
+            foreach ($allowedPaths as $path) {
+                if (preg_match('#' . preg_quote($path, '#') . '#i', $currentPath)) {
+                    $isAllowed = true;
+                    break;
+                }
+            }
+
+            if (!$isAllowed) {
+                return Services::response()
+                    ->setJSON(['status' => false, 'message' => 'Ganti password diperlukan'])
+                    ->setStatusCode(403);
+            }
+        }
+
         // Check Roles Authorization
         if (!empty($arguments)) {
             $allowedRoles = $arguments;

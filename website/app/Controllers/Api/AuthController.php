@@ -57,6 +57,7 @@ class AuthController extends BaseApiController
             'no_whatsapp'    => $user['no_whatsapp'],
             'role_level'     => $user['role_level'],
             'status_aktif'   => (int)$user['status_aktif'],
+            'password_must_change' => (int)($user['password_must_change'] ?? 0) === 1,
         ];
 
         return $this->sendSuccess('Login berhasil', [
@@ -90,8 +91,43 @@ class AuthController extends BaseApiController
             'no_whatsapp'    => $user['no_whatsapp'],
             'role_level'     => $user['role_level'],
             'status_aktif'   => (int)$user['status_aktif'],
+            'password_must_change' => (int)($user['password_must_change'] ?? 0) === 1,
         ];
 
         return $this->sendSuccess('Data user', $userData);
+    }
+
+    public function register()
+    {
+        $rules = [
+            'nama_lengkap'   => 'required|max_length[255]',
+            'nama_panggilan' => 'required|max_length[100]',
+            'username'       => 'required|is_unique[users.username]',
+            'password'       => 'required|min_length[6]',
+            'confirm_password' => 'required|matches[password]',
+            'no_whatsapp'    => 'required|max_length[20]',
+        ];
+
+        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
+
+        if (!$this->validateData($rawInput, $rules)) {
+            return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
+        }
+
+        $userModel = new UserModel();
+        $userData = [
+            'nama_lengkap'   => $rawInput['nama_lengkap'],
+            'nama_panggilan' => $rawInput['nama_panggilan'],
+            'username'       => $rawInput['username'],
+            'password'       => password_hash($rawInput['password'], PASSWORD_BCRYPT),
+            'no_whatsapp'    => $rawInput['no_whatsapp'],
+            'role_level'     => 'anggota',
+            'status_aktif'   => 1,
+            'password_must_change' => 0
+        ];
+
+        $userModel->insert($userData);
+        
+        return $this->sendSuccess('Registrasi berhasil. Silakan login.', null, 201);
     }
 }

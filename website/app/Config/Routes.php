@@ -6,12 +6,13 @@ use CodeIgniter\Router\RouteCollection;
 
 $routes->group('api', function ($routes) {
     $routes->post('login', 'Api\AuthController::login');
+    $routes->post('register', 'Api\AuthController::register');
     $routes->post('logout', 'Api\AuthController::logout', ['filter' => 'auth']);
     $routes->get('me', 'Api\AuthController::me', ['filter' => 'auth']);
     
     // Profile Management
-    $routes->put('profile', 'Api\ProfileController::update', ['filter' => 'auth']);
-    $routes->patch('profile/password', 'Api\ProfileController::updatePassword', ['filter' => 'auth']);
+    $routes->put('profile', 'Api\ProfileController::updateProfile', ['filter' => 'auth']);
+    $routes->patch('profile/password', 'Api\ProfileController::changePassword', ['filter' => 'auth']);
 
     // Announcements
     $routes->get('announcements', 'Api\AnnouncementController::index', ['filter' => 'auth']);
@@ -28,7 +29,7 @@ $routes->group('api', function ($routes) {
     $routes->patch('events/(:num)/status', 'Api\EventController::close/$1', ['filter' => 'auth']);
     
     // Participants
-    $routes->get('events/(:num)/participants', 'Api\ParticipantController::index/$1', ['filter' => 'auth']);
+    $routes->get('events/(:num)/participants', 'Api\ParticipantController::getByEvent/$1', ['filter' => 'auth']);
     $routes->post('events/(:num)/participants', 'Api\ParticipantController::add/$1', ['filter' => 'auth']);
     $routes->delete('events/(:num)/participants/(:num)', 'Api\ParticipantController::remove/$1/$2', ['filter' => 'auth']);
     

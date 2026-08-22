@@ -4,6 +4,8 @@ import '../pengelola/pengelola_home_screen.dart';
 import '../anggota/anggota_home_screen.dart';
 import '../admin/admin_home_screen.dart';
 import '../../models/user_model.dart';
+import 'force_change_password_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+
+  bool _isPasswordVisible = false;
 
   void _login() async {
     setState(() {
@@ -52,6 +56,14 @@ class _LoginScreenState extends State<LoginScreen> {
       
       if (!mounted) return;
       
+      if (user.passwordMustChange) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ForceChangePasswordScreen()),
+        );
+        return;
+      }
+
       if (user.roleLevel == 'pengelola') {
         Navigator.pushReplacement(
           context,
@@ -149,11 +161,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                     TextField(
                       controller: _passwordController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(_isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: !_isPasswordVisible,
                       enabled: !_isLoading,
                     ),
                     const SizedBox(height: 24),
@@ -180,6 +200,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             : const Text('MASUK'),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                        );
+                      },
+                      child: const Text('Belum punya akun? Daftar', style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold)),
+                    )
                   ],
                 ),
               ),

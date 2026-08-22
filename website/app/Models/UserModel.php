@@ -20,6 +20,7 @@ class UserModel extends Model
         'no_whatsapp',
         'role_level',
         'status_aktif',
+        'password_must_change',
     ];
 
     protected bool $allowEmptyInserts = false;

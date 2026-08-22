@@ -7,7 +7,7 @@ use App\Services\AuthService;
 
 class ProfileController extends BaseApiController
 {
-    public function update()
+    public function updateProfile()
     {
         $user = AuthService::getUser();
         if (!$user) {
@@ -44,7 +44,7 @@ class ProfileController extends BaseApiController
         return $this->sendSuccess('Profil berhasil diperbarui');
     }
 
-    public function updatePassword()
+    public function changePassword()
     {
         $user = AuthService::getUser();
         if (!$user) {
@@ -75,7 +75,8 @@ class ProfileController extends BaseApiController
         }
 
         $userModel->update($user['id'], [
-            'password' => password_hash($rawInput['new_password'], PASSWORD_BCRYPT)
+            'password' => password_hash($rawInput['new_password'], PASSWORD_BCRYPT),
+            'password_must_change' => 0
         ]);
 
         return $this->sendSuccess('Password berhasil diubah');

@@ -22,6 +22,32 @@ class AuthService {
     }
   }
 
+  static Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
+    try {
+      final response = await ApiClient.post('/register', data);
+      final responseData = jsonDecode(response.body);
+      
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        if (responseData['status'] == true) {
+          return {'success': true, 'message': responseData['message']};
+        }
+      }
+      
+      String message = responseData['message'] ?? 'Gagal mendaftar';
+      if (response.statusCode == 422 && responseData['errors'] != null) {
+         final errors = responseData['errors'] as Map<String, dynamic>;
+         message = errors.values.first.toString();
+      } else if (responseData['data'] != null && responseData['data'] is Map) {
+         final errors = responseData['data'] as Map<String, dynamic>;
+         message = errors.values.first.toString();
+      }
+      
+      return {'success': false, 'message': message};
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
+    }
+  }
+
   static Future<Map<String, dynamic>> getMe() async {
     try {
       final response = await ApiClient.get('/me');
@@ -46,5 +72,32 @@ class AuthService {
       // Ignore network errors on logout
     }
     await AuthStorage.removeToken();
+  }
+
+  static Future<Map<String, dynamic>> updatePassword(String oldPassword, String newPassword, String confirmPassword) async {
+    try {
+      final response = await ApiClient.patch('/profile/password', {
+        'old_password': oldPassword,
+        'new_password': newPassword,
+        'confirm_password': confirmPassword,
+      });
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == true) {
+        return {'success': true, 'message': data['message']};
+      }
+      
+      String message = data['message'] ?? 'Gagal mengubah password';
+      if (response.statusCode == 422 && data['errors'] != null) {
+         final errors = data['errors'] as Map<String, dynamic>;
+         message = errors.values.first.toString();
+      } else if (data['data'] != null && data['data'] is Map) {
+         final errors = data['data'] as Map<String, dynamic>;
+         message = errors.values.first.toString();
+      }
+      
+      return {'success': false, 'message': message};
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
   }
 }
