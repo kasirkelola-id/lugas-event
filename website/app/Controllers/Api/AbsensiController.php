@@ -12,7 +12,7 @@ class AbsensiController extends BaseApiController
     private function checkPengelola()
     {
         $user = AuthService::getUser();
-        if (!$user || $user['role_level'] !== 'pengelola') {
+        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin'])) {
             return false;
         }
         return true;
