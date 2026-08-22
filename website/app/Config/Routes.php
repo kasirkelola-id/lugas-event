@@ -27,6 +27,9 @@ $routes->group('api', function ($routes) {
     $routes->put('events/(:num)', 'Api\EventController::update/$1', ['filter' => 'auth']);
     $routes->patch('events/(:num)/status', 'Api\EventController::close/$1', ['filter' => 'auth']);
     
+    // Reports
+    $routes->get('reports/summary', 'Api\ReportController::summary', ['filter' => 'auth']);
+    
     // Attendance
     $routes->post('absensi', 'Api\AbsensiController::create', ['filter' => 'auth']);
     $routes->get('absensi/my', 'Api\AbsensiController::myHistory', ['filter' => 'auth']);
