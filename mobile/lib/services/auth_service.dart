@@ -76,7 +76,7 @@ class AuthService {
 
   static Future<Map<String, dynamic>> updatePassword(String oldPassword, String newPassword, String confirmPassword) async {
     try {
-      final response = await ApiClient.patch('/profile/password', {
+      final response = await ApiClient.post('/profile/password', {
         'old_password': oldPassword,
         'new_password': newPassword,
         'confirm_password': confirmPassword,

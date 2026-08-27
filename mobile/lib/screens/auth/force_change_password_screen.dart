@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../models/user_model.dart';
 import '../../core/theme/app_theme.dart';
 import 'login_screen.dart';
+import '../pengelola/pengelola_home_screen.dart';
+import '../anggota/anggota_home_screen.dart';
+import '../admin/admin_home_screen.dart';
 
 class ForceChangePasswordScreen extends StatefulWidget {
   const ForceChangePasswordScreen({super.key});
@@ -51,42 +55,73 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
     if (!mounted) return;
 
     if (result['success']) {
+      // Refresh user session data to ensure password_must_change == false
+      final userResult = await AuthService.getMe();
       if (!mounted) return;
-      
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: Row(
-            children: const [
-              Icon(Icons.check_circle, color: AppTheme.success, size: 28),
-              SizedBox(width: 8),
-              Text('Pembaruan Berhasil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+
+      if (userResult['success']) {
+        final UserModel user = userResult['user'];
+        if (user.passwordMustChange) {
+          // Fallback if somehow still true
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Terjadi kesalahan saat memverifikasi password baru. Silakan coba lagi.';
+          });
+          return;
+        }
+
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Row(
+              children: const [
+                Icon(Icons.check_circle, color: AppTheme.success, size: 28),
+                SizedBox(width: 8),
+                Text('Pembaruan Berhasil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
+            ),
+            content: const Text('Password berhasil diperbarui. Selamat datang di LUGAS.'),
+            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
+                ),
+                child: const Text('Lanjutkan'),
+              ),
             ],
           ),
-          content: const Text('Password berhasil diperbarui. Silakan masuk kembali.'),
-          shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
-              ),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+        );
 
-      await AuthService.logout();
-      if (!mounted) return;
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
+        if (!mounted) return;
+
+        // Navigate to the dashboard according to the role
+        if (user.roleLevel == 'pengelola') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const PengelolaHomeScreen()),
+          );
+        } else if (user.roleLevel == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AnggotaHomeScreen()),
+          );
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = userResult['message'] ?? 'Gagal memverifikasi sesi.';
+        });
+      }
     } else {
       setState(() {
         _isLoading = false;
@@ -97,7 +132,6 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Prevent back navigation using PopScope (WillPopScope is deprecated)
     return PopScope(
       canPop: false,
       child: Scaffold(
@@ -128,7 +162,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Untuk keamanan akun, Anda harus mengganti password sementara sebelum melanjutkan.',
+                        'Untuk keamanan akun, silakan buat password baru sebelum melanjutkan.',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                       ),
@@ -156,7 +190,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                         controller: _oldPasswordController,
                         obscureText: _obscureOld,
                         decoration: InputDecoration(
-                          labelText: 'Password Sementara',
+                          labelText: 'Password Saat Ini',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(_obscureOld ? Icons.visibility_off_outlined : Icons.visibility_outlined),
@@ -184,7 +218,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirm,
                         decoration: InputDecoration(
-                          labelText: 'Konfirmasi Password',
+                          labelText: 'Konfirmasi Password Baru',
                           prefixIcon: const Icon(Icons.lock),
                           suffixIcon: IconButton(
                             icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
@@ -209,7 +243,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                                   height: 24,
                                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                 )
-                              : const Text('Simpan Password', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                              : const Text('Simpan & Lanjutkan', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                         ),
                       ),
                       const SizedBox(height: 16),

@@ -45,7 +45,7 @@ class ProfileService {
   static Future<Map<String, dynamic>> updatePassword(Map<String, dynamic> data) async {
     try {
       final headers = await ApiClient.getHeaders();
-      final response = await http.patch(
+      final response = await http.post(
         Uri.parse('${ApiClient.baseUrl}/profile/password'),
         headers: headers,
         body: jsonEncode(data),

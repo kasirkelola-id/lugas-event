@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/force_change_password_screen.dart';
 import 'screens/pengelola/pengelola_home_screen.dart';
+import 'screens/admin/admin_home_screen.dart';
 import 'screens/anggota/anggota_home_screen.dart';
 import 'services/auth_service.dart';
 import 'models/user_model.dart';
@@ -55,11 +57,24 @@ class _InitialScreenState extends State<InitialScreen> {
         );
         return;
       }
+
+      if (user.passwordMustChange) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ForceChangePasswordScreen()),
+        );
+        return;
+      }
       
       if (user.roleLevel == 'pengelola') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const PengelolaHomeScreen()),
+        );
+      } else if (user.roleLevel == 'admin') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
         );
       } else {
         Navigator.pushReplacement(

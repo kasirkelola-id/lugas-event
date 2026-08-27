@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
+import 'package:qr/qr.dart';
+import 'package:image/image.dart' as img;
 
 class BluetoothPrinterService {
   static final BlueThermalPrinter _printer = BlueThermalPrinter.instance;
@@ -83,6 +85,34 @@ class BluetoothPrinterService {
     }
   }
 
+  static img.Image _generateQrImage(String text, {int size = 200}) {
+    final qrCode = QrCode.fromData(data: text, errorCorrectLevel: QrErrorCorrectLevel.M);
+    final qrImage = QrImage(qrCode);
+    final moduleCount = qrImage.moduleCount;
+    final scale = (size / moduleCount).floor();
+    final actualSize = moduleCount * scale;
+    
+    final image = img.Image(width: actualSize, height: actualSize);
+    
+    img.fill(image, color: img.ColorRgb8(255, 255, 255));
+    
+    for (int y = 0; y < moduleCount; y++) {
+      for (int x = 0; x < moduleCount; x++) {
+        if (qrImage.isDark(y, x)) {
+          img.fillRect(
+            image, 
+            x1: x * scale, 
+            y1: y * scale, 
+            x2: (x * scale) + scale - 1, 
+            y2: (y * scale) + scale - 1, 
+            color: img.ColorRgb8(0, 0, 0)
+          );
+        }
+      }
+    }
+    return image;
+  }
+
   static Future<bool> printEventQr(String eventId, String namaAcara, String tanggalAcara, String kodeQr) async {
     _log('PRINT', message: 'EVENT_ID: $eventId, CONNECTED: ${await _printer.isConnected}');
     
@@ -108,8 +138,9 @@ class BluetoothPrinterService {
         }
         bytes += generator.feed(1);
         
-        // QR Code
-        bytes += generator.qrcode(kodeQr, size: QRSize.size6, cor: QRCorrection.H);
+        // QR Code Image Fallback (Fixes 'qr create err' on unsupported printers)
+        final qrImg = _generateQrImage(kodeQr, size: 250);
+        bytes += generator.image(qrImg, align: PosAlign.center);
         bytes += generator.feed(1);
         
         // Footer
@@ -119,12 +150,12 @@ class BluetoothPrinterService {
         // Send bytes
         await _printer.writeBytes(Uint8List.fromList(bytes));
         return true;
-      }).timeout(const Duration(seconds: 10));
+      }).timeout(const Duration(seconds: 15));
       
       _log('PRINT', status: 'SUCCESS', message: 'QR_GENERATED: true');
       return success;
     } on TimeoutException {
-      _log('PRINT', status: 'FAILED', message: 'Print timeout after 10 seconds');
+      _log('PRINT', status: 'FAILED', message: 'Print timeout after 15 seconds');
       return false;
     } catch (e) {
       _log('PRINT', status: 'FAILED', message: e.toString());

@@ -55,7 +55,7 @@ class AuthFilter implements FilterInterface
         if ((int)($user['password_must_change'] ?? 0) === 1) {
             // Allow only specific paths
             $allowedPaths = ['api/me', 'api/logout', 'api/profile/password'];
-            $currentPath = $request->uri->getPath();
+            $currentPath = $request->getUri()->getPath();
             $isAllowed = false;
             foreach ($allowedPaths as $path) {
                 if (preg_match('#' . preg_quote($path, '#') . '#i', $currentPath)) {

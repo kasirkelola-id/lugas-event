@@ -57,6 +57,7 @@ class EventController extends BaseApiController
                 'kode_qr' => $event['kode_qr'],
                 'dibuat_oleh' => (int)$event['dibuat_oleh'],
                 'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
+                'jumlah_hadir' => (new \App\Models\AbsensiModel())->where('event_id', $event['id'])->countAllResults(),
                 'created_at' => $event['created_at'],
             ];
         }, $events);

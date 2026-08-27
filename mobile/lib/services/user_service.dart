@@ -91,9 +91,13 @@ class UserService {
 
   static Future<Map<String, dynamic>> resetPassword(int id) async {
     try {
-      final response = await ApiClient.patch('/users/$id/reset-password');
+      print('[DEBUG] Requesting reset password for user $id via POST');
+      final response = await ApiClient.post('/users/$id/reset-password', {});
+      print('[DEBUG] Reset password response status: ${response.statusCode}');
       return _handleResponse(response);
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('[DEBUG] Reset password exception: $e');
+      print('[DEBUG] StackTrace: $stackTrace');
       return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
     }
   }

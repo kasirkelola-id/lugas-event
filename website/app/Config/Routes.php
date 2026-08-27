@@ -13,6 +13,7 @@ $routes->group('api', function ($routes) {
     // Profile Management
     $routes->put('profile', 'Api\ProfileController::updateProfile', ['filter' => 'auth']);
     $routes->patch('profile/password', 'Api\ProfileController::changePassword', ['filter' => 'auth']);
+    $routes->post('profile/password', 'Api\ProfileController::changePassword', ['filter' => 'auth']);
 
     // Announcements
     $routes->get('announcements', 'Api\AnnouncementController::index', ['filter' => 'auth']);
@@ -49,6 +50,7 @@ $routes->group('api', function ($routes) {
     $routes->patch('users/(:num)/status', 'Api\UserController::toggleStatus/$1', ['filter' => 'auth']);
     $routes->patch('users/(:num)/role', 'Api\UserController::changeRole/$1', ['filter' => 'auth']);
     $routes->patch('users/(:num)/reset-password', 'Api\UserController::resetPassword/$1', ['filter' => 'auth']);
+    $routes->post('users/(:num)/reset-password', 'Api\UserController::resetPassword/$1', ['filter' => 'auth']);
 
     // Temporary Migration Endpoints
     $routes->get('system/migrate/status', 'Api\MigrateController::status');

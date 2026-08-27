@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
+import '../../core/theme/app_theme.dart';
 
 class ScanQrScreen extends StatefulWidget {
   const ScanQrScreen({super.key});
@@ -107,7 +108,7 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
               Text('Absensi Berhasil', style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
-          content: Text('Anda telah tercatat hadir pada acara ini.'),
+          content: const Text('Anda telah tercatat hadir pada acara ini.'),
           actions: [
             ElevatedButton(
               onPressed: () {
@@ -179,7 +180,13 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR Acara')),
+      appBar: AppBar(
+        title: const Text('Scan QR Acara'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Column(
         children: [
           const Padding(
@@ -191,9 +198,43 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
             ),
           ),
           Expanded(
-            child: MobileScanner(
-              controller: _scannerController,
-              onDetect: _onDetect,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                MobileScanner(
+                  controller: _scannerController,
+                  onDetect: _onDetect,
+                ),
+                // QR Overlay Box visual cue
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  width: 250,
+                  height: 250,
+                ),
+                if (_isProcessing)
+                  Container(
+                    color: Colors.black54,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(24.0),
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
+              label: const Text('Batal & Kembali'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.error,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
             ),
           ),
         ],
