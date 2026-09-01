@@ -9,7 +9,7 @@ import '../../models/event_model.dart';
 import '../../models/announcement_model.dart';
 import '../../models/attendance_model.dart';
 import '../auth/login_screen.dart';
-import 'scan_qr_screen.dart';
+import 'attendance_geofence_screen.dart';
 import 'attendance_history_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
@@ -275,7 +275,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ScanQrScreen()),
+            MaterialPageRoute(builder: (_) => const AttendanceGeofenceScreen()),
           );
         },
         borderRadius: AppTheme.radiusLarge,
@@ -294,7 +294,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: AppTheme.radiusMedium,
                 ),
-                child: const Icon(Icons.qr_code_scanner, size: 40, color: Colors.white),
+                child: const Icon(Icons.location_on_outlined, size: 40, color: Colors.white),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -302,12 +302,12 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
                     Text(
-                      'Scan QR Absensi',
+                      'Absensi Lokasi',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Scan QR Code untuk mencatat kehadiran Anda.',
+                      'Cek lokasi Anda untuk mencatat kehadiran acara.',
                       style: TextStyle(fontSize: 13, color: Colors.white70),
                     ),
                   ],
@@ -511,7 +511,14 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                         children: [
                           Text(att.namaAcara, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
                           const SizedBox(height: 4),
-                          Text('${att.tanggalAcara} · ${att.waktuAbsen}', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                          Text(
+                            '${att.tanggalAcara} · ${att.waktuAbsen.split(' ').last}${att.waktuCheckout != null ? ' - ${att.waktuCheckout!.split(' ').last}' : ''}',
+                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)
+                          ),
+                          if (att.durasi != null) ...[
+                            const SizedBox(height: 2),
+                            Text('${att.durasi! ~/ 60} Jam ${att.durasi! % 60} Menit', style: const TextStyle(fontSize: 11, color: AppTheme.primary, fontWeight: FontWeight.w600)),
+                          ]
                         ],
                       ),
                     ),

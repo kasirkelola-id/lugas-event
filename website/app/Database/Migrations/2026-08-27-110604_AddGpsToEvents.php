@@ -34,6 +34,8 @@ class AddGpsToEvents extends Migration
 
     public function down()
     {
-        $this->forge->dropColumn('events', ['require_gps', 'latitude', 'longitude', 'radius']);
+        if ($this->db->DBDriver !== 'SQLite3') {
+            $this->forge->dropColumn('events', ['require_gps', 'latitude', 'longitude', 'radius']);
+        }
     }
 }

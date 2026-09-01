@@ -20,6 +20,8 @@ class AddPasswordMustChangeToUsers extends Migration
 
     public function down()
     {
-        $this->forge->dropColumn('users', 'password_must_change');
+        if ($this->db->DBDriver !== 'SQLite3') {
+            $this->forge->dropColumn('users', 'password_must_change');
+        }
     }
 }

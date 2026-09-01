@@ -5,6 +5,8 @@ import '../auth/login_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import '../shared/map_picker_screen.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
 
 class CreateEventScreen extends StatefulWidget {
@@ -136,55 +138,52 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               const Text('Lokasi Acara', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Container(
-                height: 250,
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
+                  border: Border.all(color: Colors.grey.shade300),
                   borderRadius: BorderRadius.circular(8),
+                  color: Colors.grey.shade50,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: FlutterMap(
-                    mapController: _mapController,
-                    options: MapOptions(
-                      initialCenter: _selectedLocation ?? const LatLng(-6.200000, 106.816666),
-                      initialZoom: 15.0,
-                      onTap: (tapPosition, point) {
-                        setState(() {
-                          _selectedLocation = point;
-                        });
-                      },
-                    ),
-                    children: [
-                      TileLayer(
-                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.example.app',
+                child: Column(
+                  children: [
+                    if (_selectedLocation != null) ...[
+                      const Icon(Icons.location_on, color: AppTheme.error, size: 48),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Lat: ${_selectedLocation!.latitude.toStringAsFixed(6)}\nLng: ${_selectedLocation!.longitude.toStringAsFixed(6)}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      if (_selectedLocation != null) ...[
-                        CircleLayer(
-                          circles: [
-                            CircleMarker(
-                              point: _selectedLocation!,
-                              color: AppTheme.primary.withValues(alpha: 0.3),
-                              borderStrokeWidth: 2,
-                              borderColor: AppTheme.primary,
-                              useRadiusInMeter: true,
-                              radius: _radius,
-                            ),
-                          ],
-                        ),
-                        MarkerLayer(
-                          markers: [
-                            Marker(
-                              point: _selectedLocation!,
-                              width: 40,
-                              height: 40,
-                              child: const Icon(Icons.location_on, color: AppTheme.error, size: 40),
-                            ),
-                          ],
-                        ),
-                      ]
+                      const SizedBox(height: 16),
+                    ] else ...[
+                      const Icon(Icons.map_outlined, color: Colors.grey, size: 48),
+                      const SizedBox(height: 8),
+                      const Text('Lokasi belum dipilih', style: TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 16),
                     ],
-                  ),
+                    ElevatedButton.icon(
+                      onPressed: _isLoading ? null : () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MapPickerScreen(initialLocation: _selectedLocation),
+                          ),
+                        );
+                        if (result != null && result is LatLng) {
+                          setState(() {
+                            _selectedLocation = result;
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.open_in_full, size: 16),
+                      label: const Text('Buka Peta Interaktif'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.secondary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),

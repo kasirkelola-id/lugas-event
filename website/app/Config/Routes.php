@@ -38,7 +38,9 @@ $routes->group('api', function ($routes) {
     $routes->get('reports/summary', 'Api\ReportController::summary', ['filter' => 'auth']);
     
     // Attendance
-    $routes->post('absensi', 'Api\AbsensiController::create', ['filter' => 'auth']);
+    $routes->post('absensi/checkin', 'Api\AbsensiController::checkin', ['filter' => 'auth']);
+    $routes->post('absensi/checkout', 'Api\AbsensiController::checkout', ['filter' => 'auth']);
+    $routes->get('absensi/status', 'Api\AbsensiController::status', ['filter' => 'auth']);
     $routes->get('absensi/my', 'Api\AbsensiController::myHistory', ['filter' => 'auth']);
     $routes->get('events/(:num)/absensi', 'Api\AbsensiController::eventAttendees/$1', ['filter' => 'auth']);
     

@@ -187,7 +187,12 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                         children: [
                           const Icon(Icons.access_time, size: 14, color: AppTheme.textSecondary),
                           const SizedBox(width: 4),
-                          Text(_formatTime(item.waktuAbsen), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                          Text(
+                            item.waktuCheckout != null
+                                ? '${_formatTime(item.waktuAbsen)} - ${_formatTime(item.waktuCheckout!)}'
+                                : '${_formatTime(item.waktuAbsen)} (Check-in)',
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -198,6 +203,20 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                           Text(_formatDate(item.tanggalAcara), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
                         ],
                       ),
+                      if (item.durasi != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Durasi: ${item.durasi! ~/ 60} Jam ${item.durasi! % 60} Menit',
+                            style: const TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ]
                     ],
                   ),
                 ),

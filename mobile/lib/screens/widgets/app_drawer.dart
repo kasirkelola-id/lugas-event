@@ -26,7 +26,7 @@ import '../admin/admin_profil_screen.dart';
 import '../kas/kas_screen.dart';
 
 import '../anggota/anggota_home_screen.dart';
-import '../anggota/scan_qr_screen.dart';
+import '../anggota/attendance_geofence_screen.dart';
 import '../anggota/attendance_history_screen.dart';
 import '../anggota/anggota_profil_screen.dart';
 
@@ -50,9 +50,14 @@ class AppDrawer extends StatelessWidget {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation1, animation2) => screen,
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
+        pageBuilder: (context, animation, secondaryAnimation) => screen,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
       ),
     );
   }
@@ -213,7 +218,7 @@ class AppDrawer extends StatelessWidget {
     return [
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Beranda', const AnggotaHomeScreen()),
-      _buildItem(context, Icons.qr_code_scanner, 'Scan Absensi', const ScanQrScreen()),
+      _buildItem(context, Icons.location_on_outlined, 'Absensi Lokasi', const AttendanceGeofenceScreen()),
       
       if (isBendahara) ...[
         _buildSectionLabel('Keuangan'),

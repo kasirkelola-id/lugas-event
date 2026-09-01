@@ -21,6 +21,8 @@ class AddRtToUsersTable extends Migration
 
     public function down()
     {
-        $this->forge->dropColumn('users', 'rt');
+        if ($this->db->DBDriver !== 'SQLite3') {
+            $this->forge->dropColumn('users', 'rt');
+        }
     }
 }

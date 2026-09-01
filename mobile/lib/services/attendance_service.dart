@@ -53,18 +53,52 @@ class AttendanceService {
     }
   }
 
-  static Future<Map<String, dynamic>> submitAttendance(String kodeQr, {double? userLat, double? userLng}) async {
+  static Future<Map<String, dynamic>> checkIn(int eventId, {double? userLat, double? userLng}) async {
     try {
       final payload = <String, dynamic>{
-        'kode_qr': kodeQr,
+        'event_id': eventId,
       };
       if (userLat != null) payload['user_lat'] = userLat;
       if (userLng != null) payload['user_lng'] = userLng;
 
-      final response = await ApiClient.post('/absensi', payload);
+      final response = await ApiClient.post('/absensi/checkin', payload);
       return _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Server tidak dapat dihubungi. Periksa koneksi internet Anda.'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> checkOut(int eventId, {double? userLat, double? userLng}) async {
+    try {
+      final payload = <String, dynamic>{
+        'event_id': eventId,
+      };
+      if (userLat != null) payload['user_lat'] = userLat;
+      if (userLng != null) payload['user_lng'] = userLng;
+
+      final response = await ApiClient.post('/absensi/checkout', payload);
+      return _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Server tidak dapat dihubungi. Periksa koneksi internet Anda.'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getStatus() async {
+    try {
+      final response = await ApiClient.get('/absensi/status');
+      final result = await _handleResponse(response);
+      if (result['success']) {
+        try {
+          final List<dynamic> list = result['data']['active_event_ids'];
+          final activeIds = list.map((e) => e as int).toList();
+          return {'success': true, 'active_event_ids': activeIds};
+        } catch (e) {
+          return {'success': false, 'message': 'Error Parsing Attendance Status'};
+        }
+      }
+      return result;
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
     }
   }
 
