@@ -29,6 +29,7 @@ import '../anggota/anggota_home_screen.dart';
 import '../anggota/attendance_geofence_screen.dart';
 import '../anggota/attendance_history_screen.dart';
 import '../anggota/anggota_profil_screen.dart';
+import '../chat/chat_list_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final UserModel user;
@@ -196,6 +197,7 @@ class AppDrawer extends StatelessWidget {
     return [
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Beranda', const PengelolaHomeScreen()),
+      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen()),
       
       _buildSectionLabel('Manajemen'),
       _buildItem(context, Icons.manage_accounts_outlined, 'Anggota', const PengelolaPenggunaScreen()),
@@ -218,6 +220,7 @@ class AppDrawer extends StatelessWidget {
     return [
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Beranda', const AnggotaHomeScreen()),
+      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen()),
       _buildItem(context, Icons.location_on_outlined, 'Absensi Lokasi', const AttendanceGeofenceScreen()),
       
       if (isBendahara) ...[
@@ -244,6 +247,7 @@ class AppDrawer extends StatelessWidget {
     return [
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Dashboard', const AdminHomeScreen()),
+      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen()),
       
       _buildSectionLabel('Manajemen'),
       _buildItem(context, Icons.manage_accounts_outlined, 'Pengguna', const AdminPenggunaScreen()),

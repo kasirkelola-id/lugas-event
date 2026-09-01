@@ -54,7 +54,11 @@ $routes->group('api', function ($routes) {
     $routes->get('settings', 'Api\SettingController::index', ['filter' => 'auth']);
     $routes->post('settings', 'Api\SettingController::update', ['filter' => 'auth']);
     
-    // User Management (Admin Only)
+    // Chat API
+    $routes->get('chats/group', 'Api\ChatController::getGroupChats', ['filter' => 'auth']);
+    $routes->get('chats/private/(:num)', 'Api\ChatController::getPrivateChats/$1', ['filter' => 'auth']);
+
+    // User Management (Ketua Only)
     $routes->get('users/roles-summary', 'Api\UserController::rolesSummary', ['filter' => 'auth']);
     $routes->get('users', 'Api\UserController::index', ['filter' => 'auth']);
     $routes->post('users', 'Api\UserController::create', ['filter' => 'auth']);

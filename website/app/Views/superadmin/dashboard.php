@@ -110,18 +110,32 @@
 
     <div class="container">
         <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-3">
                 <div class="card stat-card p-4">
                     <i class="bi bi-diagram-3-fill stat-icon text-primary"></i>
-                    <div class="stat-title mb-2">Total Karang Taruna</div>
+                    <div class="stat-title mb-2">Karang Taruna</div>
                     <div class="stat-value"><?= $total_karang_taruna ?></div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-3">
                 <div class="card stat-card p-4">
                     <i class="bi bi-people-fill stat-icon text-success"></i>
-                    <div class="stat-title mb-2">Total Pengguna Aktif</div>
+                    <div class="stat-title mb-2">Pengguna Aktif</div>
                     <div class="stat-value"><?= $total_users ?></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card stat-card p-4">
+                    <i class="bi bi-calendar-event-fill stat-icon text-warning"></i>
+                    <div class="stat-title mb-2">Total Acara</div>
+                    <div class="stat-value"><?= $total_events ?></div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card stat-card p-4">
+                    <i class="bi bi-megaphone-fill stat-icon text-danger"></i>
+                    <div class="stat-title mb-2">Pengumuman</div>
+                    <div class="stat-value"><?= $total_pengumuman ?></div>
                 </div>
             </div>
         </div>
