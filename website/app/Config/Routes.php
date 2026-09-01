@@ -5,6 +5,7 @@ use CodeIgniter\Router\RouteCollection;
 /** @var RouteCollection $routes */
 
 $routes->group('api', function ($routes) {
+    $routes->post('tenant/verify-pin', 'Api\AuthController::validatePin');
     $routes->post('login', 'Api\AuthController::login');
     $routes->post('register', 'Api\AuthController::register');
     $routes->post('logout', 'Api\AuthController::logout', ['filter' => 'auth']);
@@ -69,4 +70,30 @@ $routes->group('api', function ($routes) {
 });
 
 /** @var RouteCollection $routes */
-$routes->get('/', 'Home::index');
+$routes->get('/', '\App\Controllers\Superadmin\AuthController::login');
+
+$routes->group('superadmin', ['namespace' => 'App\Controllers\Superadmin'], function ($routes) {
+    $routes->get('login', 'AuthController::login');
+    $routes->post('login', 'AuthController::processLogin');
+    $routes->get('logout', 'AuthController::logout');
+    
+    $routes->group('', ['filter' => 'superadmin'], function ($routes) {
+        $routes->get('dashboard', 'DashboardController::index');
+        
+        $routes->get('karang_taruna', 'KarangTarunaController::index');
+        $routes->post('karang_taruna/create', 'KarangTarunaController::create');
+        $routes->post('karang_taruna/update/(:num)', 'KarangTarunaController::update/$1');
+        $routes->get('karang_taruna/delete/(:num)', 'KarangTarunaController::delete/$1');
+        $routes->get('karang_taruna/(:num)/users', 'KarangTarunaController::users/$1');
+        
+        // Manage per Karang Taruna
+        $routes->get('manage/(:num)', 'ManageController::dashboard/$1');
+        $routes->get('manage/(:num)/users', 'ManageController::users/$1');
+        $routes->get('manage/(:num)/events', 'ManageController::events/$1');
+        $routes->get('manage/(:num)/pengumuman', 'ManageController::pengumuman/$1');
+        $routes->post('manage/(:num)/pengumuman/create', 'ManageController::createPengumuman/$1');
+        $routes->get('manage/(:num)/pengumuman/delete/(:num)', 'ManageController::deletePengumuman/$1/$2');
+        
+        $routes->get('manage/(:num)/kas', 'ManageController::kas/$1');
+    });
+});

@@ -12,7 +12,7 @@ class EventParticipantModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['event_id', 'user_id', 'created_at'];
+    protected $allowedFields    = ['karang_taruna_id', 'event_id', 'user_id', 'created_at'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

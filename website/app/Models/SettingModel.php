@@ -13,6 +13,7 @@ class SettingModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'karang_taruna_id',
         'setting_key', 
         'setting_value', 
         'description'

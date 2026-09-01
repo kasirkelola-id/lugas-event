@@ -13,7 +13,7 @@ class PengumumanModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'judul', 'isi', 'dibuat_oleh', 'target_role', 'status_aktif'
+        'karang_taruna_id', 'judul', 'isi', 'dibuat_oleh', 'target_role', 'status_aktif'
     ];
 
     // Dates

@@ -7,29 +7,62 @@ use App\Models\UserTokenModel;
 
 class AuthController extends BaseApiController
 {
-    public function login()
+    public function validatePin()
     {
         $rules = [
-            'username' => 'required',
-            'password' => 'required'
+            'pin' => 'required|exact_length[6]'
         ];
 
         if (!$this->validate($rules)) {
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
 
+        $pin = $this->request->getVar('pin');
+        
+        $ktModel = new \App\Models\KarangTarunaModel();
+        $kt = $ktModel->where('kode_pin', $pin)->first();
+
+        if (!$kt) {
+            return $this->sendError('PIN tidak valid atau tidak ditemukan.', null, 404);
+        }
+
+        if ($kt['status_aktif'] != 1) {
+            return $this->sendError('Karang Taruna ini sedang tidak aktif.', null, 403);
+        }
+
+        return $this->sendSuccess('PIN valid', [
+            'karang_taruna_id' => (int)$kt['id'],
+            'nama_organisasi'  => $kt['nama_organisasi'],
+        ]);
+    }
+
+    public function login()
+    {
+        $rules = [
+            'karang_taruna_id' => 'required|numeric',
+            'username'         => 'required',
+            'password'         => 'required'
+        ];
+
+        if (!$this->validate($rules)) {
+            return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
+        }
+
+        $karangTarunaId = $this->request->getVar('karang_taruna_id');
         $username = $this->request->getVar('username');
         $password = $this->request->getVar('password');
 
         $userModel = new UserModel();
-        $user = $userModel->where('username', $username)->first();
+        $user = $userModel->where('username', $username)
+                          ->where('karang_taruna_id', $karangTarunaId)
+                          ->first();
 
         if (!$user || !password_verify($password, (string)$user['password'])) {
             return $this->sendError('Username atau password salah.', null, 401);
         }
 
         if ($user['status_aktif'] != 1) {
-            return $this->sendError('Username atau password salah.', null, 401);
+            return $this->sendError('Akun tidak aktif.', null, 401);
         }
 
         // Generate Token
@@ -42,15 +75,17 @@ class AuthController extends BaseApiController
         $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
 
         $tokenModel->insert([
-            'user_id'    => $user['id'],
-            'token_hash' => $tokenHash,
-            'expires_at' => $expiresAt,
-            'created_at' => date('Y-m-d H:i:s'),
+            'karang_taruna_id' => $karangTarunaId,
+            'user_id'          => $user['id'],
+            'token_hash'       => $tokenHash,
+            'expires_at'       => $expiresAt,
+            'created_at'       => date('Y-m-d H:i:s'),
         ]);
 
         // Build Response User without sensitive data
         $userData = [
             'id'             => (int)$user['id'],
+            'karang_taruna_id' => (int)$user['karang_taruna_id'],
             'nama_lengkap'   => $user['nama_lengkap'],
             'nama_panggilan' => $user['nama_panggilan'],
             'username'       => $user['username'],
@@ -86,6 +121,7 @@ class AuthController extends BaseApiController
 
         $userData = [
             'id'             => (int)$user['id'],
+            'karang_taruna_id' => (int)$user['karang_taruna_id'],
             'nama_lengkap'   => $user['nama_lengkap'],
             'nama_panggilan' => $user['nama_panggilan'],
             'username'       => $user['username'],
@@ -102,13 +138,14 @@ class AuthController extends BaseApiController
     public function register()
     {
         $rules = [
-            'nama_lengkap'   => 'required|max_length[255]',
-            'nama_panggilan' => 'required|max_length[100]',
-            'username'       => 'required|is_unique[users.username]',
-            'password'       => 'required|min_length[6]',
+            'karang_taruna_id' => 'required|numeric',
+            'nama_lengkap'     => 'required|max_length[255]',
+            'nama_panggilan'   => 'required|max_length[100]',
+            'username'         => 'required',
+            'password'         => 'required|min_length[6]',
             'confirm_password' => 'required|matches[password]',
-            'no_whatsapp'    => 'required|max_length[20]',
-            'rt'             => 'permit_empty|in_list[1,2,3,4]',
+            'no_whatsapp'      => 'required|max_length[20]',
+            'rt'               => 'permit_empty|in_list[1,2,3,4]',
         ];
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
@@ -118,15 +155,25 @@ class AuthController extends BaseApiController
         }
 
         $userModel = new UserModel();
+        
+        // Manual check for unique username within tenant
+        $existing = $userModel->where('username', $rawInput['username'])
+                              ->where('karang_taruna_id', $rawInput['karang_taruna_id'])
+                              ->first();
+        if ($existing) {
+            return $this->sendError('Validasi gagal', ['username' => 'Username ini sudah digunakan di Karang Taruna Anda.'], 422);
+        }
+
         $userData = [
-            'nama_lengkap'   => $rawInput['nama_lengkap'],
-            'nama_panggilan' => $rawInput['nama_panggilan'],
-            'username'       => $rawInput['username'],
-            'password'       => password_hash($rawInput['password'], PASSWORD_BCRYPT),
-            'no_whatsapp'    => $rawInput['no_whatsapp'],
-            'rt'             => (int)($rawInput['rt'] ?? 1),
-            'role_level'     => 'anggota',
-            'status_aktif'   => 1,
+            'karang_taruna_id' => $rawInput['karang_taruna_id'],
+            'nama_lengkap'     => $rawInput['nama_lengkap'],
+            'nama_panggilan'   => $rawInput['nama_panggilan'],
+            'username'         => $rawInput['username'],
+            'password'         => password_hash($rawInput['password'], PASSWORD_BCRYPT),
+            'no_whatsapp'      => $rawInput['no_whatsapp'],
+            'rt'               => (int)($rawInput['rt'] ?? 1),
+            'role_level'       => 'anggota',
+            'status_aktif'     => 1,
             'password_must_change' => 0
         ];
 

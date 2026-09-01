@@ -4,9 +4,30 @@ import '../models/user_model.dart';
 import '../storage/auth_storage.dart';
 
 class AuthService {
+  static Future<Map<String, dynamic>> verifyPin(String pin) async {
+    try {
+      final response = await ApiClient.post('/tenant/verify-pin', {
+        'pin': pin,
+      });
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == true) {
+        return {'success': true, 'data': data['data']};
+      }
+      return {'success': false, 'message': data['message'] ?? 'PIN tidak valid'};
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
+  }
+
   static Future<Map<String, dynamic>> login(String username, String password) async {
     try {
+      final tenant = await AuthStorage.getTenant();
+      if (tenant == null) {
+        return {'success': false, 'message': 'Karang Taruna belum diatur. Silakan masukkan PIN terlebih dahulu.'};
+      }
+
       final response = await ApiClient.post('/login', {
+        'karang_taruna_id': tenant['id'],
         'username': username,
         'password': password,
       });
@@ -24,6 +45,11 @@ class AuthService {
 
   static Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
     try {
+      final tenant = await AuthStorage.getTenant();
+      if (tenant != null) {
+        data['karang_taruna_id'] = tenant['id'];
+      }
+
       final response = await ApiClient.post('/register', data);
       final responseData = jsonDecode(response.body);
       

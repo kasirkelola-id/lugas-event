@@ -13,6 +13,7 @@ class UserTokenModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'karang_taruna_id',
         'user_id',
         'token_hash',
         'expires_at',

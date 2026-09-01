@@ -13,6 +13,7 @@ class EventModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'karang_taruna_id',
         'nama_acara',
         'tanggal_acara',
         'kode_qr',

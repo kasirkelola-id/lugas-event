@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/pin_screen.dart';
 import 'screens/auth/force_change_password_screen.dart';
 import 'screens/pengelola/pengelola_home_screen.dart';
 import 'screens/admin/admin_home_screen.dart';
 import 'screens/anggota/anggota_home_screen.dart';
 import 'services/auth_service.dart';
+import 'storage/auth_storage.dart';
 import 'models/user_model.dart';
 import 'core/theme/app_theme.dart';
 
@@ -41,6 +43,17 @@ class _InitialScreenState extends State<InitialScreen> {
   }
 
   void _checkSession() async {
+    final tenant = await AuthStorage.getTenant();
+    if (!mounted) return;
+
+    if (tenant == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const PinScreen()),
+      );
+      return;
+    }
+
     final result = await AuthService.getMe();
     
     if (!mounted) return;

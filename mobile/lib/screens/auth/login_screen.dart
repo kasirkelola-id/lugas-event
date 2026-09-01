@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../storage/auth_storage.dart';
 import '../pengelola/pengelola_home_screen.dart';
 import '../anggota/anggota_home_screen.dart';
 import '../admin/admin_home_screen.dart';
@@ -9,6 +10,7 @@ import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/custom_button.dart';
 import 'force_change_password_screen.dart';
 import 'register_screen.dart';
+import 'pin_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,8 +24,33 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  String _ktName = 'Memuat...';
 
   bool _isPasswordVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTenant();
+  }
+
+  void _loadTenant() async {
+    final tenant = await AuthStorage.getTenant();
+    if (tenant != null && mounted) {
+      setState(() {
+        _ktName = tenant['name'];
+      });
+    }
+  }
+
+  void _changePin() async {
+    await AuthStorage.clearTenant();
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const PinScreen()),
+    );
+  }
 
   void _login() async {
     setState(() {
@@ -131,14 +158,28 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Silakan masuk ke akun Anda',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: AppTheme.textSecondary,
+                    Text(
+                      _ktName,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.primary,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 4),
+                    TextButton.icon(
+                      onPressed: _changePin,
+                      icon: const Icon(Icons.swap_horiz, size: 16),
+                      label: const Text('Ganti Karang Taruna / PIN', style: TextStyle(fontSize: 12)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.textSecondary,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     if (_errorMessage != null)
                       Container(
                         padding: const EdgeInsets.all(12),

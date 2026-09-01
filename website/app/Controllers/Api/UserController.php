@@ -7,28 +7,28 @@ use App\Services\AuthService;
 
 class UserController extends BaseApiController
 {
-    private function checkAdmin()
+    private function checkKetua()
     {
         $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['admin', 'ketua'])) {
+        if (!$user || $user['role_level'] !== 'ketua') {
             return false;
         }
         return true;
     }
 
-    private function checkAdminOrPengelola()
+    private function checkKetuaOrPengelola()
     {
         $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['admin', 'ketua', 'pengelola'])) {
+        if (!$user || !in_array($user['role_level'], ['ketua', 'pengelola'])) {
             return false;
         }
         return true;
     }
 
-    private function countActiveAdmins()
+    private function countActiveKetua()
     {
         $userModel = new UserModel();
-        return $userModel->whereIn('role_level', ['admin', 'ketua'])
+        return $userModel->where('role_level', 'ketua')
                          ->where('status_aktif', 1)
                          ->countAllResults();
     }
@@ -68,7 +68,7 @@ class UserController extends BaseApiController
 
     public function create()
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkKetua()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -77,7 +77,7 @@ class UserController extends BaseApiController
             'nama_panggilan' => 'required|max_length[100]',
             'username'       => 'required|is_unique[users.username]',
             'password'       => 'required|min_length[6]',
-            'role_level'     => 'required|in_list[admin,ketua,sekretaris,bendahara,pengelola,anggota]',
+            'role_level'     => 'required|in_list[ketua,sekretaris,bendahara,pengelola,anggota]',
             'rt'             => 'permit_empty|in_list[1,2,3,4]'
         ];
 
@@ -110,7 +110,7 @@ class UserController extends BaseApiController
 
     public function update($id = null)
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkKetua()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -150,7 +150,7 @@ class UserController extends BaseApiController
 
     public function toggleStatus($id = null)
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkKetua()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -164,9 +164,9 @@ class UserController extends BaseApiController
         $newStatus = (int)$user['status_aktif'] === 1 ? 0 : 1;
 
         // Lockout prevention
-        if ($newStatus === 0 && in_array($user['role_level'], ['admin', 'ketua'])) {
-            if ($this->countActiveAdmins() <= 1) {
-                return $this->sendError('Validasi gagal', ['status_aktif' => 'Tidak dapat menonaktifkan akun admin/ketua terakhir yang aktif.'], 400);
+        if ($newStatus === 0 && $user['role_level'] === 'ketua') {
+            if ($this->countActiveKetua() <= 1) {
+                return $this->sendError('Validasi gagal', ['status_aktif' => 'Tidak dapat menonaktifkan akun ketua terakhir yang aktif.'], 400);
             }
         }
 
@@ -177,7 +177,7 @@ class UserController extends BaseApiController
 
     public function changeRole($id = null)
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkKetua()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -189,16 +189,16 @@ class UserController extends BaseApiController
         }
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
-        if (!isset($rawInput['role_level']) || !in_array($rawInput['role_level'], ['admin', 'ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'])) {
+        if (!isset($rawInput['role_level']) || !in_array($rawInput['role_level'], ['ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'])) {
             return $this->sendError('Validasi gagal', ['role_level' => 'Role tidak valid'], 422);
         }
 
         $newRole = $rawInput['role_level'];
 
         // Lockout prevention
-        if (in_array($user['role_level'], ['admin', 'ketua']) && !in_array($newRole, ['admin', 'ketua']) && (int)$user['status_aktif'] === 1) {
-            if ($this->countActiveAdmins() <= 1) {
-                return $this->sendError('Validasi gagal', ['role_level' => 'Tidak dapat mengubah role dari akun admin/ketua terakhir yang aktif.'], 400);
+        if ($user['role_level'] === 'ketua' && $newRole !== 'ketua' && (int)$user['status_aktif'] === 1) {
+            if ($this->countActiveKetua() <= 1) {
+                return $this->sendError('Validasi gagal', ['role_level' => 'Tidak dapat mengubah role dari akun ketua terakhir yang aktif.'], 400);
             }
         }
 
@@ -239,21 +239,21 @@ class UserController extends BaseApiController
 
     public function rolesSummary()
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkKetua()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
         $userModel = new UserModel();
         
-        $totalAdmin = $userModel->whereIn('role_level', ['admin', 'ketua'])->countAllResults();
+        $totalKetua = $userModel->where('role_level', 'ketua')->countAllResults();
         $totalPengelola = $userModel->where('role_level', 'pengelola')->countAllResults();
         $totalAnggota = $userModel->where('role_level', 'anggota')->countAllResults();
 
         $data = [
-            'admin' => $totalAdmin,
+            'ketua' => $totalKetua,
             'pengelola' => $totalPengelola,
             'anggota' => $totalAnggota,
-            'total' => $totalAdmin + $totalPengelola + $totalAnggota
+            'total' => $totalKetua + $totalPengelola + $totalAnggota
         ];
 
         return $this->sendSuccess('Ringkasan role', $data);

@@ -13,6 +13,7 @@ class AbsensiModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'karang_taruna_id',
         'event_id',
         'user_id',
         'waktu_absen',
