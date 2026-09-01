@@ -176,12 +176,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: DropdownButtonFormField<int>(
                         value: _selectedRt,
                         decoration: const InputDecoration(labelText: 'Pilih RT', prefixIcon: Icon(Icons.home_outlined)),
-                        items: const [
-                          DropdownMenuItem(value: 1, child: Text('RT 01')),
-                          DropdownMenuItem(value: 2, child: Text('RT 02')),
-                          DropdownMenuItem(value: 3, child: Text('RT 03')),
-                          DropdownMenuItem(value: 4, child: Text('RT 04')),
-                        ],
+                        items: List.generate(10, (index) {
+                          final rt = index + 1;
+                          final rtString = rt.toString().padLeft(2, '0');
+                          return DropdownMenuItem(value: rt, child: Text('RT $rtString'));
+                        }),
                         onChanged: _isLoading ? null : (val) {
                           if (val != null) setState(() => _selectedRt = val);
                         },

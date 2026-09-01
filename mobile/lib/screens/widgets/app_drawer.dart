@@ -46,21 +46,25 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  void _navigate(BuildContext context, Widget screen) {
+  void _navigate(BuildContext context, Widget screen, {bool replace = true}) {
     Navigator.pop(context); // close drawer
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => screen,
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 300),
-      ),
+    
+    final route = PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => screen,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
     );
+
+    if (replace) {
+      Navigator.pushReplacement(context, route);
+    } else {
+      Navigator.push(context, route);
+    }
   }
 
   @override
@@ -197,7 +201,7 @@ class AppDrawer extends StatelessWidget {
     return [
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Beranda', const PengelolaHomeScreen()),
-      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen()),
+      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
       
       _buildSectionLabel('Manajemen'),
       _buildItem(context, Icons.manage_accounts_outlined, 'Anggota', const PengelolaPenggunaScreen()),
@@ -220,7 +224,7 @@ class AppDrawer extends StatelessWidget {
     return [
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Beranda', const AnggotaHomeScreen()),
-      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen()),
+      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
       _buildItem(context, Icons.location_on_outlined, 'Absensi Lokasi', const AttendanceGeofenceScreen()),
       
       if (isBendahara) ...[
@@ -247,7 +251,7 @@ class AppDrawer extends StatelessWidget {
     return [
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Dashboard', const AdminHomeScreen()),
-      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen()),
+      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
       
       _buildSectionLabel('Manajemen'),
       _buildItem(context, Icons.manage_accounts_outlined, 'Pengguna', const AdminPenggunaScreen()),
@@ -271,7 +275,7 @@ class AppDrawer extends StatelessWidget {
     ];
   }
 
-  Widget _buildItem(BuildContext context, IconData icon, String title, Widget? targetScreen) {
+  Widget _buildItem(BuildContext context, IconData icon, String title, Widget? targetScreen, {bool replace = true}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: ListTile(
@@ -281,7 +285,7 @@ class AppDrawer extends StatelessWidget {
         hoverColor: AppTheme.primary.withValues(alpha: 0.05),
         onTap: () {
           if (targetScreen != null) {
-            _navigate(context, targetScreen);
+            _navigate(context, targetScreen, replace: replace);
           } else {
             Navigator.pop(context); // close drawer
             ScaffoldMessenger.of(context).showSnackBar(

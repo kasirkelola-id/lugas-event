@@ -4,6 +4,7 @@ import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/chat_service.dart';
 import '../../storage/auth_storage.dart';
+import '../../core/theme/app_theme.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   final String roomName;
@@ -102,9 +103,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE5DDD5),
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF128C7E),
+        backgroundColor: AppTheme.primary,
         titleSpacing: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -113,33 +114,20 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         title: Row(
           children: [
             const CircleAvatar(
-              radius: 20,
+              radius: 18,
               backgroundColor: Colors.white24,
-              child: Icon(Icons.group, color: Colors.white),
+              child: Icon(Icons.forum_outlined, color: Colors.white, size: 20),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.roomName,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const Text(
-                    "Ketuk untuk info grup",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                  )
-                ],
+              child: Text(
+                widget.roomName,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
-        actions: [
-          IconButton(icon: const Icon(Icons.videocam, color: Colors.white), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.call, color: Colors.white), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.more_vert, color: Colors.white), onPressed: () {}),
-        ],
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())
@@ -231,69 +219,59 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   },
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                color: Colors.transparent,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              spreadRadius: 1,
-                              blurRadius: 1,
-                            )
-                          ]
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.grey),
-                              onPressed: () {},
-                            ),
-                            Expanded(
-                              child: TextField(
-                                controller: _msgController,
-                                maxLines: 6,
-                                minLines: 1,
-                                decoration: const InputDecoration(
-                                  hintText: "Ketik pesan",
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+              SafeArea(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  color: Colors.transparent,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                spreadRadius: 1,
+                                blurRadius: 1,
+                              )
+                            ]
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _msgController,
+                                  maxLines: 6,
+                                  minLines: 1,
+                                  decoration: const InputDecoration(
+                                    hintText: "Ketik pesan",
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  ),
+                                  onSubmitted: (_) => _sendMessage(),
                                 ),
-                                onSubmitted: (_) => _sendMessage(),
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.attach_file, color: Colors.grey),
-                              onPressed: () {},
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.camera_alt, color: Colors.grey),
-                              onPressed: () {},
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 2),
-                      child: CircleAvatar(
-                        radius: 24,
-                        backgroundColor: const Color(0xFF128C7E),
-                        child: IconButton(
-                          icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                          onPressed: _sendMessage,
+                      const SizedBox(width: 8),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 2),
+                        child: CircleAvatar(
+                          radius: 24,
+                          backgroundColor: AppTheme.primary,
+                          child: IconButton(
+                            icon: const Icon(Icons.send, color: Colors.white, size: 20),
+                            onPressed: _sendMessage,
+                          ),
                         ),
-                      ),
-                    )
-                  ],
+                      )
+                    ],
+                  ),
                 ),
               ),
             ],

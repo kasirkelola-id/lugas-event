@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'chat_room_screen.dart';
 import '../../storage/auth_storage.dart';
+import '../../core/theme/app_theme.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({Key? key}) : super(key: key);
@@ -32,7 +33,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Forum Diskusi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-        backgroundColor: const Color(0xFF128C7E),
+        backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: ListView(
