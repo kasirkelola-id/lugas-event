@@ -393,6 +393,23 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
+                      if (_currentUser?.roleLevel == 'ketua' && !isMe)
+                        _buildActionButton(Icons.manage_accounts, 'Ubah Role', AppTheme.primary, () {
+                          _showChangeRoleDialog(user);
+                        }),
+                      if (_currentUser?.roleLevel == 'ketua' && !isMe)
+                        _buildActionButton(
+                          isActive ? Icons.person_off : Icons.person, 
+                          isActive ? 'Nonaktifkan' : 'Aktifkan', 
+                          isActive ? AppTheme.error : AppTheme.success, 
+                          () {
+                          _confirmAction(
+                            isActive ? 'Nonaktifkan Pengguna' : 'Aktifkan Pengguna', 
+                            isActive ? 'Pengguna ini tidak akan bisa login lagi.' : 'Pengguna akan kembali bisa login.', 
+                            () => UserService.toggleStatus(user.id),
+                            isDestructive: isActive
+                          );
+                        }),
                       _buildActionButton(Icons.lock_reset, 'Reset Password', Colors.brown.shade600, () {
                         _confirmAction(
                           'Reset Password', 
@@ -431,6 +448,66 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
             Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showChangeRoleDialog(UserModel user) {
+    String selectedRole = user.roleLevel;
+    final roles = ['ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'];
+    
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Ubah Role', style: TextStyle(fontWeight: FontWeight.bold)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: roles.map((role) {
+                  return RadioListTile<String>(
+                    title: Text(role.toUpperCase(), style: const TextStyle(fontSize: 14)),
+                    value: role,
+                    groupValue: selectedRole,
+                    contentPadding: EdgeInsets.zero,
+                    onChanged: (val) {
+                      if (val != null) {
+                        setDialogState(() => selectedRole = val);
+                      }
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                ),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  setState(() => _isLoading = true);
+                  final result = await UserService.changeRole(user.id, selectedRole);
+                  if (result['success']) {
+                    _showSnackbar('Role berhasil diubah');
+                    _loadData();
+                  } else {
+                    _handleError(result['message']);
+                  }
+                },
+                child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        }
       ),
     );
   }

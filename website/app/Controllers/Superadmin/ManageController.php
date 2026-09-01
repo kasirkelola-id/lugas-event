@@ -53,6 +53,48 @@ class ManageController extends BaseController
         return view('superadmin/manage/users', $data);
     }
 
+    public function updateUserRole($kt_id, $user_id)
+    {
+        // Pastikan Karang Taruna ada
+        $this->getKarangTaruna($kt_id);
+
+        $userModel = new UserModel();
+        $user = $userModel->find($user_id);
+
+        if (!$user || $user['karang_taruna_id'] != $kt_id) {
+            return redirect()->back()->with('error', 'Pengguna tidak ditemukan di Karang Taruna ini.');
+        }
+
+        $newRole = $this->request->getPost('role_level');
+        $validRoles = ['ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'];
+        
+        if (!in_array($newRole, $validRoles)) {
+            return redirect()->back()->with('error', 'Role tidak valid.');
+        }
+
+        $userModel->update($user_id, ['role_level' => $newRole]);
+
+        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Role {$user['nama_lengkap']} berhasil diubah menjadi " . ucfirst($newRole));
+    }
+
+    public function toggleUserStatus($kt_id, $user_id)
+    {
+        $this->getKarangTaruna($kt_id);
+
+        $userModel = new UserModel();
+        $user = $userModel->find($user_id);
+
+        if (!$user || $user['karang_taruna_id'] != $kt_id) {
+            return redirect()->back()->with('error', 'Pengguna tidak ditemukan di Karang Taruna ini.');
+        }
+
+        $newStatus = (int)$user['status_aktif'] === 1 ? 0 : 1;
+        $userModel->update($user_id, ['status_aktif' => $newStatus]);
+        
+        $statusStr = $newStatus === 1 ? 'diaktifkan' : 'dinonaktifkan';
+        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Status pengguna {$user['nama_lengkap']} berhasil {$statusStr}.");
+    }
+
     public function events($kt_id)
     {
         $data['kt'] = $this->getKarangTaruna($kt_id);
