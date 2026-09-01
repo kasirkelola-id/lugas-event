@@ -3,22 +3,27 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../models/chat_model.dart';
 import '../core/network/api_client.dart';
 import '../storage/auth_storage.dart';
+import '../services/auth_service.dart';
+
+import '../core/config/api_config.dart';
+import '../models/user_model.dart';
 
 class ChatService {
-  final ApiClient _apiClient = ApiClient();
   IO.Socket? _socket;
   Function(Chat)? onMessageReceived;
 
   // Initialize WebSocket connection
   Future<void> initWebSocket() async {
     final token = await AuthStorage.getToken();
-    final user = await AuthStorage.getUser();
-    final ktId = await AuthStorage.getKarangTarunaId();
+    final userResult = await AuthService.getMe();
+    final tenant = await AuthStorage.getTenant();
     
-    if (token == null || user == null || ktId == null) return;
+    if (token == null || !userResult['success'] || tenant == null) return;
+    
+    final user = userResult['user'] as UserModel;
+    final ktId = tenant['id'];
 
-    // Use 10.0.2.2 for Android emulator to connect to localhost Node.js server (port 3000)
-    _socket = IO.io('http://10.0.2.2:3000', <String, dynamic>{
+    _socket = IO.io(ApiConfig.socketUrl, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
@@ -30,7 +35,7 @@ class ChatService {
       // Send authentication payload
       _socket!.emit('auth', {
         'user_id': user.id,
-        'karang_taruna_id': int.parse(ktId),
+        'karang_taruna_id': ktId,
       });
     });
 
@@ -70,7 +75,7 @@ class ChatService {
   // REST API: Get Group Chat History (Still from CodeIgniter)
   Future<List<Chat>> getGroupChatHistory() async {
     try {
-      final response = await _apiClient.get('/chats/group');
+      final response = await ApiClient.get('/chats/group');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return (data['data'] as List).map((c) => Chat.fromJson(c)).toList();
@@ -84,7 +89,7 @@ class ChatService {
   // REST API: Get Private Chat History (Still from CodeIgniter)
   Future<List<Chat>> getPrivateChatHistory(int receiverId) async {
     try {
-      final response = await _apiClient.get('/chats/private/$receiverId');
+      final response = await ApiClient.get('/chats/private/$receiverId');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return (data['data'] as List).map((c) => Chat.fromJson(c)).toList();

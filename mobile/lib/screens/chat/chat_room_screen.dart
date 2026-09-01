@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/chat_model.dart';
 import '../../models/user_model.dart';
+import '../../services/auth_service.dart';
 import '../../services/chat_service.dart';
 import '../../storage/auth_storage.dart';
 
@@ -26,7 +27,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final ScrollController _scrollController = ScrollController();
   
   List<Chat> _messages = [];
-  User? _currentUser;
+  UserModel? _currentUser;
   bool _isLoading = true;
 
   @override
@@ -36,7 +37,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   Future<void> _loadUserAndHistory() async {
-    _currentUser = await AuthStorage.getUser();
+    final userResult = await AuthService.getMe();
+    if (userResult['success']) {
+      _currentUser = userResult['user'] as UserModel;
+    }
     
     // Load history
     if (widget.type == 'group') {

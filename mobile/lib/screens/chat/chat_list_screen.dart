@@ -19,10 +19,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
   }
 
   Future<void> _loadKarangTarunaName() async {
-    final name = await AuthStorage.getNamaOrganisasi();
-    if (name != null) {
+    final tenant = await AuthStorage.getTenant();
+    if (tenant != null && tenant['name'] != null) {
       setState(() {
-        _ktName = name;
+        _ktName = tenant['name'];
       });
     }
   }
