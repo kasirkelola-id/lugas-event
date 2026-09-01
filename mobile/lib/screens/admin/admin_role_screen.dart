@@ -134,6 +134,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             ],
           ),
           const SizedBox(height: 16),
+          const SizedBox(height: 16),
           _buildRoleCard(
             title: 'Anggota',
             color: AppTheme.success,
@@ -145,6 +146,43 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
               'Melakukan scan QR untuk presensi (di masa depan).',
               'Melihat riwayat kehadiran pribadinya.',
               'Tidak memiliki akses ke dashboard pengelolaan atau admin.'
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildRoleCard(
+            title: 'Ketua',
+            color: Colors.purple,
+            icon: Icons.star_outline,
+            count: _summary?['ketua'] ?? 0,
+            description: 'Pemimpin dengan akses pengawasan penuh.',
+            capabilities: [
+              'Memiliki hak akses hampir sama dengan Admin.',
+              'Melihat semua laporan dan aktivitas pengguna.',
+              'Mengelola pengumuman sistem.'
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildRoleCard(
+            title: 'Sekretaris',
+            color: Colors.blueGrey,
+            icon: Icons.edit_document,
+            count: _summary?['sekretaris'] ?? 0,
+            description: 'Bertanggung jawab atas administrasi.',
+            capabilities: [
+              'Membuat dan mengelola pengumuman sistem.',
+              'Melihat data pengguna dan laporan.'
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildRoleCard(
+            title: 'Bendahara',
+            color: Colors.orange,
+            icon: Icons.account_balance_wallet_outlined,
+            count: _summary?['bendahara'] ?? 0,
+            description: 'Bertanggung jawab atas keuangan.',
+            capabilities: [
+              'Mengelola fitur kas warga (pemasukan/pengeluaran).',
+              'Melihat data pengguna dan laporan.'
             ],
           ),
           const SizedBox(height: 32),

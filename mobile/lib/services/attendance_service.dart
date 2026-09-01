@@ -53,11 +53,15 @@ class AttendanceService {
     }
   }
 
-  static Future<Map<String, dynamic>> submitAttendance(String kodeQr) async {
+  static Future<Map<String, dynamic>> submitAttendance(String kodeQr, {double? userLat, double? userLng}) async {
     try {
-      final response = await ApiClient.post('/absensi', {
+      final payload = <String, dynamic>{
         'kode_qr': kodeQr,
-      });
+      };
+      if (userLat != null) payload['user_lat'] = userLat;
+      if (userLng != null) payload['user_lng'] = userLng;
+
+      final response = await ApiClient.post('/absensi', payload);
       return _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Server tidak dapat dihubungi. Periksa koneksi internet Anda.'};

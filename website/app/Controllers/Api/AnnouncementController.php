@@ -7,6 +7,15 @@ use App\Services\AuthService;
 
 class AnnouncementController extends BaseApiController
 {
+    private function checkAdminAndSekretaris()
+    {
+        $user = AuthService::getUser();
+        if (!$user || !in_array($user['role_level'], ['admin', 'ketua', 'sekretaris'])) {
+            return false;
+        }
+        return true;
+    }
+
     public function index()
     {
         $user = AuthService::getUser();
@@ -16,7 +25,7 @@ class AnnouncementController extends BaseApiController
         $builder->select('pengumuman.*, users.nama_lengkap as pembuat');
         $builder->join('users', 'users.id = pengumuman.dibuat_oleh', 'left');
 
-        if ($user['role_level'] !== 'admin') {
+        if (!in_array($user['role_level'], ['admin', 'ketua', 'sekretaris'])) {
             $builder->where('pengumuman.status_aktif', 1);
             $builder->groupStart()
                     ->where('pengumuman.target_role', 'semua')
@@ -40,14 +49,14 @@ class AnnouncementController extends BaseApiController
 
     public function create()
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkAdminAndSekretaris()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
         $rules = [
             'judul' => 'required|max_length[255]',
             'isi' => 'required',
-            'target_role' => 'required|in_list[semua,pengelola,anggota]'
+            'target_role' => 'required|in_list[semua,admin,ketua,sekretaris,bendahara,pengelola,anggota]'
         ];
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
@@ -75,7 +84,7 @@ class AnnouncementController extends BaseApiController
 
     public function update($id = null)
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkAdminAndSekretaris()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -89,7 +98,7 @@ class AnnouncementController extends BaseApiController
         $rules = [
             'judul' => 'required|max_length[255]',
             'isi' => 'required',
-            'target_role' => 'required|in_list[semua,pengelola,anggota]'
+            'target_role' => 'required|in_list[semua,admin,ketua,sekretaris,bendahara,pengelola,anggota]'
         ];
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
@@ -115,7 +124,7 @@ class AnnouncementController extends BaseApiController
 
     public function toggleStatus($id = null)
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkAdminAndSekretaris()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -134,7 +143,7 @@ class AnnouncementController extends BaseApiController
 
     public function delete($id = null)
     {
-        if (!$this->checkAdmin()) {
+        if (!$this->checkAdminAndSekretaris()) {
             return $this->sendError('Forbidden', null, 403);
         }
 

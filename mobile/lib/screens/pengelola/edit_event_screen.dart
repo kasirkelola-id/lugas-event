@@ -49,9 +49,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
     });
 
     final result = await EventService.updateEvent(
-      widget.event.id,
-      _namaController.text,
-      _tanggalController.text,
+      id: widget.event.id,
+      nama: _namaController.text,
+      tanggal: _tanggalController.text,
     );
 
     setState(() {

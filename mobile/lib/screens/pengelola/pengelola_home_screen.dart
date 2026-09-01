@@ -6,6 +6,8 @@ import '../../models/user_model.dart';
 import '../../models/event_model.dart';
 import '../auth/login_screen.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/common/empty_state.dart';
 import 'create_event_screen.dart';
 import 'event_detail_screen.dart';
 
@@ -121,11 +123,20 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
-            const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            ),
+            const SizedBox(height: 24),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 24),
+            CustomButton(
+              text: 'Coba Lagi',
+              onPressed: _loadData,
+              isFullWidth: false,
+              icon: Icons.refresh,
+            ),
           ],
         ),
       );
@@ -154,17 +165,10 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
         ),
         const SizedBox(height: 16),
         if (_events.isEmpty && !_isLoading)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                children: [
-                  Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
-                  const SizedBox(height: 16),
-                  Text('Belum ada acara', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
-                ],
-              ),
-            ),
+          const EmptyStateWidget(
+            icon: Icons.event_busy,
+            title: 'Belum Ada Acara',
+            subtitle: 'Anda belum membuat acara apa pun. Silakan buat acara baru.',
           )
         else
           ..._events.map((event) => _buildEventCard(event)),

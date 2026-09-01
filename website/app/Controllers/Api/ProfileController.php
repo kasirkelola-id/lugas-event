@@ -22,6 +22,7 @@ class ProfileController extends BaseApiController
         if (isset($rawInput['nama_panggilan'])) $validationData['nama_panggilan'] = $rawInput['nama_panggilan'];
         if (isset($rawInput['username'])) $validationData['username'] = $rawInput['username'];
         if (isset($rawInput['no_whatsapp'])) $validationData['no_whatsapp'] = $rawInput['no_whatsapp'];
+        if (isset($rawInput['rt'])) $validationData['rt'] = (int)$rawInput['rt'];
 
         if (empty($validationData)) {
             return $this->sendError('Tidak ada data yang diubah', null, 422);
@@ -33,6 +34,7 @@ class ProfileController extends BaseApiController
         if (isset($validationData['username'])) {
             $rules['username'] = "required|max_length[100]|is_unique[users.username,id,{$user['id']}]";
         }
+        if (isset($validationData['rt'])) $rules['rt'] = 'required|in_list[1,2,3,4]';
         
         if (!$this->validateData($validationData, $rules)) {
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);

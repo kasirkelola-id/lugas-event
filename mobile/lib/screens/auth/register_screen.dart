@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
+import '../widgets/common/custom_text_field.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/common/feedback_dialogs.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  int _selectedRt = 1;
   bool _isLoading = false;
   String? _errorMessage;
   bool _obscurePassword = true;
@@ -57,6 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'nama_panggilan': namaPanggilan,
         'username': username,
         'no_whatsapp': whatsapp,
+        'rt': _selectedRt,
         'password': password,
         'confirm_password': confirmPassword,
       });
@@ -64,35 +69,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       if (result['success']) {
-        await showDialog(
+        await FeedbackDialogs.showConfirmation(
           context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            title: Row(
-              children: const [
-                Icon(Icons.check_circle, color: AppTheme.success, size: 28),
-                SizedBox(width: 8),
-                Text('Pendaftaran Berhasil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              ],
-            ),
-            content: const Text('Akun Anda berhasil dibuat. Silakan masuk untuk melanjutkan.'),
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  Navigator.pop(context); // back to login
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
-                ),
-                child: const Text('Selesai'),
-              ),
-            ],
-          ),
+          title: 'Pendaftaran Berhasil',
+          content: 'Akun Anda berhasil dibuat. Silakan masuk untuk melanjutkan.',
+          confirmText: 'Selesai',
         );
+        if (context.mounted) {
+          Navigator.pop(context); // back to login
+        }
       } else {
         setState(() {
           _errorMessage = result['message'];
@@ -145,7 +130,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (_errorMessage != null)
                       Container(
                         padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(bottom: 24),
                         decoration: BoxDecoration(
                           color: AppTheme.error.withValues(alpha: 0.1),
                           borderRadius: AppTheme.radiusSmall,
@@ -153,85 +138,93 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppTheme.error),
+                            const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
+                              child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.error, fontSize: 14)),
                             ),
                           ],
                         ),
                       ),
-                    TextField(
+                    CustomTextField(
                       controller: _namaLengkapController,
-                      decoration: const InputDecoration(labelText: 'Nama Lengkap', prefixIcon: Icon(Icons.badge_outlined)),
-                      enabled: !_isLoading,
+                      label: 'Nama Lengkap',
+                      prefixIcon: Icons.badge_outlined,
+                      readOnly: _isLoading,
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
+                    CustomTextField(
                       controller: _namaPanggilanController,
-                      decoration: const InputDecoration(labelText: 'Nama Panggilan', prefixIcon: Icon(Icons.face)),
-                      enabled: !_isLoading,
+                      label: 'Nama Panggilan',
+                      prefixIcon: Icons.face,
+                      readOnly: _isLoading,
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
+                    CustomTextField(
                       controller: _usernameController,
-                      decoration: const InputDecoration(labelText: 'Username', prefixIcon: Icon(Icons.person_outline)),
-                      enabled: !_isLoading,
+                      label: 'Username',
+                      prefixIcon: Icons.person_outline,
+                      readOnly: _isLoading,
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
+                    CustomTextField(
                       controller: _whatsappController,
+                      label: 'No. WhatsApp',
+                      prefixIcon: Icons.phone_android,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'No. WhatsApp', prefixIcon: Icon(Icons.phone_android)),
-                      enabled: !_isLoading,
+                      readOnly: _isLoading,
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      child: DropdownButtonFormField<int>(
+                        value: _selectedRt,
+                        decoration: const InputDecoration(labelText: 'Pilih RT', prefixIcon: Icon(Icons.home_outlined)),
+                        items: const [
+                          DropdownMenuItem(value: 1, child: Text('RT 01')),
+                          DropdownMenuItem(value: 2, child: Text('RT 02')),
+                          DropdownMenuItem(value: 3, child: Text('RT 03')),
+                          DropdownMenuItem(value: 4, child: Text('RT 04')),
+                        ],
+                        onChanged: _isLoading ? null : (val) {
+                          if (val != null) setState(() => _selectedRt = val);
+                        },
+                      ),
+                    ),
+                    CustomTextField(
                       controller: _passwordController,
+                      label: 'Password',
+                      prefixIcon: Icons.lock_outline,
                       obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        ),
+                      readOnly: _isLoading,
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
-                      enabled: !_isLoading,
                     ),
-                    const SizedBox(height: 12),
-                    TextField(
+                    CustomTextField(
                       controller: _confirmPasswordController,
+                      label: 'Konfirmasi Password',
+                      prefixIcon: Icons.lock_reset,
                       obscureText: _obscureConfirm,
-                      decoration: InputDecoration(
-                        labelText: 'Konfirmasi Password',
-                        prefixIcon: const Icon(Icons.lock_reset),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                          onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                        ),
-                      ),
-                      enabled: !_isLoading,
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _register,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : const Text('Daftar', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      readOnly: _isLoading,
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                        onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Sudah punya akun? Masuk', style: TextStyle(color: AppTheme.primary)),
+                    CustomButton(
+                      text: 'Daftar',
+                      onPressed: _register,
+                      isLoading: _isLoading,
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Sudah punya akun? ', style: TextStyle(color: AppTheme.textSecondary)),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: const Text('Masuk', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
                     )
                   ],
                 ),

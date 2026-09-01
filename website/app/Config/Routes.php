@@ -42,6 +42,15 @@ $routes->group('api', function ($routes) {
     $routes->get('absensi/my', 'Api\AbsensiController::myHistory', ['filter' => 'auth']);
     $routes->get('events/(:num)/absensi', 'Api\AbsensiController::eventAttendees/$1', ['filter' => 'auth']);
     
+    // Kas
+    $routes->get('kas', 'Api\KasController::index', ['filter' => 'auth']);
+    $routes->post('kas', 'Api\KasController::create', ['filter' => 'auth']);
+    $routes->delete('kas/(:num)', 'Api\KasController::delete/$1', ['filter' => 'auth']);
+    
+    // Settings
+    $routes->get('settings', 'Api\SettingController::index', ['filter' => 'auth']);
+    $routes->post('settings', 'Api\SettingController::update', ['filter' => 'auth']);
+    
     // User Management (Admin Only)
     $routes->get('users/roles-summary', 'Api\UserController::rolesSummary', ['filter' => 'auth']);
     $routes->get('users', 'Api\UserController::index', ['filter' => 'auth']);

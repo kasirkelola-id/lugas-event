@@ -66,11 +66,22 @@ class EventService {
     }
   }
 
-  static Future<Map<String, dynamic>> createEvent(String nama, String tanggal) async {
+  static Future<Map<String, dynamic>> createEvent({
+    required String nama, 
+    required String tanggal,
+    bool requireGps = false,
+    double? latitude,
+    double? longitude,
+    int? radius,
+  }) async {
     try {
       final response = await ApiClient.post('/events', {
         'nama_acara': nama,
         'tanggal_acara': tanggal,
+        'require_gps': requireGps ? 1 : 0,
+        if (requireGps && latitude != null) 'latitude': latitude,
+        if (requireGps && longitude != null) 'longitude': longitude,
+        if (requireGps && radius != null) 'radius': radius,
       });
       return _handleResponse(response);
     } catch (e) {
@@ -78,7 +89,15 @@ class EventService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateEvent(int id, String nama, String tanggal) async {
+  static Future<Map<String, dynamic>> updateEvent({
+    required int id, 
+    required String nama, 
+    required String tanggal,
+    bool requireGps = false,
+    double? latitude,
+    double? longitude,
+    int? radius,
+  }) async {
     try {
       final headers = await ApiClient.getHeaders();
       final response = await http.put(
@@ -87,6 +106,10 @@ class EventService {
         body: jsonEncode({
           'nama_acara': nama,
           'tanggal_acara': tanggal,
+          'require_gps': requireGps ? 1 : 0,
+          if (requireGps && latitude != null) 'latitude': latitude,
+          if (requireGps && longitude != null) 'longitude': longitude,
+          if (requireGps && radius != null) 'radius': radius,
         }),
       );
       return _handleResponse(response);

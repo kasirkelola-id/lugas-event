@@ -18,6 +18,7 @@ class UserModel extends Model
         'username',
         'password',
         'no_whatsapp',
+        'rt',
         'role_level',
         'status_aktif',
         'password_must_change',

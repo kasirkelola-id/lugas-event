@@ -5,6 +5,7 @@ import '../../services/event_service.dart';
 import '../../models/user_model.dart';
 import '../../models/event_model.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/common/custom_button.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -87,11 +88,20 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
-            const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            ),
+            const SizedBox(height: 24),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 24),
+            CustomButton(
+              text: 'Coba Lagi',
+              onPressed: _loadData,
+              isFullWidth: false,
+              icon: Icons.refresh,
+            ),
           ],
         ),
       );

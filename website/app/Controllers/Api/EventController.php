@@ -10,7 +10,7 @@ class EventController extends BaseApiController
     private function checkPengelola()
     {
         $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin'])) {
+        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin', 'ketua'])) {
             return false;
         }
         return true;
@@ -19,8 +19,8 @@ class EventController extends BaseApiController
     private function checkEventOwnership($eventId)
     {
         $user = AuthService::getUser();
-        if (in_array($user['role_level'], ['admin', 'pengelola'])) {
-            return true; // Admin and pengelola can access any event
+        if (in_array($user['role_level'], ['admin', 'pengelola', 'ketua'])) {
+            return true; // Admin, ketua, and pengelola can access any event
         }
         $eventModel = new EventModel();
         $event = $eventModel->find($eventId);
@@ -58,6 +58,10 @@ class EventController extends BaseApiController
                 'dibuat_oleh' => (int)$event['dibuat_oleh'],
                 'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
                 'jumlah_hadir' => (new \App\Models\AbsensiModel())->where('event_id', $event['id'])->countAllResults(),
+                'require_gps' => (int)$event['require_gps'],
+                'latitude' => $event['latitude'] ? (float)$event['latitude'] : null,
+                'longitude' => $event['longitude'] ? (float)$event['longitude'] : null,
+                'radius' => $event['radius'] ? (int)$event['radius'] : null,
                 'created_at' => $event['created_at'],
             ];
         }, $events);
@@ -90,6 +94,10 @@ class EventController extends BaseApiController
             'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
             'dibuat_oleh' => (int)$event['dibuat_oleh'],
             'jumlah_hadir' => (new \App\Models\AbsensiModel())->where('event_id', $id)->countAllResults(),
+            'require_gps' => (int)$event['require_gps'],
+            'latitude' => $event['latitude'] ? (float)$event['latitude'] : null,
+            'longitude' => $event['longitude'] ? (float)$event['longitude'] : null,
+            'radius' => $event['radius'] ? (int)$event['radius'] : null,
             'created_at' => $event['created_at'],
             'updated_at' => $event['updated_at'],
         ];
@@ -113,8 +121,17 @@ class EventController extends BaseApiController
         }
 
         $user = AuthService::getUser();
-        $namaAcara = $this->request->getVar('nama_acara');
-        $tanggalAcara = $this->request->getVar('tanggal_acara');
+        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
+        
+        $namaAcara = $rawInput['nama_acara'] ?? $this->request->getVar('nama_acara');
+        $tanggalAcara = $rawInput['tanggal_acara'] ?? $this->request->getVar('tanggal_acara');
+        $requireGps = isset($rawInput['require_gps']) ? (int)$rawInput['require_gps'] : 0;
+        
+        if ($requireGps === 1) {
+            if (!isset($rawInput['latitude']) || !isset($rawInput['longitude']) || !isset($rawInput['radius'])) {
+                return $this->sendError('Validasi gagal', ['gps' => 'Koordinat dan radius wajib diisi jika fitur GPS diaktifkan.'], 422);
+            }
+        }
 
         // Generate QR code token: LGS-xxxxxxxx
         $kodeQr = 'LGS-' . bin2hex(random_bytes(4));
@@ -129,7 +146,11 @@ class EventController extends BaseApiController
             'tanggal_acara' => $tanggalAcara,
             'kode_qr'       => $kodeQr,
             'dibuat_oleh'   => $user['id'],
-            'status_aktif'  => 'aktif'
+            'status_aktif'  => 'aktif',
+            'require_gps'   => $requireGps,
+            'latitude'      => $requireGps === 1 ? $rawInput['latitude'] : null,
+            'longitude'     => $requireGps === 1 ? $rawInput['longitude'] : null,
+            'radius'        => $requireGps === 1 ? $rawInput['radius'] : null,
         ];
 
         $eventModel->insert($eventData);
@@ -161,6 +182,22 @@ class EventController extends BaseApiController
         $validationData = [];
         if (isset($rawInput['nama_acara'])) $validationData['nama_acara'] = $rawInput['nama_acara'];
         if (isset($rawInput['tanggal_acara'])) $validationData['tanggal_acara'] = $rawInput['tanggal_acara'];
+        if (isset($rawInput['require_gps'])) {
+            $validationData['require_gps'] = (int)$rawInput['require_gps'];
+            if ($validationData['require_gps'] === 1) {
+                $validationData['latitude'] = $rawInput['latitude'] ?? $event['latitude'];
+                $validationData['longitude'] = $rawInput['longitude'] ?? $event['longitude'];
+                $validationData['radius'] = $rawInput['radius'] ?? $event['radius'];
+                
+                if (empty($validationData['latitude']) || empty($validationData['longitude']) || empty($validationData['radius'])) {
+                    return $this->sendError('Validasi gagal', ['gps' => 'Koordinat dan radius wajib diisi jika fitur GPS diaktifkan.'], 422);
+                }
+            } else {
+                $validationData['latitude'] = null;
+                $validationData['longitude'] = null;
+                $validationData['radius'] = null;
+            }
+        }
 
         if (empty($validationData)) {
             return $this->sendError('Tidak ada data yang diubah', null, 422);

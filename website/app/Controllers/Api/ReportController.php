@@ -13,7 +13,7 @@ class ReportController extends BaseApiController
     {
         $user = AuthService::getUser();
 
-        if (!$user || !in_array($user['role_level'], ['admin', 'pengelola'])) {
+        if (!$user || !in_array($user['role_level'], ['admin', 'ketua', 'pengelola'])) {
             return $this->sendError('Forbidden', null, 403);
         }
 

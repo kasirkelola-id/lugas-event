@@ -3,6 +3,9 @@ import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../../core/theme/app_theme.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -16,6 +19,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _namaController = TextEditingController();
   final _tanggalController = TextEditingController();
   bool _isLoading = false;
+  
+  bool _requireGps = false;
+  LatLng? _selectedLocation;
+  double _radius = 50.0;
+  final MapController _mapController = MapController();
 
   void _pilihTanggal() async {
     final picked = await showDatePicker(
@@ -38,9 +46,23 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       _isLoading = true;
     });
 
+    if (_requireGps && _selectedLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih lokasi acara pada peta.')),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     final result = await EventService.createEvent(
-      _namaController.text,
-      _tanggalController.text,
+      nama: _namaController.text,
+      tanggal: _tanggalController.text,
+      requireGps: _requireGps,
+      latitude: _selectedLocation?.latitude,
+      longitude: _selectedLocation?.longitude,
+      radius: _radius.toInt(),
     );
 
     setState(() {
@@ -94,6 +116,102 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
               onTap: _isLoading ? null : _pilihTanggal,
               validator: (v) => v!.isEmpty ? 'Tanggal acara harus diisi' : null,
             ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('Batasi Presensi dengan GPS'),
+              subtitle: const Text('Anggota hanya bisa absen di sekitar lokasi acara'),
+              value: _requireGps,
+              activeColor: AppTheme.primary,
+              onChanged: _isLoading ? null : (val) {
+                setState(() {
+                  _requireGps = val;
+                  if (val && _selectedLocation == null) {
+                    _selectedLocation = const LatLng(-6.200000, 106.816666); // Default Jakarta
+                  }
+                });
+              },
+            ),
+            if (_requireGps) ...[
+              const SizedBox(height: 16),
+              const Text('Lokasi Acara', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                height: 250,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: _selectedLocation ?? const LatLng(-6.200000, 106.816666),
+                      initialZoom: 15.0,
+                      onTap: (tapPosition, point) {
+                        setState(() {
+                          _selectedLocation = point;
+                        });
+                      },
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.example.app',
+                      ),
+                      if (_selectedLocation != null) ...[
+                        CircleLayer(
+                          circles: [
+                            CircleMarker(
+                              point: _selectedLocation!,
+                              color: AppTheme.primary.withValues(alpha: 0.3),
+                              borderStrokeWidth: 2,
+                              borderColor: AppTheme.primary,
+                              useRadiusInMeter: true,
+                              radius: _radius,
+                            ),
+                          ],
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: _selectedLocation!,
+                              width: 40,
+                              height: 40,
+                              child: const Icon(Icons.location_on, color: AppTheme.error, size: 40),
+                            ),
+                          ],
+                        ),
+                      ]
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text('Ketuk peta untuk memindahkan lokasi acara.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Text('Radius (meter):', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Slider(
+                      value: _radius,
+                      min: 10,
+                      max: 1000,
+                      divisions: 99,
+                      label: '${_radius.toInt()} m',
+                      activeColor: AppTheme.primary,
+                      onChanged: _isLoading ? null : (val) {
+                        setState(() {
+                          _radius = val;
+                        });
+                      },
+                    ),
+                  ),
+                  Text('${_radius.toInt()} m', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,

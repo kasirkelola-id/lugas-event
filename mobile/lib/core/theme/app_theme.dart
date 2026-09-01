@@ -60,13 +60,15 @@ class AppTheme {
         primary: primary,
         secondary: secondary,
         surface: surface,
+        error: error,
       ),
       scaffoldBackgroundColor: background,
-      fontFamily: 'Inter', // Assuming standard font
+      fontFamily: 'Inter',
       appBarTheme: const AppBarTheme(
         backgroundColor: surface,
         foregroundColor: textPrimary,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: textPrimary),
         titleTextStyle: TextStyle(
@@ -74,6 +76,17 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
+      ),
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: textPrimary, fontWeight: FontWeight.bold),
+        displayMedium: TextStyle(color: textPrimary, fontWeight: FontWeight.bold),
+        displaySmall: TextStyle(color: textPrimary, fontWeight: FontWeight.bold),
+        headlineMedium: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
+        titleLarge: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 20),
+        titleMedium: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
+        bodyLarge: TextStyle(color: textPrimary, fontSize: 16),
+        bodyMedium: TextStyle(color: textSecondary, fontSize: 14),
+        labelLarge: TextStyle(color: textPrimary, fontWeight: FontWeight.w500),
       ),
       cardTheme: CardThemeData(
         color: surface,
@@ -83,6 +96,25 @@ class AppTheme {
           borderRadius: radiusMedium,
           side: BorderSide(color: Colors.grey.shade200),
         ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: radiusLarge),
+        titleTextStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+        contentTextStyle: const TextStyle(fontSize: 14, color: textSecondary),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: Colors.grey.shade200,
+        thickness: 1,
+        space: 1,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -97,15 +129,22 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
-          side: const BorderSide(color: primary),
+          side: const BorderSide(color: primary, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: radiusSmall),
           textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         ),
       ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: primary,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
+        fillColor: Colors.grey.shade50,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: radiusSmall,
@@ -119,7 +158,22 @@ class AppTheme {
           borderRadius: radiusSmall,
           borderSide: const BorderSide(color: primary, width: 2),
         ),
-        labelStyle: TextStyle(color: textSecondary),
+        errorBorder: OutlineInputBorder(
+          borderRadius: radiusSmall,
+          borderSide: const BorderSide(color: error, width: 1.5),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: radiusSmall,
+          borderSide: const BorderSide(color: error, width: 2),
+        ),
+        labelStyle: TextStyle(color: textSecondary, fontSize: 14),
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        errorStyle: const TextStyle(color: error, fontWeight: FontWeight.w500),
+      ),
+      listTileTheme: const ListTileThemeData(
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        iconColor: textSecondary,
+        textColor: textPrimary,
       ),
     );
   }

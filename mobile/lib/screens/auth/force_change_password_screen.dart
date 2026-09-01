@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
 import '../../core/theme/app_theme.dart';
+import '../widgets/common/custom_text_field.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/common/feedback_dialogs.dart';
 import 'login_screen.dart';
 import '../pengelola/pengelola_home_screen.dart';
 import '../anggota/anggota_home_screen.dart';
@@ -70,31 +73,11 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
           return;
         }
 
-        await showDialog(
+        await FeedbackDialogs.showConfirmation(
           context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            title: Row(
-              children: const [
-                Icon(Icons.check_circle, color: AppTheme.success, size: 28),
-                SizedBox(width: 8),
-                Text('Pembaruan Berhasil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              ],
-            ),
-            content: const Text('Password berhasil diperbarui. Selamat datang di LUGAS.'),
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
-                ),
-                child: const Text('Lanjutkan'),
-              ),
-            ],
-          ),
+          title: 'Pembaruan Berhasil',
+          content: 'Password berhasil diperbarui. Selamat datang di LUGAS.',
+          confirmText: 'Lanjutkan',
         );
 
         if (!mounted) return;
@@ -170,7 +153,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                       if (_errorMessage != null)
                         Container(
                           padding: const EdgeInsets.all(12),
-                          margin: const EdgeInsets.only(bottom: 16),
+                          margin: const EdgeInsets.only(bottom: 24),
                           decoration: BoxDecoration(
                             color: AppTheme.error.withValues(alpha: 0.1),
                             borderRadius: AppTheme.radiusSmall,
@@ -178,73 +161,52 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline, color: AppTheme.error),
+                              const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
+                                child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.error, fontSize: 14)),
                               ),
                             ],
                           ),
                         ),
-                      TextField(
+                      CustomTextField(
                         controller: _oldPasswordController,
+                        label: 'Password Saat Ini',
+                        prefixIcon: Icons.lock_outline,
                         obscureText: _obscureOld,
-                        decoration: InputDecoration(
-                          labelText: 'Password Saat Ini',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureOld ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                            onPressed: () => setState(() => _obscureOld = !_obscureOld),
-                          ),
+                        readOnly: _isLoading,
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureOld ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                          onPressed: () => setState(() => _obscureOld = !_obscureOld),
                         ),
-                        enabled: !_isLoading,
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
+                      CustomTextField(
                         controller: _newPasswordController,
+                        label: 'Password Baru',
+                        prefixIcon: Icons.lock,
                         obscureText: _obscureNew,
-                        decoration: InputDecoration(
-                          labelText: 'Password Baru',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                            onPressed: () => setState(() => _obscureNew = !_obscureNew),
-                          ),
+                        readOnly: _isLoading,
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                          onPressed: () => setState(() => _obscureNew = !_obscureNew),
                         ),
-                        enabled: !_isLoading,
+                      ),
+                      CustomTextField(
+                        controller: _confirmPasswordController,
+                        label: 'Konfirmasi Password Baru',
+                        prefixIcon: Icons.lock,
+                        obscureText: _obscureConfirm,
+                        readOnly: _isLoading,
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                          onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                        ),
                       ),
                       const SizedBox(height: 16),
-                      TextField(
-                        controller: _confirmPasswordController,
-                        obscureText: _obscureConfirm,
-                        decoration: InputDecoration(
-                          labelText: 'Konfirmasi Password Baru',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                            onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                          ),
-                        ),
-                        enabled: !_isLoading,
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primary,
-                            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : const Text('Simpan & Lanjutkan', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                        ),
+                      CustomButton(
+                        text: 'Simpan & Lanjutkan',
+                        onPressed: _submit,
+                        isLoading: _isLoading,
                       ),
                       const SizedBox(height: 16),
                       TextButton(

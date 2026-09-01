@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import '../../core/theme/app_theme.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/common/feedback_dialogs.dart';
 
 class ScanQrScreen extends StatefulWidget {
   const ScanQrScreen({super.key});
@@ -51,28 +54,44 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
   }
 
   Future<bool?> _showConfirmationDialog(String qrCode) {
-    return showDialog<bool>(
+    return FeedbackDialogs.showConfirmation(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Catat Kehadiran', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Apakah Anda yakin ingin memverifikasi kehadiran untuk acara ini?'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batalkan', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: const Text('Konfirmasi'),
-          ),
-        ],
-      ),
+      title: 'Catat Kehadiran',
+      content: 'Apakah Anda yakin ingin memverifikasi kehadiran untuk acara ini?',
     );
+  }
+
+  Future<Position?> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Layanan lokasi dinonaktifkan. Silakan hidupkan GPS.')));
+      }
+      return null;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Izin lokasi ditolak.')));
+        }
+        return null;
+      }
+    }
+    
+    if (permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Izin lokasi ditolak secara permanen. Tidak dapat melakukan presensi dengan GPS.')));
+      }
+      return null;
+    } 
+
+    return await Geolocator.getCurrentPosition();
   }
 
   void _submitAbsensi(String qrCode) async {
@@ -84,45 +103,51 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
           children: const [
             CircularProgressIndicator(),
             SizedBox(width: 24),
-            Text('Memverifikasi absensi...'),
+            Expanded(child: Text('Memverifikasi lokasi & absensi...')),
           ],
         ),
       ),
     );
 
-    final result = await AttendanceService.submitAttendance(qrCode);
+    // Get location just in case the event requires GPS.
+    // If it doesn't, sending coordinates is harmless.
+    final position = await _getCurrentLocation();
+    
+    if (position != null && position.isMocked) {
+      if (!mounted) return;
+      Navigator.pop(context); // close loading dialog
+      await FeedbackDialogs.showConfirmation(
+        context: context,
+        title: 'Lokasi Palsu Terdeteksi',
+        content: 'Anda terdeteksi menggunakan aplikasi Fake GPS (Mock Location). Harap matikan pemalsu lokasi untuk melakukan presensi.',
+        confirmText: 'Mengerti',
+        isDestructive: true,
+      );
+      setState(() {
+        _isProcessing = false;
+      });
+      _scannerController.start();
+      return;
+    }
+    
+    final result = await AttendanceService.submitAttendance(
+      qrCode,
+      userLat: position?.latitude,
+      userLng: position?.longitude,
+    );
     
     if (!mounted) return;
     Navigator.pop(context); // close loading dialog
 
     if (result['success']) {
-      await showDialog(
+      await FeedbackDialogs.showConfirmation(
         context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: const [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
-              SizedBox(width: 8),
-              Text('Absensi Berhasil', style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: const Text('Anda telah tercatat hadir pada acara ini.'),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                Navigator.pop(context); // close scanner screen and return to dashboard
-              },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text('Selesai'),
-            ),
-          ],
-        ),
+        title: 'Absensi Berhasil',
+        content: 'Anda telah tercatat hadir pada acara ini.',
+        confirmText: 'Selesai',
       );
+      if (!mounted) return;
+      Navigator.pop(context); // close scanner screen and return to dashboard
     } else {
       String title = 'Absensi Gagal';
       IconData iconData = Icons.error_outline;
@@ -139,29 +164,12 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
         title = 'QR Code Tidak Valid';
       }
 
-      await showDialog(
+      await FeedbackDialogs.showConfirmation(
         context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Icon(iconData, color: iconColor, size: 28),
-              const SizedBox(width: 8),
-              Expanded(child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
-            ],
-          ),
-          content: Text(result['message'] ?? 'Koneksi Bermasalah'),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
+        title: title,
+        content: result['message'] ?? 'Koneksi Bermasalah',
+        confirmText: 'OK',
+        isDestructive: true,
       );
       
       if (result['statusCode'] == 401) {
@@ -227,14 +235,12 @@ class _ScanQrScreenState extends State<ScanQrScreen> {
           Container(
             padding: const EdgeInsets.all(24.0),
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: CustomButton(
+              text: 'Batal & Kembali',
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.close),
-              label: const Text('Batal & Kembali'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.error,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
+              icon: Icons.close,
+              isFullWidth: true,
+              type: ButtonType.danger,
             ),
           ),
         ],

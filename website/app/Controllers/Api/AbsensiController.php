@@ -12,10 +12,28 @@ class AbsensiController extends BaseApiController
     private function checkPengelola()
     {
         $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin'])) {
+        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin', 'ketua'])) {
             return false;
         }
         return true;
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // Radius Bumi dalam meter
+        
+        $latFrom = deg2rad((float)$lat1);
+        $lonFrom = deg2rad((float)$lon1);
+        $latTo = deg2rad((float)$lat2);
+        $lonTo = deg2rad((float)$lon2);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+          cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+          
+        return $angle * $earthRadius;
     }
 
     public function create()
@@ -52,6 +70,20 @@ class AbsensiController extends BaseApiController
         $statusAktif = $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0;
         if ($statusAktif !== 1) {
             return $this->sendError('Acara sudah ditutup', null, 422);
+        }
+
+        if (isset($event['require_gps']) && (int)$event['require_gps'] === 1) {
+            $userLat = $rawInput['user_lat'] ?? null;
+            $userLng = $rawInput['user_lng'] ?? null;
+            
+            if ($userLat === null || $userLng === null) {
+                return $this->sendError('Akses Lokasi Diperlukan', ['gps' => 'Koordinat GPS Anda diperlukan untuk melakukan absensi pada acara ini.'], 422);
+            }
+            
+            $distance = $this->calculateDistance($event['latitude'], $event['longitude'], $userLat, $userLng);
+            if ($distance > $event['radius']) {
+                return $this->sendError('Lokasi Di Luar Jangkauan', ['gps' => 'Anda berada di luar area yang diizinkan untuk absensi ini. Jarak Anda: ' . round($distance) . 'm. Radius maksimal: ' . $event['radius'] . 'm.'], 422);
+            }
         }
 
         // Users are no longer required to be pre-registered in event_participants to attend

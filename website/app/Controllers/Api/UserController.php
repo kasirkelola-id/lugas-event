@@ -10,7 +10,7 @@ class UserController extends BaseApiController
     private function checkAdmin()
     {
         $user = AuthService::getUser();
-        if (!$user || $user['role_level'] !== 'admin') {
+        if (!$user || !in_array($user['role_level'], ['admin', 'ketua'])) {
             return false;
         }
         return true;
@@ -19,7 +19,7 @@ class UserController extends BaseApiController
     private function checkAdminOrPengelola()
     {
         $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['admin', 'pengelola'])) {
+        if (!$user || !in_array($user['role_level'], ['admin', 'ketua', 'pengelola'])) {
             return false;
         }
         return true;
@@ -28,7 +28,7 @@ class UserController extends BaseApiController
     private function countActiveAdmins()
     {
         $userModel = new UserModel();
-        return $userModel->where('role_level', 'admin')
+        return $userModel->whereIn('role_level', ['admin', 'ketua'])
                          ->where('status_aktif', 1)
                          ->countAllResults();
     }
@@ -56,6 +56,7 @@ class UserController extends BaseApiController
                 'nama_panggilan' => $u['nama_panggilan'],
                 'username' => $u['username'],
                 'no_whatsapp' => $u['no_whatsapp'],
+                'rt' => (int)($u['rt'] ?? 1),
                 'role_level' => $u['role_level'],
                 'status_aktif' => (int)$u['status_aktif'],
                 'created_at' => $u['created_at'],
@@ -76,7 +77,8 @@ class UserController extends BaseApiController
             'nama_panggilan' => 'required|max_length[100]',
             'username'       => 'required|is_unique[users.username]',
             'password'       => 'required|min_length[6]',
-            'role_level'     => 'required|in_list[admin,pengelola,anggota]'
+            'role_level'     => 'required|in_list[admin,ketua,sekretaris,bendahara,pengelola,anggota]',
+            'rt'             => 'permit_empty|in_list[1,2,3,4]'
         ];
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
@@ -92,6 +94,7 @@ class UserController extends BaseApiController
             'username'       => $rawInput['username'],
             'password'       => password_hash($rawInput['password'], PASSWORD_BCRYPT),
             'no_whatsapp'    => $rawInput['no_whatsapp'] ?? null,
+            'rt'             => (int)($rawInput['rt'] ?? 1),
             'role_level'     => $rawInput['role_level'],
             'status_aktif'   => 1
         ];
@@ -124,6 +127,7 @@ class UserController extends BaseApiController
         if (isset($rawInput['nama_panggilan'])) $validationData['nama_panggilan'] = $rawInput['nama_panggilan'];
         if (isset($rawInput['no_whatsapp'])) $validationData['no_whatsapp'] = $rawInput['no_whatsapp'];
         if (isset($rawInput['username'])) $validationData['username'] = $rawInput['username'];
+        if (isset($rawInput['rt'])) $validationData['rt'] = (int)$rawInput['rt'];
 
         if (empty($validationData)) {
             return $this->sendError('Tidak ada data yang diubah', null, 422);
@@ -133,6 +137,7 @@ class UserController extends BaseApiController
         if (isset($validationData['nama_lengkap'])) $rules['nama_lengkap'] = 'required|max_length[255]';
         if (isset($validationData['nama_panggilan'])) $rules['nama_panggilan'] = 'required|max_length[100]';
         if (isset($validationData['username'])) $rules['username'] = "required|is_unique[users.username,id,{$id}]";
+        if (isset($validationData['rt'])) $rules['rt'] = 'required|in_list[1,2,3,4]';
 
         if (!$this->validateData($validationData, $rules)) {
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
@@ -159,9 +164,9 @@ class UserController extends BaseApiController
         $newStatus = (int)$user['status_aktif'] === 1 ? 0 : 1;
 
         // Lockout prevention
-        if ($newStatus === 0 && $user['role_level'] === 'admin') {
+        if ($newStatus === 0 && in_array($user['role_level'], ['admin', 'ketua'])) {
             if ($this->countActiveAdmins() <= 1) {
-                return $this->sendError('Validasi gagal', ['status_aktif' => 'Tidak dapat menonaktifkan akun admin terakhir yang aktif.'], 400);
+                return $this->sendError('Validasi gagal', ['status_aktif' => 'Tidak dapat menonaktifkan akun admin/ketua terakhir yang aktif.'], 400);
             }
         }
 
@@ -184,16 +189,16 @@ class UserController extends BaseApiController
         }
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
-        if (!isset($rawInput['role_level']) || !in_array($rawInput['role_level'], ['admin', 'pengelola', 'anggota'])) {
-             return $this->sendError('Validasi gagal', ['role_level' => 'Role tidak valid'], 422);
+        if (!isset($rawInput['role_level']) || !in_array($rawInput['role_level'], ['admin', 'ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'])) {
+            return $this->sendError('Validasi gagal', ['role_level' => 'Role tidak valid'], 422);
         }
 
         $newRole = $rawInput['role_level'];
 
         // Lockout prevention
-        if ($user['role_level'] === 'admin' && $newRole !== 'admin' && (int)$user['status_aktif'] === 1) {
+        if (in_array($user['role_level'], ['admin', 'ketua']) && !in_array($newRole, ['admin', 'ketua']) && (int)$user['status_aktif'] === 1) {
             if ($this->countActiveAdmins() <= 1) {
-                return $this->sendError('Validasi gagal', ['role_level' => 'Tidak dapat mengubah role dari akun admin terakhir yang aktif.'], 400);
+                return $this->sendError('Validasi gagal', ['role_level' => 'Tidak dapat mengubah role dari akun admin/ketua terakhir yang aktif.'], 400);
             }
         }
 
@@ -234,15 +239,13 @@ class UserController extends BaseApiController
 
     public function rolesSummary()
     {
-        // Allowed for admin and pengelola (pengelola might want to see how many members they have, though the UI is currently admin only)
-        // Let's restrict it to admin
         if (!$this->checkAdmin()) {
             return $this->sendError('Forbidden', null, 403);
         }
 
         $userModel = new UserModel();
         
-        $totalAdmin = $userModel->where('role_level', 'admin')->countAllResults();
+        $totalAdmin = $userModel->whereIn('role_level', ['admin', 'ketua'])->countAllResults();
         $totalPengelola = $userModel->where('role_level', 'pengelola')->countAllResults();
         $totalAnggota = $userModel->where('role_level', 'anggota')->countAllResults();
 

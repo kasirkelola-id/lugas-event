@@ -55,6 +55,7 @@ class AuthController extends BaseApiController
             'nama_panggilan' => $user['nama_panggilan'],
             'username'       => $user['username'],
             'no_whatsapp'    => $user['no_whatsapp'],
+            'rt'             => (int)($user['rt'] ?? 1),
             'role_level'     => $user['role_level'],
             'status_aktif'   => (int)$user['status_aktif'],
             'password_must_change' => (int)($user['password_must_change'] ?? 0) === 1,
@@ -89,6 +90,7 @@ class AuthController extends BaseApiController
             'nama_panggilan' => $user['nama_panggilan'],
             'username'       => $user['username'],
             'no_whatsapp'    => $user['no_whatsapp'],
+            'rt'             => (int)($user['rt'] ?? 1),
             'role_level'     => $user['role_level'],
             'status_aktif'   => (int)$user['status_aktif'],
             'password_must_change' => (int)($user['password_must_change'] ?? 0) === 1,
@@ -106,6 +108,7 @@ class AuthController extends BaseApiController
             'password'       => 'required|min_length[6]',
             'confirm_password' => 'required|matches[password]',
             'no_whatsapp'    => 'required|max_length[20]',
+            'rt'             => 'permit_empty|in_list[1,2,3,4]',
         ];
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
@@ -121,6 +124,7 @@ class AuthController extends BaseApiController
             'username'       => $rawInput['username'],
             'password'       => password_hash($rawInput['password'], PASSWORD_BCRYPT),
             'no_whatsapp'    => $rawInput['no_whatsapp'],
+            'rt'             => (int)($rawInput['rt'] ?? 1),
             'role_level'     => 'anggota',
             'status_aktif'   => 1,
             'password_must_change' => 0

@@ -65,6 +65,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
     final namaPanggilanController = TextEditingController(text: _user!.namaPanggilan);
     final usernameController = TextEditingController(text: _user!.username);
     final whatsappController = TextEditingController(text: _user!.noWhatsapp);
+    int selectedRt = _user!.rt;
     bool isLoadingSubmit = false;
 
     await showDialog(
@@ -116,6 +117,23 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                           border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<int>(
+                        value: selectedRt,
+                        decoration: InputDecoration(
+                          labelText: 'RT (Rukun Tetangga)', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 1, child: Text('RT 01')),
+                          DropdownMenuItem(value: 2, child: Text('RT 02')),
+                          DropdownMenuItem(value: 3, child: Text('RT 03')),
+                          DropdownMenuItem(value: 4, child: Text('RT 04')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setStateDialog(() => selectedRt = val);
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -137,6 +155,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                               'nama_panggilan': namaPanggilanController.text,
                               'username': usernameController.text,
                               'no_whatsapp': whatsappController.text,
+                              'rt': selectedRt,
                             };
 
                             final result = await ProfileService.updateProfile(data);
@@ -413,6 +432,11 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                         child: Divider(height: 1, color: Colors.black12),
                       ),
                       _buildInfoTile(Icons.phone_outlined, 'WhatsApp', _user!.noWhatsapp.isEmpty ? '-' : _user!.noWhatsapp),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1, color: Colors.black12),
+                      ),
+                      _buildInfoTile(Icons.home_outlined, 'RT', 'RT 0${_user!.rt}'),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Divider(height: 1, color: Colors.black12),

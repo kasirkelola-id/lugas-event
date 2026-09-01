@@ -5,6 +5,10 @@ import '../../services/announcement_service.dart';
 import '../../models/user_model.dart';
 import '../../models/announcement_model.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/common/custom_text_field.dart';
+import '../widgets/common/empty_state.dart';
+import '../widgets/common/feedback_dialogs.dart';
 
 class AdminPengumumanScreen extends StatefulWidget {
   const AdminPengumumanScreen({super.key});
@@ -54,14 +58,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
 
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? AppTheme.error : AppTheme.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-      ),
-    );
+    FeedbackDialogs.showSnackbar(context, message, isError: isError);
   }
 
   Future<void> _showFormDialog({AnnouncementModel? announcement}) async {
@@ -88,21 +85,14 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextFormField(
+                      CustomTextField(
                         controller: judulController,
-                        decoration: InputDecoration(
-                          labelText: 'Judul', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                        ),
+                        label: 'Judul',
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
-                      const SizedBox(height: 16),
-                      TextFormField(
+                      CustomTextField(
                         controller: isiController,
-                        decoration: InputDecoration(
-                          labelText: 'Isi Pengumuman', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                        ),
+                        label: 'Isi Pengumuman',
                         maxLines: 4,
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
@@ -140,47 +130,40 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                   onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
                   child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
                 ),
-                ElevatedButton(
-                  onPressed: isLoadingSubmit
-                      ? null
-                      : () async {
-                          if (formKey.currentState!.validate()) {
-                            setStateDialog(() => isLoadingSubmit = true);
-                            
-                            final data = {
-                              'judul': judulController.text,
-                              'isi': isiController.text,
-                              'target_role': targetRole,
-                              'status_aktif': statusAktif ? 1 : 0,
-                            };
+                CustomButton(
+                  text: 'Simpan',
+                  onPressed: () async {
+                    if (formKey.currentState!.validate()) {
+                      setStateDialog(() => isLoadingSubmit = true);
+                      
+                      final data = {
+                        'judul': judulController.text,
+                        'isi': isiController.text,
+                        'target_role': targetRole,
+                        'status_aktif': statusAktif ? 1 : 0,
+                      };
 
-                            Map<String, dynamic> result;
-                            if (announcement == null) {
-                              result = await AnnouncementService.createAnnouncement(data);
-                            } else {
-                              result = await AnnouncementService.updateAnnouncement(announcement.id, data);
-                            }
+                      Map<String, dynamic> result;
+                      if (announcement == null) {
+                        result = await AnnouncementService.createAnnouncement(data);
+                      } else {
+                        result = await AnnouncementService.updateAnnouncement(announcement.id, data);
+                      }
 
-                            if (result['success']) {
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                                _showSnackbar(announcement == null ? 'Pengumuman dibuat' : 'Pengumuman diperbarui');
-                                _loadData();
-                              }
-                            } else {
-                              setStateDialog(() => isLoadingSubmit = false);
-                              _showSnackbar(result['message'], isError: true);
-                            }
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-                  ),
-                  child: isLoadingSubmit 
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
-                      : const Text('Simpan'),
+                      if (result['success']) {
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          _showSnackbar(announcement == null ? 'Pengumuman dibuat' : 'Pengumuman diperbarui');
+                          _loadData();
+                        }
+                      } else {
+                        setStateDialog(() => isLoadingSubmit = false);
+                        _showSnackbar(result['message'], isError: true);
+                      }
+                    }
+                  },
+                  isLoading: isLoadingSubmit,
+                  isFullWidth: false,
                 ),
               ],
             );
@@ -191,28 +174,11 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
   }
 
   Future<void> _deleteAnnouncement(AnnouncementModel announcement) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hapus Pengumuman?', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Anda yakin ingin menghapus "${announcement.judul}"?'),
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false), 
-            child: const Text('Batalkan', style: TextStyle(color: AppTheme.textSecondary))
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true), 
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-            ),
-            child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+      title: 'Hapus Pengumuman?',
+      content: 'Anda yakin ingin menghapus "${announcement.judul}"?',
+      isDestructive: true,
     );
 
     if (confirm == true) {
@@ -271,39 +237,32 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
-            const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            ),
+            const SizedBox(height: 24),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 24),
+            CustomButton(
+              text: 'Coba Lagi',
+              onPressed: _loadData,
+              isFullWidth: false,
+              icon: Icons.refresh,
+            ),
           ],
         ),
       );
     }
 
     if (_announcements.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.campaign_outlined, size: 80, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            const Text('Belum Ada Pengumuman', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('Pengumuman yang dibuat akan tampil di sini.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => _showFormDialog(),
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('Buat Pengumuman', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          ],
-        ),
+      return EmptyStateWidget(
+        icon: Icons.campaign_outlined,
+        title: 'Belum Ada Pengumuman',
+        subtitle: 'Pengumuman yang dibuat akan tampil di sini.',
+        buttonText: 'Buat Pengumuman',
+        onButtonPressed: () => _showFormDialog(),
       );
     }
 

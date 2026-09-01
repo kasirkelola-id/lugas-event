@@ -12,7 +12,7 @@ class ParticipantController extends BaseApiController
     private function checkPengelola()
     {
         $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin'])) {
+        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin', 'ketua'])) {
             return false;
         }
         return true;
@@ -21,7 +21,7 @@ class ParticipantController extends BaseApiController
     private function checkEventOwnership($eventId)
     {
         $user = AuthService::getUser();
-        if (in_array($user['role_level'], ['admin', 'pengelola'])) {
+        if (in_array($user['role_level'], ['admin', 'pengelola', 'ketua'])) {
             return true;
         }
         $eventModel = new EventModel();

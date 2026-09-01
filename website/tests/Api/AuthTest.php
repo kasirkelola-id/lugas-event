@@ -13,8 +13,8 @@ class AuthTest extends CIUnitTestCase
     use FeatureTestTrait, DatabaseTestTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = false;
-    protected $DBGroup = 'default';
+    protected $migrateOnce = true;
+    protected $namespace = 'App';
 
     protected function setUp(): void
     {

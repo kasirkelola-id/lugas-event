@@ -13,6 +13,8 @@ import 'scan_qr_screen.dart';
 import 'attendance_history_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/common/empty_state.dart';
 
 class AnggotaHomeScreen extends StatefulWidget {
   const AnggotaHomeScreen({super.key});
@@ -186,14 +188,11 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
               child: Text(_errorMessage, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textSecondary)),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            CustomButton(
+              text: 'Coba Lagi',
               onPressed: _loadData,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-              ),
-              child: const Text('Coba Lagi'),
+              isFullWidth: false,
+              icon: Icons.refresh,
             ),
           ],
         ),
@@ -402,26 +401,10 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
           ),
         ),
         if (_announcements.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: AppTheme.radiusMedium,
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                children: const [
-                  Icon(Icons.campaign_outlined, size: 48, color: AppTheme.textSecondary),
-                  SizedBox(height: 12),
-                  Text('Belum Ada Pengumuman', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 16)),
-                  SizedBox(height: 4),
-                  Text('Informasi terbaru akan muncul di sini.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
+          const EmptyStateWidget(
+            icon: Icons.campaign_outlined,
+            title: 'Belum Ada Pengumuman',
+            subtitle: 'Informasi terbaru akan muncul di sini.',
           )
         else
           ListView.builder(
@@ -489,26 +472,10 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
           ),
         ),
         if (_recentAttendances.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: AppTheme.radiusMedium,
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                children: const [
-                  Icon(Icons.history_outlined, size: 48, color: AppTheme.textSecondary),
-                  SizedBox(height: 12),
-                  Text('Belum Ada Riwayat', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary, fontSize: 16)),
-                  SizedBox(height: 4),
-                  Text('Absensi yang Anda lakukan akan muncul di sini.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13), textAlign: TextAlign.center),
-                ],
-              ),
-            ),
+          const EmptyStateWidget(
+            icon: Icons.history_outlined,
+            title: 'Belum Ada Riwayat',
+            subtitle: 'Absensi yang Anda lakukan akan muncul di sini.',
           )
         else
           ListView.builder(

@@ -4,6 +4,7 @@ class UserModel {
   final String namaPanggilan;
   final String username;
   final String noWhatsapp;
+  final int rt;
   final String roleLevel;
   final int statusAktif;
   final bool passwordMustChange;
@@ -14,6 +15,7 @@ class UserModel {
     required this.namaPanggilan,
     required this.username,
     required this.noWhatsapp,
+    this.rt = 1,
     required this.roleLevel,
     required this.statusAktif,
     this.passwordMustChange = false,
@@ -26,6 +28,7 @@ class UserModel {
       namaPanggilan: json['nama_panggilan'] ?? '',
       username: json['username'] ?? '',
       noWhatsapp: json['no_whatsapp'] ?? '',
+      rt: json['rt'] != null ? (json['rt'] is int ? json['rt'] : int.tryParse(json['rt'].toString()) ?? 1) : 1,
       roleLevel: json['role_level'] ?? '',
       statusAktif: json['status_aktif'] is int ? json['status_aktif'] : int.parse(json['status_aktif'].toString()),
       passwordMustChange: json['password_must_change'] == true || json['password_must_change'] == 1,

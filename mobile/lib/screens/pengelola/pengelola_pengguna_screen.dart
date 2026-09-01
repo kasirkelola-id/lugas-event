@@ -22,6 +22,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   
   String _searchQuery = '';
   String _roleFilter = 'Semua';
+  int? _rtFilter;
 
   final _namaLengkapController = TextEditingController();
   final _namaPanggilanController = TextEditingController();
@@ -79,9 +80,13 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                               user.username.toLowerCase().contains(_searchQuery.toLowerCase());
         final matchesRole = _roleFilter == 'Semua' || 
                             (_roleFilter == 'Admin' && user.roleLevel == 'admin') ||
+                            (_roleFilter == 'Ketua' && user.roleLevel == 'ketua') ||
+                            (_roleFilter == 'Sekretaris' && user.roleLevel == 'sekretaris') ||
+                            (_roleFilter == 'Bendahara' && user.roleLevel == 'bendahara') ||
                             (_roleFilter == 'Pengelola' && user.roleLevel == 'pengelola') ||
                             (_roleFilter == 'Anggota' && user.roleLevel == 'anggota');
-        return matchesSearch && matchesRole;
+        final matchesRt = _rtFilter == null || user.rt == _rtFilter;
+        return matchesSearch && matchesRole && matchesRt;
       }).toList();
     });
   }
@@ -194,7 +199,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: ['Semua', 'Admin', 'Pengelola', 'Anggota'].map((role) {
+                      children: ['Semua', 'Admin', 'Ketua', 'Sekretaris', 'Bendahara', 'Pengelola', 'Anggota'].map((role) {
                         final isSelected = _roleFilter == role;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
@@ -217,6 +222,42 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                             onSelected: (selected) {
                               setState(() {
                                 _roleFilter = role;
+                                _applyFilters();
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [null, 1, 2, 3, 4].map((rt) {
+                        final isSelected = _rtFilter == rt;
+                        final label = rt == null ? 'Semua RT' : 'RT 0$rt';
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: FilterChip(
+                            label: Text(label),
+                            selected: isSelected,
+                            selectedColor: AppTheme.info.withValues(alpha: 0.15),
+                            checkmarkColor: AppTheme.info,
+                            labelStyle: TextStyle(
+                              color: isSelected ? AppTheme.info : AppTheme.textSecondary,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                            backgroundColor: AppTheme.surface,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: AppTheme.radiusLarge,
+                              side: BorderSide(
+                                color: isSelected ? AppTheme.info.withValues(alpha: 0.5) : Colors.grey.shade300,
+                              ),
+                            ),
+                            onSelected: (selected) {
+                              setState(() {
+                                _rtFilter = rt;
                                 _applyFilters();
                               });
                             },
@@ -340,7 +381,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
-                  '${user.username} • ${user.roleLevel.toUpperCase()}',
+                  '${user.username} • RT 0${user.rt} • ${user.roleLevel.toUpperCase()}',
                   style: TextStyle(color: isActive ? AppTheme.textSecondary : Colors.grey.shade400, fontSize: 13),
                 ),
               ),

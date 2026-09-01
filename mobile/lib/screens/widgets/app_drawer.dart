@@ -23,6 +23,7 @@ import '../admin/admin_pengumuman_screen.dart';
 import '../admin/admin_printer_screen.dart';
 import '../admin/admin_pengaturan_screen.dart';
 import '../admin/admin_profil_screen.dart';
+import '../kas/kas_screen.dart';
 
 import '../anggota/anggota_home_screen.dart';
 import '../anggota/scan_qr_screen.dart';
@@ -59,8 +60,10 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final role = user.roleLevel.toLowerCase();
-    final isAdmin = role == 'admin';
-    final isAnggota = role == 'anggota';
+    final isAdmin = role == 'admin' || role == 'ketua';
+    final isPengelola = role == 'pengelola';
+    final isSekretaris = role == 'sekretaris';
+    final isBendahara = role == 'bendahara';
 
     return Drawer(
       backgroundColor: AppTheme.background,
@@ -72,25 +75,35 @@ class AppDrawer extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 16),
               children: isAdmin 
                   ? _buildAdminMenu(context) 
-                  : (isAnggota ? _buildAnggotaMenu(context) : _buildPengelolaMenu(context)),
+                  : (isPengelola ? _buildPengelolaMenu(context) : _buildAnggotaMenu(context, isSekretaris, isBendahara)),
             ),
           ),
           const Divider(height: 1, color: Colors.black12),
           Container(
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
             color: AppTheme.surface,
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.error.withValues(alpha: 0.1),
-                  borderRadius: AppTheme.radiusSmall,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.error.withValues(alpha: 0.1),
+                      borderRadius: AppTheme.radiusSmall,
+                    ),
+                    child: const Icon(Icons.logout, color: AppTheme.error, size: 20),
+                  ),
+                  title: const Text('Logout', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+                  onTap: () => _logout(context),
+                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
                 ),
-                child: const Icon(Icons.logout, color: AppTheme.error, size: 20),
-              ),
-              title: const Text('Logout', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
-              onTap: () => _logout(context),
-              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
+                const SizedBox(height: 8),
+                Text(
+                  'v1.0.0 (Beta)',
+                  style: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.5), fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
           ),
         ],
@@ -100,19 +113,31 @@ class AppDrawer extends StatelessWidget {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.only(top: 50, bottom: 24, left: 24, right: 24),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.only(top: 60, bottom: 24, left: 24, right: 24),
+      decoration: BoxDecoration(
         color: AppTheme.surface,
-        border: Border(bottom: BorderSide(color: Colors.black12)),
+        border: const Border(bottom: BorderSide(color: Colors.black12)),
+        image: DecorationImage(
+          image: const AssetImage('assets/images/header_bg.png'), // Opsional jika ada
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.9), BlendMode.lighten),
+        ),
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-            child: Text(
-              user.namaPanggilan.isNotEmpty ? user.namaPanggilan.substring(0, 1).toUpperCase() : 'U',
-              style: const TextStyle(fontSize: 28, color: AppTheme.primary, fontWeight: FontWeight.bold),
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 2),
+            ),
+            child: CircleAvatar(
+              radius: 28,
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+              child: Text(
+                user.namaPanggilan.isNotEmpty ? user.namaPanggilan.substring(0, 1).toUpperCase() : 'U',
+                style: const TextStyle(fontSize: 24, color: AppTheme.primary, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -122,7 +147,7 @@ class AppDrawer extends StatelessWidget {
               children: [
                 Text(
                   user.namaLengkap,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -130,12 +155,13 @@ class AppDrawer extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary,
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     user.roleLevel.toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -183,15 +209,26 @@ class AppDrawer extends StatelessWidget {
     ];
   }
 
-  List<Widget> _buildAnggotaMenu(BuildContext context) {
+  List<Widget> _buildAnggotaMenu(BuildContext context, bool isSekretaris, bool isBendahara) {
     return [
       _buildSectionLabel('Utama'),
       _buildItem(context, Icons.dashboard_outlined, 'Beranda', const AnggotaHomeScreen()),
       _buildItem(context, Icons.qr_code_scanner, 'Scan Absensi', const ScanQrScreen()),
       
+      if (isBendahara) ...[
+        _buildSectionLabel('Keuangan'),
+        _buildItem(context, Icons.account_balance_wallet_outlined, 'Kas Warga', KasScreen(user: user)),
+      ],
+
       _buildSectionLabel('Kegiatan'),
       _buildItem(context, Icons.history_outlined, 'Riwayat Absensi', const AttendanceHistoryScreen()),
-      _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const UserPengumumanScreen()),
+      
+      if (isSekretaris) ...[
+        _buildSectionLabel('Manajemen'),
+        _buildItem(context, Icons.campaign_outlined, 'Kelola Pengumuman', const AdminPengumumanScreen()),
+      ] else ...[
+        _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const UserPengumumanScreen()),
+      ],
       
       _buildSectionLabel('Akun'),
       _buildItem(context, Icons.person_outline, 'Profil', const AnggotaProfilScreen()),
@@ -212,10 +249,13 @@ class AppDrawer extends StatelessWidget {
       _buildSectionLabel('Analisis'),
       _buildItem(context, Icons.insert_chart_outlined, 'Laporan', const AdminLaporanScreen()),
       
+      _buildSectionLabel('Keuangan'),
+      _buildItem(context, Icons.account_balance_wallet_outlined, 'Kas Warga', KasScreen(user: user)),
+      
       _buildSectionLabel('Sistem'),
       _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const AdminPengumumanScreen()),
       _buildItem(context, Icons.print_outlined, 'Printer', const AdminPrinterScreen()),
-      _buildItem(context, Icons.settings_outlined, 'Pengaturan', const AdminPengaturanScreen()),
+      _buildItem(context, Icons.settings_outlined, 'Pengaturan', AdminPengaturanScreen(user: user)),
       
       _buildSectionLabel('Akun'),
       _buildItem(context, Icons.person_outline, 'Profil', const AdminProfilScreen()),

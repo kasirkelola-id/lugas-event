@@ -5,6 +5,8 @@ import '../../services/event_service.dart';
 import '../../models/user_model.dart';
 import '../../models/event_model.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/common/empty_state.dart';
 import '../pengelola/create_event_screen.dart';
 import '../pengelola/event_detail_screen.dart';
 
@@ -104,47 +106,40 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
-            const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
+              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            ),
+            const SizedBox(height: 24),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 24),
+            CustomButton(
+              text: 'Coba Lagi',
+              onPressed: _loadData,
+              isFullWidth: false,
+              icon: Icons.refresh,
+            ),
           ],
         ),
       );
     }
 
     if (_events.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.event_busy, size: 80, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            const Text('Belum Ada Acara', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('Belum ada acara di dalam sistem.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CreateEventScreen()),
-                );
-                if (result == true) {
-                  _loadData();
-                }
-              },
-              icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('Buat Acara', style: TextStyle(color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-          ],
-        ),
+      return EmptyStateWidget(
+        icon: Icons.event_busy,
+        title: 'Belum Ada Acara',
+        subtitle: 'Belum ada acara di dalam sistem.',
+        buttonText: 'Buat Acara',
+        onButtonPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CreateEventScreen()),
+          );
+          if (result == true) {
+            _loadData();
+          }
+        },
       );
     }
 
