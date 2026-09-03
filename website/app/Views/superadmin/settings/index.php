@@ -87,7 +87,7 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="/superadmin/dashboard">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/superadmin/karang_taruna">Karang Taruna</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/superadmin/settings">Pengaturan Global</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/superadmin/settings">Pengaturan</a></li>
                 </ul>
                 <span class="navbar-text me-4">
                     <i class="bi bi-person-circle me-1"></i> Halo, <?= session()->get('superadmin_nama_lengkap') ?>
@@ -124,9 +124,14 @@
                         <?= csrf_field() ?>
                         <div class="mb-4">
                             <label class="form-label fw-bold text-muted small text-uppercase">Password Sementara (Reset)</label>
-                            <input type="text" name="temporary_reset_password" class="form-control" 
-                                   value="<?= esc($settings['temporary_reset_password'] ?? '') ?>" 
-                                   placeholder="Contoh: kartarjosjis" required minlength="8">
+                            <div class="input-group">
+                                <input type="password" id="temp_password" name="temporary_reset_password" class="form-control" 
+                                       value="<?= esc($settings['temporary_reset_password'] ?? '') ?>" 
+                                       placeholder="Contoh: kartarjosjis" required minlength="8">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
                             <div class="form-text">
                                 Password sementara ini akan digunakan ketika Admin / Ketua mereset password anggotanya. <br>
                                 Pengguna yang login dengan password ini akan dipaksa mengganti passwordnya.
@@ -140,5 +145,20 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function (e) {
+            const passwordInput = document.getElementById('temp_password');
+            const icon = this.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    </script>
 </body>
 </html>

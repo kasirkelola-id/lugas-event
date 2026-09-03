@@ -107,6 +107,7 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="/superadmin/dashboard">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link active" href="/superadmin/karang_taruna">Karang Taruna</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/superadmin/settings">Pengaturan</a></li>
                 </ul>
                 <span class="navbar-text me-4">
                     <i class="bi bi-person-circle me-1"></i> Halo, <?= session()->get('superadmin_nama_lengkap') ?>
