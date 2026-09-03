@@ -14,7 +14,7 @@ class UserService {
     try {
       final data = jsonDecode(response.body);
       if (response.statusCode >= 200 && response.statusCode < 300 && data['status'] == true) {
-        return {'success': true, 'data': data['data']};
+        return {'success': true, 'data': data['data'] ?? data};
       }
       
       String message = data['message'] ?? 'Terjadi kesalahan';

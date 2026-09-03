@@ -32,7 +32,7 @@ class UserModel {
       noWhatsapp: json['no_whatsapp'] ?? '',
       rt: json['rt'] != null ? (json['rt'] is int ? json['rt'] : int.tryParse(json['rt'].toString()) ?? 1) : 1,
       roleLevel: json['role_level'] ?? '',
-      statusAktif: json['status_aktif'] is int ? json['status_aktif'] : int.parse(json['status_aktif'].toString()),
+      statusAktif: json['status_aktif'] != null ? (json['status_aktif'] is int ? json['status_aktif'] : int.tryParse(json['status_aktif'].toString()) ?? 1) : 1,
       passwordMustChange: json['password_must_change'] == true || json['password_must_change'] == 1,
       profilePhotoUrl: json['profile_photo_url'],
     );

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "689179873862",
+    "project_id": "kartar-b5521",
+    "storage_bucket": "kartar-b5521.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:689179873862:android:8cbd7ce00145f1f625b047",
+        "android_client_info": {
+          "package_name": "com.kartar.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD92iNtLmuk_RJ1iNnCem7xap6M6Tmk2U8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

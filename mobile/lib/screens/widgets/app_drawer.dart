@@ -3,7 +3,6 @@ import '../../core/theme/app_theme.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
-import '../auth/tenant_selector_screen.dart';
 
 import '../pengelola/pengelola_home_screen.dart';
 import '../pengelola/pengelola_acara_screen.dart';
@@ -49,12 +48,7 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  void _switchTenant(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => TenantSelectorScreen(user: user)),
-    );
-  }
+
 
   void _navigate(BuildContext context, Widget screen, {bool replace = true}) {
     Navigator.pop(context); // close drawer
@@ -104,19 +98,7 @@ class AppDrawer extends StatelessWidget {
             color: AppTheme.surface,
             child: Column(
               children: [
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: AppTheme.radiusSmall,
-                    ),
-                    child: const Icon(Icons.swap_horiz, color: AppTheme.primary, size: 20),
-                  ),
-                  title: const Text('Ganti Karang Taruna', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600)),
-                  onTap: () => _switchTenant(context),
-                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
-                ),
+
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),

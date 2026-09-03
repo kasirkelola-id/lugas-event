@@ -54,10 +54,10 @@ class _InitialScreenState extends State<InitialScreen> {
   }
 
   void _checkSession() async {
-    final tenant = await AuthStorage.getTenant();
+    final hasToken = await AuthStorage.hasToken();
     if (!mounted) return;
 
-    if (tenant == null) {
+    if (!hasToken) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const PinScreen()),
@@ -66,6 +66,48 @@ class _InitialScreenState extends State<InitialScreen> {
     }
 
     final result = await AuthService.getMe();
+    
+    // Network Error (No status code, or null statusCode, meaning it failed to connect)
+    if (!result['success'] && result['statusCode'] == null) {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => Scaffold(
+            backgroundColor: AppTheme.background,
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.wifi_off_outlined, size: 64, color: AppTheme.textSecondary),
+                    const SizedBox(height: 16),
+                    const Text('Koneksi Gagal', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                    const SizedBox(height: 8),
+                    const Text('Gagal menyambung ke server. Periksa koneksi internet Anda.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary)),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const InitialScreen()));
+                      },
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
     if (result['success']) {
       // Initialize Push Notification
       await NotificationService.initialize();
@@ -75,7 +117,7 @@ class _InitialScreenState extends State<InitialScreen> {
         // User not active, force logout locally and goto login
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Akun Anda tidak aktif')),
         );
@@ -110,25 +152,25 @@ class _InitialScreenState extends State<InitialScreen> {
         // Membership revoked or inactive for the current tenant.
         await AuthStorage.clearTenant();
         
-        // Retry getMe without the invalid tenant header
-        final globalResult = await AuthService.getMe();
+        // Return to PinScreen so user has to choose tenant safely
         if (!mounted) return;
-        
-        if (globalResult['success']) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => TenantSelectorScreen(user: globalResult['user'])),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-          );
-        }
-      } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const PinScreen()),
+        );
+      } else if (result['statusCode'] == 401) {
+        await AuthStorage.removeToken();
+        await AuthStorage.clearTenant();
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const PinScreen()),
+        );
+      } else {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const PinScreen()),
         );
       }
     }
