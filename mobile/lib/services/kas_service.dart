@@ -50,6 +50,15 @@ class KasService {
     }
   }
 
+  static Future<Map<String, dynamic>> getSummary() async {
+    try {
+      final response = await ApiClient.get('/kas/summary');
+      return await _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
+  }
+
   static Future<Map<String, dynamic>> createTransaksi({
     required String jenis,
     required int nominal,
@@ -71,11 +80,7 @@ class KasService {
 
   static Future<Map<String, dynamic>> deleteTransaksi(int id) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.delete(
-        Uri.parse('${ApiClient.baseUrl}/kas/$id'),
-        headers: headers,
-      );
+      final response = await ApiClient.delete('/kas/$id');
       return _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};

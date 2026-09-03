@@ -338,6 +338,62 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     );
   }
 
+  void _resetPassword(UserModel user) async {
+    final confirm = await FeedbackDialogs.showConfirmation(
+      context: context,
+      title: 'Reset Password',
+      content: 'Anda yakin ingin mereset password ${user.namaLengkap}? Pengguna akan dipaksa mengganti password pada login berikutnya.',
+      isDestructive: true,
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      final result = await UserService.resetPassword(user.id);
+      
+      if (result['success']) {
+        if (!mounted) return;
+        final tempPass = result['temporary_password'] ?? '-';
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Password Berhasil Direset', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.success)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Silakan berikan password sementara ini kepada ${user.namaLengkap}:'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: AppTheme.radiusMedium,
+                    border: Border.all(color: AppTheme.primary),
+                  ),
+                  child: Center(
+                    child: SelectableText(
+                      tempPass,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary, letterSpacing: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              CustomButton(
+                text: 'Tutup',
+                onPressed: () => Navigator.pop(context),
+                isFullWidth: true,
+              )
+            ],
+          )
+        );
+        _loadData();
+      } else {
+        _handleError(result['message']);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -595,13 +651,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                     children: [
                       _buildActionButton(Icons.edit_outlined, 'Edit', AppTheme.info, () => _showUserForm(user: user)),
                       _buildActionButton(Icons.manage_accounts_outlined, 'Role', AppTheme.warning, () => _showRoleDialog(user)),
-                      _buildActionButton(Icons.lock_reset, 'Password', Colors.brown.shade600, () {
-                        _confirmAction(
-                          'Reset Password', 
-                          'Password pengguna akan direset ke password sementara. Pengguna harus mengganti password saat login berikutnya.', 
-                          () => UserService.resetPassword(user.id)
-                        );
-                      }),
+                      _buildActionButton(Icons.lock_reset, 'Reset', Colors.purple, () => _resetPassword(user)),
                       _buildActionButton(
                         isActive ? Icons.block : Icons.check_circle_outline, 
                         isActive ? 'Nonaktifkan' : 'Aktifkan', 

@@ -3,34 +3,32 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile/storage/auth_storage.dart';
 
 void main() {
-  group('AuthStorage', () {
-    setUp(() {
-      SharedPreferences.setMockInitialValues({});
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  group('AuthStorage Tenant Tests', () {
+    test('saveTenant and getTenant work correctly', () async {
+      // Act
+      await AuthStorage.saveTenant(123, 'KT Mawar');
+      final tenant = await AuthStorage.getTenant();
+
+      // Assert
+      expect(tenant, isNotNull);
+      expect(tenant!['id'], 123);
+      expect(tenant['name'], 'KT Mawar');
     });
 
-    test('saveToken and getToken work correctly', () async {
-      await AuthStorage.saveToken('test_token_123');
-      final token = await AuthStorage.getToken();
-      expect(token, 'test_token_123');
+    test('clearTenant removes tenant data', () async {
+      // Arrange
+      await AuthStorage.saveTenant(456, 'KT Melati');
       
-      final hasToken = await AuthStorage.hasToken();
-      expect(hasToken, true);
-    });
+      // Act
+      await AuthStorage.clearTenant();
+      final tenant = await AuthStorage.getTenant();
 
-    test('removeToken clears the token', () async {
-      await AuthStorage.saveToken('test_token_123');
-      await AuthStorage.removeToken();
-      
-      final token = await AuthStorage.getToken();
-      expect(token, null);
-      
-      final hasToken = await AuthStorage.hasToken();
-      expect(hasToken, false);
-    });
-
-    test('hasToken returns false when no token', () async {
-      final hasToken = await AuthStorage.hasToken();
-      expect(hasToken, false);
+      // Assert
+      expect(tenant, isNull);
     });
   });
 }

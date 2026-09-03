@@ -214,7 +214,7 @@
         <?php foreach($karang_taruna as $kt): ?>
         <div class="modal fade" id="editModal<?= $kt['id'] ?>" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
-            <form action="/superadmin/karang_taruna/update/<?= $kt['id'] ?>" method="post" class="w-100">
+            <form action="/superadmin/karang_taruna/update/<?= $kt['id'] ?>" method="post" enctype="multipart/form-data" class="w-100">
                 <?= csrf_field() ?>
                 <div class="modal-content border-0 shadow">
                     <div class="modal-header bg-light border-0">
@@ -241,6 +241,22 @@
                             <option value="0" <?= $kt['status_aktif'] == 0 ? 'selected' : '' ?>>Nonaktif</option>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-bold small">Logo Karang Taruna (Opsional)</label>
+                        <?php if (!empty($kt['logo_path'])): ?>
+                            <div class="mb-2">
+                                <img src="<?= base_url($kt['logo_path']) ?>" alt="Logo Current" class="img-thumbnail" style="max-height: 100px;">
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="checkbox" name="remove_logo" value="1" id="removeLogo<?= $kt['id'] ?>">
+                                    <label class="form-check-label text-danger small" for="removeLogo<?= $kt['id'] ?>">
+                                        Hapus Logo Ini
+                                    </label>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        <input type="file" name="logo" class="form-control bg-light border-0" accept="image/jpeg,image/png,image/webp">
+                        <small class="text-muted d-block mt-1">Format: JPG, PNG, WEBP. Maks: 2MB.</small>
+                    </div>
                     </div>
                     <div class="modal-footer border-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
@@ -256,7 +272,7 @@
     <!-- Add Modal -->
     <div class="modal fade" id="addModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
-        <form action="/superadmin/karang_taruna/create" method="post" class="w-100">
+        <form action="/superadmin/karang_taruna/create" method="post" enctype="multipart/form-data" class="w-100">
             <?= csrf_field() ?>
             <div class="modal-content border-0 shadow">
               <div class="modal-header bg-light border-0">
@@ -285,6 +301,11 @@
                 <div class="mb-3">
                     <label class="form-label text-muted fw-bold small">Nama Ketua / PIC</label>
                     <input type="text" name="nama_ketua" class="form-control bg-light border-0" placeholder="Nama penanggung jawab">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted fw-bold small">Logo Karang Taruna (Opsional)</label>
+                    <input type="file" name="logo" class="form-control bg-light border-0" accept="image/jpeg,image/png,image/webp">
+                    <small class="text-muted d-block mt-1">Format: JPG, PNG, WEBP. Maks: 2MB.</small>
                 </div>
               </div>
               <div class="modal-footer border-0">

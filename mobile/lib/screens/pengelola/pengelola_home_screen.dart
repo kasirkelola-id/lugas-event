@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
-import '../../services/event_service.dart';
+import '../../services/dashboard_service.dart';
 import '../../models/user_model.dart';
-import '../../models/event_model.dart';
+import '../../models/dashboard_summary_model.dart';
 import '../auth/login_screen.dart';
+import '../anggota/attendance_geofence_screen.dart';
+import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
-import '../widgets/common/empty_state.dart';
-import 'create_event_screen.dart';
-import 'event_detail_screen.dart';
 
 class PengelolaHomeScreen extends StatefulWidget {
   const PengelolaHomeScreen({super.key});
@@ -20,9 +19,11 @@ class PengelolaHomeScreen extends StatefulWidget {
 
 class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
   UserModel? _user;
-  List<EventModel> _events = [];
+  DashboardSummary? _summary;
+  
   bool _isLoading = true;
-  String? _errorMessage;
+  bool _isError = false;
+  String _errorMessage = 'Koneksi bermasalah.';
 
   @override
   void initState() {
@@ -31,57 +32,69 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
+      _isError = false;
     });
 
-    final userResult = await AuthService.getMe();
-    if (!userResult['success']) {
-      if (mounted) _handleError(userResult['message']);
-      return;
-    }
+    try {
+      final userResult = await AuthService.getMe();
+      if (!mounted) return;
 
-    final eventsResult = await EventService.getEvents();
-    if (!mounted) return;
+      if (!userResult['success']) {
+        if (userResult['message'].toString().toLowerCase().contains('sesi')) {
+          _logout();
+          return;
+        }
+        setState(() {
+          _isError = true;
+          _errorMessage = userResult['message'];
+        });
+        return;
+      }
 
-    if (eventsResult['success']) {
+      final summaryResult = await DashboardService.getSummary();
+      if (!mounted) return;
+
+      if (!summaryResult['success']) {
+        setState(() {
+          _isError = true;
+          _errorMessage = summaryResult['message'];
+        });
+        return;
+      }
+
       setState(() {
-        _user = userResult['user'];
-        _events = eventsResult['events'] as List<EventModel>;
+        _user = userResult['user'] as UserModel;
+        _summary = summaryResult['summary'] as DashboardSummary;
         _isLoading = false;
       });
-    } else {
-      _handleError(eventsResult['message'] ?? 'Data acara gagal dimuat.');
-    }
-  }
-
-  void _handleError(String message) {
-    setState(() {
-      _isLoading = false;
-      _errorMessage = (message.toLowerCase().contains('sesi') || message.toLowerCase().contains('berakhir')) 
-          ? message 
-          : 'Data acara gagal dimuat.';
-    });
-    if (message.toLowerCase().contains('sesi') || message.toLowerCase().contains('berakhir')) {
-      _logout();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isError = true;
+          _errorMessage = 'Gagal memuat dashboard.';
+        });
+      }
     }
   }
 
   void _logout() async {
     await AuthService.logout();
     if (!mounted) return;
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
     );
   }
-
-  int get _activeEventsCount => _events.where((e) => e.isActive).length;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Beranda Pengelola'),
         backgroundColor: AppTheme.surface,
@@ -89,118 +102,66 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
         scrolledUnderElevation: 0,
       ),
       drawer: _user != null ? AppDrawer(user: _user!) : null,
-      backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
         color: AppTheme.primary,
         child: _buildBody(),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateEventScreen()),
-          );
-          if (result == true) {
-            _loadData();
-          }
-        },
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Buat Acara', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-        backgroundColor: AppTheme.primary,
-        elevation: 4,
-      ),
     );
   }
 
   Widget _buildBody() {
-    if (_isLoading && _events.isEmpty && _user == null) {
+    if (_isLoading) {
       return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
     }
-
-    if (_errorMessage != null && _events.isEmpty) {
+    if (_isError || _user == null || _summary == null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
-            ),
-            const SizedBox(height: 24),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 24),
-            CustomButton(
-              text: 'Coba Lagi',
-              onPressed: _loadData,
-              isFullWidth: false,
-              icon: Icons.refresh,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            const SizedBox(height: 16),
+            Text(_errorMessage, style: const TextStyle(color: AppTheme.textSecondary)),
+            const SizedBox(height: 16),
+            CustomButton(text: 'Coba Lagi', onPressed: _loadData, isFullWidth: false),
           ],
         ),
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+    return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        if (_user != null) ...[
-          _buildGreetingSection(),
-          const SizedBox(height: 32),
-          _buildSummarySection(),
-          const SizedBox(height: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeaderSection(),
+          const SizedBox(height: 16),
+          _buildManagementMetrics(),
+          _buildUpcomingEvent(),
+          _buildLatestAnnouncement(),
+          _buildActiveVoting(),
+          const SizedBox(height: 40),
         ],
-        
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Acara Terbaru', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-            TextButton(
-              onPressed: () {},
-              child: const Text('Lihat Semua', style: TextStyle(color: AppTheme.primary)),
-            )
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (_events.isEmpty && !_isLoading)
-          const EmptyStateWidget(
-            icon: Icons.event_busy,
-            title: 'Belum Ada Acara',
-            subtitle: 'Anda belum membuat acara apa pun. Silakan buat acara baru.',
-          )
-        else
-          ..._events.map((event) => _buildEventCard(event)),
-          
-        const SizedBox(height: 80), // padding for FAB
-      ],
+      ),
     );
   }
 
-  Widget _buildGreetingSection() {
+  Widget _buildHeaderSection() {
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
-        borderRadius: AppTheme.radiusLarge,
-        boxShadow: AppTheme.shadowMedium,
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 24),
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(2),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: CircleAvatar(
-              radius: 28,
-              backgroundColor: AppTheme.surface,
-              child: Text(
-                _user!.namaPanggilan.substring(0, 1).toUpperCase(),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary),
-              ),
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: AppTheme.primary.withOpacity(0.1),
+            child: Text(
+              _user!.namaPanggilan.isNotEmpty ? _user!.namaPanggilan.substring(0, 1).toUpperCase() : 'U',
+              style: const TextStyle(fontSize: 28, color: AppTheme.primary, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(width: 16),
@@ -209,14 +170,11 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Selamat datang,',
-                  style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.8)),
+                  'Halo, ${_user!.namaPanggilan} 👋',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  _user!.namaPanggilan,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
+                const Text('Role: Pengelola', style: TextStyle(color: AppTheme.textSecondary)),
               ],
             ),
           ),
@@ -225,135 +183,111 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
     );
   }
 
-  Widget _buildSummarySection() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard('Total Acara', _events.length.toString(), Icons.event_note, AppTheme.primary),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard('Acara Aktif', _activeEventsCount.toString(), Icons.event_available, AppTheme.success),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(20.0),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: AppTheme.radiusMedium,
-        boxShadow: AppTheme.shadowSoft,
-        border: Border.all(color: color.withValues(alpha: 0.1)),
-      ),
+  Widget _buildManagementMetrics() {
+    if (_summary!.management == null) return const SizedBox();
+    final mgmt = _summary!.management!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: AppTheme.radiusSmall,
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+          const Text('Metrik Pengelolaan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard('Anggota', mgmt.activeMembers.toString(), Icons.people, Colors.blue),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard('Pinjaman', mgmt.pendingLoans.toString(), Icons.inventory, Colors.orange),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard('Stok Habis', mgmt.outOfStock.toString(), Icons.warning, Colors.red),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEventCard(EventModel event) {
+  Widget _buildMetricCard(String title, String value, IconData icon, Color color) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: AppTheme.radiusMedium,
         boxShadow: AppTheme.shadowSoft,
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: InkWell(
-        borderRadius: AppTheme.radiusMedium,
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => EventDetailScreen(eventId: event.id)),
-          );
-          if (result == true) {
-            _loadData();
-          }
-        },
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 8),
+          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingEvent() {
+    if (_summary!.upcomingEvent == null) return const SizedBox();
+    final event = _summary!.upcomingEvent!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Card(
+        color: AppTheme.primary,
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      event.namaAcara,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: event.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      event.isActive ? 'AKTIF' : 'SELESAI',
-                      style: TextStyle(
-                        color: event.isActive ? AppTheme.success : AppTheme.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Icon(Icons.calendar_month, size: 16, color: AppTheme.textSecondary),
-                  const SizedBox(width: 8),
-                  Text(
-                    event.tanggalAcara,
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-                  ),
-                ],
-              ),
+              const Text('Acara Terdekat', style: TextStyle(color: Colors.white70, fontSize: 12)),
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.people_alt_outlined, size: 16, color: AppTheme.textSecondary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Jumlah Hadir: ${event.jumlahHadir ?? 0}',
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
-                  ),
-                ],
-              ),
+              Text(event.title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text('${event.date} - ${event.time}', style: const TextStyle(color: Colors.white)),
             ],
           ),
         ),
       ),
     );
   }
-}
 
+  Widget _buildLatestAnnouncement() {
+    if (_summary!.latestAnnouncement == null) return const SizedBox();
+    final ann = _summary!.latestAnnouncement!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+        child: ListTile(
+          leading: const Icon(Icons.campaign, color: AppTheme.warning),
+          title: Text(ann.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text(ann.preview, maxLines: 2, overflow: TextOverflow.ellipsis),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveVoting() {
+    if (_summary!.activeVoting == null) return const SizedBox();
+    final vote = _summary!.activeVoting!;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+        child: ListTile(
+          leading: const Icon(Icons.how_to_vote, color: AppTheme.primary),
+          title: Text(vote.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: const Text('Voting Aktif'),
+        ),
+      ),
+    );
+  }
+}

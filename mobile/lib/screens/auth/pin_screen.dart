@@ -96,7 +96,11 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
 
     if (result['success']) {
       final data = result['data'];
-      await AuthStorage.saveTenant(data['karang_taruna_id'], data['nama_organisasi']);
+      await AuthStorage.saveTenant(
+        data['karang_taruna_id'], 
+        data['nama_organisasi'],
+        logoUrl: data['logo_url']
+      );
       
       if (!mounted) return;
       Navigator.pushReplacement(

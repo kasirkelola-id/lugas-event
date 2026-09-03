@@ -8,6 +8,7 @@ class UserModel {
   final String roleLevel;
   final int statusAktif;
   final bool passwordMustChange;
+  final String? profilePhotoUrl;
 
   UserModel({
     required this.id,
@@ -19,6 +20,7 @@ class UserModel {
     required this.roleLevel,
     required this.statusAktif,
     this.passwordMustChange = false,
+    this.profilePhotoUrl,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class UserModel {
       roleLevel: json['role_level'] ?? '',
       statusAktif: json['status_aktif'] is int ? json['status_aktif'] : int.parse(json['status_aktif'].toString()),
       passwordMustChange: json['password_must_change'] == true || json['password_must_change'] == 1,
+      profilePhotoUrl: json['profile_photo_url'],
     );
   }
 }

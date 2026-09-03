@@ -9,14 +9,7 @@ use App\Services\AuthService;
 
 class AbsensiController extends BaseApiController
 {
-    private function checkPengelola()
-    {
-        $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin', 'ketua'])) {
-            return false;
-        }
-        return true;
-    }
+    // checkPengelola replaced by RBAC
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2)
     {
@@ -38,13 +31,14 @@ class AbsensiController extends BaseApiController
 
     public function checkin()
     {
-        $user = AuthService::getUser();
-        if (!$user) {
-            return $this->sendError('Unauthorized', null, 401);
+        $tenantId = AuthService::getTenantId();
+        $userId = AuthService::getGlobalUserId();
+        if (!$tenantId || !AuthService::can('attendance.checkin')) {
+            return $this->sendError('Forbidden', null, 403);
         }
 
         $userModel = new UserModel();
-        $dbUser = $userModel->find($user['id']);
+        $dbUser = $userModel->find($userId);
         if (!$dbUser || (int)$dbUser['status_aktif'] !== 1) {
             return $this->sendError('User tidak aktif', null, 403);
         }
@@ -61,7 +55,7 @@ class AbsensiController extends BaseApiController
         $eventId = $rawInput['event_id'];
 
         $eventModel = new EventModel();
-        $event = $eventModel->find($eventId);
+        $event = $eventModel->where('karang_taruna_id', $tenantId)->find($eventId);
 
         if (!$event) {
             return $this->sendError('Acara tidak ditemukan', null, 404);
@@ -72,14 +66,48 @@ class AbsensiController extends BaseApiController
             return $this->sendError('Acara sudah ditutup', null, 422);
         }
 
+        // --- Time Window Enforcement ---
+        $today = date('Y-m-d');
+        if ($event['tanggal_acara'] !== $today) {
+            if ($today < $event['tanggal_acara']) {
+                return $this->sendError('Belum Waktunya', ['time' => 'Acara ini dijadwalkan pada ' . $event['tanggal_acara'] . '. Absensi belum dibuka.'], 422);
+            } else {
+                return $this->sendError('Waktu Habis', ['time' => 'Acara ini sudah selesai pada ' . $event['tanggal_acara'] . '.'], 422);
+            }
+        }
+
+        if (!empty($event['waktu_mulai']) && !empty($event['waktu_selesai'])) {
+            $nowStr = date('H:i:s');
+            $startStr = $event['waktu_mulai'];
+            $endStr = $event['waktu_selesai'];
+
+            // Allow 30 mins early
+            $startTime = strtotime($startStr) - (30 * 60);
+            // Allow 30 mins late
+            $endTime = strtotime($endStr) + (30 * 60);
+            $nowTime = strtotime($nowStr);
+
+            if ($nowTime < $startTime) {
+                return $this->sendError('Belum Waktunya', ['time' => 'Absensi belum dibuka. Silakan kembali nanti.'], 422);
+            }
+            if ($nowTime > $endTime) {
+                return $this->sendError('Waktu Habis', ['time' => 'Absensi sudah ditutup.'], 422);
+            }
+        }
+        // --------------------------------
+
         $userLat = $rawInput['user_lat'] ?? null;
         $userLng = $rawInput['user_lng'] ?? null;
+        $accuracy = $rawInput['accuracy'] ?? null;
         
-        if ($userLat === null || $userLng === null) {
-            return $this->sendError('Akses Lokasi Diperlukan', ['gps' => 'Koordinat GPS Anda diperlukan untuk melakukan absensi pada acara ini.'], 422);
-        }
-        
+        $distance = null;
         if (isset($event['require_gps']) && (int)$event['require_gps'] === 1) {
+            if ($event['latitude'] === null || $event['longitude'] === null || $event['radius'] === null) {
+                return $this->sendError('Konfigurasi Gagal', ['gps' => 'Lokasi acara belum diatur oleh admin. Tidak dapat melakukan absensi berbasisi GPS.'], 422);
+            }
+            if ($userLat === null || $userLng === null) {
+                return $this->sendError('Akses Lokasi Diperlukan', ['gps' => 'Koordinat GPS Anda diperlukan untuk melakukan absensi pada acara ini.'], 422);
+            }
             $distance = $this->calculateDistance($event['latitude'], $event['longitude'], $userLat, $userLng);
             if ($distance > $event['radius']) {
                 return $this->sendError('Lokasi Di Luar Jangkauan', ['gps' => 'Anda berada di luar area yang diizinkan untuk absensi ini. Jarak Anda: ' . round($distance) . 'm. Radius maksimal: ' . $event['radius'] . 'm.'], 422);
@@ -88,8 +116,9 @@ class AbsensiController extends BaseApiController
 
         $absensiModel = new AbsensiModel();
         
+        // This 'SELECT before INSERT' check is kept for general fast path
         $existing = $absensiModel->where('event_id', $event['id'])
-                                 ->where('user_id', $user['id'])
+                                 ->where('user_id', $userId)
                                  ->first();
         if ($existing) {
             return $this->sendError('Anda sudah melakukan check-in pada acara ini.', null, 409);
@@ -99,11 +128,20 @@ class AbsensiController extends BaseApiController
 
         try {
             $absensiModel->insert([
+                'karang_taruna_id' => $tenantId,
                 'event_id'    => $event['id'],
-                'user_id'     => $user['id'],
-                'waktu_absen' => $waktuAbsen
+                'user_id'     => $userId,
+                'waktu_absen' => $waktuAbsen,
+                'latitude'    => $userLat,
+                'longitude'   => $userLng,
+                'accuracy'    => $accuracy,
+                'distance_m'  => $distance !== null ? round($distance) : null
             ]);
         } catch (\Exception $e) {
+            // Graceful duplicate constraint handler
+            if (strpos(strtolower($e->getMessage()), 'duplicate') !== false || strpos(strtolower($e->getMessage()), 'unique') !== false) {
+                return $this->sendError('Anda sudah melakukan check-in pada acara ini.', null, 409);
+            }
             return $this->sendError('Terjadi kesalahan sistem saat menyimpan absensi.', null, 500);
         }
 
@@ -116,9 +154,10 @@ class AbsensiController extends BaseApiController
 
     public function checkout()
     {
-        $user = AuthService::getUser();
-        if (!$user) {
-            return $this->sendError('Unauthorized', null, 401);
+        $tenantId = AuthService::getTenantId();
+        $userId = AuthService::getGlobalUserId();
+        if (!$tenantId || !AuthService::can('attendance.checkin')) {
+            return $this->sendError('Forbidden', null, 403);
         }
 
         $rules = [
@@ -132,7 +171,7 @@ class AbsensiController extends BaseApiController
 
         $eventId = $rawInput['event_id'];
         $eventModel = new EventModel();
-        $event = $eventModel->find($eventId);
+        $event = $eventModel->where('karang_taruna_id', $tenantId)->find($eventId);
 
         if (!$event) {
             return $this->sendError('Acara tidak ditemukan', null, 404);
@@ -141,11 +180,13 @@ class AbsensiController extends BaseApiController
         $userLat = $rawInput['user_lat'] ?? null;
         $userLng = $rawInput['user_lng'] ?? null;
         
-        if ($userLat === null || $userLng === null) {
-            return $this->sendError('Akses Lokasi Diperlukan', ['gps' => 'Koordinat GPS Anda diperlukan untuk melakukan check-out.'], 422);
-        }
-        
         if (isset($event['require_gps']) && (int)$event['require_gps'] === 1) {
+            if ($event['latitude'] === null || $event['longitude'] === null || $event['radius'] === null) {
+                return $this->sendError('Konfigurasi Gagal', ['gps' => 'Lokasi acara belum diatur oleh admin.'], 422);
+            }
+            if ($userLat === null || $userLng === null) {
+                return $this->sendError('Akses Lokasi Diperlukan', ['gps' => 'Koordinat GPS Anda diperlukan untuk melakukan check-out.'], 422);
+            }
             $distance = $this->calculateDistance($event['latitude'], $event['longitude'], $userLat, $userLng);
             if ($distance > $event['radius']) {
                 return $this->sendError('Lokasi Di Luar Jangkauan', ['gps' => 'Anda berada di luar area yang diizinkan untuk check-out ini. Jarak Anda: ' . round($distance) . 'm. Radius maksimal: ' . $event['radius'] . 'm.'], 422);
@@ -155,7 +196,7 @@ class AbsensiController extends BaseApiController
         $absensiModel = new AbsensiModel();
         
         $existing = $absensiModel->where('event_id', $event['id'])
-                                 ->where('user_id', $user['id'])
+                                 ->where('user_id', $userId)
                                  ->first();
         
         if (!$existing) {
@@ -178,15 +219,15 @@ class AbsensiController extends BaseApiController
 
     public function status()
     {
-        $user = AuthService::getUser();
-        if (!$user) {
-            return $this->sendError('Unauthorized', null, 401);
+        $userId = AuthService::getGlobalUserId();
+        if (!$userId) {
+            return $this->sendError('Forbidden', null, 403);
         }
 
         $absensiModel = new AbsensiModel();
         // Cari absensi hari ini yang belum checkout
         $today = date('Y-m-d');
-        $activeAbsensi = $absensiModel->where('user_id', $user['id'])
+        $activeAbsensi = $absensiModel->where('user_id', $userId)
                                       ->where('waktu_checkout IS NULL')
                                       ->where('waktu_absen >=', $today . ' 00:00:00')
                                       ->where('waktu_absen <=', $today . ' 23:59:59')
@@ -199,16 +240,18 @@ class AbsensiController extends BaseApiController
 
     public function myHistory()
     {
-        $user = AuthService::getUser();
-        if (!$user) {
-            return $this->sendError('Unauthorized', null, 401);
+        $tenantId = AuthService::getTenantId();
+        $userId = AuthService::getGlobalUserId();
+        if (!$tenantId) {
+            return $this->sendError('Forbidden', null, 403);
         }
 
         $absensiModel = new AbsensiModel();
         $builder = $absensiModel->builder();
         $builder->select('absensi.id as absensi_id, absensi.event_id, absensi.waktu_absen, absensi.waktu_checkout, events.nama_acara, events.tanggal_acara, events.status_aktif as status_event');
         $builder->join('events', 'events.id = absensi.event_id');
-        $builder->where('absensi.user_id', $user['id']);
+        $builder->where('events.karang_taruna_id', $tenantId);
+        $builder->where('absensi.user_id', $userId);
         $builder->orderBy('absensi.waktu_absen', 'DESC');
         
         $history = $builder->get()->getResultArray();
@@ -234,13 +277,13 @@ class AbsensiController extends BaseApiController
 
     public function eventAttendees($eventId)
     {
-        if (!$this->checkPengelola()) {
+        if (!AuthService::can('attendance.manage')) {
             return $this->sendError('Forbidden', null, 403);
         }
 
-        $user = AuthService::getUser();
+        $tenantId = AuthService::getTenantId();
         $eventModel = new EventModel();
-        $event = $eventModel->find($eventId);
+        $event = $eventModel->where('karang_taruna_id', $tenantId)->find($eventId);
 
         if (!$event) {
             return $this->sendError('Acara tidak ditemukan', null, 404);

@@ -127,6 +127,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
       event.id,
       userLat: _currentPosition!.latitude,
       userLng: _currentPosition!.longitude,
+      accuracy: _currentPosition!.accuracy,
     );
     
     if (result['success']) {
@@ -144,6 +145,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
       event.id,
       userLat: _currentPosition!.latitude,
       userLng: _currentPosition!.longitude,
+      accuracy: _currentPosition!.accuracy,
     );
     
     if (result['success']) {
@@ -209,7 +211,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                                     const SizedBox(height: 16),
                                     if (isCheckedIn)
                                       CustomButton(
-                                        text: 'Check-Out Sekarang',
+                                        text: 'Sudah Absen (Check-Out)',
                                         onPressed: () => _handleCheckOut(event),
                                         type: ButtonType.danger,
                                       )

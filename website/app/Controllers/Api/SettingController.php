@@ -7,25 +7,18 @@ use App\Services\AuthService;
 
 class SettingController extends BaseApiController
 {
-    private function checkAdminAtauKetua()
-    {
-        $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['admin', 'ketua'])) {
-            return false;
-        }
-        return true;
-    }
+    // checkAdminAtauKetua removed
 
     public function index()
     {
         // Publicly readable if authenticated, so any user can fetch settings for validation
-        $user = AuthService::getUser();
-        if (!$user) {
+        $tenantId = AuthService::getTenantId();
+        if (!$tenantId) {
             return $this->sendError('Unauthorized', null, 401);
         }
 
         $settingModel = new SettingModel();
-        $settings = $settingModel->findAll();
+        $settings = $settingModel->where('karang_taruna_id', $tenantId)->findAll();
 
         $data = [];
         foreach ($settings as $setting) {
@@ -35,9 +28,9 @@ class SettingController extends BaseApiController
         return $this->sendSuccess('Daftar Pengaturan', $data);
     }
 
-    public function update()
+    public function update($id = null)
     {
-        if (!$this->checkAdminAtauKetua()) {
+        if (!AuthService::can('settings.manage')) {
             return $this->sendError('Forbidden: Akses khusus Admin dan Ketua.', null, 403);
         }
 
@@ -52,10 +45,12 @@ class SettingController extends BaseApiController
         $db = \Config\Database::connect();
         $db->transStart();
         
+        $tenantId = AuthService::getTenantId();
         foreach ($rawInput as $key => $value) {
-            $existing = $settingModel->find($key);
+            $existing = $settingModel->where('karang_taruna_id', $tenantId)->find($key);
             if ($existing) {
-                $settingModel->update($key, ['setting_value' => (string)$value]);
+                $settingModel->where('karang_taruna_id', $tenantId)
+                             ->update($key, ['setting_value' => (string)$value]);
             }
         }
         

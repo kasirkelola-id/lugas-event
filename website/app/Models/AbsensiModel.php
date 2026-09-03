@@ -17,6 +17,11 @@ class AbsensiModel extends Model
         'event_id',
         'user_id',
         'waktu_absen',
+        'waktu_checkout',
+        'latitude',
+        'longitude',
+        'accuracy',
+        'distance_m'
     ];
 
     protected bool $allowEmptyInserts = false;

@@ -33,6 +33,7 @@ class AuthController extends BaseApiController
         return $this->sendSuccess('PIN valid', [
             'karang_taruna_id' => (int)$kt['id'],
             'nama_organisasi'  => $kt['nama_organisasi'],
+            'logo_url'         => !empty($kt['logo_path']) ? base_url($kt['logo_path']) : null,
         ]);
     }
 
@@ -53,16 +54,41 @@ class AuthController extends BaseApiController
         $password = $this->request->getVar('password');
 
         $userModel = new UserModel();
-        $user = $userModel->where('username', $username)
-                          ->where('karang_taruna_id', $karangTarunaId)
-                          ->first();
+        
+        $db = \Config\Database::connect();
+        
+        // Find user by joining organization_members (where the tenant-scoped username lives)
+        $memberInfo = $db->table('organization_members')
+                         ->select('users.*, organization_members.username as tenant_username, organization_members.role_level as tenant_role, organization_members.status_aktif as tenant_status')
+                         ->join('users', 'users.id = organization_members.user_id')
+                         ->where('organization_members.username', $username)
+                         ->where('organization_members.karang_taruna_id', $karangTarunaId)
+                         ->get()
+                         ->getRowArray();
+
+        $user = $memberInfo; // Will be null if not found
+
+        $isSuperAdmin = false;
+        $superadmin = null;
 
         if (!$user || !password_verify($password, (string)$user['password'])) {
-            return $this->sendError('Username atau password salah.', null, 401);
+            // Check if it's a superadmin
+            $db = \Config\Database::connect();
+            $superadmin = $db->table('superadmins')->where('username', $username)->get()->getRowArray();
+
+            if (!$superadmin || !password_verify($password, (string)$superadmin['password'])) {
+                return $this->sendError('Username atau password salah.', null, 401);
+            }
+
+            $isSuperAdmin = true;
         }
 
-        if ($user['status_aktif'] != 1) {
-            return $this->sendError('Akun tidak aktif.', null, 401);
+        if (!$isSuperAdmin && $user['tenant_status'] != 1) {
+            return $this->sendError('Akun tidak aktif di Karang Taruna ini.', null, 401);
+        }
+
+        if (!$isSuperAdmin && $user['status_aktif'] != 1) {
+            return $this->sendError('Akun pengguna dinonaktifkan secara global.', null, 401);
         }
 
         // Generate Token
@@ -74,31 +100,69 @@ class AuthController extends BaseApiController
         // Expiration in 30 days
         $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
 
+        $userId = $isSuperAdmin ? 0 : $user['id']; // Token table user_id is INT
+
         $tokenModel->insert([
             'karang_taruna_id' => $karangTarunaId,
-            'user_id'          => $user['id'],
+            'user_id'          => $userId,
             'token_hash'       => $tokenHash,
             'expires_at'       => $expiresAt,
             'created_at'       => date('Y-m-d H:i:s'),
         ]);
 
         // Build Response User without sensitive data
-        $userData = [
-            'id'             => (int)$user['id'],
-            'karang_taruna_id' => (int)$user['karang_taruna_id'],
-            'nama_lengkap'   => $user['nama_lengkap'],
-            'nama_panggilan' => $user['nama_panggilan'],
-            'username'       => $user['username'],
-            'no_whatsapp'    => $user['no_whatsapp'],
-            'rt'             => (int)($user['rt'] ?? 1),
-            'role_level'     => $user['role_level'],
-            'status_aktif'   => (int)$user['status_aktif'],
-            'password_must_change' => (int)($user['password_must_change'] ?? 0) === 1,
-        ];
+        if ($isSuperAdmin) {
+            $userData = [
+                'id'             => 's_' . $superadmin['id'], // Virtual ID to prevent collision
+                'karang_taruna_id' => (int)$karangTarunaId,
+                'nama_lengkap'   => $superadmin['nama_lengkap'],
+                'nama_panggilan' => 'Superadmin',
+                'username'       => $superadmin['username'],
+                'no_whatsapp'    => '-',
+                'rt'             => 1,
+                'role_level'     => 'superadmin',
+                'status_aktif'   => 1,
+                'password_must_change' => false,
+            ];
+        } else {
+            $userData = [
+                'id'             => (int)$user['id'],
+                'karang_taruna_id' => (int)$karangTarunaId, // The tenant they logged into
+                'nama_lengkap'   => $user['nama_lengkap'],
+                'nama_panggilan' => $user['nama_panggilan'],
+                'username'       => $user['tenant_username'], // Use tenant-scoped username
+                'no_whatsapp'    => $user['no_whatsapp'],
+                'rt'             => (int)($user['rt'] ?? 1),
+                'role_level'     => $user['tenant_role'],
+                'status_aktif'   => (int)$user['tenant_status'],
+                'password_must_change' => (int)($user['password_must_change'] ?? 0) === 1,
+            ];
+        }
+
+        $memberModel = new \App\Models\OrganizationMemberModel();
+        $memberships = [];
+        if (!$isSuperAdmin) {
+            $builder = $memberModel->builder();
+            $builder->select('organization_members.id as membership_id, organization_members.karang_taruna_id, organization_members.role_level as role, organization_members.status_aktif as status, karang_taruna.nama_organisasi as nama');
+            $builder->join('karang_taruna', 'karang_taruna.id = organization_members.karang_taruna_id');
+            $builder->where('organization_members.user_id', $user['id']);
+            $builder->where('organization_members.status_aktif', 1);
+            $memberships = $builder->get()->getResultArray();
+            $memberships = array_map(function($m) {
+                $m['membership_id'] = (int)$m['membership_id'];
+                $m['karang_taruna_id'] = (int)$m['karang_taruna_id'];
+                $m['status'] = (int)$m['status'];
+                return $m;
+            }, $memberships);
+        }
+
+        $requiresTenantSelection = count($memberships) > 1;
 
         return $this->sendSuccess('Login berhasil', [
             'token' => $plainToken,
-            'user'  => $userData
+            'user'  => $userData,
+            'memberships' => $memberships,
+            'requires_tenant_selection' => $requiresTenantSelection
         ], 200);
     }
 
@@ -118,21 +182,29 @@ class AuthController extends BaseApiController
     public function me()
     {
         $user = \App\Services\AuthService::getUser();
+        $tenantId = $user['karang_taruna_id'] ?? null;
+        $tenantName = null;
 
-        $userData = [
-            'id'             => (int)$user['id'],
-            'karang_taruna_id' => (int)$user['karang_taruna_id'],
-            'nama_lengkap'   => $user['nama_lengkap'],
+        if ($tenantId) {
+            $ktModel = new \App\Models\KarangTarunaModel();
+            $kt = $ktModel->find($tenantId);
+            $tenantName = $kt['nama_organisasi'] ?? null;
+        }
+
+        return $this->sendSuccess('Berhasil mengambil profil', [
+            'id' => (int)$user['id'],
+            'nama_lengkap' => $user['nama_lengkap'],
             'nama_panggilan' => $user['nama_panggilan'],
-            'username'       => $user['username'],
-            'no_whatsapp'    => $user['no_whatsapp'],
-            'rt'             => (int)($user['rt'] ?? 1),
-            'role_level'     => $user['role_level'],
-            'status_aktif'   => (int)$user['status_aktif'],
-            'password_must_change' => (int)($user['password_must_change'] ?? 0) === 1,
-        ];
-
-        return $this->sendSuccess('Data user', $userData);
+            'username' => $user['username'], 
+            'no_whatsapp' => $user['no_whatsapp'],
+            'role_level' => $user['role_level'],
+            'rt' => (int)$user['rt'],
+            'profile_photo_url' => !empty($user['profile_photo']) ? base_url($user['profile_photo']) : null,
+            'karang_taruna' => [
+                'id' => (int)$tenantId,
+                'nama_organisasi' => $tenantName,
+            ]
+        ]);
     }
 
     public function register()
@@ -149,36 +221,123 @@ class AuthController extends BaseApiController
         ];
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
+        $karangTarunaId = $rawInput['karang_taruna_id'] ?? null;
 
         if (!$this->validateData($rawInput, $rules)) {
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
 
-        $userModel = new UserModel();
+        $memberModel = new \App\Models\OrganizationMemberModel();
         
-        // Manual check for unique username within tenant
-        $existing = $userModel->where('username', $rawInput['username'])
-                              ->where('karang_taruna_id', $rawInput['karang_taruna_id'])
-                              ->first();
-        if ($existing) {
+        // Check if username already exists IN THIS TENANT
+        $existingMember = $memberModel->where('username', $rawInput['username'])
+                                      ->where('karang_taruna_id', $karangTarunaId)
+                                      ->first();
+        if ($existingMember) {
+            return $this->sendError('Username sudah terdaftar', ['username' => 'Username ini sudah digunakan di Karang Taruna Anda.'], 409);
+        }
+
+        $userModel = new UserModel();
+
+        // Check if phone number already exists
+        $existingUserByPhone = $userModel->where('no_whatsapp', $rawInput['no_whatsapp'])->first();
+        if ($existingUserByPhone) {
             return $this->sendError('Validasi gagal', ['username' => 'Username ini sudah digunakan di Karang Taruna Anda.'], 422);
         }
 
         $userData = [
-            'karang_taruna_id' => $rawInput['karang_taruna_id'],
-            'nama_lengkap'     => $rawInput['nama_lengkap'],
-            'nama_panggilan'   => $rawInput['nama_panggilan'],
-            'username'         => $rawInput['username'],
-            'password'         => password_hash($rawInput['password'], PASSWORD_BCRYPT),
-            'no_whatsapp'      => $rawInput['no_whatsapp'],
-            'rt'               => (int)($rawInput['rt'] ?? 1),
-            'role_level'       => 'anggota',
-            'status_aktif'     => 1,
-            'password_must_change' => 0
+            'nama_lengkap'   => $rawInput['nama_lengkap'],
+            'nama_panggilan' => $rawInput['nama_panggilan'],
+            'username'       => $rawInput['username'], // Keep globally for now as fallback/legacy
+            'password'       => password_hash($rawInput['password'], PASSWORD_BCRYPT),
+            'no_whatsapp'    => $rawInput['no_whatsapp'],
+            'rt'             => (int)($rawInput['rt'] ?? 1),
+            'status_aktif'   => 1
         ];
 
         $userModel->insert($userData);
+        $userId = $userModel->getInsertID();
+
+        // Insert into organization_members
+        $memberData = [
+            'user_id' => $userId,
+            'karang_taruna_id' => $karangTarunaId,
+            'username' => $rawInput['username'], // The real tenant-scoped username
+            'role_level' => 'anggota',
+            'status_aktif' => 1,
+            'joined_at' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
+        $memberModel->insert($memberData);
         
         return $this->sendSuccess('Registrasi berhasil. Silakan login.', null, 201);
+    }
+
+    public function updateFcmToken()
+    {
+        $rules = [
+            'fcm_token' => 'required',
+            'device_type' => 'permit_empty'
+        ];
+
+        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
+
+        if (!$this->validateData($rawInput, $rules)) {
+            return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
+        }
+
+        $user = \App\Services\AuthService::getUser();
+        if (!$user) {
+            return $this->sendError('Unauthenticated', null, 401);
+        }
+
+        $deviceModel = new \App\Models\UserDeviceModel();
+        
+        // Find existing token
+        $existing = $deviceModel->where('fcm_token', $rawInput['fcm_token'])->first();
+        
+        if ($existing) {
+            // Update owner and device type if token already exists (handles logout/login to another account on same device)
+            $deviceModel->update($existing['id'], [
+                'user_id' => (string)$user['id'],
+                'device_type' => $rawInput['device_type'] ?? 'android'
+            ]);
+        } else {
+            $deviceModel->insert([
+                'user_id' => (string)$user['id'],
+                'fcm_token' => $rawInput['fcm_token'],
+                'device_type' => $rawInput['device_type'] ?? 'android'
+            ]);
+        }
+
+        return $this->sendSuccess('Token berhasil diupdate');
+    }
+
+    public function removeFcmToken()
+    {
+        $rules = [
+            'fcm_token' => 'required'
+        ];
+
+        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
+
+        if (!$this->validateData($rawInput, $rules)) {
+            return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
+        }
+
+        $user = \App\Services\AuthService::getUser();
+        if (!$user) {
+            return $this->sendError('Unauthenticated', null, 401);
+        }
+
+        $deviceModel = new \App\Models\UserDeviceModel();
+        
+        // Only allow deleting token if it belongs to the current user
+        $deviceModel->where('user_id', (string)$user['id'])
+                    ->where('fcm_token', $rawInput['fcm_token'])
+                    ->delete();
+
+        return $this->sendSuccess('Token berhasil dihapus');
     }
 }

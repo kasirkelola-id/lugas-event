@@ -7,29 +7,37 @@ use App\Services\AuthService;
 
 class AnnouncementController extends BaseApiController
 {
-    private function checkAdminAndSekretaris()
-    {
-        $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['admin', 'ketua', 'sekretaris'])) {
-            return false;
-        }
-        return true;
-    }
+    // checkAdminAndSekretaris replaced by RBAC
 
     public function index()
     {
-        $user = AuthService::getUser();
+        $tenantId = AuthService::getTenantId();
+        $role = AuthService::getRole();
+        
+        if (!$tenantId || !AuthService::can('announcement.view')) {
+            return $this->sendError('Forbidden', null, 403);
+        }
+        
         $model = new PengumumanModel();
         
         $builder = $model->builder();
         $builder->select('pengumuman.*, users.nama_lengkap as pembuat');
         $builder->join('users', 'users.id = pengumuman.dibuat_oleh', 'left');
+        $builder->where('pengumuman.karang_taruna_id', $tenantId);
 
-        if (!in_array($user['role_level'], ['admin', 'ketua', 'sekretaris'])) {
+        if (!AuthService::can('announcement.manage')) {
             $builder->where('pengumuman.status_aktif', 1);
             $builder->groupStart()
                     ->where('pengumuman.target_role', 'semua')
-                    ->orWhere('pengumuman.target_role', $user['role_level'])
+                    ->orWhere('pengumuman.target_role', $role)
+                    ->groupEnd();
+        }
+
+        $search = $this->request->getVar('search');
+        if (!empty($search)) {
+            $builder->groupStart()
+                    ->like('pengumuman.judul', $search)
+                    ->orLike('pengumuman.isi', $search)
                     ->groupEnd();
         }
 
@@ -49,7 +57,7 @@ class AnnouncementController extends BaseApiController
 
     public function create()
     {
-        if (!$this->checkAdminAndSekretaris()) {
+        if (!AuthService::can('announcement.manage')) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -65,31 +73,55 @@ class AnnouncementController extends BaseApiController
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
 
-        $user = AuthService::getUser();
+        $tenantId = AuthService::getTenantId();
+        $userId = AuthService::getGlobalUserId();
         $model = new PengumumanModel();
 
         $data = [
-            'judul' => $rawInput['judul'],
-            'isi' => $rawInput['isi'],
+            'karang_taruna_id' => $tenantId,
+            'judul' => trim($rawInput['judul']),
+            'isi' => trim($rawInput['isi']),
             'target_role' => $rawInput['target_role'],
             'status_aktif' => isset($rawInput['status_aktif']) ? (int)$rawInput['status_aktif'] : 1,
-            'dibuat_oleh' => $user['id']
+            'dibuat_oleh' => $userId
         ];
 
         $id = $model->insert($data);
         $data['id'] = $id;
+
+        if ($data['status_aktif'] == 1) {
+            // Trigger push notification (asynchronously ideally, but curl is fairly fast, or we just do it synchronously for MVP)
+            $excludeUsers = [$userId];
+            $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, $excludeUsers);
+            if (!empty($tokens)) {
+                $ktModel = new \App\Models\KarangTarunaModel();
+                $kt = $ktModel->find($tenantId);
+                $ktName = $kt ? $kt['nama_organisasi'] : 'Karang Taruna';
+                
+                $title = "Pengumuman: " . $ktName;
+                $body = mb_substr($data['judul'], 0, 100);
+                
+                // Do not block if it fails
+                \App\Services\NotificationService::sendPushNotification($tokens, $title, $body, [
+                    'type' => 'announcement',
+                    'tenant_id' => (string)$tenantId,
+                    'announcement_id' => (string)$id
+                ]);
+            }
+        }
 
         return $this->sendSuccess('Pengumuman berhasil dibuat', $data, 201);
     }
 
     public function update($id = null)
     {
-        if (!$this->checkAdminAndSekretaris()) {
+        if (!AuthService::can('announcement.manage')) {
             return $this->sendError('Forbidden', null, 403);
         }
 
+        $tenantId = AuthService::getTenantId();
         $model = new PengumumanModel();
-        $announcement = $model->find($id);
+        $announcement = $model->where('karang_taruna_id', $tenantId)->find($id);
 
         if (!$announcement) {
             return $this->sendError('Pengumuman tidak ditemukan', null, 404);
@@ -108,8 +140,8 @@ class AnnouncementController extends BaseApiController
         }
 
         $data = [
-            'judul' => $rawInput['judul'],
-            'isi' => $rawInput['isi'],
+            'judul' => trim($rawInput['judul']),
+            'isi' => trim($rawInput['isi']),
             'target_role' => $rawInput['target_role']
         ];
         
@@ -124,12 +156,13 @@ class AnnouncementController extends BaseApiController
 
     public function toggleStatus($id = null)
     {
-        if (!$this->checkAdminAndSekretaris()) {
+        if (!AuthService::can('announcement.manage')) {
             return $this->sendError('Forbidden', null, 403);
         }
 
+        $tenantId = AuthService::getTenantId();
         $model = new PengumumanModel();
-        $announcement = $model->find($id);
+        $announcement = $model->where('karang_taruna_id', $tenantId)->find($id);
 
         if (!$announcement) {
             return $this->sendError('Pengumuman tidak ditemukan', null, 404);
@@ -143,12 +176,13 @@ class AnnouncementController extends BaseApiController
 
     public function delete($id = null)
     {
-        if (!$this->checkAdminAndSekretaris()) {
+        if (!AuthService::can('announcement.manage')) {
             return $this->sendError('Forbidden', null, 403);
         }
 
+        $tenantId = AuthService::getTenantId();
         $model = new PengumumanModel();
-        if (!$model->find($id)) {
+        if (!$model->where('karang_taruna_id', $tenantId)->find($id)) {
             return $this->sendError('Pengumuman tidak ditemukan', null, 404);
         }
 

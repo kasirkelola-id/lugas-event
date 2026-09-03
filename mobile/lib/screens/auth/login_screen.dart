@@ -11,6 +11,7 @@ import '../widgets/common/custom_button.dart';
 import 'force_change_password_screen.dart';
 import 'register_screen.dart';
 import 'pin_screen.dart';
+import 'tenant_selector_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,6 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   String _ktName = 'Memuat...';
+  String? _ktLogoUrl;
 
   bool _isPasswordVisible = false;
 
@@ -39,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (tenant != null && mounted) {
       setState(() {
         _ktName = tenant['name'];
+        _ktLogoUrl = tenant['logo_url'];
       });
     }
   }
@@ -94,6 +97,20 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
+      if (result['requires_tenant_selection'] == true) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TenantSelectorScreen(
+              user: user,
+              initialMemberships: result['memberships'],
+            ),
+          ),
+        );
+        return;
+      }
+
+      // If single membership, just use the tenant we logged into, it's already saved by PinScreen/login
       if (user.roleLevel == 'pengelola') {
         Navigator.pushReplacement(
           context,
@@ -136,18 +153,29 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.event_available,
-                        size: 64,
-                        color: AppTheme.primary,
-                      ),
-                    ),
+                    _ktLogoUrl != null 
+                      ? Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: NetworkImage(_ktLogoUrl!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 100,
+                          height: 100,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: AssetImage('assets/logo/default_kartar.png'),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
                     const SizedBox(height: 24),
                     const Text(
                       'Selamat Datang',

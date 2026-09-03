@@ -3,6 +3,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
+import '../auth/tenant_selector_screen.dart';
 
 import '../pengelola/pengelola_home_screen.dart';
 import '../pengelola/pengelola_acara_screen.dart';
@@ -30,6 +31,8 @@ import '../anggota/attendance_geofence_screen.dart';
 import '../anggota/attendance_history_screen.dart';
 import '../anggota/anggota_profil_screen.dart';
 import '../chat/chat_list_screen.dart';
+import '../voting/voting_list_screen.dart';
+import '../inventory/inventory_main_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   final UserModel user;
@@ -43,6 +46,13 @@ class AppDrawer extends StatelessWidget {
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
+    );
+  }
+
+  void _switchTenant(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => TenantSelectorScreen(user: user)),
     );
   }
 
@@ -94,6 +104,19 @@ class AppDrawer extends StatelessWidget {
             color: AppTheme.surface,
             child: Column(
               children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: AppTheme.radiusSmall,
+                    ),
+                    child: const Icon(Icons.swap_horiz, color: AppTheme.primary, size: 20),
+                  ),
+                  title: const Text('Ganti Karang Taruna', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600)),
+                  onTap: () => _switchTenant(context),
+                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
+                ),
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
@@ -211,6 +234,10 @@ class AppDrawer extends StatelessWidget {
       _buildItem(context, Icons.history_outlined, 'Riwayat Acara', const PengelolaRiwayatScreen()),
       _buildItem(context, Icons.people_alt_outlined, 'Peserta & Absensi', const PengelolaPesertaScreen()),
       
+      _buildSectionLabel('Fasilitas'),
+      _buildItem(context, Icons.how_to_vote_outlined, 'Voting & Pemilu', const VotingListScreen(), replace: false),
+      _buildItem(context, Icons.inventory_2_outlined, 'Inventaris', const InventoryMainScreen(), replace: false),
+
       _buildSectionLabel('Analisis'),
       _buildItem(context, Icons.insert_chart_outlined, 'Laporan', const PengelolaLaporanScreen()),
       
@@ -234,6 +261,10 @@ class AppDrawer extends StatelessWidget {
 
       _buildSectionLabel('Kegiatan'),
       _buildItem(context, Icons.history_outlined, 'Riwayat Absensi', const AttendanceHistoryScreen()),
+      
+      _buildSectionLabel('Fasilitas'),
+      _buildItem(context, Icons.how_to_vote_outlined, 'Voting & Pemilu', const VotingListScreen(), replace: false),
+      _buildItem(context, Icons.inventory_2_outlined, 'Inventaris', const InventoryMainScreen(), replace: false),
       
       if (isSekretaris) ...[
         _buildSectionLabel('Manajemen'),
@@ -259,6 +290,10 @@ class AppDrawer extends StatelessWidget {
       _buildItem(context, Icons.event_note_outlined, 'Acara', const AdminAcaraScreen()),
       _buildItem(context, Icons.people_alt_outlined, 'Peserta & Absensi', const AdminPesertaScreen()),
       
+      _buildSectionLabel('Fasilitas'),
+      _buildItem(context, Icons.how_to_vote_outlined, 'Voting & Pemilu', const VotingListScreen(), replace: false),
+      _buildItem(context, Icons.inventory_2_outlined, 'Inventaris', const InventoryMainScreen(), replace: false),
+
       _buildSectionLabel('Analisis'),
       _buildItem(context, Icons.insert_chart_outlined, 'Laporan', const AdminLaporanScreen()),
       

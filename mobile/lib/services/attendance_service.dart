@@ -53,13 +53,14 @@ class AttendanceService {
     }
   }
 
-  static Future<Map<String, dynamic>> checkIn(int eventId, {double? userLat, double? userLng}) async {
+  static Future<Map<String, dynamic>> checkIn(int eventId, {double? userLat, double? userLng, double? accuracy}) async {
     try {
       final payload = <String, dynamic>{
         'event_id': eventId,
       };
       if (userLat != null) payload['user_lat'] = userLat;
       if (userLng != null) payload['user_lng'] = userLng;
+      if (accuracy != null) payload['accuracy'] = accuracy;
 
       final response = await ApiClient.post('/absensi/checkin', payload);
       return _handleResponse(response);
@@ -68,13 +69,14 @@ class AttendanceService {
     }
   }
 
-  static Future<Map<String, dynamic>> checkOut(int eventId, {double? userLat, double? userLng}) async {
+  static Future<Map<String, dynamic>> checkOut(int eventId, {double? userLat, double? userLng, double? accuracy}) async {
     try {
       final payload = <String, dynamic>{
         'event_id': eventId,
       };
       if (userLat != null) payload['user_lat'] = userLat;
       if (userLng != null) payload['user_lng'] = userLng;
+      if (accuracy != null) payload['accuracy'] = accuracy;
 
       final response = await ApiClient.post('/absensi/checkout', payload);
       return _handleResponse(response);

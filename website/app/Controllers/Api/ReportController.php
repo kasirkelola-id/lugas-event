@@ -11,16 +11,18 @@ class ReportController extends BaseApiController
 {
     public function summary()
     {
-        $user = AuthService::getUser();
+        $tenantId = AuthService::getTenantId();
+        $role = AuthService::getRole();
 
-        if (!$user || !in_array($user['role_level'], ['admin', 'ketua', 'pengelola'])) {
+        if (!$tenantId || !AuthService::can('report.view')) {
             return $this->sendError('Forbidden', null, 403);
         }
 
         $eventModel = new EventModel();
         $builder = $eventModel->builder();
         
-        // Admin and Pengelola can view report for all events
+        // Admin and Pengelola can view report for their events
+        $builder->where('karang_taruna_id', $tenantId);
 
         // Hitung acara
         $events = $builder->get()->getResultArray();

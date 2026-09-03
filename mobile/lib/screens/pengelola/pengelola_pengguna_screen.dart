@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/common/feedback_dialogs.dart';
+import '../widgets/common/custom_button.dart';
 
 class PengelolaPenggunaScreen extends StatefulWidget {
   const PengelolaPenggunaScreen({super.key});
@@ -23,6 +26,10 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   String _searchQuery = '';
   String _roleFilter = 'Semua';
   int? _rtFilter;
+  
+  Timer? _debounce;
+  int _currentPage = 1;
+  int _limit = 100; // MVP simple pagination
 
   final _namaLengkapController = TextEditingController();
   final _namaPanggilanController = TextEditingController();
@@ -38,6 +45,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   
   @override
   void dispose() {
+    _debounce?.cancel();
     _namaLengkapController.dispose();
     _namaPanggilanController.dispose();
     _usernameController.dispose();
@@ -58,14 +66,27 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
       return;
     }
 
-    final usersResult = await UserService.getUsers();
+    final usersResult = await UserService.getUsers(
+      page: _currentPage,
+      limit: _limit,
+      search: _searchQuery,
+      role: _roleFilter,
+      status: '', // Not filtering by status in MVP for simplicity, or we could add a tab
+    );
     if (!mounted) return;
 
     if (usersResult['success']) {
       setState(() {
         _currentUser = userResult['user'];
         _users = usersResult['users'] as List<UserModel>;
-        _applyFilters();
+        
+        // Local RT filter application since backend doesn't filter RT currently
+        if (_rtFilter != null) {
+          _filteredUsers = _users.where((u) => u.rt == _rtFilter).toList();
+        } else {
+          _filteredUsers = _users;
+        }
+        
         _isLoading = false;
       });
     } else {
@@ -73,22 +94,18 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
     }
   }
 
-  void _applyFilters() {
-    setState(() {
-      _filteredUsers = _users.where((user) {
-        final matchesSearch = user.namaLengkap.toLowerCase().contains(_searchQuery.toLowerCase()) || 
-                              user.username.toLowerCase().contains(_searchQuery.toLowerCase());
-        final matchesRole = _roleFilter == 'Semua' || 
-                            (_roleFilter == 'Admin' && user.roleLevel == 'admin') ||
-                            (_roleFilter == 'Ketua' && user.roleLevel == 'ketua') ||
-                            (_roleFilter == 'Sekretaris' && user.roleLevel == 'sekretaris') ||
-                            (_roleFilter == 'Bendahara' && user.roleLevel == 'bendahara') ||
-                            (_roleFilter == 'Pengelola' && user.roleLevel == 'pengelola') ||
-                            (_roleFilter == 'Anggota' && user.roleLevel == 'anggota');
-        final matchesRt = _rtFilter == null || user.rt == _rtFilter;
-        return matchesSearch && matchesRole && matchesRt;
-      }).toList();
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _searchQuery = query;
+      });
+      _loadData();
     });
+  }
+
+  void _applyFilters() {
+    _loadData(); // Re-fetch from server when roles/search change
   }
 
   void _handleError(String message) {
@@ -188,12 +205,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
-                    onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val;
-                        _applyFilters();
-                      });
-                    },
+                    onChanged: _onSearchChanged,
                   ),
                   const SizedBox(height: 16),
                   SingleChildScrollView(
@@ -398,6 +410,8 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                           _showChangeRoleDialog(user);
                         }),
                       if (_currentUser?.roleLevel == 'ketua' && !isMe)
+                        _buildActionButton(Icons.lock_reset, 'Reset', Colors.purple, () => _resetPassword(user)),
+                      if (_currentUser?.roleLevel == 'ketua' && !isMe)
                         _buildActionButton(
                           isActive ? Icons.person_off : Icons.person, 
                           isActive ? 'Nonaktifkan' : 'Aktifkan', 
@@ -410,13 +424,6 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                             isDestructive: isActive
                           );
                         }),
-                      _buildActionButton(Icons.lock_reset, 'Reset Password', Colors.brown.shade600, () {
-                        _confirmAction(
-                          'Reset Password', 
-                          'Password pengguna akan direset ke password sementara. Pengguna harus mengganti password saat login berikutnya.', 
-                          () => UserService.resetPassword(user.id)
-                        );
-                      }),
                     ],
                   ),
                 ),
@@ -426,6 +433,62 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
         );
       },
     );
+  }
+
+  void _resetPassword(UserModel user) async {
+    final confirm = await FeedbackDialogs.showConfirmation(
+      context: context,
+      title: 'Reset Password',
+      content: 'Anda yakin ingin mereset password ${user.namaLengkap}? Pengguna akan dipaksa mengganti password pada login berikutnya.',
+      isDestructive: true,
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      final result = await UserService.resetPassword(user.id);
+      
+      if (result['success']) {
+        if (!mounted) return;
+        final tempPass = result['temporary_password'] ?? '-';
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Password Berhasil Direset', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.success)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Silakan berikan password sementara ini kepada ${user.namaLengkap}:'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: AppTheme.radiusMedium,
+                    border: Border.all(color: AppTheme.primary),
+                  ),
+                  child: Center(
+                    child: SelectableText(
+                      tempPass,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary, letterSpacing: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              CustomButton(
+                text: 'Tutup',
+                onPressed: () => Navigator.pop(context),
+                isFullWidth: true,
+              )
+            ],
+          )
+        );
+        _loadData();
+      } else {
+        _handleError(result['message']);
+      }
+    }
   }
 
   Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback onTap) {

@@ -23,6 +23,7 @@ class UserModel extends Model
         'role_level',
         'status_aktif',
         'password_must_change',
+        'profile_photo',
     ];
 
     protected bool $allowEmptyInserts = false;

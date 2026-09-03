@@ -29,14 +29,24 @@ class UserService {
     }
   }
 
-  static Future<Map<String, dynamic>> getUsers() async {
+  static Future<Map<String, dynamic>> getUsers({int page = 1, int limit = 100, String search = '', String role = 'Semua', String status = ''}) async {
     try {
-      final response = await ApiClient.get('/users');
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+      
+      if (search.isNotEmpty) queryParams['search'] = search;
+      if (role != 'Semua') queryParams['role'] = role;
+      if (status.isNotEmpty) queryParams['status'] = status;
+      
+      final uri = Uri(path: '/users', queryParameters: queryParams);
+      final response = await ApiClient.get(uri.toString());
       final result = await _handleResponse(response);
       if (result['success']) {
-        final List<dynamic> list = result['data'];
+        final List<dynamic> list = result['data']['users'];
         final users = list.map((e) => UserModel.fromJson(e)).toList();
-        return {'success': true, 'users': users};
+        return {'success': true, 'users': users, 'pagination': result['data']['pagination']};
       }
       return result;
     } catch (e) {
@@ -89,15 +99,11 @@ class UserService {
     }
   }
 
-  static Future<Map<String, dynamic>> resetPassword(int id) async {
+  static Future<Map<String, dynamic>> resetPassword(int userId) async {
     try {
-      print('[DEBUG] Requesting reset password for user $id via POST');
-      final response = await ApiClient.post('/users/$id/reset-password', {});
-      print('[DEBUG] Reset password response status: ${response.statusCode}');
+      final response = await ApiClient.post('/users/$userId/reset-password', {});
       return _handleResponse(response);
-    } catch (e, stackTrace) {
-      print('[DEBUG] Reset password exception: $e');
-      print('[DEBUG] StackTrace: $stackTrace');
+    } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
     }
   }

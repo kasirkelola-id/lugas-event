@@ -55,11 +55,7 @@ class ParticipantService {
 
   static Future<Map<String, dynamic>> removeParticipant(int eventId, int userId) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.delete(
-        Uri.parse('${ApiClient.baseUrl}/events/$eventId/participants/$userId'),
-        headers: headers
-      );
+      final response = await ApiClient.delete('/events/$eventId/participants/$userId');
       return await _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};

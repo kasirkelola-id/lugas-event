@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../core/network/api_client.dart';
 import '../storage/auth_storage.dart';
+import 'dart:io';
 
 class ProfileService {
   static Future<Map<String, dynamic>> _handleResponse(http.Response response) async {
@@ -30,12 +31,7 @@ class ProfileService {
 
   static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.put(
-        Uri.parse('${ApiClient.baseUrl}/profile'),
-        headers: headers,
-        body: jsonEncode(data),
-      );
+      final response = await ApiClient.put('/profile', data);
       return _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
@@ -44,15 +40,33 @@ class ProfileService {
 
   static Future<Map<String, dynamic>> updatePassword(Map<String, dynamic> data) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.post(
-        Uri.parse('${ApiClient.baseUrl}/profile/password'),
-        headers: headers,
-        body: jsonEncode(data),
-      );
+      final response = await ApiClient.post('/profile/password', data);
       return _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateProfilePhoto(File imageFile) async {
+    try {
+      final token = await AuthStorage.getToken();
+      final tenant = await AuthStorage.getTenant();
+      
+      final request = http.MultipartRequest('POST', Uri.parse('${ApiClient.baseUrl}/profile/photo'));
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'application/json';
+      if (tenant != null) {
+        request.headers['X-Karang-Taruna-ID'] = tenant['id'].toString();
+      }
+      
+      request.files.add(await http.MultipartFile.fromPath('photo', imageFile.path));
+      
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan saat mengunggah foto'};
     }
   }
 }

@@ -16,9 +16,15 @@ class EventModel extends Model
         'karang_taruna_id',
         'nama_acara',
         'tanggal_acara',
+        'waktu_mulai',
+        'waktu_selesai',
         'kode_qr',
         'dibuat_oleh',
         'status_aktif',
+        'require_gps',
+        'latitude',
+        'longitude',
+        'radius'
     ];
 
     protected bool $allowEmptyInserts = false;

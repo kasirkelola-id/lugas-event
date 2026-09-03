@@ -9,24 +9,23 @@ use App\Services\AuthService;
 
 class ParticipantController extends BaseApiController
 {
-    private function checkPengelola()
-    {
-        $user = AuthService::getUser();
-        if (!$user || !in_array($user['role_level'], ['pengelola', 'admin', 'ketua'])) {
-            return false;
-        }
-        return true;
-    }
+    // checkPengelola replaced by RBAC
 
     private function checkEventOwnership($eventId)
     {
-        $user = AuthService::getUser();
-        if (in_array($user['role_level'], ['admin', 'pengelola', 'ketua'])) {
+        $tenantId = AuthService::getTenantId();
+        $role = AuthService::getRole();
+        $userId = AuthService::getGlobalUserId();
+        
+        $eventModel = new EventModel();
+        $event = $eventModel->where('karang_taruna_id', $tenantId)->find($eventId);
+        if (!$event) {
+            return false;
+        }
+        if (AuthService::can('event.manage')) {
             return true;
         }
-        $eventModel = new EventModel();
-        $event = $eventModel->find($eventId);
-        if ($event && (int)$event['dibuat_oleh'] === (int)$user['id']) {
+        if ((int)$event['dibuat_oleh'] === (int)$userId) {
             return true;
         }
         return false;
@@ -34,7 +33,7 @@ class ParticipantController extends BaseApiController
 
     public function index($eventId = null)
     {
-        if (!$this->checkPengelola()) {
+        if (!AuthService::can('event.manage')) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -60,7 +59,7 @@ class ParticipantController extends BaseApiController
 
     public function add($eventId)
     {
-        if (!$this->checkPengelola()) {
+        if (!AuthService::can('event.manage')) {
             return $this->sendError('Forbidden', null, 403);
         }
 
@@ -81,11 +80,12 @@ class ParticipantController extends BaseApiController
         $userIds = $rawInput['user_ids'];
         $participantModel = new EventParticipantModel();
         $userModel = new UserModel();
+        $tenantId = AuthService::getTenantId();
 
         $added = 0;
         foreach ($userIds as $userId) {
-            $user = $userModel->find($userId);
-            if ($user && $user['role_level'] === 'anggota' && (int)$user['status_aktif'] === 1) {
+            $userTarget = $userModel->where('karang_taruna_id', $tenantId)->find($userId);
+            if ($userTarget && $userTarget['role_level'] === 'anggota' && (int)$userTarget['status_aktif'] === 1) {
                 // Check if already registered
                 $exists = $participantModel->where('event_id', $eventId)->where('user_id', $userId)->first();
                 if (!$exists) {
@@ -104,7 +104,7 @@ class ParticipantController extends BaseApiController
 
     public function remove($eventId, $userId)
     {
-        if (!$this->checkPengelola()) {
+        if (!AuthService::can('event.manage')) {
             return $this->sendError('Forbidden', null, 403);
         }
 

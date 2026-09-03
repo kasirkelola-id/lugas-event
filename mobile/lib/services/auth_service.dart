@@ -2,6 +2,7 @@ import 'dart:convert';
 import '../core/network/api_client.dart';
 import '../models/user_model.dart';
 import '../storage/auth_storage.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class AuthService {
   static Future<Map<String, dynamic>> verifyPin(String pin) async {
@@ -35,11 +36,16 @@ class AuthService {
       if (response.statusCode == 200 && data['status'] == true) {
         final token = data['data']['token'];
         await AuthStorage.saveToken(token);
-        return {'success': true, 'user': UserModel.fromJson(data['data']['user'])};
+        return {
+            'success': true, 
+            'user': UserModel.fromJson(data['data']['user']),
+            'memberships': data['data']['memberships'] ?? [],
+            'requires_tenant_selection': data['data']['requires_tenant_selection'] ?? false,
+        };
       }
       return {'success': false, 'message': data['message'] ?? 'Login gagal'};
     } catch (e) {
-      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan: $e'};
     }
   }
 
@@ -79,13 +85,33 @@ class AuthService {
       final response = await ApiClient.get('/me');
       if (response.statusCode == 401) {
         await AuthStorage.removeToken();
-        return {'success': false, 'message': 'Sesi Anda telah berakhir, silakan login kembali.'};
+        return {'success': false, 'message': 'Sesi Anda telah berakhir, silakan login kembali.', 'statusCode': 401};
+      }
+      if (response.statusCode == 403) {
+        return {'success': false, 'message': 'Akses ke Karang Taruna ini ditolak atau keanggotaan tidak aktif.', 'statusCode': 403};
       }
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['status'] == true) {
         return {'success': true, 'user': UserModel.fromJson(data['data'])};
       }
-      return {'success': false, 'message': data['message'] ?? 'Gagal mengambil profil'};
+      return {'success': false, 'message': data['message'] ?? 'Gagal mengambil profil', 'statusCode': response.statusCode};
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMemberships() async {
+    try {
+      // Intentionally omitting tenant_id headers to hit the global /memberships endpoint
+      final response = await ApiClient.get('/memberships', excludeTenantHeader: true);
+      if (response.statusCode == 401) {
+        return {'success': false, 'message': 'Sesi Anda telah berakhir, silakan login kembali.', 'statusCode': 401};
+      }
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == true) {
+        return {'success': true, 'data': data['data']};
+      }
+      return {'success': false, 'message': data['message'] ?? 'Gagal mengambil memberships', 'statusCode': response.statusCode};
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
     }
@@ -93,6 +119,16 @@ class AuthService {
 
   static Future<void> logout() async {
     try {
+      // First, remove FCM Token from backend
+      try {
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+        if (fcmToken != null) {
+          await ApiClient.delete('/fcm-token', {'fcm_token': fcmToken});
+        }
+      } catch (e) {
+        // Ignore FCM errors
+      }
+      
       await ApiClient.post('/logout', {});
     } catch (e) {
       // Ignore network errors on logout
@@ -124,6 +160,17 @@ class AuthService {
       return {'success': false, 'message': message};
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
+  }
+
+  static Future<void> updateFcmToken(String token) async {
+    try {
+      await ApiClient.post('/fcm-token', {
+        'fcm_token': token,
+        'device_type': 'android',
+      });
+    } catch (e) {
+      // Ignore network errors for token update
     }
   }
 }

@@ -20,13 +20,26 @@ class AdminPengumumanScreen extends StatefulWidget {
 class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
   UserModel? _user;
   List<AnnouncementModel> _announcements = [];
+  List<AnnouncementModel> _filteredAnnouncements = [];
   bool _isLoading = true;
   String? _errorMessage;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _searchController.addListener(_filterAnnouncements);
+  }
+
+  void _filterAnnouncements() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredAnnouncements = _announcements.where((a) {
+        return a.judul.toLowerCase().contains(query) || 
+               a.isi.toLowerCase().contains(query);
+      }).toList();
+    });
   }
 
   Future<void> _loadData() async {
@@ -45,6 +58,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
       if (announcementResult['success']) {
         setState(() {
           _announcements = announcementResult['data'];
+          _filteredAnnouncements = _announcements;
           _isLoading = false;
         });
       } else {
@@ -256,6 +270,21 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
       );
     }
 
+    if (_filteredAnnouncements.isEmpty && _searchController.text.isNotEmpty) {
+      return Column(
+        children: [
+          _buildSearchBar(),
+          Expanded(
+            child: EmptyStateWidget(
+              icon: Icons.search_off,
+              title: 'Tidak ada hasil',
+              subtitle: 'Coba gunakan kata kunci pencarian yang lain.',
+            ),
+          ),
+        ],
+      );
+    }
+
     if (_announcements.isEmpty) {
       return EmptyStateWidget(
         icon: Icons.campaign_outlined,
@@ -266,11 +295,15 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: _announcements.length,
-      itemBuilder: (context, index) {
-        final a = _announcements[index];
+    return Column(
+      children: [
+        _buildSearchBar(),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: _filteredAnnouncements.length,
+            itemBuilder: (context, index) {
+              final a = _filteredAnnouncements[index];
         return Container(
           margin: const EdgeInsets.only(bottom: 20),
           decoration: BoxDecoration(
@@ -334,16 +367,25 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(a.judul, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-                    const SizedBox(height: 12),
-                    Text(
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  childrenPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                  title: Text(a.judul, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
                       a.isi, 
-                      style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
+                      maxLines: 2, 
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)
+                    ),
+                  ),
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(a.isi, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5)),
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -395,6 +437,32 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
           ),
         );
       },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Cari pengumuman...',
+          prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+          filled: true,
+          fillColor: AppTheme.surface,
+          border: OutlineInputBorder(
+            borderRadius: AppTheme.radiusMedium,
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: AppTheme.radiusMedium,
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+        ),
+      ),
     );
   }
 }

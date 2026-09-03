@@ -10,14 +10,18 @@ class ApiClient {
   static String get baseUrl => ApiConfig.baseUrl;
   static const Duration _timeout = Duration(seconds: 30);
 
-  static Future<Map<String, String>> getHeaders() async {
+  static Future<Map<String, String>> getHeaders({bool excludeTenantHeader = false}) async {
     final token = await AuthStorage.getToken();
+    final tenant = await AuthStorage.getTenant();
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
+    }
+    if (tenant != null && tenant['id'] != null && !excludeTenantHeader) {
+      headers['X-Karang-Taruna-ID'] = tenant['id'].toString();
     }
     return headers;
   }
@@ -122,8 +126,8 @@ class ApiClient {
     }
   }
 
-  static Future<http.Response> get(String endpoint) async {
-    final headers = await getHeaders();
+  static Future<http.Response> get(String endpoint, {bool excludeTenantHeader = false}) async {
+    final headers = await getHeaders(excludeTenantHeader: excludeTenantHeader);
     return _executeRequest(
       'GET', 
       endpoint, 
@@ -168,13 +172,15 @@ class ApiClient {
     );
   }
 
-  static Future<http.Response> delete(String endpoint) async {
+  static Future<http.Response> delete(String endpoint, [Map<String, dynamic>? body]) async {
     final headers = await getHeaders();
+    final jsonBody = body != null ? jsonEncode(body) : null;
     return _executeRequest(
       'DELETE', 
       endpoint, 
-      () => http.delete(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers),
-      headers: headers
+      () => http.delete(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers, body: jsonBody),
+      headers: headers,
+      body: jsonBody
     );
   }
 }

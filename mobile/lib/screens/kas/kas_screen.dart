@@ -8,6 +8,7 @@ import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/empty_state.dart';
 import '../widgets/common/feedback_dialogs.dart';
+import '../widgets/animations/fade_in_slide.dart';
 import 'add_kas_screen.dart';
 
 class KasScreen extends StatefulWidget {
@@ -21,6 +22,8 @@ class KasScreen extends StatefulWidget {
 
 class _KasScreenState extends State<KasScreen> {
   int _saldo = 0;
+  int _pemasukanBulanIni = 0;
+  int _pengeluaranBulanIni = 0;
   List<KasModel> _transaksi = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -37,13 +40,24 @@ class _KasScreenState extends State<KasScreen> {
       _errorMessage = null;
     });
 
-    final result = await KasService.getKasData();
+    final results = await Future.wait([
+      KasService.getKasData(),
+      KasService.getSummary(),
+    ]);
+
+    final result = results[0];
+    final summary = results[1];
+
     if (!mounted) return;
 
     if (result['success']) {
       setState(() {
         _saldo = result['saldo'] ?? 0;
         _transaksi = result['transaksi'] as List<KasModel>;
+        if (summary['success']) {
+          _pemasukanBulanIni = summary['data']['pemasukan_bulan_ini'] ?? 0;
+          _pengeluaranBulanIni = summary['data']['pengeluaran_bulan_ini'] ?? 0;
+        }
         _isLoading = false;
       });
     } else {
@@ -164,39 +178,103 @@ class _KasScreenState extends State<KasScreen> {
             subtitle: 'Daftar transaksi kas Anda akan muncul di sini.',
           )
         else
-          ..._transaksi.map((t) => _buildTransaksiCard(t, canManage)).toList(),
+          ...List.generate(_transaksi.length, (index) {
+            final t = _transaksi[index];
+            return FadeInSlide(
+              delay: 0.1 * index,
+              child: _buildTransaksiCard(t, canManage),
+            );
+          }),
         const SizedBox(height: 80), // space for FAB
       ],
     );
   }
 
   Widget _buildSaldoCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppTheme.primary, AppTheme.primary.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return FadeInSlide(
+      delay: 0,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppTheme.primary, AppTheme.secondary],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primary.withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text('Total Saldo Kas', style: TextStyle(color: Colors.white70, fontSize: 16)),
-          const SizedBox(height: 8),
-          Text(
-            _formatCurrency(_saldo),
-            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-          ),
-        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total Saldo Kas', style: TextStyle(color: Colors.white70, fontSize: 16)),
+                Icon(Icons.account_balance_wallet, color: Colors.white.withValues(alpha: 0.5)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _formatCurrency(_saldo),
+              style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: -1),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Pemasukan Bulan Ini', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.arrow_downward, color: Colors.greenAccent, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatCurrency(_pemasukanBulanIni),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Text('Pengeluaran Bulan Ini', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.arrow_upward, color: Colors.redAccent, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatCurrency(_pengeluaranBulanIni),
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -209,37 +287,49 @@ class _KasScreenState extends State<KasScreen> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 2,
+      shadowColor: Colors.black12,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.1),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Icon(icon, color: color),
         ),
-        title: Text(t.keterangan, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(t.keterangan, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.only(top: 6.0),
+          child: Row(
             children: [
+              Icon(Icons.calendar_today, size: 12, color: AppTheme.textSecondary),
+              const SizedBox(width: 4),
               Text(t.tanggal, style: const TextStyle(fontSize: 12)),
-              if (t.pembuat != null)
-                Text('Oleh: ${t.pembuat}', style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
             ],
           ),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '$sign${_formatCurrency(t.nominal)}',
-              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '$sign${_formatCurrency(t.nominal)}',
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+                if (t.pembuat != null)
+                  Text(t.pembuat!, style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+              ],
             ),
             if (canManage) ...[
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.delete, color: AppTheme.error, size: 20),
+                icon: const Icon(Icons.delete_outline, color: AppTheme.error, size: 22),
                 onPressed: () => _deleteTransaksi(t.id),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),

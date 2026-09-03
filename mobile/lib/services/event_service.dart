@@ -99,19 +99,14 @@ class EventService {
     int? radius,
   }) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.put(
-        Uri.parse('${ApiClient.baseUrl}/events/$id'),
-        headers: headers,
-        body: jsonEncode({
-          'nama_acara': nama,
-          'tanggal_acara': tanggal,
-          'require_gps': requireGps ? 1 : 0,
-          if (requireGps && latitude != null) 'latitude': latitude,
-          if (requireGps && longitude != null) 'longitude': longitude,
-          if (requireGps && radius != null) 'radius': radius,
-        }),
-      );
+      final response = await ApiClient.put('/events/$id', {
+        'nama_acara': nama,
+        'tanggal_acara': tanggal,
+        'require_gps': requireGps ? 1 : 0,
+        if (requireGps && latitude != null) 'latitude': latitude,
+        if (requireGps && longitude != null) 'longitude': longitude,
+        if (requireGps && radius != null) 'radius': radius,
+      });
       return _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
@@ -120,12 +115,7 @@ class EventService {
 
   static Future<Map<String, dynamic>> closeEvent(int id) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.patch(
-        Uri.parse('${ApiClient.baseUrl}/events/$id/status'),
-        headers: headers,
-        body: jsonEncode({'status_aktif': 0}),
-      );
+      final response = await ApiClient.patch('/events/$id/status', {'status_aktif': 0});
       return _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};

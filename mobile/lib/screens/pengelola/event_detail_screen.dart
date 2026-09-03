@@ -165,6 +165,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         children: [
           _buildHeroSection(),
           const SizedBox(height: 24),
+          _buildAttendanceCTA(),
+          const SizedBox(height: 24),
           _buildQuickActions(),
           const SizedBox(height: 24),
           _buildQrSection(),
@@ -200,15 +202,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _event!.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                  color: _getStatusColor(_event!.statusKegiatan ?? (_event!.isActive ? 'berlangsung' : 'selesai')).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _event!.isActive ? AppTheme.success.withValues(alpha: 0.5) : AppTheme.textSecondary.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: _getStatusColor(_event!.statusKegiatan ?? (_event!.isActive ? 'berlangsung' : 'selesai')).withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Text(
-                  _event!.isActive ? 'AKTIF' : 'SELESAI',
+                  _getStatusText(_event!.statusKegiatan ?? (_event!.isActive ? 'berlangsung' : 'selesai')),
                   style: TextStyle(
-                    color: _event!.isActive ? AppTheme.success : AppTheme.textSecondary,
-                    fontSize: 12,
+                    color: _getStatusColor(_event!.statusKegiatan ?? (_event!.isActive ? 'berlangsung' : 'selesai')),
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -407,6 +411,69 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         ],
       ),
     );
+  }
+  Widget _buildAttendanceCTA() {
+    if (_event!.statusKegiatan == 'akan_datang') {
+      return _buildCTABtn('Absensi Belum Dibuka', AppTheme.info, null);
+    } else if (_event!.statusKegiatan == 'selesai') {
+      if (_event!.userAttendanceStatus == 'sudah_absen') {
+        return _buildCTABtn('Sudah Absen', AppTheme.success, null);
+      }
+      return _buildCTABtn('Absensi Ditutup', AppTheme.textSecondary, null);
+    } else {
+      // berlangsung
+      if (_event!.userAttendanceStatus == 'sudah_absen') {
+        return _buildCTABtn('Sudah Absen', AppTheme.success, null);
+      }
+      return _buildCTABtn('Absen Sekarang', AppTheme.primary, () {
+        // Navigate to attendance screen (might not be available directly here for Pengelola, 
+        // but we can redirect to AttendanceGeofenceScreen)
+        Navigator.pop(context); // back to home? or just show a message.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Silakan gunakan fitur Absensi Lokasi dari Beranda Anggota')),
+        );
+      });
+    }
+  }
+
+  Widget _buildCTABtn(String text, Color color, VoidCallback? onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: onPressed == null ? color.withValues(alpha: 0.5) : color,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+        ),
+        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      ),
+    );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'berlangsung':
+        return AppTheme.success;
+      case 'akan_datang':
+        return AppTheme.info;
+      case 'selesai':
+      default:
+        return AppTheme.textSecondary;
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'berlangsung':
+        return 'SEDANG BERLANGSUNG';
+      case 'akan_datang':
+        return 'AKAN DATANG';
+      case 'selesai':
+      default:
+        return 'SELESAI';
+    }
   }
 }
 

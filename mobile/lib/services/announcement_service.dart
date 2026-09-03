@@ -74,11 +74,7 @@ class AnnouncementService {
 
   static Future<Map<String, dynamic>> toggleStatus(int id) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.patch(
-        Uri.parse('${ApiClient.baseUrl}/announcements/$id/status'),
-        headers: headers,
-      );
+      final response = await ApiClient.patch('/announcements/$id/status');
       return await _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
@@ -87,11 +83,7 @@ class AnnouncementService {
 
   static Future<Map<String, dynamic>> deleteAnnouncement(int id) async {
     try {
-      final headers = await ApiClient.getHeaders();
-      final response = await http.delete(
-        Uri.parse('${ApiClient.baseUrl}/announcements/$id'),
-        headers: headers,
-      );
+      final response = await ApiClient.delete('/announcements/$id');
       return await _handleResponse(response);
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};

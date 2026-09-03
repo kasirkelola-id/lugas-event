@@ -4,6 +4,8 @@ import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class AdminProfilScreen extends StatefulWidget {
   const AdminProfilScreen({super.key});
@@ -15,6 +17,7 @@ class AdminProfilScreen extends StatefulWidget {
 class _AdminProfilScreenState extends State<AdminProfilScreen> {
   UserModel? _user;
   bool _isLoading = true;
+  bool _isUploadingImage = false;
   String? _errorMessage;
 
   @override
@@ -57,6 +60,30 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
     );
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+
+    if (pickedFile != null) {
+      setState(() {
+        _isUploadingImage = true;
+      });
+
+      final result = await ProfileService.updateProfilePhoto(File(pickedFile.path));
+      
+      setState(() {
+        _isUploadingImage = false;
+      });
+
+      if (result['success']) {
+        _showSnackbar('Foto profil berhasil diunggah');
+        _loadUser(); // reload the user info to get the new photo url
+      } else {
+        _showSnackbar(result['message'], isError: true);
+      }
+    }
+  }
+
   Future<void> _showEditProfileDialog() async {
     if (_user == null) return;
     
@@ -83,6 +110,11 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        alignment: Alignment.centerLeft,
+                        child: const Text('Identitas Global', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                      ),
                       TextFormField(
                         controller: namaLengkapController,
                         decoration: InputDecoration(
@@ -102,20 +134,26 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
-                        controller: usernameController,
-                        decoration: InputDecoration(
-                          labelText: 'Username', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                        ),
-                        validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
                         controller: whatsappController,
                         decoration: InputDecoration(
                           labelText: 'No. WhatsApp', 
                           border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        alignment: Alignment.centerLeft,
+                        child: const Text('Identitas Tenant (Keanggotaan)', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                      ),
+                      TextFormField(
+                        controller: usernameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username (Spesifik Karang Taruna Ini)', 
+                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
+                        validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<int>(
@@ -371,20 +409,49 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
             ),
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: Text(
-                      _user!.namaPanggilan.isNotEmpty ? _user!.namaPanggilan.substring(0, 1).toUpperCase() : '?',
-                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.white,
+                        backgroundImage: _user!.profilePhotoUrl != null
+                            ? NetworkImage(_user!.profilePhotoUrl!)
+                            : null,
+                        child: _user!.profilePhotoUrl == null
+                            ? Text(
+                                _user!.namaPanggilan.isNotEmpty ? _user!.namaPanggilan.substring(0, 1).toUpperCase() : '?',
+                                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                              )
+                            : null,
+                      ),
                     ),
-                  ),
+                    if (_isUploadingImage)
+                      const Positioned(
+                        top: 0, bottom: 0, left: 0, right: 0,
+                        child: Center(
+                          child: CircularProgressIndicator(color: AppTheme.primary),
+                        ),
+                      )
+                    else
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: AppTheme.secondary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -517,4 +584,5 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
     );
   }
 }
+
 

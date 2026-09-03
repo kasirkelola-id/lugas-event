@@ -198,15 +198,18 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: event.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                      color: _getStatusColor(event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai')).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _getStatusColor(event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai')).withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
-                      event.isActive ? 'AKTIF' : 'SELESAI',
+                      _getStatusText(event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai')),
                       style: TextStyle(
-                        color: event.isActive ? AppTheme.success : AppTheme.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        color: _getStatusColor(event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai')),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -239,5 +242,29 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
         ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'berlangsung':
+        return AppTheme.success;
+      case 'akan_datang':
+        return AppTheme.info;
+      case 'selesai':
+      default:
+        return AppTheme.textSecondary;
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'berlangsung':
+        return 'SEDANG BERLANGSUNG';
+      case 'akan_datang':
+        return 'AKAN DATANG';
+      case 'selesai':
+      default:
+        return 'SELESAI';
+    }
   }
 }
