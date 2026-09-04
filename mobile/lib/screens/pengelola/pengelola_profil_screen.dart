@@ -229,11 +229,9 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
 
   Future<void> _showUpdatePasswordDialog() async {
     final formKey = GlobalKey<FormState>();
-    final oldPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
     bool isLoadingSubmit = false;
-    bool obscureOld = true;
     bool obscureNew = true;
     bool obscureConfirm = true;
 
@@ -252,20 +250,6 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextFormField(
-                        controller: oldPasswordController,
-                        decoration: InputDecoration(
-                          labelText: 'Password Lama', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                          suffixIcon: IconButton(
-                            icon: Icon(obscureOld ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                            onPressed: () => setStateDialog(() => obscureOld = !obscureOld),
-                          ),
-                        ),
-                        obscureText: obscureOld,
-                        validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 16),
                       TextFormField(
                         controller: newPasswordController,
                         decoration: InputDecoration(
@@ -314,7 +298,6 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                             setStateDialog(() => isLoadingSubmit = true);
                             
                             final data = {
-                              'old_password': oldPasswordController.text,
                               'new_password': newPasswordController.text,
                               'confirm_password': confirmPasswordController.text,
                             };

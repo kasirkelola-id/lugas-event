@@ -18,12 +18,10 @@ class ForceChangePasswordScreen extends StatefulWidget {
 }
 
 class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
-  final _oldPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-  bool _obscureOld = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
 
@@ -32,11 +30,10 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
       _errorMessage = null;
     });
 
-    final oldPass = _oldPasswordController.text;
     final newPass = _newPasswordController.text;
     final confirmPass = _confirmPasswordController.text;
 
-    if (oldPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
+    if (newPass.isEmpty || confirmPass.isEmpty) {
       setState(() => _errorMessage = 'Semua kolom wajib diisi');
       return;
     }
@@ -53,7 +50,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await AuthService.updatePassword(oldPass, newPass, confirmPass);
+    final result = await AuthService.updatePassword(newPass, confirmPass);
 
     if (!mounted) return;
 
@@ -169,17 +166,6 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                             ],
                           ),
                         ),
-                      CustomTextField(
-                        controller: _oldPasswordController,
-                        label: 'Password Saat Ini',
-                        prefixIcon: Icons.lock_outline,
-                        obscureText: _obscureOld,
-                        readOnly: _isLoading,
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscureOld ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                          onPressed: () => setState(() => _obscureOld = !_obscureOld),
-                        ),
-                      ),
                       CustomTextField(
                         controller: _newPasswordController,
                         label: 'Password Baru',
