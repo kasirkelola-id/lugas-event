@@ -38,20 +38,18 @@ Manajemen Event
                         <tr>
                             <td class="px-4 fw-bold text-muted"><?= $no++ ?></td>
                             <td>
-                                <div class="fw-bold fs-6"><?= esc($event['nama_event']) ?></div>
-                                <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= esc($event['lokasi']) ?></small>
+                                <div class="fw-bold fs-6"><?= esc($event['nama_acara']) ?></div>
+                                <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= $event['require_gps'] ? 'GPS Required' : 'Tanpa Lokasi' ?></small>
                             </td>
                             <td>
-                                <div><i class="bi bi-calendar3 me-1"></i><?= date('d M Y', strtotime($event['waktu_mulai'])) ?></div>
-                                <small class="text-muted"><i class="bi bi-clock me-1"></i><?= date('H:i', strtotime($event['waktu_mulai'])) ?> - <?= date('H:i', strtotime($event['waktu_selesai'])) ?></small>
+                                <div><i class="bi bi-calendar3 me-1"></i><?= date('d M Y', strtotime($event['tanggal_acara'])) ?></div>
+                                <small class="text-muted"><i class="bi bi-clock me-1"></i><?= substr($event['waktu_mulai'], 0, 5) ?> - <?= substr($event['waktu_selesai'], 0, 5) ?></small>
                             </td>
                             <td>
-                                <?php if($event['status'] === 'berjalan'): ?>
-                                    <span class="badge bg-success px-3 py-2 rounded-pill">Berjalan</span>
-                                <?php elseif($event['status'] === 'selesai'): ?>
-                                    <span class="badge bg-secondary px-3 py-2 rounded-pill">Selesai</span>
+                                <?php if($event['status_aktif'] == 1): ?>
+                                    <span class="badge bg-success px-3 py-2 rounded-pill">Aktif</span>
                                 <?php else: ?>
-                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><?= esc($event['status']) ?></span>
+                                    <span class="badge bg-secondary px-3 py-2 rounded-pill">Selesai/Nonaktif</span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-end px-4">
