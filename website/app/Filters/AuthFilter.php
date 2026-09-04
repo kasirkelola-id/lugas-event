@@ -85,6 +85,9 @@ class AuthFilter implements FilterInterface
             }
 
             $headerTenantId = $request->getHeaderLine('X-Karang-Taruna-ID');
+            if (empty($headerTenantId) && !empty($tokenData['karang_taruna_id'])) {
+                $headerTenantId = $tokenData['karang_taruna_id'];
+            }
             $memberModel = new \App\Models\OrganizationMemberModel();
             
             if (!empty($headerTenantId)) {
