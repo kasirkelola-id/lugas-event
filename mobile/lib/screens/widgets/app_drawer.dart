@@ -129,14 +129,9 @@ class AppDrawer extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.only(top: 60, bottom: 24, left: 24, right: 24),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.surface,
-        border: const Border(bottom: BorderSide(color: Colors.black12)),
-        image: DecorationImage(
-          image: const AssetImage('assets/images/header_bg.png'), // Opsional jika ada
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(Colors.white.withValues(alpha: 0.9), BlendMode.lighten),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.black12)),
       ),
       child: Row(
         children: [
