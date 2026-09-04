@@ -199,6 +199,7 @@ class AuthController extends BaseApiController
             'no_whatsapp' => $user['no_whatsapp'],
             'role_level' => $user['role_level'],
             'rt' => (int)$user['rt'],
+            'password_must_change' => (int)($user['password_must_change'] ?? 0),
             'profile_photo_url' => !empty($user['profile_photo']) ? base_url($user['profile_photo']) : null,
             'karang_taruna' => [
                 'id' => (int)$tenantId,
