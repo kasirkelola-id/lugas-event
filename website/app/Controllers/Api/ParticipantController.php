@@ -79,12 +79,12 @@ class ParticipantController extends BaseApiController
 
         $userIds = $rawInput['user_ids'];
         $participantModel = new EventParticipantModel();
-        $userModel = new UserModel();
+        $memberModel = new \App\Models\OrganizationMemberModel();
         $tenantId = AuthService::getTenantId();
 
         $added = 0;
         foreach ($userIds as $userId) {
-            $userTarget = $userModel->where('karang_taruna_id', $tenantId)->find($userId);
+            $userTarget = $memberModel->where('karang_taruna_id', $tenantId)->where('user_id', $userId)->first();
             if ($userTarget && $userTarget['role_level'] === 'anggota' && (int)$userTarget['status_aktif'] === 1) {
                 // Check if already registered
                 $exists = $participantModel->where('event_id', $eventId)->where('user_id', $userId)->first();

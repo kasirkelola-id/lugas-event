@@ -250,7 +250,7 @@ class UserController extends BaseApiController
 
         $tenantId = AuthService::getTenantId();
         $userModel = new UserModel();
-        $user = $userModel->where('karang_taruna_id', $tenantId)->find($id);
+        $user = $userModel->find($id);
 
         if (!$user) {
             return $this->sendError('Pengguna tidak ditemukan', null, 404);
@@ -296,7 +296,7 @@ class UserController extends BaseApiController
         $tenantId = AuthService::getTenantId();
         
         $userModel = new UserModel();
-        $user = $userModel->where('karang_taruna_id', $tenantId)->find($id);
+        $user = $userModel->find($id);
 
         if (!$user) {
             return $this->sendError('Pengguna tidak ditemukan', null, 404);
@@ -340,11 +340,11 @@ class UserController extends BaseApiController
         }
 
         $tenantId = AuthService::getTenantId();
-        $userModel = new UserModel();
+        $memberModel = new \App\Models\OrganizationMemberModel();
         
-        $totalKetua = $userModel->where('karang_taruna_id', $tenantId)->where('role_level', 'ketua')->countAllResults();
-        $totalPengelola = $userModel->where('karang_taruna_id', $tenantId)->where('role_level', 'pengelola')->countAllResults();
-        $totalAnggota = $userModel->where('karang_taruna_id', $tenantId)->where('role_level', 'anggota')->countAllResults();
+        $totalKetua = $memberModel->where('karang_taruna_id', $tenantId)->where('role_level', 'ketua')->countAllResults();
+        $totalPengelola = $memberModel->where('karang_taruna_id', $tenantId)->where('role_level', 'pengelola')->countAllResults();
+        $totalAnggota = $memberModel->where('karang_taruna_id', $tenantId)->where('role_level', 'anggota')->countAllResults();
 
         $data = [
             'ketua' => $totalKetua,

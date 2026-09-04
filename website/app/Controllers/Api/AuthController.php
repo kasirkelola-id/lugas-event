@@ -242,7 +242,7 @@ class AuthController extends BaseApiController
         // Check if phone number already exists
         $existingUserByPhone = $userModel->where('no_whatsapp', $rawInput['no_whatsapp'])->first();
         if ($existingUserByPhone) {
-            return $this->sendError('Validasi gagal', ['username' => 'Username ini sudah digunakan di Karang Taruna Anda.'], 422);
+            return $this->sendError('Validasi gagal', ['no_whatsapp' => 'Nomor WhatsApp ini sudah terdaftar di sistem.'], 422);
         }
 
         $userData = [

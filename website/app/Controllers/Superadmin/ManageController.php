@@ -47,8 +47,13 @@ class ManageController extends BaseController
     public function users($kt_id)
     {
         $data['kt'] = $this->getKarangTaruna($kt_id);
-        $userModel = new UserModel();
-        $data['users'] = $userModel->where('karang_taruna_id', $kt_id)->findAll();
+        
+        $db = \Config\Database::connect();
+        $data['users'] = $db->table('organization_members')
+            ->select('users.id, users.nama_lengkap, users.username, users.no_whatsapp, organization_members.role_level, organization_members.status_aktif')
+            ->join('users', 'users.id = organization_members.user_id')
+            ->where('organization_members.karang_taruna_id', $kt_id)
+            ->get()->getResultArray();
         
         return view('superadmin/manage/users', $data);
     }
@@ -58,10 +63,10 @@ class ManageController extends BaseController
         // Pastikan Karang Taruna ada
         $this->getKarangTaruna($kt_id);
 
-        $userModel = new UserModel();
-        $user = $userModel->find($user_id);
+        $memberModel = new \App\Models\OrganizationMemberModel();
+        $membership = $memberModel->where('user_id', $user_id)->where('karang_taruna_id', $kt_id)->first();
 
-        if (!$user || $user['karang_taruna_id'] != $kt_id) {
+        if (!$membership) {
             return redirect()->back()->with('error', 'Pengguna tidak ditemukan di Karang Taruna ini.');
         }
 
@@ -72,27 +77,64 @@ class ManageController extends BaseController
             return redirect()->back()->with('error', 'Role tidak valid.');
         }
 
-        $userModel->update($user_id, ['role_level' => $newRole]);
+        $memberModel->update($membership['id'], ['role_level' => $newRole]);
 
-        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Role {$user['nama_lengkap']} berhasil diubah menjadi " . ucfirst($newRole));
+        $userModel = new UserModel();
+        $user = $userModel->find($user_id);
+        $namaLengkap = $user ? $user['nama_lengkap'] : 'Pengguna';
+
+        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Role {$namaLengkap} berhasil diubah menjadi " . ucfirst($newRole));
     }
 
     public function toggleUserStatus($kt_id, $user_id)
     {
         $this->getKarangTaruna($kt_id);
 
-        $userModel = new UserModel();
-        $user = $userModel->find($user_id);
+        $memberModel = new \App\Models\OrganizationMemberModel();
+        $membership = $memberModel->where('user_id', $user_id)->where('karang_taruna_id', $kt_id)->first();
 
-        if (!$user || $user['karang_taruna_id'] != $kt_id) {
+        if (!$membership) {
             return redirect()->back()->with('error', 'Pengguna tidak ditemukan di Karang Taruna ini.');
         }
 
-        $newStatus = (int)$user['status_aktif'] === 1 ? 0 : 1;
-        $userModel->update($user_id, ['status_aktif' => $newStatus]);
+        $newStatus = (int)$membership['status_aktif'] === 1 ? 0 : 1;
+        $memberModel->update($membership['id'], ['status_aktif' => $newStatus]);
+        
+        $userModel = new UserModel();
+        $user = $userModel->find($user_id);
+        $namaLengkap = $user ? $user['nama_lengkap'] : 'Pengguna';
         
         $statusStr = $newStatus === 1 ? 'diaktifkan' : 'dinonaktifkan';
-        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Status pengguna {$user['nama_lengkap']} berhasil {$statusStr}.");
+        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Status {$namaLengkap} berhasil {$statusStr}.");
+    }
+
+    public function resetPassword($kt_id, $user_id)
+    {
+        $this->getKarangTaruna($kt_id);
+
+        $memberModel = new \App\Models\OrganizationMemberModel();
+        $membership = $memberModel->where('user_id', $user_id)->where('karang_taruna_id', $kt_id)->first();
+
+        if (!$membership) {
+            return redirect()->back()->with('error', 'Pengguna tidak ditemukan di Karang Taruna ini.');
+        }
+
+        $settingModel = new \App\Models\SettingModel();
+        $tempPassSetting = $settingModel->where('karang_taruna_id', 0)->where('setting_key', 'temporary_reset_password')->first();
+        
+        if (!$tempPassSetting || empty(trim($tempPassSetting['setting_value']))) {
+            return redirect()->back()->with('error', 'Password sementara global belum dikonfigurasi. Silakan periksa menu Pengaturan.');
+        }
+
+        $temporaryPassword = trim($tempPassSetting['setting_value']);
+
+        $userModel = new UserModel();
+        $userModel->update($user_id, [
+            'password' => password_hash($temporaryPassword, PASSWORD_BCRYPT),
+            'password_must_change' => 1
+        ]);
+
+        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Password pengguna berhasil direset menjadi: {$temporaryPassword}");
     }
 
     public function events($kt_id)

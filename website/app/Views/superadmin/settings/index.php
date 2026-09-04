@@ -79,7 +79,10 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-shield-lock-fill me-2"></i>Lugasku Superadmin</a>
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                <img src="/assets/images/logo.png" alt="Logo" width="30" height="30" class="me-2" style="border-radius: 4px;">
+                Karang Taruna App
+            </a>
             <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <i class="bi bi-list fs-2"></i>
             </button>
