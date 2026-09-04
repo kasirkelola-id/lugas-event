@@ -85,7 +85,6 @@ class ProfileController extends BaseApiController
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
 
         $rules = [
-            'old_password' => 'required',
             'new_password' => 'required|min_length[6]',
             'confirm_password' => 'required|matches[new_password]'
         ];
@@ -99,11 +98,6 @@ class ProfileController extends BaseApiController
         }
 
         $userModel = new UserModel();
-        $dbUser = $userModel->find($userId);
-
-        if (!password_verify($rawInput['old_password'], (string)$dbUser['password'])) {
-            return $this->sendError('Validasi gagal', ['old_password' => 'Password lama salah.'], 422);
-        }
 
         $userModel->update($userId, [
             'password' => password_hash($rawInput['new_password'], PASSWORD_BCRYPT),
