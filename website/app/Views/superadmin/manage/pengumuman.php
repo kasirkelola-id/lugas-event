@@ -44,7 +44,7 @@ Manajemen Pengumuman
                                 <div><i class="bi bi-calendar3 me-1"></i><?= date('d M Y', strtotime($p['created_at'])) ?></div>
                             </td>
                             <td class="text-end px-4">
-                                <a href="/superadmin/manage/<?= $kt['id'] ?>/pengumuman/delete/<?= $p['id'] ?>" class="btn btn-sm btn-outline-danger" title="Hapus" onclick="return confirm('Yakin ingin menghapus pengumuman ini?')"><i class="bi bi-trash"></i></a>
+                                <a href="/superadmin/manage/<?= $kt['id'] ?>/pengumuman/delete/<?= $p['id'] ?>" class="btn btn-sm btn-outline-danger confirm-action" title="Hapus" data-confirm-message="Yakin ingin menghapus pengumuman ini?"><i class="bi bi-trash"></i></a>
                             </td>
                         </tr>
                         <?php endforeach; ?>

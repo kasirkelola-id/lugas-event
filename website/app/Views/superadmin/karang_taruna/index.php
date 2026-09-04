@@ -134,18 +134,7 @@
     </div>
 
     <div class="container">
-        <?php if(session()->getFlashdata('success')): ?>
-            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i> <?= session()->getFlashdata('success') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-        <?php if(session()->getFlashdata('error')): ?>
-            <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= session()->getFlashdata('error') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
+
 
         <div class="card card-custom">
             <div class="card-body p-0">
@@ -201,7 +190,7 @@
                                     <td class="text-end px-4">
                                         <a href="/superadmin/manage/<?= $kt['id'] ?>" class="btn btn-sm btn-primary me-1" title="Kelola Data"><i class="bi bi-gear-fill"></i> Kelola</a>
                                         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal<?= $kt['id'] ?>" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <a href="/superadmin/karang_taruna/delete/<?= $kt['id'] ?>" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Yakin ingin menghapus data ini?')" title="Hapus"><i class="bi bi-trash"></i></a>
+                                        <a href="/superadmin/karang_taruna/delete/<?= $kt['id'] ?>" class="btn btn-sm btn-outline-danger ms-1 confirm-action" data-confirm-message="Yakin ingin menghapus data ini?" title="Hapus"><i class="bi bi-trash"></i></a>
                                     </td>
                                 </tr>
 
@@ -323,5 +312,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?= $this->include('superadmin/partials/sweetalert') ?>
 </body>
 </html>

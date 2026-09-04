@@ -89,11 +89,7 @@
                 <p class="text-white-50 mb-0">Portal Manajemen Karang Taruna App</p>
             </div>
             
-            <?php if(session()->getFlashdata('error')): ?>
-                <div class="alert alert-danger" style="background: rgba(220, 53, 69, 0.8); color: white; border: none; border-radius: 10px;">
-                    <?= session()->getFlashdata('error') ?>
-                </div>
-            <?php endif; ?>
+
 
             <form action="/superadmin/login" method="post">
                 <?= csrf_field() ?>
@@ -109,5 +105,6 @@
             </form>
         </div>
     </div>
+    <?= $this->include('superadmin/partials/sweetalert') ?>
 </body>
 </html>

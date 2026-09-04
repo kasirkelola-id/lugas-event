@@ -53,10 +53,10 @@ Manajemen Pengguna
                                 <?php endif; ?>
                             </td>
                             <td class="text-end px-4">
-                                <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/status" class="btn btn-sm <?= $user['status_aktif'] == 1 ? 'btn-outline-danger' : 'btn-outline-success' ?> me-1" onclick="return confirm('Yakin ingin <?= $user['status_aktif'] == 1 ? 'menonaktifkan' : 'mengaktifkan' ?> pengguna ini?');" title="<?= $user['status_aktif'] == 1 ? 'Nonaktifkan' : 'Aktifkan' ?>">
+                                <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/status" class="btn btn-sm <?= $user['status_aktif'] == 1 ? 'btn-outline-danger' : 'btn-outline-success' ?> me-1 confirm-action" data-confirm-message="Yakin ingin <?= $user['status_aktif'] == 1 ? 'menonaktifkan' : 'mengaktifkan' ?> pengguna ini?" title="<?= $user['status_aktif'] == 1 ? 'Nonaktifkan' : 'Aktifkan' ?>">
                                     <i class="bi <?= $user['status_aktif'] == 1 ? 'bi-person-x' : 'bi-person-check' ?>"></i> 
                                 </a>
-                                <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/reset-password" class="btn btn-sm btn-outline-warning me-1" onclick="return confirm('Yakin ingin mereset password pengguna ini? Pengguna akan diminta mengubah password pada saat login berikutnya.');" title="Reset Password">
+                                <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/reset-password" class="btn btn-sm btn-outline-warning me-1 confirm-action" data-confirm-message="Yakin ingin mereset password pengguna ini? Pengguna akan diminta mengubah password pada saat login berikutnya." title="Reset Password">
                                     <i class="bi bi-key"></i> 
                                 </a>
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#roleModal<?= $user['id'] ?>">
