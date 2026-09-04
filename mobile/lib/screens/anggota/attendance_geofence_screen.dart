@@ -87,7 +87,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
 
     if (eventResult['success'] && statusResult['success']) {
       final List<EventModel> allEvents = eventResult['events'];
-      _activeCheckinEventIds = statusResult['active_event_ids'] as List<int>;
+      _activeCheckinEventIds = (statusResult['active_event_ids'] as List).map((e) => e is int ? e : int.parse(e.toString())).toList();
       
       _nearbyEvents = [];
       for (var event in allEvents) {

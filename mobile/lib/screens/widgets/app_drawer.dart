@@ -205,7 +205,7 @@ class AppDrawer extends StatelessWidget {
   List<Widget> _buildPengelolaMenu(BuildContext context) {
     return [
       _buildSectionLabel('Utama'),
-      _buildItem(context, Icons.dashboard_outlined, 'Beranda', const PengelolaHomeScreen()),
+      _buildItem(context, Icons.dashboard_outlined, 'Beranda', const PengelolaHomeScreen(), replace: true),
       _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
       
       _buildSectionLabel('Manajemen'),
@@ -232,7 +232,7 @@ class AppDrawer extends StatelessWidget {
   List<Widget> _buildAnggotaMenu(BuildContext context, bool isSekretaris, bool isBendahara) {
     return [
       _buildSectionLabel('Utama'),
-      _buildItem(context, Icons.dashboard_outlined, 'Beranda', const AnggotaHomeScreen()),
+      _buildItem(context, Icons.dashboard_outlined, 'Beranda', const AnggotaHomeScreen(), replace: true),
       _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
       _buildItem(context, Icons.location_on_outlined, 'Absensi Lokasi', const AttendanceGeofenceScreen()),
       
@@ -263,7 +263,7 @@ class AppDrawer extends StatelessWidget {
   List<Widget> _buildAdminMenu(BuildContext context) {
     return [
       _buildSectionLabel('Utama'),
-      _buildItem(context, Icons.dashboard_outlined, 'Dashboard', const AdminHomeScreen()),
+      _buildItem(context, Icons.dashboard_outlined, 'Dashboard', const AdminHomeScreen(), replace: true),
       _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
       
       _buildSectionLabel('Manajemen'),
@@ -292,7 +292,7 @@ class AppDrawer extends StatelessWidget {
     ];
   }
 
-  Widget _buildItem(BuildContext context, IconData icon, String title, Widget? targetScreen, {bool replace = true}) {
+  Widget _buildItem(BuildContext context, IconData icon, String title, Widget? targetScreen, {bool replace = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: ListTile(
