@@ -6,6 +6,7 @@ import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class PengelolaProfilScreen extends StatefulWidget {
   const PengelolaProfilScreen({super.key});
@@ -216,7 +217,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                     shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
                   ),
                   child: isLoadingSubmit 
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
+                      ? const SizedBox(width: 16, height: 16, child: CustomLoadingIndicator(size: 24, color: Colors.white)) 
                       : const Text('Simpan'),
                 ),
               ],
@@ -321,7 +322,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                     shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
                   ),
                   child: isLoadingSubmit 
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) 
+                      ? const SizedBox(width: 16, height: 16, child: CustomLoadingIndicator(size: 24, color: Colors.white)) 
                       : const Text('Ganti Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ],
@@ -355,7 +356,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _user == null) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _user == null) {
@@ -419,7 +420,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                       const Positioned(
                         top: 0, bottom: 0, left: 0, right: 0,
                         child: Center(
-                          child: CircularProgressIndicator(color: AppTheme.primary),
+                          child: CustomLoadingIndicator(color: AppTheme.primary),
                         ),
                       )
                     else

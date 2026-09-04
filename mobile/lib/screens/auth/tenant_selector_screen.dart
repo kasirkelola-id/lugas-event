@@ -8,6 +8,7 @@ import '../pengelola/pengelola_home_screen.dart';
 import '../anggota/anggota_home_screen.dart';
 import '../admin/admin_home_screen.dart';
 import 'login_screen.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class TenantSelectorScreen extends StatefulWidget {
   final UserModel user;
@@ -134,7 +135,7 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+          ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
           : _errorMessage != null
               ? Center(
                   child: Column(

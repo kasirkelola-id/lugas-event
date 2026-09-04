@@ -8,6 +8,7 @@ import 'voting_detail_screen.dart';
 import 'create_voting_screen.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class VotingListScreen extends StatefulWidget {
   const VotingListScreen({Key? key}) : super(key: key);
@@ -61,7 +62,7 @@ class _VotingListScreenState extends State<VotingListScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CustomLoadingIndicator())
           : _votings.isEmpty
               ? const Center(child: Text("Belum ada voting saat ini."))
               : RefreshIndicator(

@@ -6,6 +6,7 @@ import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/voting_service.dart';
 import '../widgets/common/custom_button.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class VotingDetailScreen extends StatefulWidget {
   final int votingId;
@@ -118,7 +119,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Detail Voting'), backgroundColor: AppTheme.primary),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: CustomLoadingIndicator()),
       );
     }
 

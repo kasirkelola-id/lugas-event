@@ -9,6 +9,7 @@ import '../widgets/common/custom_button.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/empty_state.dart';
 import '../widgets/common/feedback_dialogs.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AdminPengumumanScreen extends StatefulWidget {
   const AdminPengumumanScreen({super.key});
@@ -243,7 +244,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null) {

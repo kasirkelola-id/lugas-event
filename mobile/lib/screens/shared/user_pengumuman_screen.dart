@@ -5,6 +5,7 @@ import '../../services/announcement_service.dart';
 import '../../models/user_model.dart';
 import '../../models/announcement_model.dart';
 import '../widgets/app_drawer.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class UserPengumumanScreen extends StatefulWidget {
   const UserPengumumanScreen({super.key});
@@ -87,7 +88,7 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null) {

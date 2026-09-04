@@ -4,6 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AdminRoleScreen extends StatefulWidget {
   const AdminRoleScreen({super.key});
@@ -72,7 +73,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null) {

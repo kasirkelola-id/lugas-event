@@ -9,6 +9,7 @@ import '../widgets/common/custom_button.dart';
 import '../widgets/common/empty_state.dart';
 import '../pengelola/create_event_screen.dart';
 import '../pengelola/event_detail_screen.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AdminAcaraScreen extends StatefulWidget {
   const AdminAcaraScreen({super.key});
@@ -98,7 +99,7 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _events.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _events.isEmpty) {

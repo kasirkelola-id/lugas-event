@@ -7,6 +7,7 @@ import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import '../widgets/common/custom_button.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class PengelolaPenggunaScreen extends StatefulWidget {
   const PengelolaPenggunaScreen({super.key});
@@ -290,7 +291,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _users.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _users.isEmpty) {

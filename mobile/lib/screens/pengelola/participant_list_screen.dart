@@ -6,6 +6,7 @@ import '../../services/participant_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import 'attendance_list_screen.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class ParticipantListScreen extends StatefulWidget {
   final EventModel event;
@@ -132,7 +133,7 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _participants.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _participants.isEmpty) {

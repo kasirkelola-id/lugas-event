@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 enum ButtonType { primary, secondary, outline, danger }
 
@@ -29,7 +30,7 @@ class CustomButton extends StatelessWidget {
         ? const SizedBox(
             height: 20,
             width: 20,
-            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+            child: CustomLoadingIndicator(size: 24, color: Colors.white),
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
@@ -75,7 +76,7 @@ class CustomButton extends StatelessWidget {
             ? const SizedBox(
                 height: 20,
                 width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2.5, color: AppTheme.primary),
+                child: CustomLoadingIndicator(size: 24, color: AppTheme.primary),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,

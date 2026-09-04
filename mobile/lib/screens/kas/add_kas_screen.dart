@@ -9,6 +9,7 @@ import '../auth/login_screen.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/feedback_dialogs.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AddKasScreen extends StatefulWidget {
   const AddKasScreen({super.key});
@@ -120,7 +121,7 @@ class _AddKasScreenState extends State<AddKasScreen> {
       ),
       backgroundColor: AppTheme.background,
       body: _isInitLoading 
-        ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+        ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
         : Form(
         key: _formKey,
         child: ListView(

@@ -8,6 +8,7 @@ import '../widgets/common/custom_button.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/empty_state.dart';
 import '../widgets/common/feedback_dialogs.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AdminPenggunaScreen extends StatefulWidget {
   const AdminPenggunaScreen({super.key});
@@ -530,7 +531,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _users.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _users.isEmpty) {

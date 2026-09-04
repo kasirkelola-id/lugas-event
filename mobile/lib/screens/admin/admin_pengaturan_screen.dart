@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/user_model.dart';
 import '../../services/setting_service.dart';
 import '../widgets/app_drawer.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AdminPengaturanScreen extends StatefulWidget {
   final UserModel? user;
@@ -85,7 +86,7 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
       drawer: widget.user != null ? AppDrawer(user: widget.user!) : null,
       backgroundColor: AppTheme.background,
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
+        ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
         : _errorMessage != null 
           ? Center(
               child: Column(

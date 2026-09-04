@@ -4,6 +4,7 @@ import '../../services/chat_service.dart';
 import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/common/custom_button.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({Key? key}) : super(key: key);
@@ -99,7 +100,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           ),
           Expanded(
             child: _isLoadingUsers
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CustomLoadingIndicator())
                 : ListView.builder(
                     itemCount: _users.length,
                     itemBuilder: (context, index) {

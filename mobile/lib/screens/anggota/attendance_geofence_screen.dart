@@ -4,6 +4,7 @@ import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../services/attendance_service.dart';
 import '../widgets/common/custom_button.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AttendanceGeofenceScreen extends StatefulWidget {
   const AttendanceGeofenceScreen({Key? key}) : super(key: key);
@@ -162,7 +163,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Absensi Lokasi')),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CustomLoadingIndicator())
           : _errorMessage.isNotEmpty
               ? Center(
                   child: Column(

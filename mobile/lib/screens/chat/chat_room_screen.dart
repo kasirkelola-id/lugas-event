@@ -7,6 +7,7 @@ import '../../services/chat_service.dart';
 import '../../core/theme/app_theme.dart';
 import 'group_info_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   final String roomName;
@@ -382,7 +383,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         ],
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
+        ? const Center(child: CustomLoadingIndicator())
         : Column(
             children: [
               Expanded(
@@ -410,7 +411,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           if (_isLoadingMore && index == 0) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 10),
-                              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                              child: Center(child: CustomLoadingIndicator(size: 24, )),
                             );
                           }
 

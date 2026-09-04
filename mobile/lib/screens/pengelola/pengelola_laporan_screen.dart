@@ -5,6 +5,7 @@ import '../../services/report_service.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
 import '../widgets/app_drawer.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class PengelolaLaporanScreen extends StatefulWidget {
   const PengelolaLaporanScreen({super.key});
@@ -79,7 +80,7 @@ class _PengelolaLaporanScreenState extends State<PengelolaLaporanScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _report == null) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _report == null) {

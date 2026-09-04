@@ -7,6 +7,7 @@ import '../../models/event_model.dart';
 import '../widgets/app_drawer.dart';
 import 'create_event_screen.dart';
 import 'event_detail_screen.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class PengelolaAcaraScreen extends StatefulWidget {
   const PengelolaAcaraScreen({super.key});
@@ -96,7 +97,7 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _events.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _events.isEmpty) {

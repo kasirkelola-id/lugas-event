@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/common/custom_button.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class MapPickerScreen extends StatefulWidget {
   final LatLng? initialLocation;
@@ -64,7 +65,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         actions: [
           IconButton(
             icon: _isLoadingLocation 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(width: 20, height: 20, child: CustomLoadingIndicator(size: 24, ))
                 : const Icon(Icons.my_location),
             onPressed: _isLoadingLocation ? null : _getCurrentLocation,
             tooltip: 'Gunakan Lokasi Saat Ini',

@@ -3,6 +3,7 @@ import '../../core/theme/app_theme.dart';
 import '../../services/chat_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class GroupInfoScreen extends StatefulWidget {
   final int roomId;
@@ -90,7 +91,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
+        ? const Center(child: CustomLoadingIndicator())
         : Column(
             children: [
               const SizedBox(height: 32),

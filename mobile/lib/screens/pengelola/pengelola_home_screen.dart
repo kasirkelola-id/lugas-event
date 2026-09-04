@@ -9,6 +9,7 @@ import '../anggota/attendance_geofence_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class PengelolaHomeScreen extends StatefulWidget {
   const PengelolaHomeScreen({super.key});
@@ -112,7 +113,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
     if (_isError || _user == null || _summary == null) {
       return Center(

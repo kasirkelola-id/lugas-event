@@ -4,6 +4,7 @@ import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class EditEventScreen extends StatefulWidget {
   final EventModel event;
@@ -108,7 +109,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
-              child: _isLoading ? const CircularProgressIndicator() : const Text('Simpan Perubahan'),
+              child: _isLoading ? const CustomLoadingIndicator() : const Text('Simpan Perubahan'),
             ),
           ],
         ),

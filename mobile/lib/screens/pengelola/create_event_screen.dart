@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import '../shared/map_picker_screen.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});
@@ -214,7 +215,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
-              child: _isLoading ? const CircularProgressIndicator() : const Text('Buat Acara'),
+              child: _isLoading ? const CustomLoadingIndicator() : const Text('Buat Acara'),
             ),
           ],
         ),

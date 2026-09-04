@@ -8,6 +8,7 @@ import '../auth/login_screen.dart';
 import 'edit_event_screen.dart';
 import 'attendance_list_screen.dart';
 import 'bluetooth_printer_dialog.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -136,7 +137,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _event == null) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _event == null) {
@@ -316,7 +317,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             child: OutlinedButton.icon(
               onPressed: _isLoading ? null : _closeEvent,
               icon: _isLoading 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.error))
+                ? const SizedBox(width: 20, height: 20, child: CustomLoadingIndicator(size: 24, color: AppTheme.error))
                 : const Icon(Icons.close, color: AppTheme.error),
               label: Text(_isLoading ? 'Menutup...' : 'Tutup Acara', style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
               style: OutlinedButton.styleFrom(

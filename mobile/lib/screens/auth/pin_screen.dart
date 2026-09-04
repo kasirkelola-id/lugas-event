@@ -4,6 +4,7 @@ import '../../storage/auth_storage.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/common/custom_button.dart';
 import 'login_screen.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class PinScreen extends StatefulWidget {
   const PinScreen({super.key});
@@ -353,7 +354,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                     ),
                     const SizedBox(height: 40),
                     if (_isLoading)
-                      const CircularProgressIndicator(color: AppTheme.primary)
+                      const CustomLoadingIndicator(color: AppTheme.primary)
                     else
                       _buildNumPad(),
                   ],

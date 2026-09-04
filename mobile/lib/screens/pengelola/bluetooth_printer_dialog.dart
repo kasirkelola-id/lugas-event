@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import '../../services/bluetooth_printer_service.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class BluetoothPrinterDialog extends StatefulWidget {
   final int eventId;
@@ -145,7 +146,7 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
             if (_isLoading)
               const Center(child: Padding(
                 padding: EdgeInsets.all(24.0),
-                child: CircularProgressIndicator(),
+                child: CustomLoadingIndicator(),
               ))
             else if (_devices.isEmpty)
               Center(
@@ -214,7 +215,7 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                                 ),
                                 child: isThisDeviceLoading 
-                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                  ? const SizedBox(width: 20, height: 20, child: CustomLoadingIndicator(size: 24, ))
                                   : const Text('Hubungkan & Cetak', style: TextStyle(fontWeight: FontWeight.bold)),
                               ),
                             )

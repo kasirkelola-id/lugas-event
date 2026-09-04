@@ -8,6 +8,7 @@ import '../../services/chat_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/chat_room_model.dart';
 import '../../models/user_model.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({Key? key}) : super(key: key);
@@ -106,7 +107,7 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
 
   Widget _buildGroupList() {
     if (_isLoadingRooms) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CustomLoadingIndicator());
     }
 
     if (_rooms.isEmpty) {

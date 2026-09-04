@@ -10,6 +10,7 @@ import '../widgets/common/empty_state.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import 'add_kas_screen.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class KasScreen extends StatefulWidget {
   final UserModel? user;
@@ -134,7 +135,7 @@ class _KasScreenState extends State<KasScreen> {
 
   Widget _buildBody(bool canManage) {
     if (_isLoading && _transaksi.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
+      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _transaksi.isEmpty) {

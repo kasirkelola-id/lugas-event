@@ -8,6 +8,7 @@ import '../../services/inventory_service.dart';
 import 'create_inventory_screen.dart';
 import 'loan_request_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class InventoryMainScreen extends StatefulWidget {
   const InventoryMainScreen({Key? key}) : super(key: key);
@@ -147,7 +148,7 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CustomLoadingIndicator())
           : TabBarView(
               controller: _tabController,
               children: [
