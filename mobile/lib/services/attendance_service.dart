@@ -92,7 +92,7 @@ class AttendanceService {
       if (result['success']) {
         try {
           final List<dynamic> list = result['data']['active_event_ids'];
-          final activeIds = list.map((e) => e as int).toList();
+          final activeIds = list.map((e) => e is int ? e : int.parse(e.toString())).toList();
           return {'success': true, 'active_event_ids': activeIds};
         } catch (e) {
           return {'success': false, 'message': 'Error Parsing Attendance Status'};
