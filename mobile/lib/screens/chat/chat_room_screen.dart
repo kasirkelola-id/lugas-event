@@ -224,7 +224,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     return colors[userId % colors.length];
   }
 
-  void _showUserDetails(BuildContext context, String name, String role, {String? photoUrl}) {
+  void _showUserDetails(BuildContext context, int userId, String name, String role, {String? photoUrl}) {
     showDialog(
       context: context,
       builder: (context) {
@@ -258,6 +258,35 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   style: const TextStyle(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w600),
                 ),
               ),
+              if (userId != _currentUser?.id) ...[
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    icon: const Icon(Icons.chat_bubble_outline),
+                    label: const Text('Kirim Pesan Pribadi'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatRoomScreen(
+                            roomName: name,
+                            type: 'private',
+                            receiverId: userId,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ],
           ),
           actions: [
@@ -443,7 +472,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                         const SizedBox(width: 32)
                                       else
                                         GestureDetector(
-                                          onTap: () => _showUserDetails(context, chat.namaLengkap ?? 'User', chat.roleLevel ?? 'Anggota', photoUrl: chat.senderPhotoUrl),
+                                          onTap: () => _showUserDetails(context, chat.senderId, chat.namaLengkap ?? 'User', chat.roleLevel ?? 'Anggota', photoUrl: chat.senderPhotoUrl),
                                           child: CircleAvatar(
                                             radius: 16,
                                             backgroundColor: _getColorForUser(chat.senderId),
@@ -532,24 +561,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                         ),
                                       ),
                                     ),
-                                    if (isMe) ...[
-                                      const SizedBox(width: 8),
-                                      // Optional: we don't show own avatar in chat groups usually, but keeping it if desired
-                                      if (isSameSenderAsPrevious)
-                                        const SizedBox(width: 32)
-                                      else
-                                        GestureDetector(
-                                          onTap: () => _showUserDetails(context, chat.namaLengkap ?? _currentUser?.namaLengkap ?? 'User', chat.roleLevel ?? _currentUser?.roleLevel ?? 'Anggota'),
-                                          child: CircleAvatar(
-                                            radius: 16,
-                                            backgroundColor: _getColorForUser(chat.senderId),
-                                            child: Text(
-                                              ((chat.namaLengkap ?? _currentUser?.namaLengkap) != null && (chat.namaLengkap ?? _currentUser?.namaLengkap)!.isNotEmpty) ? (chat.namaLengkap ?? _currentUser?.namaLengkap)![0].toUpperCase() : 'U',
-                                              style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-                                            ),
-                                          ),
-                                        ),
-                                    ],
                                   ],
                                 ),
                               ),
