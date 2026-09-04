@@ -4,7 +4,7 @@ class ApiConfig {
   static const String baseUrl = 'https://kartar.kelolakasir.id/api';
 
   static String get socketUrl {
-      return 'https://kartar.kelolakasir.id:3000';
+      return 'http://kartar.kelolakasir.id:3000';
     // if (kReleaseMode) {
     // } else {
     //   // Use 10.0.2.2 for Android emulator to connect to localhost Node.js server
