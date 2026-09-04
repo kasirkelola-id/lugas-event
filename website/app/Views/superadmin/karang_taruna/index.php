@@ -111,6 +111,7 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="/superadmin/dashboard">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link active" href="/superadmin/karang_taruna">Karang Taruna</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/superadmin/kelurahan">Kelurahan</a></li>
                     <li class="nav-item"><a class="nav-link" href="/superadmin/settings">Pengaturan</a></li>
                 </ul>
                 <span class="navbar-text me-4">
@@ -144,6 +145,7 @@
                             <tr>
                                 <th class="py-3 px-4">No</th>
                                 <th class="py-3">Nama Organisasi</th>
+                                <th class="py-3">Kelurahan/Desa</th>
                                 <th class="py-3">6-Digit PIN (Kode Akses)</th>
                                 <th class="py-3">Ketua/Kontak</th>
                                 <th class="py-3">Status</th>
@@ -165,6 +167,11 @@
                                     <td>
                                         <div class="fw-bold fs-6"><?= esc($kt['nama_organisasi']) ?></div>
                                         <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= esc($kt['alamat_lengkap']) ?></small>
+                                    </td>
+                                    <td>
+                                        <div class="text-secondary fw-semibold">
+                                            <?= !empty($kt['kelurahan_nama']) ? esc($kt['kelurahan_nama']) : '<span class="text-muted fst-italic">Belum Diatur</span>' ?>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="d-inline-flex align-items-center bg-light rounded px-3 py-1 border border-primary border-opacity-25">
@@ -219,6 +226,15 @@
                     <div class="mb-3">
                         <label class="form-label text-muted fw-bold small">Nama Organisasi</label>
                         <input type="text" name="nama_organisasi" class="form-control form-control-lg bg-light border-0" value="<?= esc($kt['nama_organisasi']) ?>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-bold small">Kelurahan / Desa</label>
+                        <select name="kelurahan_id" class="form-select form-control-lg bg-light border-0" required>
+                            <option value="">-- Pilih Kelurahan --</option>
+                            <?php foreach($kelurahan as $k): ?>
+                                <option value="<?= $k['id'] ?>" <?= $kt['kelurahan_id'] == $k['id'] ? 'selected' : '' ?>><?= esc($k['nama']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-muted fw-bold small">Alamat Lengkap</label>
@@ -281,6 +297,16 @@
                 <div class="mb-3">
                     <label class="form-label text-muted fw-bold small">Nama Organisasi</label>
                     <input type="text" name="nama_organisasi" class="form-control form-control-lg bg-light border-0" placeholder="Contoh: Karang Taruna Mekar Jaya" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted fw-bold small">Kelurahan / Desa</label>
+                    <select name="kelurahan_id" class="form-select form-control-lg bg-light border-0" required>
+                        <option value="">-- Pilih Kelurahan --</option>
+                        <?php foreach($kelurahan as $k): ?>
+                            <option value="<?= $k['id'] ?>"><?= esc($k['nama']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 
                 <div class="mb-3">

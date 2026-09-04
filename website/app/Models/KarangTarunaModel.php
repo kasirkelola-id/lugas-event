@@ -12,7 +12,7 @@ class KarangTarunaModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['nama_organisasi', 'kode_pin', 'alamat_lengkap', 'nama_ketua', 'status_aktif', 'logo_path'];
+    protected $allowedFields    = ['nama_organisasi', 'kode_pin', 'alamat_lengkap', 'nama_ketua', 'status_aktif', 'logo_path', 'kelurahan_id'];
 
     protected bool $allowEmptyInserts = false;
 

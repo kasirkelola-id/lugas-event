@@ -115,6 +115,11 @@ $routes->group('superadmin', ['namespace' => 'App\Controllers\Superadmin'], func
         $routes->get('settings', 'SettingController::index');
         $routes->post('settings', 'SettingController::update');
         
+        $routes->get('kelurahan', 'KelurahanController::index');
+        $routes->post('kelurahan/store', 'KelurahanController::store');
+        $routes->post('kelurahan/update/(:num)', 'KelurahanController::update/$1');
+        $routes->get('kelurahan/delete/(:num)', 'KelurahanController::delete/$1');
+        
         $routes->get('karang_taruna', 'KarangTarunaController::index');
         $routes->post('karang_taruna/create', 'KarangTarunaController::create');
         $routes->post('karang_taruna/update/(:num)', 'KarangTarunaController::update/$1');

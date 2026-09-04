@@ -10,7 +10,12 @@ class KarangTarunaController extends BaseController
     public function index()
     {
         $ktModel = new KarangTarunaModel();
-        $data['karang_taruna'] = $ktModel->findAll();
+        $kelurahanModel = new \App\Models\KelurahanModel();
+        
+        $data['karang_taruna'] = $ktModel->select('karang_taruna.*, kelurahan.nama as kelurahan_nama')
+                                         ->join('kelurahan', 'kelurahan.id = karang_taruna.kelurahan_id', 'left')
+                                         ->findAll();
+        $data['kelurahan'] = $kelurahanModel->findAll();
 
         return view('superadmin/karang_taruna/index', $data);
     }
@@ -33,6 +38,7 @@ class KarangTarunaController extends BaseController
 
         $data = [
             'nama_organisasi' => $this->request->getPost('nama_organisasi'),
+            'kelurahan_id'    => $this->request->getPost('kelurahan_id'),
             'kode_pin'        => $kode_pin,
             'alamat_lengkap'  => $this->request->getPost('alamat_lengkap'),
             'nama_ketua'      => $this->request->getPost('nama_ketua'),
@@ -66,6 +72,7 @@ class KarangTarunaController extends BaseController
 
         $data = [
             'nama_organisasi' => $this->request->getPost('nama_organisasi'),
+            'kelurahan_id'    => $this->request->getPost('kelurahan_id'),
             'alamat_lengkap'  => $this->request->getPost('alamat_lengkap'),
             'nama_ketua'      => $this->request->getPost('nama_ketua'),
             'status_aktif'    => $this->request->getPost('status_aktif'),

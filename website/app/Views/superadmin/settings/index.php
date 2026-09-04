@@ -91,6 +91,7 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="/superadmin/dashboard">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/superadmin/karang_taruna">Karang Taruna</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/superadmin/kelurahan">Kelurahan</a></li>
                     <li class="nav-item"><a class="nav-link active" href="/superadmin/settings">Pengaturan</a></li>
                 </ul>
                 <span class="navbar-text me-4">
