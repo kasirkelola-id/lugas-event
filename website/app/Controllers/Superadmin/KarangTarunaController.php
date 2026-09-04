@@ -41,6 +41,16 @@ class KarangTarunaController extends BaseController
         ];
 
         $ktModel->insert($data);
+        $ktId = $ktModel->getInsertID();
+        
+        // Buat default chat room untuk Karang Taruna ini
+        $roomModel = new \App\Models\ChatRoomModel();
+        $roomModel->insert([
+            'karang_taruna_id' => $ktId,
+            'name' => 'Forum ' . $data['nama_organisasi'],
+            'type' => 'default',
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
 
         return redirect()->to('/superadmin/karang_taruna')->with('success', 'Karang Taruna berhasil ditambahkan dengan PIN: ' . $kode_pin);
     }
