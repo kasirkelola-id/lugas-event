@@ -76,8 +76,11 @@ Manajemen Pengguna
                                                     <p>Pilih jabatan baru untuk <strong><?= esc($user['nama_lengkap']) ?></strong>:</p>
                                                     <select class="form-select" name="role_level" required>
                                                         <option value="ketua" <?= $user['role_level'] == 'ketua' ? 'selected' : '' ?>>Ketua</option>
+                                                        <option value="wakil_ketua" <?= $user['role_level'] == 'wakil_ketua' ? 'selected' : '' ?>>Wakil Ketua</option>
                                                         <option value="sekretaris" <?= $user['role_level'] == 'sekretaris' ? 'selected' : '' ?>>Sekretaris</option>
+                                                        <option value="wakil_sekretaris" <?= $user['role_level'] == 'wakil_sekretaris' ? 'selected' : '' ?>>Wakil Sekretaris</option>
                                                         <option value="bendahara" <?= $user['role_level'] == 'bendahara' ? 'selected' : '' ?>>Bendahara</option>
+                                                        <option value="wakil_bendahara" <?= $user['role_level'] == 'wakil_bendahara' ? 'selected' : '' ?>>Wakil Bendahara</option>
                                                         <option value="pengelola" <?= $user['role_level'] == 'pengelola' ? 'selected' : '' ?>>Pengelola</option>
                                                         <option value="anggota" <?= $user['role_level'] == 'anggota' ? 'selected' : '' ?>>Anggota</option>
                                                     </select>

@@ -71,10 +71,23 @@ class ManageController extends BaseController
         }
 
         $newRole = $this->request->getPost('role_level');
-        $validRoles = ['ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'];
+        $validRoles = ['ketua', 'wakil_ketua', 'sekretaris', 'wakil_sekretaris', 'bendahara', 'wakil_bendahara', 'pengelola', 'anggota'];
         
         if (!in_array($newRole, $validRoles)) {
             return redirect()->back()->with('error', 'Role tidak valid.');
+        }
+
+        $exclusiveRoles = ['ketua', 'wakil_ketua', 'sekretaris', 'wakil_sekretaris', 'bendahara', 'wakil_bendahara'];
+        if (in_array($newRole, $exclusiveRoles)) {
+            $existing = $memberModel->where('karang_taruna_id', $kt_id)
+                                    ->where('role_level', $newRole)
+                                    ->where('status_aktif', 1)
+                                    ->where('id !=', $membership['id'])
+                                    ->first();
+            if ($existing) {
+                $roleLabel = ucwords(str_replace('_', ' ', $newRole));
+                return redirect()->back()->with('error', "Jabatan {$roleLabel} sudah diisi oleh pengguna aktif lain. Jabatan ini hanya boleh diisi oleh 1 orang per Karang Taruna.");
+            }
         }
 
         $memberModel->update($membership['id'], ['role_level' => $newRole]);
@@ -83,7 +96,8 @@ class ManageController extends BaseController
         $user = $userModel->find($user_id);
         $namaLengkap = $user ? $user['nama_lengkap'] : 'Pengguna';
 
-        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Role {$namaLengkap} berhasil diubah menjadi " . ucfirst($newRole));
+        $roleLabel = ucwords(str_replace('_', ' ', $newRole));
+        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Role {$namaLengkap} berhasil diubah menjadi {$roleLabel}");
     }
 
     public function toggleUserStatus($kt_id, $user_id)
@@ -98,6 +112,22 @@ class ManageController extends BaseController
         }
 
         $newStatus = (int)$membership['status_aktif'] === 1 ? 0 : 1;
+        
+        if ($newStatus === 1) {
+            $exclusiveRoles = ['ketua', 'wakil_ketua', 'sekretaris', 'wakil_sekretaris', 'bendahara', 'wakil_bendahara'];
+            if (in_array($membership['role_level'], $exclusiveRoles)) {
+                $existing = $memberModel->where('karang_taruna_id', $kt_id)
+                                        ->where('role_level', $membership['role_level'])
+                                        ->where('status_aktif', 1)
+                                        ->where('id !=', $membership['id'])
+                                        ->first();
+                if ($existing) {
+                    $roleLabel = ucwords(str_replace('_', ' ', $membership['role_level']));
+                    return redirect()->back()->with('error', "Tidak dapat mengaktifkan kembali pengguna ini karena jabatan {$roleLabel} sudah diisi oleh pengguna aktif lain.");
+                }
+            }
+        }
+
         $memberModel->update($membership['id'], ['status_aktif' => $newStatus]);
         
         $userModel = new UserModel();

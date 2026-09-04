@@ -18,6 +18,24 @@ class UserController extends BaseApiController
                          ->countAllResults();
     }
 
+    private function checkExclusiveRole($role, $tenantId, $excludeMemberId = null)
+    {
+        $exclusiveRoles = ['ketua', 'wakil_ketua', 'sekretaris', 'wakil_sekretaris', 'bendahara', 'wakil_bendahara'];
+        if (!in_array($role, $exclusiveRoles)) {
+            return true;
+        }
+
+        $memberModel = new \App\Models\OrganizationMemberModel();
+        $builder = $memberModel->where('karang_taruna_id', $tenantId)
+                               ->where('role_level', $role)
+                               ->where('status_aktif', 1);
+        if ($excludeMemberId) {
+            $builder->where('id !=', $excludeMemberId);
+        }
+        
+        return $builder->countAllResults() === 0;
+    }
+
     public function index()
     {
         if (!AuthService::can('members.view')) {
@@ -105,7 +123,7 @@ class UserController extends BaseApiController
             'nama_lengkap'   => 'required|max_length[255]',
             'nama_panggilan' => 'required|max_length[100]',
             'username'       => 'required',
-            'role_level'     => 'required|in_list[ketua,sekretaris,bendahara,pengelola,anggota]',
+            'role_level'     => 'required|in_list[ketua,wakil_ketua,sekretaris,wakil_sekretaris,bendahara,wakil_bendahara,pengelola,anggota]',
             'rt'             => 'permit_empty|in_list[1,2,3,4]'
         ];
 
@@ -116,6 +134,11 @@ class UserController extends BaseApiController
         }
 
         $tenantId = AuthService::getTenantId();
+
+        if (!$this->checkExclusiveRole($rawInput['role_level'], $tenantId)) {
+            $roleLabel = ucwords(str_replace('_', ' ', $rawInput['role_level']));
+            return $this->sendError('Validasi gagal', ['role_level' => "Jabatan {$roleLabel} sudah diisi oleh pengguna aktif lain. Hanya boleh 1 orang."], 400);
+        }
         
         $userModel = new UserModel();
         $memberModel = new \App\Models\OrganizationMemberModel();
@@ -230,6 +253,13 @@ class UserController extends BaseApiController
 
         $newStatus = (int)$membership['status_aktif'] === 1 ? 0 : 1;
 
+        if ($newStatus === 1) {
+            if (!$this->checkExclusiveRole($membership['role_level'], $tenantId, $membership['id'])) {
+                $roleLabel = ucwords(str_replace('_', ' ', $membership['role_level']));
+                return $this->sendError('Validasi gagal', ['status_aktif' => "Tidak dapat mengaktifkan kembali karena jabatan {$roleLabel} sudah diisi oleh pengguna aktif lain."], 400);
+            }
+        }
+
         // Lockout prevention
         if ($newStatus === 0 && $membership['role_level'] === 'ketua') {
             if ($this->countActiveKetua($tenantId) <= 1) {
@@ -257,7 +287,7 @@ class UserController extends BaseApiController
         }
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
-        if (!isset($rawInput['role_level']) || !in_array($rawInput['role_level'], ['ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'])) {
+        if (!isset($rawInput['role_level']) || !in_array($rawInput['role_level'], ['ketua', 'wakil_ketua', 'sekretaris', 'wakil_sekretaris', 'bendahara', 'wakil_bendahara', 'pengelola', 'anggota'])) {
             return $this->sendError('Validasi gagal', ['role_level' => 'Role tidak valid'], 422);
         }
 
@@ -271,8 +301,13 @@ class UserController extends BaseApiController
         }
         
         $currentUserRole = AuthService::getRole();
-        if ($currentUserRole !== 'ketua' && in_array($newRole, ['ketua', 'pengelola'])) {
+        if ($currentUserRole !== 'ketua' && in_array($newRole, ['ketua', 'wakil_ketua', 'sekretaris', 'wakil_sekretaris', 'bendahara', 'wakil_bendahara', 'pengelola'])) {
             return $this->sendError('Forbidden: Anda tidak memiliki akses untuk memberikan role ini', null, 403);
+        }
+
+        if ((int)$membership['status_aktif'] === 1 && !$this->checkExclusiveRole($newRole, $tenantId, $membership['id'])) {
+            $roleLabel = ucwords(str_replace('_', ' ', $newRole));
+            return $this->sendError('Validasi gagal', ['role_level' => "Jabatan {$roleLabel} sudah diisi oleh pengguna aktif lain. Hanya boleh 1 orang."], 400);
         }
 
         // Lockout prevention
