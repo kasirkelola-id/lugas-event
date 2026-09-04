@@ -119,7 +119,7 @@ class NotificationService
         $builder = $db->table('organization_members');
         $builder->select('user_id');
         $builder->where('karang_taruna_id', $tenantId);
-        $builder->where('status', 'aktif');
+        $builder->where('status_aktif', 1);
         if (!empty($excludeUserIds)) {
             $builder->whereNotIn('user_id', $excludeUserIds);
         }
