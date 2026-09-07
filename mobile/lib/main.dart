@@ -14,6 +14,7 @@ import 'screens/auth/tenant_selector_screen.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -21,6 +22,7 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await initializeDateFormatting('id_ID', null);
   runApp(const MyApp());
 }
 
