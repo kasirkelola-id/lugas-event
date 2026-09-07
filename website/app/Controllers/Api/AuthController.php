@@ -71,12 +71,12 @@ class AuthController extends BaseApiController
         $isSuperAdmin = false;
         $superadmin = null;
 
-        if (!$user || !password_verify($password, (string)$user['password'])) {
+        if (!$user || !password_verify($password, (string)($user['password'] ?? ''))) {
             // Check if it's a superadmin
             $db = \Config\Database::connect();
             $superadmin = $db->table('superadmins')->where('username', $username)->get()->getRowArray();
 
-            if (!$superadmin || !password_verify($password, (string)$superadmin['password'])) {
+            if (!$superadmin || !password_verify($password, (string)($superadmin['password'] ?? ''))) {
                 return $this->sendError('Username atau password salah.', null, 401);
             }
 
@@ -121,7 +121,7 @@ class AuthController extends BaseApiController
         // Build Response User without sensitive data
         if ($isSuperAdmin) {
             $userData = [
-                'id'             => 's_' . $superadmin['id'], // Virtual ID to prevent collision
+                'id'             => -1 * (int)$superadmin['id'], // Virtual ID to prevent collision
                 'karang_taruna_id' => (int)$karangTarunaId,
                 'nama_lengkap'   => $superadmin['nama_lengkap'],
                 'nama_panggilan' => 'Superadmin',
