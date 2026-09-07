@@ -62,4 +62,33 @@ class ChatModel extends Model
         return $builder->orderBy('chats.id', 'DESC')
                        ->findAll($limit);
     }
+
+    public function getPrivateChatContacts($karangTarunaId, $userId)
+    {
+        $db = \Config\Database::connect();
+        
+        $sql = "SELECT 
+                    u.id as contact_id, 
+                    u.nama_lengkap as contact_name, 
+                    u.profile_photo as contact_photo,
+                    u.role_level as contact_role,
+                    m.message as last_message, 
+                    m.created_at as last_message_time
+                FROM users u
+                JOIN (
+                    SELECT 
+                        CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as contact_id,
+                        MAX(id) as max_id
+                    FROM chats
+                    WHERE type = 'private' 
+                      AND karang_taruna_id = ? 
+                      AND (sender_id = ? OR receiver_id = ?)
+                    GROUP BY CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END
+                ) last_chat ON u.id = last_chat.contact_id
+                JOIN chats m ON m.id = last_chat.max_id
+                ORDER BY m.id DESC";
+
+        $query = $db->query($sql, [$userId, $karangTarunaId, $userId, $userId, $userId]);
+        return $query->getResultArray();
+    }
 }

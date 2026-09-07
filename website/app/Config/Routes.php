@@ -72,6 +72,7 @@ $routes->group('api', function ($routes) {
     $routes->delete('chats/rooms/(:num)', 'Api\ChatController::deleteRoom/$1', ['filter' => 'auth']);
     $routes->get('chats/rooms/(:num)/messages', 'Api\ChatController::getRoomChats/$1', ['filter' => 'auth']);
     $routes->post('chats/messages', 'Api\ChatController::sendMessage', ['filter' => 'auth']);
+    $routes->get('chats/private-contacts', 'Api\ChatController::getPrivateContacts', ['filter' => 'auth']);
     $routes->get('chats/private/(:num)', 'Api\ChatController::getPrivateChats/$1', ['filter' => 'auth']);
 
     // Votings

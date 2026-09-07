@@ -21,7 +21,9 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
   late TabController _tabController;
   
   bool _isLoadingRooms = true;
+  bool _isLoadingPrivate = true;
   List<ChatRoom> _rooms = [];
+  List<Map<String, dynamic>> _privateContacts = [];
   UserModel? _currentUser;
   final ChatService _chatService = ChatService();
 
@@ -36,12 +38,16 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoadingRooms = true);
+    setState(() {
+      _isLoadingRooms = true;
+      _isLoadingPrivate = true;
+    });
     final userResult = await AuthService.getMe();
     if (userResult['success']) {
       _currentUser = userResult['user'];
     }
     await _fetchRooms();
+    await _fetchPrivateContacts();
   }
 
   Future<void> _fetchRooms() async {
@@ -50,6 +56,16 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
       setState(() {
         _rooms = rooms;
         _isLoadingRooms = false;
+      });
+    }
+  }
+
+  Future<void> _fetchPrivateContacts() async {
+    final contacts = await _chatService.getPrivateContacts();
+    if (mounted) {
+      setState(() {
+        _privateContacts = contacts;
+        _isLoadingPrivate = false;
       });
     }
   }
@@ -158,10 +174,59 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
   }
 
   Widget _buildPrivateList() {
-    return const Center(
-      child: Text(
-        "Fitur pesan pribadi akan datang.",
-        style: TextStyle(color: Colors.grey),
+    if (_isLoadingPrivate) {
+      return const Center(child: CustomLoadingIndicator());
+    }
+
+    if (_privateContacts.isEmpty) {
+      return const Center(
+        child: Text("Belum ada pesan pribadi.", style: TextStyle(color: Colors.grey)),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _fetchPrivateContacts,
+      child: ListView.separated(
+        itemCount: _privateContacts.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final contact = _privateContacts[index];
+          final photoUrl = contact['contact_photo_url'];
+          
+          return FadeInSlide(
+            delay: 0.1 * index,
+            child: ListTile(
+              leading: CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.grey.shade300,
+                backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                child: photoUrl == null ? const Icon(Icons.person, color: Colors.white, size: 28) : null,
+              ),
+              title: Text(
+                contact['contact_name'] ?? 'Pengguna', 
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+              subtitle: Text(
+                contact['last_message'] ?? '',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatRoomScreen(
+                      roomId: contact['contact_id'], // Using roomId field to pass user ID for private chat
+                      roomName: contact['contact_name'],
+                      type: 'private',
+                    ),
+                  ),
+                );
+                _fetchPrivateContacts(); // refresh if new message
+              },
+            ),
+          );
+        },
       ),
     );
   }

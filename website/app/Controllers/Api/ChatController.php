@@ -176,6 +176,27 @@ class ChatController extends BaseApiController
         return $this->sendSuccess('Berhasil mengambil riwayat private chat', $chats);
     }
 
+    public function getPrivateContacts()
+    {
+        $tenantId = AuthService::getTenantId();
+        $userId = AuthService::getGlobalUserId();
+        if (!$tenantId) {
+            return $this->sendError('Unauthenticated', null, 401);
+        }
+
+        $chatModel = new ChatModel();
+        $contacts = $chatModel->getPrivateChatContacts($tenantId, $userId);
+
+        foreach ($contacts as &$c) {
+            $c['contact_photo_url'] = !empty($c['contact_photo']) ? base_url($c['contact_photo']) : null;
+            unset($c['contact_photo']);
+            // Standardize format to match what app expects for ChatRoom somewhat or unique object
+            $c['contact_id'] = (int)$c['contact_id'];
+        }
+
+        return $this->sendSuccess('Berhasil mengambil daftar kontak pesan pribadi', $contacts);
+    }
+
     public function sendMessage()
     {
         $tenantId = AuthService::getTenantId();

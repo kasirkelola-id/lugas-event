@@ -188,4 +188,20 @@ class ChatService {
       return [];
     }
   }
+
+  // REST API: Get Private Chat Contacts
+  Future<List<Map<String, dynamic>>> getPrivateContacts() async {
+    try {
+      final response = await ApiClient.get('/chats/private-contacts');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == true && data['data'] != null) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 }
