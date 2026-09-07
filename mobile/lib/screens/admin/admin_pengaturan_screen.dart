@@ -38,7 +38,7 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
     if (!mounted) return;
 
     if (result['success']) {
-      final data = result['data'] as Map<String, dynamic>;
+      final data = result['data'] is Map<String, dynamic> ? result['data'] as Map<String, dynamic> : <String, dynamic>{};
       setState(() {
         _kasBackdateController.text = data['kas_backdate_limit']?.toString() ?? '30';
         _isLoading = false;
