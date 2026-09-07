@@ -37,10 +37,16 @@ class Voting {
       createdBy: int.parse(json['created_by'].toString()),
       createdAt: DateTime.parse(json['created_at']),
       hasVoted: json['has_voted'] ?? false,
-      totalVotes: json['total_votes'] != null ? int.parse(json['total_votes'].toString()) : null,
-      votedOptionId: json['voted_option_id'] != null ? int.parse(json['voted_option_id'].toString()) : null,
+      totalVotes: json['total_votes'] != null
+          ? int.parse(json['total_votes'].toString())
+          : null,
+      votedOptionId: json['voted_option_id'] != null
+          ? int.parse(json['voted_option_id'].toString())
+          : null,
       options: json['options'] != null
-          ? (json['options'] as List).map((i) => VotingOption.fromJson(i)).toList()
+          ? (json['options'] as List)
+                .map((i) => VotingOption.fromJson(i))
+                .toList()
           : null,
     );
   }

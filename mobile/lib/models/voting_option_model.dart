@@ -18,8 +18,12 @@ class VotingOption {
       id: int.parse(json['id'].toString()),
       votingId: int.parse(json['voting_id'].toString()),
       optionName: json['option_name'],
-      voteCount: json['vote_count'] != null ? int.parse(json['vote_count'].toString()) : null,
-      percentage: json['percentage'] != null ? double.parse(json['percentage'].toString()) : null,
+      voteCount: json['vote_count'] != null
+          ? int.parse(json['vote_count'].toString())
+          : null,
+      percentage: json['percentage'] != null
+          ? double.parse(json['percentage'].toString())
+          : null,
     );
   }
 }

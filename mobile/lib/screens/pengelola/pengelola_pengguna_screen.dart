@@ -14,7 +14,8 @@ class PengelolaPenggunaScreen extends StatefulWidget {
   const PengelolaPenggunaScreen({super.key});
 
   @override
-  State<PengelolaPenggunaScreen> createState() => _PengelolaPenggunaScreenState();
+  State<PengelolaPenggunaScreen> createState() =>
+      _PengelolaPenggunaScreenState();
 }
 
 class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
@@ -22,14 +23,14 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   List<UserModel> _users = [];
   List<UserModel> _filteredUsers = [];
   List<String> _rtOptions = [];
-  
+
   bool _isLoading = true;
   String? _errorMessage;
-  
+
   String _searchQuery = '';
   String _roleFilter = 'Semua';
   String? _rtFilter;
-  
+
   Timer? _debounce;
   int _currentPage = 1;
   int _limit = 100; // MVP simple pagination
@@ -45,7 +46,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
     super.initState();
     _loadData();
   }
-  
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -81,7 +82,8 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
       limit: _limit,
       search: _searchQuery,
       role: _roleFilter,
-      status: '', // Not filtering by status in MVP for simplicity, or we could add a tab
+      status:
+          '', // Not filtering by status in MVP for simplicity, or we could add a tab
     );
     if (!mounted) return;
 
@@ -89,14 +91,16 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
       setState(() {
         _currentUser = userResult['user'];
         _users = usersResult['users'] as List<UserModel>;
-        
+
         // Local RT filter application since backend doesn't filter RT currently
         if (_rtFilter != null) {
-          _filteredUsers = _users.where((u) => u.rt.toString() == _rtFilter).toList();
+          _filteredUsers = _users
+              .where((u) => u.rt.toString() == _rtFilter)
+              .toList();
         } else {
           _filteredUsers = _users;
         }
-        
+
         _isLoading = false;
       });
     } else {
@@ -125,7 +129,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
     });
     _showSnackbar(message, isError: true);
   }
-  
+
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -138,7 +142,12 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
     );
   }
 
-  Future<void> _confirmAction(String title, String content, Future<Map<String, dynamic>> Function() action, {bool isDestructive = false}) async {
+  Future<void> _confirmAction(
+    String title,
+    String content,
+    Future<Map<String, dynamic>> Function() action, {
+    bool isDestructive = false,
+  }) async {
     final confirm = await AppDialog.showConfirmation(
       context: context,
       title: title,
@@ -157,7 +166,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
       }
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -181,7 +190,10 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                   TextField(
                     decoration: InputDecoration(
                       hintText: 'Cari nama atau username...',
-                      prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppTheme.textSecondary,
+                      ),
                       filled: true,
                       fillColor: AppTheme.surface,
                       border: OutlineInputBorder(
@@ -196,7 +208,10 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                         borderRadius: AppTheme.radiusLarge,
                         borderSide: const BorderSide(color: AppTheme.primary),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                     onChanged: _onSearchChanged,
                   ),
@@ -204,35 +219,54 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: ['Semua', 'Admin', 'Ketua', 'Sekretaris', 'Bendahara', 'Pengelola', 'Anggota'].map((role) {
-                        final isSelected = _roleFilter == role;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: FilterChip(
-                            label: Text(role),
-                            selected: isSelected,
-                            selectedColor: AppTheme.primary.withValues(alpha: 0.15),
-                            checkmarkColor: AppTheme.primary,
-                            labelStyle: TextStyle(
-                              color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                            backgroundColor: AppTheme.surface,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppTheme.radiusLarge,
-                              side: BorderSide(
-                                color: isSelected ? AppTheme.primary.withValues(alpha: 0.5) : Colors.grey.shade300,
+                      children:
+                          [
+                            'Semua',
+                            'Admin',
+                            'Ketua',
+                            'Sekretaris',
+                            'Bendahara',
+                            'Pengelola',
+                            'Anggota',
+                          ].map((role) {
+                            final isSelected = _roleFilter == role;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: FilterChip(
+                                label: Text(role),
+                                selected: isSelected,
+                                selectedColor: AppTheme.primary.withValues(
+                                  alpha: 0.15,
+                                ),
+                                checkmarkColor: AppTheme.primary,
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? AppTheme.primary
+                                      : AppTheme.textSecondary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                                backgroundColor: AppTheme.surface,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: AppTheme.radiusLarge,
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? AppTheme.primary.withValues(
+                                            alpha: 0.5,
+                                          )
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _roleFilter = role;
+                                    _applyFilters();
+                                  });
+                                },
                               ),
-                            ),
-                            onSelected: (selected) {
-                              setState(() {
-                                _roleFilter = role;
-                                _applyFilters();
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
+                            );
+                          }).toList(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -247,17 +281,25 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                           child: FilterChip(
                             label: Text(label),
                             selected: isSelected,
-                            selectedColor: AppTheme.info.withValues(alpha: 0.15),
+                            selectedColor: AppTheme.info.withValues(
+                              alpha: 0.15,
+                            ),
                             checkmarkColor: AppTheme.info,
                             labelStyle: TextStyle(
-                              color: isSelected ? AppTheme.info : AppTheme.textSecondary,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected
+                                  ? AppTheme.info
+                                  : AppTheme.textSecondary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                             backgroundColor: AppTheme.surface,
                             shape: RoundedRectangleBorder(
                               borderRadius: AppTheme.radiusLarge,
                               side: BorderSide(
-                                color: isSelected ? AppTheme.info.withValues(alpha: 0.5) : Colors.grey.shade300,
+                                color: isSelected
+                                    ? AppTheme.info.withValues(alpha: 0.5)
+                                    : Colors.grey.shade300,
                               ),
                             ),
                             onSelected: (selected) {
@@ -281,7 +323,6 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
     );
   }
 
-  
   List<int> get _availableRts {
     final rts = _users.map((u) => u.rt).toSet().toList();
     rts.sort();
@@ -290,7 +331,9 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _users.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _users.isEmpty) {
@@ -302,7 +345,10 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -313,9 +359,16 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off_outlined, size: 80, color: Colors.grey.shade300),
+            Icon(
+              Icons.search_off_outlined,
+              size: 80,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 16),
-            const Text('Tidak ada pengguna yang sesuai.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 16)),
+            const Text(
+              'Tidak ada pengguna yang sesuai.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+            ),
           ],
         ),
       );
@@ -344,23 +397,32 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
             child: ExpansionTile(
               collapsedBackgroundColor: Colors.transparent,
               backgroundColor: Colors.transparent,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
               leading: Container(
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isActive ? AppTheme.primary.withValues(alpha: 0.3) : Colors.grey.shade300, 
-                    width: 2
+                    color: isActive
+                        ? AppTheme.primary.withValues(alpha: 0.3)
+                        : Colors.grey.shade300,
+                    width: 2,
                   ),
                 ),
                 child: CircleAvatar(
-                  backgroundColor: isActive ? AppTheme.primary.withValues(alpha: 0.1) : Colors.grey.shade100,
+                  backgroundColor: isActive
+                      ? AppTheme.primary.withValues(alpha: 0.1)
+                      : Colors.grey.shade100,
                   radius: 22,
                   child: Text(
-                    user.namaPanggilan.isNotEmpty ? user.namaPanggilan.substring(0, 1).toUpperCase() : '?',
+                    user.namaPanggilan.isNotEmpty
+                        ? user.namaPanggilan.substring(0, 1).toUpperCase()
+                        : '?',
                     style: TextStyle(
-                      color: isActive ? AppTheme.primary : Colors.grey.shade500, 
+                      color: isActive ? AppTheme.primary : Colors.grey.shade500,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -371,8 +433,11 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${user.namaLengkap} ${isMe ? '(Anda)' : ''}', 
-                      style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? AppTheme.textPrimary : Colors.grey),
+                      '${user.namaLengkap} ${isMe ? '(Anda)' : ''}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isActive ? AppTheme.textPrimary : Colors.grey,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -380,50 +445,83 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                   if (!isActive) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.error.withValues(alpha: 0.1),
                         borderRadius: AppTheme.radiusSmall,
                       ),
-                      child: const Text('NONAKTIF', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: AppTheme.error)),
-                    )
-                  ]
+                      child: const Text(
+                        'NONAKTIF',
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
                   '${user.username} • RT 0${user.rt} • ${user.roleLevel.toUpperCase()}',
-                  style: TextStyle(color: isActive ? AppTheme.textSecondary : Colors.grey.shade400, fontSize: 13),
+                  style: TextStyle(
+                    color: isActive
+                        ? AppTheme.textSecondary
+                        : Colors.grey.shade400,
+                    fontSize: 13,
+                  ),
                 ),
               ),
               childrenPadding: const EdgeInsets.all(0),
               children: [
                 Container(
                   color: Colors.grey.shade50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       if (_currentUser?.roleLevel == 'ketua' && !isMe)
-                        _buildActionButton(Icons.manage_accounts, 'Ubah Role', AppTheme.primary, () {
-                          _showChangeRoleDialog(user);
-                        }),
-                      if (_currentUser?.roleLevel == 'ketua' && !isMe)
-                        _buildActionButton(Icons.lock_reset, 'Reset', Colors.purple, () => _resetPassword(user)),
+                        _buildActionButton(
+                          Icons.manage_accounts,
+                          'Ubah Role',
+                          AppTheme.primary,
+                          () {
+                            _showChangeRoleDialog(user);
+                          },
+                        ),
                       if (_currentUser?.roleLevel == 'ketua' && !isMe)
                         _buildActionButton(
-                          isActive ? Icons.person_off : Icons.person, 
-                          isActive ? 'Nonaktifkan' : 'Aktifkan', 
-                          isActive ? AppTheme.error : AppTheme.success, 
+                          Icons.lock_reset,
+                          'Reset',
+                          Colors.purple,
+                          () => _resetPassword(user),
+                        ),
+                      if (_currentUser?.roleLevel == 'ketua' && !isMe)
+                        _buildActionButton(
+                          isActive ? Icons.person_off : Icons.person,
+                          isActive ? 'Nonaktifkan' : 'Aktifkan',
+                          isActive ? AppTheme.error : AppTheme.success,
                           () {
-                          _confirmAction(
-                            isActive ? 'Nonaktifkan Pengguna' : 'Aktifkan Pengguna', 
-                            isActive ? 'Pengguna ini tidak akan bisa login lagi.' : 'Pengguna akan kembali bisa login.', 
-                            () => UserService.toggleStatus(user.id),
-                            isDestructive: isActive
-                          );
-                        }),
+                            _confirmAction(
+                              isActive
+                                  ? 'Nonaktifkan Pengguna'
+                                  : 'Aktifkan Pengguna',
+                              isActive
+                                  ? 'Pengguna ini tidak akan bisa login lagi.'
+                                  : 'Pengguna akan kembali bisa login.',
+                              () => UserService.toggleStatus(user.id),
+                              isDestructive: isActive,
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -439,14 +537,15 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: 'Reset Password',
-      content: 'Anda yakin ingin mereset password ${user.namaLengkap}? Pengguna akan dipaksa mengganti password pada login berikutnya.',
+      content:
+          'Anda yakin ingin mereset password ${user.namaLengkap}? Pengguna akan dipaksa mengganti password pada login berikutnya.',
       isDestructive: true,
     );
 
     if (confirm == true) {
       setState(() => _isLoading = true);
       final result = await UserService.resetPassword(user.id);
-      
+
       if (result['success']) {
         if (!mounted) return;
         final tempPass = result['temporary_password'] ?? '-';
@@ -457,7 +556,10 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Silakan berikan password sementara ini kepada ${user.namaLengkap}:', textAlign: TextAlign.center),
+              Text(
+                'Silakan berikan password sementara ini kepada ${user.namaLengkap}:',
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -469,7 +571,12 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                 child: Center(
                   child: SelectableText(
                     tempPass,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary, letterSpacing: 2),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                      letterSpacing: 2,
+                    ),
                   ),
                 ),
               ),
@@ -483,7 +590,12 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
     }
   }
 
-  Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: AppTheme.radiusSmall,
@@ -500,7 +612,14 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
               child: Icon(icon, color: color, size: 20),
             ),
             const SizedBox(height: 6),
-            Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -510,7 +629,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   void _showChangeRoleDialog(UserModel user) {
     String selectedRole = user.roleLevel;
     final roles = ['ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'];
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -524,14 +643,20 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text('Ubah Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  const Text(
+                    'Ubah Role',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
                   const SizedBox(height: 16),
                   SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: roles.map((role) {
                         return RadioListTile<String>(
-                          title: Text(role.toUpperCase(), style: const TextStyle(fontSize: 14)),
+                          title: Text(
+                            role.toUpperCase(),
+                            style: const TextStyle(fontSize: 14),
+                          ),
                           value: role,
                           groupValue: selectedRole,
                           contentPadding: EdgeInsets.zero,
@@ -550,19 +675,27 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primary,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppTheme.radiusMedium,
+                          ),
                         ),
                         onPressed: () async {
                           Navigator.pop(context);
                           setState(() => _isLoading = true);
-                          final result = await UserService.changeRole(user.id, selectedRole);
+                          final result = await UserService.changeRole(
+                            user.id,
+                            selectedRole,
+                          );
                           if (result['success']) {
                             _showSnackbar('Role berhasil diubah');
                             _loadData();
@@ -570,7 +703,10 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                             _handleError(result['message']);
                           }
                         },
-                        child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Simpan',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ],
                   ),
@@ -578,11 +714,8 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
 }
-
-
-

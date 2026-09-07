@@ -73,7 +73,9 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null) {
@@ -85,7 +87,10 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -101,7 +106,11 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
           const SizedBox(height: 32),
           const Text(
             'Informasi Hak Akses',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
           ),
           const SizedBox(height: 16),
           _buildRoleCard(
@@ -115,7 +124,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
               'Manajemen akun seluruh pengguna.',
               'Melihat dan mengelola seluruh acara dari semua pengelola.',
               'Reset password dan menonaktifkan pengguna.',
-              'Hanya Admin yang dapat mengubah role pengguna lain.'
+              'Hanya Admin yang dapat mengubah role pengguna lain.',
             ],
           ),
           const SizedBox(height: 16),
@@ -131,7 +140,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
               'Melihat daftar hadir peserta dari acara miliknya.',
               'Melihat laporan dan histori acara miliknya.',
               'Tidak dapat melihat atau mengelola acara pengelola lain.',
-              'Tidak memiliki akses ke manajemen pengguna.'
+              'Tidak memiliki akses ke manajemen pengguna.',
             ],
           ),
           const SizedBox(height: 16),
@@ -146,7 +155,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
               'Melihat daftar acara aktif.',
               'Melakukan scan QR untuk presensi (di masa depan).',
               'Melihat riwayat kehadiran pribadinya.',
-              'Tidak memiliki akses ke dashboard pengelolaan atau admin.'
+              'Tidak memiliki akses ke dashboard pengelolaan atau admin.',
             ],
           ),
           const SizedBox(height: 16),
@@ -159,7 +168,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             capabilities: [
               'Memiliki hak akses hampir sama dengan Admin.',
               'Melihat semua laporan dan aktivitas pengguna.',
-              'Mengelola pengumuman sistem.'
+              'Mengelola pengumuman sistem.',
             ],
           ),
           const SizedBox(height: 16),
@@ -171,7 +180,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             description: 'Bertanggung jawab atas administrasi.',
             capabilities: [
               'Membuat dan mengelola pengumuman sistem.',
-              'Melihat data pengguna dan laporan.'
+              'Melihat data pengguna dan laporan.',
             ],
           ),
           const SizedBox(height: 16),
@@ -183,7 +192,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             description: 'Bertanggung jawab atas keuangan.',
             capabilities: [
               'Mengelola fitur kas (pemasukan/pengeluaran).',
-              'Melihat data pengguna dan laporan.'
+              'Melihat data pengguna dan laporan.',
             ],
           ),
           const SizedBox(height: 32),
@@ -192,7 +201,9 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             decoration: BoxDecoration(
               color: AppTheme.warning.withValues(alpha: 0.1),
               borderRadius: AppTheme.radiusLarge,
-              border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppTheme.warning.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,7 +213,11 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
                 Expanded(
                   child: Text(
                     'Sistem keamanan secara otomatis mencegah penghapusan/penonaktifan jika hanya tersisa 1 Admin aktif di dalam sistem (Lockout Prevention).',
-                    style: TextStyle(color: Colors.orange.shade900, fontSize: 13, height: 1.5),
+                    style: TextStyle(
+                      color: Colors.orange.shade900,
+                      fontSize: 13,
+                      height: 1.5,
+                    ),
                   ),
                 ),
               ],
@@ -228,11 +243,22 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Total Pengguna', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500)),
+              const Text(
+                'Total Pengguna',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 8),
               Text(
                 '${_summary?['total'] ?? 0}',
-                style: const TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -242,7 +268,11 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
               color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.analytics_outlined, color: Colors.white, size: 40),
+            child: const Icon(
+              Icons.analytics_outlined,
+              color: Colors.white,
+              size: 40,
+            ),
           ),
         ],
       ),
@@ -279,10 +309,24 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             ),
             child: Icon(icon, color: color, size: 24),
           ),
-          title: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary)),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: AppTheme.textPrimary,
+            ),
+          ),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 6.0),
-            child: Text('$count Akun terdaftar', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+            child: Text(
+              '$count Akun terdaftar',
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           children: [
             Container(
@@ -295,21 +339,51 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(description, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppTheme.textPrimary)),
-                  const SizedBox(height: 16),
-                  const Text('HAK AKSES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.textSecondary, letterSpacing: 1)),
-                  const SizedBox(height: 12),
-                  ...capabilities.map((cap) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.check_circle_outline, color: color, size: 18),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text(cap, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4))),
-                      ],
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: AppTheme.textPrimary,
                     ),
-                  )),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'HAK AKSES',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                      color: AppTheme.textSecondary,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ...capabilities.map(
+                    (cap) => Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: color,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              cap,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -319,4 +393,3 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
     );
   }
 }
-

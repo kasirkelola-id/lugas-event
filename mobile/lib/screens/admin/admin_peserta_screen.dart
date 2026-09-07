@@ -83,7 +83,9 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _events.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _events.isEmpty) {
@@ -93,11 +95,25 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+              decoration: BoxDecoration(
+                color: AppTheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppTheme.error,
+              ),
             ),
             const SizedBox(height: 24),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 24),
             CustomButton(
               text: 'Coba Lagi',
@@ -124,7 +140,10 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
       itemCount: _events.length + 2,
       itemBuilder: (context, index) {
         if (index == 0) {
-          int totalKehadiran = _events.fold(0, (sum, event) => sum + (event.jumlahHadir ?? 0));
+          int totalKehadiran = _events.fold(
+            0,
+            (sum, event) => sum + (event.jumlahHadir ?? 0),
+          );
           return Container(
             margin: const EdgeInsets.only(bottom: 24),
             padding: const EdgeInsets.all(20),
@@ -138,17 +157,37 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
               children: [
                 Column(
                   children: [
-                    const Text('Total Acara', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    const Text(
+                      'Total Acara',
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
                     const SizedBox(height: 4),
-                    Text('${_events.length}', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                    Text(
+                      '${_events.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 Container(width: 1, height: 40, color: Colors.white24),
                 Column(
                   children: [
-                    const Text('Total Kehadiran', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    const Text(
+                      'Total Kehadiran',
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    ),
                     const SizedBox(height: 4),
-                    Text('$totalKehadiran', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                    Text(
+                      '$totalKehadiran',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -161,7 +200,10 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               'Pilih Acara untuk Lihat Kehadiran',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
             ),
           );
         }
@@ -180,7 +222,9 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => AttendanceListScreen(event: event)),
+                MaterialPageRoute(
+                  builder: (_) => AttendanceListScreen(event: event),
+                ),
               );
             },
             child: Padding(
@@ -190,10 +234,17 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: event.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                      color: event.isActive
+                          ? AppTheme.success.withValues(alpha: 0.1)
+                          : AppTheme.textSecondary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.people_alt, color: event.isActive ? AppTheme.success : AppTheme.textSecondary),
+                    child: Icon(
+                      Icons.people_alt,
+                      color: event.isActive
+                          ? AppTheme.success
+                          : AppTheme.textSecondary,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -202,26 +253,53 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                       children: [
                         Text(
                           event.namaAcara,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppTheme.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.calendar_month, size: 14, color: AppTheme.textSecondary),
+                            const Icon(
+                              Icons.calendar_month,
+                              size: 14,
+                              color: AppTheme.textSecondary,
+                            ),
                             const SizedBox(width: 4),
-                            Text(event.tanggalAcara, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                            Text(
+                              event.tanggalAcara,
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: event.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                                color: event.isActive
+                                    ? AppTheme.success.withValues(alpha: 0.1)
+                                    : AppTheme.textSecondary.withValues(
+                                        alpha: 0.1,
+                                      ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 event.isActive ? 'Aktif' : 'Selesai',
-                                style: TextStyle(color: event.isActive ? AppTheme.success : AppTheme.textSecondary, fontSize: 10, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: event.isActive
+                                      ? AppTheme.success
+                                      : AppTheme.textSecondary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
@@ -230,16 +308,30 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              const Icon(Icons.people, size: 14, color: AppTheme.primary),
+                              const Icon(
+                                Icons.people,
+                                size: 14,
+                                color: AppTheme.primary,
+                              ),
                               const SizedBox(width: 4),
-                              Text('${event.jumlahHadir} hadir', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                              Text(
+                                '${event.jumlahHadir} hadir',
+                                style: const TextStyle(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
                             ],
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: AppTheme.textSecondary,
+                  ),
                 ],
               ),
             ),
@@ -249,4 +341,3 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
     );
   }
 }
-

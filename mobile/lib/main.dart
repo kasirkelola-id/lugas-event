@@ -69,7 +69,7 @@ class _InitialScreenState extends State<InitialScreen> {
     }
 
     final result = await AuthService.getMe();
-    
+
     // Network Error (No status code, or null statusCode, meaning it failed to connect)
     if (!result['success'] && result['statusCode'] == null) {
       if (!mounted) return;
@@ -84,20 +84,43 @@ class _InitialScreenState extends State<InitialScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.wifi_off_outlined, size: 64, color: AppTheme.textSecondary),
+                    const Icon(
+                      Icons.wifi_off_outlined,
+                      size: 64,
+                      color: AppTheme.textSecondary,
+                    ),
                     const SizedBox(height: 16),
-                    const Text('Koneksi Gagal', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                    const Text(
+                      'Koneksi Gagal',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    const Text('Gagal menyambung ke server. Periksa koneksi internet Anda.', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary)),
+                    const Text(
+                      'Gagal menyambung ke server. Periksa koneksi internet Anda.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppTheme.textSecondary),
+                    ),
                     const SizedBox(height: 24),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 12,
+                        ),
                       ),
                       onPressed: () {
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const InitialScreen()));
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const InitialScreen(),
+                          ),
+                        );
                       },
                       child: const Text('Coba Lagi'),
                     ),
@@ -120,10 +143,13 @@ class _InitialScreenState extends State<InitialScreen> {
         // User not active, force logout locally and goto login
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Akun Anda tidak aktif')),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const PinScreen()),
         );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Akun Anda tidak aktif')));
         return;
       }
 
@@ -134,27 +160,28 @@ class _InitialScreenState extends State<InitialScreen> {
         );
         return;
       }
-      
+
       Widget targetScreen = const AnggotaHomeScreen();
       if (user.roleLevel == 'pengelola') {
         targetScreen = const PengelolaHomeScreen();
       } else if (user.roleLevel == 'admin') {
         targetScreen = const AdminHomeScreen();
       }
-      
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => targetScreen),
       );
-      
+
       if (widget.pendingNavigation != null) {
         NotificationService.navigateBasedOnPayload(widget.pendingNavigation!);
       }
     } else {
-      if (result['errorCode'] == 'TENANT_ACCESS_REVOKED' || result['errorCode'] == 'ACTIVE_MEMBERSHIP_REVOKED') {
+      if (result['errorCode'] == 'TENANT_ACCESS_REVOKED' ||
+          result['errorCode'] == 'ACTIVE_MEMBERSHIP_REVOKED') {
         // Membership revoked or inactive for the current tenant.
         await AuthStorage.clearTenant();
-        
+
         // Return to PinScreen so user has to choose tenant safely
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -181,10 +208,6 @@ class _InitialScreenState extends State<InitialScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CustomLoadingIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CustomLoadingIndicator()));
   }
 }

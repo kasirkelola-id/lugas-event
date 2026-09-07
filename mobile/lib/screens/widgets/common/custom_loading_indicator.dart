@@ -6,17 +6,11 @@ class CustomLoadingIndicator extends StatelessWidget {
   final Color? color;
   final double size;
 
-  const CustomLoadingIndicator({
-    Key? key,
-    this.color,
-    this.size = 50.0,
-  }) : super(key: key);
+  const CustomLoadingIndicator({Key? key, this.color, this.size = 50.0})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return SpinKitThreeBounce(
-      color: color ?? AppTheme.primary,
-      size: size,
-    );
+    return SpinKitThreeBounce(color: color ?? AppTheme.primary, size: size);
   }
 }

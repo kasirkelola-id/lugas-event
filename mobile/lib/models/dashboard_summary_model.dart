@@ -15,11 +15,21 @@ class DashboardSummary {
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
     return DashboardSummary(
-      upcomingEvent: json['upcoming_event'] != null ? UpcomingEventSummary.fromJson(json['upcoming_event']) : null,
-      latestAnnouncement: json['latest_announcement'] != null ? LatestAnnouncementSummary.fromJson(json['latest_announcement']) : null,
-      activeVoting: json['active_voting'] != null ? ActiveVotingSummary.fromJson(json['active_voting']) : null,
-      myActiveLoan: json['my_active_loan'] != null ? MyActiveLoanSummary.fromJson(json['my_active_loan']) : null,
-      management: json['management'] != null ? ManagementMetrics.fromJson(json['management']) : null,
+      upcomingEvent: json['upcoming_event'] != null
+          ? UpcomingEventSummary.fromJson(json['upcoming_event'])
+          : null,
+      latestAnnouncement: json['latest_announcement'] != null
+          ? LatestAnnouncementSummary.fromJson(json['latest_announcement'])
+          : null,
+      activeVoting: json['active_voting'] != null
+          ? ActiveVotingSummary.fromJson(json['active_voting'])
+          : null,
+      myActiveLoan: json['my_active_loan'] != null
+          ? MyActiveLoanSummary.fromJson(json['my_active_loan'])
+          : null,
+      management: json['management'] != null
+          ? ManagementMetrics.fromJson(json['management'])
+          : null,
     );
   }
 }

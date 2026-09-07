@@ -28,7 +28,8 @@ class _EditEventScreenState extends State<EditEventScreen> {
   }
 
   void _pilihTanggal() async {
-    final initialDate = DateTime.tryParse(widget.event.tanggalAcara) ?? DateTime.now();
+    final initialDate =
+        DateTime.tryParse(widget.event.tanggalAcara) ?? DateTime.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
@@ -70,11 +71,14 @@ class _EditEventScreenState extends State<EditEventScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'])),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
       }
     }
   }
@@ -90,7 +94,10 @@ class _EditEventScreenState extends State<EditEventScreen> {
           children: [
             TextFormField(
               controller: _namaController,
-              decoration: const InputDecoration(labelText: 'Nama Acara', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Nama Acara',
+                border: OutlineInputBorder(),
+              ),
               enabled: !_isLoading,
               validator: (v) => v!.isEmpty ? 'Nama acara harus diisi' : null,
             ),
@@ -109,7 +116,9 @@ class _EditEventScreenState extends State<EditEventScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
-              child: _isLoading ? const CustomLoadingIndicator() : const Text('Simpan Perubahan'),
+              child: _isLoading
+                  ? const CustomLoadingIndicator()
+                  : const Text('Simpan Perubahan'),
             ),
           ],
         ),
@@ -117,4 +126,3 @@ class _EditEventScreenState extends State<EditEventScreen> {
     );
   }
 }
-

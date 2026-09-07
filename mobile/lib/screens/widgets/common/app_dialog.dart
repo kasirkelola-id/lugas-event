@@ -41,7 +41,7 @@ class AppDialog {
     DialogType type = DialogType.warning,
   }) {
     final color = _getColor(type);
-    
+
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
@@ -55,7 +55,11 @@ class AppDialog {
             color: AppTheme.surface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
             ],
           ),
           child: Column(
@@ -73,14 +77,22 @@ class AppDialog {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
               ),
               const SizedBox(height: 12),
               if (content != null)
                 Text(
                   content,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15, height: 1.5, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               if (child != null) ...[
                 if (content != null) const SizedBox(height: 16),
@@ -94,10 +106,20 @@ class AppDialog {
                       onPressed: () => Navigator.pop(context, false),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-                        side: BorderSide(color: AppTheme.textSecondary.withValues(alpha: 0.3)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: AppTheme.radiusMedium,
+                        ),
+                        side: BorderSide(
+                          color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                        ),
                       ),
-                      child: Text(cancelText, style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        cancelText,
+                        style: const TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -109,9 +131,14 @@ class AppDialog {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: AppTheme.radiusMedium,
+                        ),
                       ),
-                      child: Text(confirmText, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(
+                        confirmText,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -132,7 +159,7 @@ class AppDialog {
     String buttonText = 'Tutup',
   }) {
     final color = _getColor(type);
-    
+
     return showDialog<void>(
       context: context,
       builder: (context) => Dialog(
@@ -145,7 +172,11 @@ class AppDialog {
             color: AppTheme.surface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
             ],
           ),
           child: Column(
@@ -163,14 +194,22 @@ class AppDialog {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
               ),
               const SizedBox(height: 12),
               if (content != null)
                 Text(
                   content,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15, height: 1.5, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               if (child != null) ...[
                 if (content != null) const SizedBox(height: 16),
@@ -186,9 +225,14 @@ class AppDialog {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppTheme.radiusMedium,
+                    ),
                   ),
-                  child: Text(buttonText, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(
+                    buttonText,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -198,7 +242,10 @@ class AppDialog {
     );
   }
 
-  static void showLoading(BuildContext context, {String message = 'Memproses...'}) {
+  static void showLoading(
+    BuildContext context, {
+    String message = 'Memproses...',
+  }) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -212,7 +259,11 @@ class AppDialog {
             color: AppTheme.surface,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
             ],
           ),
           child: Column(
@@ -223,7 +274,11 @@ class AppDialog {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
               ),
             ],
           ),

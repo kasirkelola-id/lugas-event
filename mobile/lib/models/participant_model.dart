@@ -19,13 +19,21 @@ class ParticipantModel {
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) {
     return ParticipantModel(
-      participantId: json['participant_id'] is int ? json['participant_id'] : int.tryParse(json['participant_id'].toString()) ?? 0,
-      userId: json['user_id'] is int ? json['user_id'] : int.tryParse(json['user_id'].toString()) ?? 0,
+      participantId: json['participant_id'] is int
+          ? json['participant_id']
+          : int.tryParse(json['participant_id'].toString()) ?? 0,
+      userId: json['user_id'] is int
+          ? json['user_id']
+          : int.tryParse(json['user_id'].toString()) ?? 0,
       namaLengkap: json['nama_lengkap'] ?? '',
       namaPanggilan: json['nama_panggilan'] ?? '',
       whatsapp: json['whatsapp'] ?? '',
       roleLevel: json['role_level'] ?? '',
-      userRt: json['user_rt'] != null ? (json['user_rt'] is int ? json['user_rt'] : int.tryParse(json['user_rt'].toString()) ?? 0) : 0,
+      userRt: json['user_rt'] != null
+          ? (json['user_rt'] is int
+                ? json['user_rt']
+                : int.tryParse(json['user_rt'].toString()) ?? 0)
+          : 0,
     );
   }
 }

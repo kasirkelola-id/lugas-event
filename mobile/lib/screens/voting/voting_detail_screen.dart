@@ -12,7 +12,8 @@ import 'package:mobile/screens/widgets/common/app_dialog.dart';
 class VotingDetailScreen extends StatefulWidget {
   final int votingId;
 
-  const VotingDetailScreen({Key? key, required this.votingId}) : super(key: key);
+  const VotingDetailScreen({Key? key, required this.votingId})
+    : super(key: key);
 
   @override
   _VotingDetailScreenState createState() => _VotingDetailScreenState();
@@ -33,7 +34,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     final userResult = await AuthService.getMe();
     if (userResult['success']) {
       _currentUser = userResult['user'];
@@ -49,7 +50,9 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
         if (result['success']) {
           _voting = result['voting'];
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(result['message'])));
         }
         _isLoading = false;
       });
@@ -58,7 +61,12 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
 
   Future<void> _submitVote() async {
     if (_selectedOptionId == null) {
-      AppDialog.showResult(context: context, title: 'Perhatian', content: 'Silakan pilih salah satu opsi', type: DialogType.warning);
+      AppDialog.showResult(
+        context: context,
+        title: 'Perhatian',
+        content: 'Silakan pilih salah satu opsi',
+        type: DialogType.warning,
+      );
       return;
     }
 
@@ -74,15 +82,28 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
     if (!mounted) return;
     AppDialog.showLoading(context, message: 'Mengirim...');
 
-    final result = await VotingService.submitVote(widget.votingId, _selectedOptionId!);
+    final result = await VotingService.submitVote(
+      widget.votingId,
+      _selectedOptionId!,
+    );
     if (!mounted) return;
     Navigator.pop(context); // close loading
 
     if (result['success']) {
-      await AppDialog.showResult(context: context, title: 'Berhasil', content: result['message'], type: DialogType.success);
+      await AppDialog.showResult(
+        context: context,
+        title: 'Berhasil',
+        content: result['message'],
+        type: DialogType.success,
+      );
       _fetchDetail(); // reload to show results
     } else {
-      await AppDialog.showResult(context: context, title: 'Gagal', content: result['message'], type: DialogType.error);
+      await AppDialog.showResult(
+        context: context,
+        title: 'Gagal',
+        content: result['message'],
+        type: DialogType.error,
+      );
     }
   }
 
@@ -90,7 +111,8 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
     final confirm = await AppDialog.showConfirmation(
       context: context,
       title: 'Tutup Voting',
-      content: 'Apakah Anda yakin ingin menutup voting ini? Anggota tidak akan bisa memilih lagi.',
+      content:
+          'Apakah Anda yakin ingin menutup voting ini? Anggota tidak akan bisa memilih lagi.',
       type: DialogType.error,
     );
 
@@ -98,16 +120,26 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
 
     if (!mounted) return;
     AppDialog.showLoading(context, message: 'Menutup...');
-    
+
     final result = await VotingService.changeStatus(widget.votingId, 'closed');
     if (!mounted) return;
     Navigator.pop(context);
 
     if (result['success']) {
-      await AppDialog.showResult(context: context, title: 'Voting Ditutup', content: result['message'], type: DialogType.success);
+      await AppDialog.showResult(
+        context: context,
+        title: 'Voting Ditutup',
+        content: result['message'],
+        type: DialogType.success,
+      );
       _fetchDetail();
     } else {
-      await AppDialog.showResult(context: context, title: 'Gagal', content: result['message'], type: DialogType.error);
+      await AppDialog.showResult(
+        context: context,
+        title: 'Gagal',
+        content: result['message'],
+        type: DialogType.error,
+      );
     }
   }
 
@@ -115,25 +147,36 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Detail Voting'), backgroundColor: AppTheme.primary),
+        appBar: AppBar(
+          title: const Text('Detail Voting'),
+          backgroundColor: AppTheme.primary,
+        ),
         body: const Center(child: CustomLoadingIndicator()),
       );
     }
 
     if (_voting == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Detail Voting'), backgroundColor: AppTheme.primary),
+        appBar: AppBar(
+          title: const Text('Detail Voting'),
+          backgroundColor: AppTheme.primary,
+        ),
         body: const Center(child: Text('Voting tidak ditemukan')),
       );
     }
 
-    final bool isKetuaOrAdmin = _currentUser?.roleLevel == 'ketua' || _currentUser?.roleLevel == 'superadmin';
+    final bool isKetuaOrAdmin =
+        _currentUser?.roleLevel == 'ketua' ||
+        _currentUser?.roleLevel == 'superadmin';
     final bool showResults = _voting!.hasVoted || _voting!.status == 'closed';
     final bool canVote = !_voting!.hasVoted && _voting!.status == 'active';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail Voting', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Detail Voting',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -153,13 +196,17 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: _voting!.status == 'active' ? Colors.green.shade100 : Colors.red.shade100,
+                color: _voting!.status == 'active'
+                    ? Colors.green.shade100
+                    : Colors.red.shade100,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 _voting!.status == 'active' ? 'AKTIF' : 'DITUTUP',
                 style: TextStyle(
-                  color: _voting!.status == 'active' ? Colors.green.shade800 : Colors.red.shade800,
+                  color: _voting!.status == 'active'
+                      ? Colors.green.shade800
+                      : Colors.red.shade800,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -180,13 +227,13 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
             ],
             const Divider(),
             const SizedBox(height: 8),
-            
+
             Text(
               showResults ? 'Hasil Pemilihan:' : 'Silakan Pilih:',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             if (_voting!.options != null)
               ..._voting!.options!.map((option) {
                 if (showResults) {
@@ -208,14 +255,17 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
                   );
                 }
               }).toList(),
-              
+
             const SizedBox(height: 24),
-            
+
             if (showResults)
               Center(
                 child: Text(
                   'Total Suara: ${_voting!.totalVotes}',
-                  style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
 
@@ -228,7 +278,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
                   isLoading: _isSubmitting,
                 ),
               ),
-              
+
             if (!canVote && _voting!.status == 'active')
               Container(
                 width: double.infinity,
@@ -242,7 +292,12 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
                   children: [
                     Icon(Icons.info_outline, color: Colors.blue),
                     SizedBox(width: 8),
-                    Expanded(child: Text('Anda sudah memberikan suara pada voting ini. Menunggu voting ditutup oleh pengelola.', style: TextStyle(color: Colors.blue))),
+                    Expanded(
+                      child: Text(
+                        'Anda sudah memberikan suara pada voting ini. Menunggu voting ditutup oleh pengelola.',
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -255,7 +310,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
   Widget _buildResultBar(VotingOption option) {
     final bool isMyChoice = _voting!.votedOptionId == option.id;
     final double pct = option.percentage ?? 0.0;
-    
+
     bool isWinner = false;
     if (_voting!.status == 'closed' && _voting!.options != null) {
       int maxVotes = 0;
@@ -268,7 +323,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
         isWinner = true;
       }
     }
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -284,28 +339,48 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
                       child: Text(
                         option.optionName,
                         style: TextStyle(
-                          fontSize: 16, 
-                          fontWeight: isMyChoice || isWinner ? FontWeight.bold : FontWeight.normal,
-                          color: isWinner ? Colors.green.shade700 : (isMyChoice ? AppTheme.primary : Colors.black87),
+                          fontSize: 16,
+                          fontWeight: isMyChoice || isWinner
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          color: isWinner
+                              ? Colors.green.shade700
+                              : (isMyChoice
+                                    ? AppTheme.primary
+                                    : Colors.black87),
                         ),
                       ),
                     ),
                     if (isMyChoice)
                       const Padding(
                         padding: EdgeInsets.only(left: 4),
-                        child: Icon(Icons.check_circle, size: 16, color: AppTheme.primary),
+                        child: Icon(
+                          Icons.check_circle,
+                          size: 16,
+                          color: AppTheme.primary,
+                        ),
                       ),
                     if (isWinner)
                       Container(
                         margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green.shade100,
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(color: Colors.green.shade300),
                         ),
-                        child: const Text('PEMENANG', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold)),
-                      )
+                        child: const Text(
+                          'PEMENANG',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -319,7 +394,9 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
           LinearProgressIndicator(
             value: pct / 100,
             backgroundColor: Colors.grey.shade200,
-            color: isWinner ? Colors.green.shade500 : (isMyChoice ? AppTheme.primary : Colors.grey.shade400),
+            color: isWinner
+                ? Colors.green.shade500
+                : (isMyChoice ? AppTheme.primary : Colors.grey.shade400),
             minHeight: 10,
             borderRadius: BorderRadius.circular(10),
           ),

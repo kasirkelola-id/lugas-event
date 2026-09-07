@@ -82,7 +82,9 @@ class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _events.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _events.isEmpty) {
@@ -94,7 +96,10 @@ class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -107,9 +112,19 @@ class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
           children: [
             Icon(Icons.history, size: 80, color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            const Text('Belum Ada Riwayat', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(
+              'Belum Ada Riwayat',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
-            const Text('Belum ada acara yang selesai.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            const Text(
+              'Belum ada acara yang selesai.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            ),
           ],
         ),
       );
@@ -134,7 +149,9 @@ class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
             onTap: () async {
               final result = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => EventDetailScreen(eventId: event.id)),
+                MaterialPageRoute(
+                  builder: (_) => EventDetailScreen(eventId: event.id),
+                ),
               );
               if (result == true) {
                 _loadData();
@@ -150,7 +167,10 @@ class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
                       color: AppTheme.textSecondary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.history, color: AppTheme.textSecondary),
+                    child: const Icon(
+                      Icons.history,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -159,22 +179,39 @@ class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
                       children: [
                         Text(
                           event.namaAcara,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppTheme.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.calendar_month, size: 14, color: AppTheme.textSecondary),
+                            const Icon(
+                              Icons.calendar_month,
+                              size: 14,
+                              color: AppTheme.textSecondary,
+                            ),
                             const SizedBox(width: 4),
-                            Text(event.tanggalAcara, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                            Text(
+                              event.tanggalAcara,
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: AppTheme.textSecondary,
+                  ),
                 ],
               ),
             ),

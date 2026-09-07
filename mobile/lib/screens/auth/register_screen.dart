@@ -39,7 +39,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    if (namaLengkap.isEmpty || namaPanggilan.isEmpty || username.isEmpty || whatsapp.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (namaLengkap.isEmpty ||
+        namaPanggilan.isEmpty ||
+        username.isEmpty ||
+        whatsapp.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       setState(() {
         _isLoading = false;
         _errorMessage = 'Semua field wajib diisi';
@@ -72,7 +77,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         await FeedbackDialogs.showConfirmation(
           context: context,
           title: 'Pendaftaran Berhasil',
-          content: 'Akun Anda berhasil dibuat. Silakan masuk untuk melanjutkan.',
+          content:
+              'Akun Anda berhasil dibuat. Silakan masuk untuk melanjutkan.',
           confirmText: 'Selesai',
         );
         if (context.mounted) {
@@ -103,7 +109,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Daftar Akun Anggota', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Daftar Akun Anggota',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: AppTheme.primary,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -120,11 +129,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.person_add_alt_1, size: 64, color: AppTheme.primary),
+                    const Icon(
+                      Icons.person_add_alt_1,
+                      size: 64,
+                      color: AppTheme.primary,
+                    ),
                     const SizedBox(height: 16),
                     const Text(
                       'Pendaftaran Anggota',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     if (_errorMessage != null)
@@ -134,14 +151,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         decoration: BoxDecoration(
                           color: AppTheme.error.withValues(alpha: 0.1),
                           borderRadius: AppTheme.radiusSmall,
-                          border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: AppTheme.error.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppTheme.error,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.error, fontSize: 14)),
+                              child: Text(
+                                _errorMessage!,
+                                style: const TextStyle(
+                                  color: AppTheme.error,
+                                  fontSize: 14,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -185,8 +214,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: _obscurePassword,
                       readOnly: _isLoading,
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
                     CustomTextField(
@@ -196,8 +231,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: _obscureConfirm,
                       readOnly: _isLoading,
                       suffixIcon: IconButton(
-                        icon: Icon(_obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                        onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                        icon: Icon(
+                          _obscureConfirm
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                        ),
+                        onPressed: () =>
+                            setState(() => _obscureConfirm = !_obscureConfirm),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -210,13 +250,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Sudah punya akun? ', style: TextStyle(color: AppTheme.textSecondary)),
+                        const Text(
+                          'Sudah punya akun? ',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: const Text('Masuk', style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'Masuk',
+                            style: TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

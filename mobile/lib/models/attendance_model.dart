@@ -29,17 +29,37 @@ class AttendanceModel {
 
   factory AttendanceModel.fromJson(Map<String, dynamic> json) {
     return AttendanceModel(
-      absensiId: json['absensi_id'] != null ? (json['absensi_id'] is int ? json['absensi_id'] : int.parse(json['absensi_id'].toString())) : 0,
-      eventId: json['event_id'] != null ? (json['event_id'] is int ? json['event_id'] : int.parse(json['event_id'].toString())) : 0,
+      absensiId: json['absensi_id'] != null
+          ? (json['absensi_id'] is int
+                ? json['absensi_id']
+                : int.parse(json['absensi_id'].toString()))
+          : 0,
+      eventId: json['event_id'] != null
+          ? (json['event_id'] is int
+                ? json['event_id']
+                : int.parse(json['event_id'].toString()))
+          : 0,
       waktuAbsen: json['waktu_absen'] ?? '',
       waktuCheckout: json['waktu_checkout'],
-      durasi: json['durasi'] != null ? (json['durasi'] is int ? json['durasi'] : int.tryParse(json['durasi'].toString())) : null,
+      durasi: json['durasi'] != null
+          ? (json['durasi'] is int
+                ? json['durasi']
+                : int.tryParse(json['durasi'].toString()))
+          : null,
       namaAcara: json['nama_acara'] ?? '',
       tanggalAcara: json['tanggal_acara'] ?? '',
-      statusEvent: json['status_event'] != null ? (json['status_event'] is int ? json['status_event'] : int.parse(json['status_event'].toString())) : 0,
+      statusEvent: json['status_event'] != null
+          ? (json['status_event'] is int
+                ? json['status_event']
+                : int.parse(json['status_event'].toString()))
+          : 0,
       namaLengkap: json['nama_lengkap'] ?? '',
       namaPanggilan: json['nama_panggilan'] ?? '',
-      userRt: json['user_rt'] != null ? (json['user_rt'] is int ? json['user_rt'] : int.tryParse(json['user_rt'].toString()) ?? 0) : 0,
+      userRt: json['user_rt'] != null
+          ? (json['user_rt'] is int
+                ? json['user_rt']
+                : int.tryParse(json['user_rt'].toString()) ?? 0)
+          : 0,
     );
   }
 }

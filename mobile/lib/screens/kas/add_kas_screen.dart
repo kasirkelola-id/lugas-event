@@ -23,7 +23,7 @@ class _AddKasScreenState extends State<AddKasScreen> {
   final _nominalController = TextEditingController();
   final _keteranganController = TextEditingController();
   final _tanggalController = TextEditingController();
-  
+
   String _jenis = 'pemasukan';
   bool _isLoading = false;
   int _limitDays = 30; // default
@@ -39,23 +39,28 @@ class _AddKasScreenState extends State<AddKasScreen> {
   Future<void> _loadSettings() async {
     final result = await SettingService.getSettings();
     if (!mounted) return;
-    
+
     if (result['success']) {
-      final data = result['data'] is Map<String, dynamic> ? result['data'] as Map<String, dynamic> : <String, dynamic>{};
-      final limit = int.tryParse(data['kas_backdate_limit']?.toString() ?? '30') ?? 30;
+      final data = result['data'] is Map<String, dynamic>
+          ? result['data'] as Map<String, dynamic>
+          : <String, dynamic>{};
+      final limit =
+          int.tryParse(data['kas_backdate_limit']?.toString() ?? '30') ?? 30;
       setState(() {
         _limitDays = limit;
         _isInitLoading = false;
       });
     } else {
-      setState(() { _isInitLoading = false; });
+      setState(() {
+        _isInitLoading = false;
+      });
     }
   }
 
   void _pilihTanggal() async {
     final DateTime today = DateTime.now();
     final DateTime firstDate = today.subtract(Duration(days: _limitDays));
-    
+
     final picked = await showDatePicker(
       context: context,
       initialDate: today,
@@ -81,7 +86,10 @@ class _AddKasScreenState extends State<AddKasScreen> {
     });
 
     // Remove any non-digit character (e.g., formatting)
-    final nominalRaw = _nominalController.text.replaceAll(RegExp(r'[^0-9]'), '');
+    final nominalRaw = _nominalController.text.replaceAll(
+      RegExp(r'[^0-9]'),
+      '',
+    );
     final nominal = int.tryParse(nominalRaw) ?? 0;
 
     final result = await KasService.createTransaksi(
@@ -104,7 +112,10 @@ class _AddKasScreenState extends State<AddKasScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       } else {
         FeedbackDialogs.showSnackbar(context, result['message'], isError: true);
       }
@@ -120,82 +131,98 @@ class _AddKasScreenState extends State<AddKasScreen> {
         elevation: 0,
       ),
       backgroundColor: AppTheme.background,
-      body: _isInitLoading 
-        ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
-        : Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            const Text('Jenis Transaksi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<String>(
-                    title: const Text('Pemasukan', style: TextStyle(color: AppTheme.success)),
-                    value: 'pemasukan',
-                    groupValue: _jenis,
-                    activeColor: AppTheme.success,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (val) {
-                      setState(() { _jenis = val!; });
-                    },
+      body: _isInitLoading
+          ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
+          : Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const Text(
+                    'Jenis Transaksi',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                ),
-                Expanded(
-                  child: RadioListTile<String>(
-                    title: const Text('Pengeluaran', style: TextStyle(color: AppTheme.error)),
-                    value: 'pengeluaran',
-                    groupValue: _jenis,
-                    activeColor: AppTheme.error,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (val) {
-                      setState(() { _jenis = val!; });
-                    },
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: RadioListTile<String>(
+                          title: const Text(
+                            'Pemasukan',
+                            style: TextStyle(color: AppTheme.success),
+                          ),
+                          value: 'pemasukan',
+                          groupValue: _jenis,
+                          activeColor: AppTheme.success,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: (val) {
+                            setState(() {
+                              _jenis = val!;
+                            });
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: RadioListTile<String>(
+                          title: const Text(
+                            'Pengeluaran',
+                            style: TextStyle(color: AppTheme.error),
+                          ),
+                          value: 'pengeluaran',
+                          groupValue: _jenis,
+                          activeColor: AppTheme.error,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: (val) {
+                            setState(() {
+                              _jenis = val!;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  CustomTextField(
+                    controller: _nominalController,
+                    label: 'Nominal (Rp)',
+                    prefixText: 'Rp ',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: (v) => v!.isEmpty ? 'Nominal harus diisi' : null,
+                    readOnly: _isLoading,
+                  ),
+                  CustomTextField(
+                    controller: _keteranganController,
+                    label: 'Keterangan',
+                    hint: 'Cth: Iuran kas bulan Juli Bpk Andi',
+                    maxLines: 2,
+                    validator: (v) =>
+                        v!.isEmpty ? 'Keterangan harus diisi' : null,
+                    readOnly: _isLoading,
+                  ),
+                  CustomTextField(
+                    controller: _tanggalController,
+                    label: 'Tanggal Transaksi',
+                    suffixIcon: const Icon(Icons.calendar_today),
+                    readOnly: true,
+                    onTap: _isLoading ? null : _pilihTanggal,
+                    validator: (v) => v!.isEmpty ? 'Tanggal harus diisi' : null,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4.0, bottom: 24.0),
+                    child: Text(
+                      'Batas maksimal mundur (backdate): $_limitDays hari',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ),
+                  CustomButton(
+                    text: 'Simpan Transaksi',
+                    onPressed: _submit,
+                    isLoading: _isLoading,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
-            CustomTextField(
-              controller: _nominalController,
-              label: 'Nominal (Rp)',
-              prefixText: 'Rp ',
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              validator: (v) => v!.isEmpty ? 'Nominal harus diisi' : null,
-              readOnly: _isLoading,
-            ),
-            CustomTextField(
-              controller: _keteranganController,
-              label: 'Keterangan',
-              hint: 'Cth: Iuran kas bulan Juli Bpk Andi',
-              maxLines: 2,
-              validator: (v) => v!.isEmpty ? 'Keterangan harus diisi' : null,
-              readOnly: _isLoading,
-            ),
-            CustomTextField(
-              controller: _tanggalController,
-              label: 'Tanggal Transaksi',
-              suffixIcon: const Icon(Icons.calendar_today),
-              readOnly: true,
-              onTap: _isLoading ? null : _pilihTanggal,
-              validator: (v) => v!.isEmpty ? 'Tanggal harus diisi' : null,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 4.0, bottom: 24.0),
-              child: Text('Batas maksimal mundur (backdate): $_limitDays hari', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            ),
-            CustomButton(
-              text: 'Simpan Transaksi',
-              onPressed: _submit,
-              isLoading: _isLoading,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
-

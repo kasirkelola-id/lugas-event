@@ -63,18 +63,13 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-
-
   void _navigate(BuildContext context, Widget screen, {bool replace = true}) {
     Navigator.pop(context); // close drawer
-    
+
     final route = PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => screen,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
+        return FadeTransition(opacity: animation, child: child);
       },
       transitionDuration: const Duration(milliseconds: 300),
     );
@@ -102,9 +97,15 @@ class AppDrawer extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              children: isAdmin 
-                  ? _buildAdminMenu(context) 
-                  : (isPengelola ? _buildPengelolaMenu(context) : _buildAnggotaMenu(context, isSekretaris, isBendahara)),
+              children: isAdmin
+                  ? _buildAdminMenu(context)
+                  : (isPengelola
+                        ? _buildPengelolaMenu(context)
+                        : _buildAnggotaMenu(
+                            context,
+                            isSekretaris,
+                            isBendahara,
+                          )),
             ),
           ),
           const Divider(height: 1, color: Colors.black12),
@@ -113,7 +114,6 @@ class AppDrawer extends StatelessWidget {
             color: AppTheme.surface,
             child: Column(
               children: [
-
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
@@ -121,16 +121,32 @@ class AppDrawer extends StatelessWidget {
                       color: AppTheme.error.withValues(alpha: 0.1),
                       borderRadius: AppTheme.radiusSmall,
                     ),
-                    child: const Icon(Icons.logout, color: AppTheme.error, size: 20),
+                    child: const Icon(
+                      Icons.logout,
+                      color: AppTheme.error,
+                      size: 20,
+                    ),
                   ),
-                  title: const Text('Logout', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: AppTheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   onTap: () => _logout(context),
-                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppTheme.radiusSmall,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'v1.0.0 (Beta)',
-                  style: TextStyle(color: AppTheme.textSecondary.withValues(alpha: 0.5), fontSize: 12, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 8),
               ],
@@ -154,14 +170,23 @@ class AppDrawer extends StatelessWidget {
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3), width: 2),
+              border: Border.all(
+                color: AppTheme.primary.withValues(alpha: 0.3),
+                width: 2,
+              ),
             ),
             child: CircleAvatar(
               radius: 28,
               backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
               child: Text(
-                user.namaPanggilan.isNotEmpty ? user.namaPanggilan.substring(0, 1).toUpperCase() : 'U',
-                style: const TextStyle(fontSize: 24, color: AppTheme.primary, fontWeight: FontWeight.bold),
+                user.namaPanggilan.isNotEmpty
+                    ? user.namaPanggilan.substring(0, 1).toUpperCase()
+                    : 'U',
+                style: const TextStyle(
+                  fontSize: 24,
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -172,21 +197,34 @@ class AppDrawer extends StatelessWidget {
               children: [
                 Text(
                   user.namaLengkap,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: AppTheme.textPrimary,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppTheme.primary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     user.roleLevel.toUpperCase(),
-                    style: const TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: AppTheme.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -215,100 +253,303 @@ class AppDrawer extends StatelessWidget {
   List<Widget> _buildPengelolaMenu(BuildContext context) {
     return [
       _buildSectionLabel('Utama'),
-      _buildItem(context, Icons.dashboard_outlined, 'Beranda', const PengelolaHomeScreen(), replace: true),
-      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
-      
+      _buildItem(
+        context,
+        Icons.dashboard_outlined,
+        'Beranda',
+        const PengelolaHomeScreen(),
+        replace: true,
+      ),
+      _buildItem(
+        context,
+        Icons.forum_outlined,
+        'Forum / Chat',
+        const ChatListScreen(),
+        replace: false,
+      ),
+
       _buildSectionLabel('Manajemen'),
-      _buildItem(context, Icons.manage_accounts_outlined, 'Anggota', const PengelolaPenggunaScreen()),
+      _buildItem(
+        context,
+        Icons.manage_accounts_outlined,
+        'Anggota',
+        const PengelolaPenggunaScreen(),
+      ),
 
       _buildSectionLabel('Kegiatan'),
-      _buildItem(context, Icons.event_note_outlined, 'Acara', const PengelolaAcaraScreen()),
-      _buildItem(context, Icons.history_outlined, 'Riwayat Acara', const PengelolaRiwayatScreen()),
-      _buildItem(context, Icons.people_alt_outlined, 'Peserta & Absensi', const PengelolaPesertaScreen()),
-      
+      _buildItem(
+        context,
+        Icons.event_note_outlined,
+        'Acara',
+        const PengelolaAcaraScreen(),
+      ),
+      _buildItem(
+        context,
+        Icons.history_outlined,
+        'Riwayat Acara',
+        const PengelolaRiwayatScreen(),
+      ),
+      _buildItem(
+        context,
+        Icons.people_alt_outlined,
+        'Peserta & Absensi',
+        const PengelolaPesertaScreen(),
+      ),
+
       _buildSectionLabel('Fasilitas'),
-      _buildItem(context, Icons.how_to_vote_outlined, 'Voting & Pemilu', const VotingListScreen(), replace: false),
-      _buildItem(context, Icons.inventory_2_outlined, 'Inventaris', const InventoryMainScreen(), replace: false),
+      _buildItem(
+        context,
+        Icons.how_to_vote_outlined,
+        'Voting & Pemilu',
+        const VotingListScreen(),
+        replace: false,
+      ),
+      _buildItem(
+        context,
+        Icons.inventory_2_outlined,
+        'Inventaris',
+        const InventoryMainScreen(),
+        replace: false,
+      ),
 
       _buildSectionLabel('Analisis'),
-      _buildItem(context, Icons.insert_chart_outlined, 'Laporan', const PengelolaLaporanScreen()),
-      
+      _buildItem(
+        context,
+        Icons.insert_chart_outlined,
+        'Laporan',
+        const PengelolaLaporanScreen(),
+      ),
+
       _buildSectionLabel('Lainnya'),
-      _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const UserPengumumanScreen()),
-      _buildItem(context, Icons.person_outline, 'Profil', const PengelolaProfilScreen()),
+      _buildItem(
+        context,
+        Icons.campaign_outlined,
+        'Pengumuman',
+        const UserPengumumanScreen(),
+      ),
+      _buildItem(
+        context,
+        Icons.person_outline,
+        'Profil',
+        const PengelolaProfilScreen(),
+      ),
     ];
   }
 
-  List<Widget> _buildAnggotaMenu(BuildContext context, bool isSekretaris, bool isBendahara) {
+  List<Widget> _buildAnggotaMenu(
+    BuildContext context,
+    bool isSekretaris,
+    bool isBendahara,
+  ) {
     return [
       _buildSectionLabel('Utama'),
-      _buildItem(context, Icons.dashboard_outlined, 'Beranda', const AnggotaHomeScreen(), replace: true),
-      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
-      _buildItem(context, Icons.location_on_outlined, 'Absensi Lokasi', const AttendanceGeofenceScreen()),
-      
+      _buildItem(
+        context,
+        Icons.dashboard_outlined,
+        'Beranda',
+        const AnggotaHomeScreen(),
+        replace: true,
+      ),
+      _buildItem(
+        context,
+        Icons.forum_outlined,
+        'Forum / Chat',
+        const ChatListScreen(),
+        replace: false,
+      ),
+      _buildItem(
+        context,
+        Icons.location_on_outlined,
+        'Absensi Lokasi',
+        const AttendanceGeofenceScreen(),
+      ),
+
       if (isBendahara) ...[
         _buildSectionLabel('Keuangan'),
-        _buildItem(context, Icons.account_balance_wallet_outlined, 'Kas', KasScreen(user: user)),
+        _buildItem(
+          context,
+          Icons.account_balance_wallet_outlined,
+          'Kas',
+          KasScreen(user: user),
+        ),
       ],
 
       _buildSectionLabel('Kegiatan'),
-      _buildItem(context, Icons.history_outlined, 'Riwayat Absensi', const AttendanceHistoryScreen()),
-      
+      _buildItem(
+        context,
+        Icons.history_outlined,
+        'Riwayat Absensi',
+        const AttendanceHistoryScreen(),
+      ),
+
       _buildSectionLabel('Fasilitas'),
-      _buildItem(context, Icons.how_to_vote_outlined, 'Voting & Pemilu', const VotingListScreen(), replace: false),
-      _buildItem(context, Icons.inventory_2_outlined, 'Inventaris', const InventoryMainScreen(), replace: false),
-      
+      _buildItem(
+        context,
+        Icons.how_to_vote_outlined,
+        'Voting & Pemilu',
+        const VotingListScreen(),
+        replace: false,
+      ),
+      _buildItem(
+        context,
+        Icons.inventory_2_outlined,
+        'Inventaris',
+        const InventoryMainScreen(),
+        replace: false,
+      ),
+
       if (isSekretaris) ...[
         _buildSectionLabel('Manajemen'),
-        _buildItem(context, Icons.how_to_reg_outlined, 'Persetujuan Anggota', const PengelolaApprovalScreen()),
-        _buildItem(context, Icons.campaign_outlined, 'Kelola Pengumuman', const AdminPengumumanScreen()),
+        _buildItem(
+          context,
+          Icons.how_to_reg_outlined,
+          'Persetujuan Anggota',
+          const PengelolaApprovalScreen(),
+        ),
+        _buildItem(
+          context,
+          Icons.campaign_outlined,
+          'Kelola Pengumuman',
+          const AdminPengumumanScreen(),
+        ),
       ] else ...[
-        _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const UserPengumumanScreen()),
+        _buildItem(
+          context,
+          Icons.campaign_outlined,
+          'Pengumuman',
+          const UserPengumumanScreen(),
+        ),
       ],
-      
+
       _buildSectionLabel('Akun'),
-      _buildItem(context, Icons.person_outline, 'Profil', const AnggotaProfilScreen()),
+      _buildItem(
+        context,
+        Icons.person_outline,
+        'Profil',
+        const AnggotaProfilScreen(),
+      ),
     ];
   }
 
   List<Widget> _buildAdminMenu(BuildContext context) {
     return [
       _buildSectionLabel('Utama'),
-      _buildItem(context, Icons.dashboard_outlined, 'Dashboard', const AdminHomeScreen(), replace: true),
-      _buildItem(context, Icons.forum_outlined, 'Forum / Chat', const ChatListScreen(), replace: false),
-      
+      _buildItem(
+        context,
+        Icons.dashboard_outlined,
+        'Dashboard',
+        const AdminHomeScreen(),
+        replace: true,
+      ),
+      _buildItem(
+        context,
+        Icons.forum_outlined,
+        'Forum / Chat',
+        const ChatListScreen(),
+        replace: false,
+      ),
+
       _buildSectionLabel('Manajemen'),
-      _buildItem(context, Icons.manage_accounts_outlined, 'Pengguna', const AdminPenggunaScreen()),
-      _buildItem(context, Icons.admin_panel_settings_outlined, 'Role & Hak Akses', const AdminRoleScreen()),
-      _buildItem(context, Icons.event_note_outlined, 'Acara', const AdminAcaraScreen()),
-      _buildItem(context, Icons.people_alt_outlined, 'Peserta & Absensi', const AdminPesertaScreen()),
-      
+      _buildItem(
+        context,
+        Icons.manage_accounts_outlined,
+        'Pengguna',
+        const AdminPenggunaScreen(),
+      ),
+      _buildItem(
+        context,
+        Icons.admin_panel_settings_outlined,
+        'Role & Hak Akses',
+        const AdminRoleScreen(),
+      ),
+      _buildItem(
+        context,
+        Icons.event_note_outlined,
+        'Acara',
+        const AdminAcaraScreen(),
+      ),
+      _buildItem(
+        context,
+        Icons.people_alt_outlined,
+        'Peserta & Absensi',
+        const AdminPesertaScreen(),
+      ),
+
       _buildSectionLabel('Fasilitas'),
-      _buildItem(context, Icons.how_to_vote_outlined, 'Voting & Pemilu', const VotingListScreen(), replace: false),
-      _buildItem(context, Icons.inventory_2_outlined, 'Inventaris', const InventoryMainScreen(), replace: false),
+      _buildItem(
+        context,
+        Icons.how_to_vote_outlined,
+        'Voting & Pemilu',
+        const VotingListScreen(),
+        replace: false,
+      ),
+      _buildItem(
+        context,
+        Icons.inventory_2_outlined,
+        'Inventaris',
+        const InventoryMainScreen(),
+        replace: false,
+      ),
 
       _buildSectionLabel('Analisis'),
-      _buildItem(context, Icons.insert_chart_outlined, 'Laporan', const AdminLaporanScreen()),
-      
-      _buildSectionLabel('Keuangan'),
-      _buildItem(context, Icons.account_balance_wallet_outlined, 'Kas', KasScreen(user: user)),
-      
-      _buildSectionLabel('Sistem'),
-      _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const AdminPengumumanScreen()),
+      _buildItem(
+        context,
+        Icons.insert_chart_outlined,
+        'Laporan',
+        const AdminLaporanScreen(),
+      ),
 
-      _buildItem(context, Icons.settings_outlined, 'Pengaturan', AdminPengaturanScreen(user: user)),
-      
+      _buildSectionLabel('Keuangan'),
+      _buildItem(
+        context,
+        Icons.account_balance_wallet_outlined,
+        'Kas',
+        KasScreen(user: user),
+      ),
+
+      _buildSectionLabel('Sistem'),
+      _buildItem(
+        context,
+        Icons.campaign_outlined,
+        'Pengumuman',
+        const AdminPengumumanScreen(),
+      ),
+
+      _buildItem(
+        context,
+        Icons.settings_outlined,
+        'Pengaturan',
+        AdminPengaturanScreen(user: user),
+      ),
+
       _buildSectionLabel('Akun'),
-      _buildItem(context, Icons.person_outline, 'Profil', const AdminProfilScreen()),
+      _buildItem(
+        context,
+        Icons.person_outline,
+        'Profil',
+        const AdminProfilScreen(),
+      ),
     ];
   }
 
-  Widget _buildItem(BuildContext context, IconData icon, String title, Widget? targetScreen, {bool replace = false}) {
+  Widget _buildItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    Widget? targetScreen, {
+    bool replace = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: ListTile(
         leading: Icon(icon, color: AppTheme.primary.withValues(alpha: 0.8)),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textPrimary)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
         hoverColor: AppTheme.primary.withValues(alpha: 0.05),
         onTap: () {
@@ -317,7 +558,11 @@ class AppDrawer extends StatelessWidget {
           } else {
             Navigator.pop(context); // close drawer
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Fitur ini akan tersedia pada pembaruan berikutnya.')),
+              const SnackBar(
+                content: Text(
+                  'Fitur ini akan tersedia pada pembaruan berikutnya.',
+                ),
+              ),
             );
           }
         },
@@ -325,5 +570,3 @@ class AppDrawer extends StatelessWidget {
     );
   }
 }
-
-

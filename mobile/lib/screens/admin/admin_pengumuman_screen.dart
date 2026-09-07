@@ -37,8 +37,8 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     final query = _searchController.text.toLowerCase();
     setState(() {
       _filteredAnnouncements = _announcements.where((a) {
-        return a.judul.toLowerCase().contains(query) || 
-               a.isi.toLowerCase().contains(query);
+        return a.judul.toLowerCase().contains(query) ||
+            a.isi.toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -64,7 +64,8 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
         });
       } else {
         setState(() {
-          _errorMessage = announcementResult['message'] ?? 'Gagal memuat pengumuman';
+          _errorMessage =
+              announcementResult['message'] ?? 'Gagal memuat pengumuman';
           _isLoading = false;
         });
       }
@@ -102,98 +103,148 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(announcement == null ? 'Buat Pengumuman' : 'Edit Pengumuman', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                        Text(
+                          announcement == null
+                              ? 'Buat Pengumuman'
+                              : 'Edit Pengumuman',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
                         const SizedBox(height: 24),
                         CustomTextField(
-                        controller: judulController,
-                        label: 'Judul',
-                        validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
-                      ),
-                      CustomTextField(
-                        controller: isiController,
-                        label: 'Isi Pengumuman',
-                        maxLines: 4,
-                        validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: targetRole,
-                        decoration: InputDecoration(
-                          labelText: 'Target Pengguna', 
-                          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                          controller: judulController,
+                          label: 'Judul',
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Wajib diisi'
+                              : null,
                         ),
-                        items: const [
-                          DropdownMenuItem(value: 'semua', child: Text('Semua Pengguna')),
-                          DropdownMenuItem(value: 'pengelola', child: Text('Hanya Pengelola')),
-                          DropdownMenuItem(value: 'anggota', child: Text('Hanya Anggota')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) setStateDialog(() => targetRole = val);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      SwitchListTile(
-                        title: const Text('Status Aktif', style: TextStyle(fontWeight: FontWeight.w500)),
-                        value: statusAktif,
-                        onChanged: (val) => setStateDialog(() => statusAktif = val),
-                        contentPadding: EdgeInsets.zero,
-                        activeTrackColor: AppTheme.primary.withValues(alpha: 0.5),
-                        activeThumbColor: AppTheme.primary,
-                      ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                    child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+                        CustomTextField(
+                          controller: isiController,
+                          label: 'Isi Pengumuman',
+                          maxLines: 4,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Wajib diisi'
+                              : null,
+                        ),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          initialValue: targetRole,
+                          decoration: InputDecoration(
+                            labelText: 'Target Pengguna',
+                            border: OutlineInputBorder(
+                              borderRadius: AppTheme.radiusMedium,
+                            ),
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'semua',
+                              child: Text('Semua Pengguna'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'pengelola',
+                              child: Text('Hanya Pengelola'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'anggota',
+                              child: Text('Hanya Anggota'),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            if (val != null)
+                              setStateDialog(() => targetRole = val);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        SwitchListTile(
+                          title: const Text(
+                            'Status Aktif',
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                          value: statusAktif,
+                          onChanged: (val) =>
+                              setStateDialog(() => statusAktif = val),
+                          contentPadding: EdgeInsets.zero,
+                          activeTrackColor: AppTheme.primary.withValues(
+                            alpha: 0.5,
+                          ),
+                          activeThumbColor: AppTheme.primary,
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: isLoadingSubmit
+                                  ? null
+                                  : () => Navigator.pop(context),
+                              child: const Text(
+                                'Batal',
+                                style: TextStyle(color: AppTheme.textSecondary),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            CustomButton(
+                              text: 'Simpan',
+                              onPressed: () async {
+                                if (formKey.currentState!.validate()) {
+                                  setStateDialog(() => isLoadingSubmit = true);
+
+                                  final data = {
+                                    'judul': judulController.text,
+                                    'isi': isiController.text,
+                                    'target_role': targetRole,
+                                    'status_aktif': statusAktif ? 1 : 0,
+                                  };
+
+                                  Map<String, dynamic> result;
+                                  if (announcement == null) {
+                                    result =
+                                        await AnnouncementService.createAnnouncement(
+                                          data,
+                                        );
+                                  } else {
+                                    result =
+                                        await AnnouncementService.updateAnnouncement(
+                                          announcement.id,
+                                          data,
+                                        );
+                                  }
+
+                                  if (result['success']) {
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      _showSnackbar(
+                                        announcement == null
+                                            ? 'Pengumuman dibuat'
+                                            : 'Pengumuman diperbarui',
+                                      );
+                                      _loadData();
+                                    }
+                                  } else {
+                                    setStateDialog(
+                                      () => isLoadingSubmit = false,
+                                    );
+                                    _showSnackbar(
+                                      result['message'],
+                                      isError: true,
+                                    );
+                                  }
+                                }
+                              },
+                              isLoading: isLoadingSubmit,
+                              isFullWidth: false,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  CustomButton(
-                    text: 'Simpan',
-                    onPressed: () async {
-                      if (formKey.currentState!.validate()) {
-                        setStateDialog(() => isLoadingSubmit = true);
-                        
-                        final data = {
-                          'judul': judulController.text,
-                          'isi': isiController.text,
-                          'target_role': targetRole,
-                          'status_aktif': statusAktif ? 1 : 0,
-                        };
-
-                        Map<String, dynamic> result;
-                        if (announcement == null) {
-                          result = await AnnouncementService.createAnnouncement(data);
-                        } else {
-                          result = await AnnouncementService.updateAnnouncement(announcement.id, data);
-                        }
-
-                        if (result['success']) {
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            _showSnackbar(announcement == null ? 'Pengumuman dibuat' : 'Pengumuman diperbarui');
-                            _loadData();
-                          }
-                        } else {
-                          setStateDialog(() => isLoadingSubmit = false);
-                          _showSnackbar(result['message'], isError: true);
-                        }
-                      }
-                    },
-                    isLoading: isLoadingSubmit,
-                    isFullWidth: false,
-                  ),
-                ],
+                ),
               ),
-
-                    ], 
-                  ), 
-                ), 
-              ),
-            ),
-          );
-        }
+            );
+          },
         );
       },
     );
@@ -208,7 +259,9 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     );
 
     if (confirm == true) {
-      final result = await AnnouncementService.deleteAnnouncement(announcement.id);
+      final result = await AnnouncementService.deleteAnnouncement(
+        announcement.id,
+      );
       if (result['success']) {
         _showSnackbar('Pengumuman dihapus');
         _loadData();
@@ -242,7 +295,10 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
         onPressed: () => _showFormDialog(),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Buat', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        label: const Text(
+          'Buat',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
       ),
       backgroundColor: AppTheme.background,
       body: RefreshIndicator(
@@ -255,7 +311,9 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null) {
@@ -265,11 +323,25 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+              decoration: BoxDecoration(
+                color: AppTheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppTheme.error,
+              ),
             ),
             const SizedBox(height: 24),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 24),
             CustomButton(
               text: 'Coba Lagi',
@@ -316,139 +388,226 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
             itemCount: _filteredAnnouncements.length,
             itemBuilder: (context, index) {
               final a = _filteredAnnouncements[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: AppTheme.radiusLarge,
-            boxShadow: AppTheme.shadowSoft,
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: a.statusAktif == 1 ? AppTheme.primary.withValues(alpha: 0.05) : Colors.grey.shade100,
-                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-                  border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+                  color: AppTheme.surface,
+                  borderRadius: AppTheme.radiusLarge,
+                  boxShadow: AppTheme.shadowSoft,
+                  border: Border.all(color: Colors.grey.shade200),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: a.targetRole == 'semua' 
-                            ? Colors.blue.shade50 
-                            : (a.targetRole == 'pengelola' ? Colors.orange.shade50 : Colors.green.shade50),
-                        borderRadius: AppTheme.radiusSmall,
-                        border: Border.all(
-                          color: a.targetRole == 'semua' 
-                              ? Colors.blue.shade200 
-                              : (a.targetRole == 'pengelola' ? Colors.orange.shade200 : Colors.green.shade200),
+                        color: a.statusAktif == 1
+                            ? AppTheme.primary.withValues(alpha: 0.05)
+                            : Colors.grey.shade100,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                        border: Border(
+                          bottom: BorderSide(color: Colors.grey.shade200),
                         ),
                       ),
-                      child: Text(
-                        'Target: ${a.targetRole.toUpperCase()}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: a.targetRole == 'semua' 
-                              ? Colors.blue.shade700 
-                              : (a.targetRole == 'pengelola' ? Colors.orange.shade700 : Colors.green.shade700),
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: a.targetRole == 'semua'
+                                  ? Colors.blue.shade50
+                                  : (a.targetRole == 'pengelola'
+                                        ? Colors.orange.shade50
+                                        : Colors.green.shade50),
+                              borderRadius: AppTheme.radiusSmall,
+                              border: Border.all(
+                                color: a.targetRole == 'semua'
+                                    ? Colors.blue.shade200
+                                    : (a.targetRole == 'pengelola'
+                                          ? Colors.orange.shade200
+                                          : Colors.green.shade200),
+                              ),
+                            ),
+                            child: Text(
+                              'Target: ${a.targetRole.toUpperCase()}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: a.targetRole == 'semua'
+                                    ? Colors.blue.shade700
+                                    : (a.targetRole == 'pengelola'
+                                          ? Colors.orange.shade700
+                                          : Colors.green.shade700),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: a.statusAktif == 1
+                                  ? AppTheme.success.withValues(alpha: 0.1)
+                                  : AppTheme.error.withValues(alpha: 0.1),
+                              borderRadius: AppTheme.radiusSmall,
+                            ),
+                            child: Text(
+                              a.statusAktif == 1 ? 'AKTIF' : 'NONAKTIF',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: a.statusAktif == 1
+                                    ? AppTheme.success
+                                    : AppTheme.error,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: a.statusAktif == 1 ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.error.withValues(alpha: 0.1),
-                        borderRadius: AppTheme.radiusSmall,
-                      ),
-                      child: Text(
-                        a.statusAktif == 1 ? 'AKTIF' : 'NONAKTIF',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: a.statusAktif == 1 ? AppTheme.success : AppTheme.error,
+                    Theme(
+                      data: Theme.of(
+                        context,
+                      ).copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        tilePadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
                         ),
+                        childrenPadding: const EdgeInsets.only(
+                          left: 20,
+                          right: 20,
+                          bottom: 20,
+                        ),
+                        title: Text(
+                          a.judul,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            a.isi,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              a.isi,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppTheme.textSecondary,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                size: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Dibuat oleh: ${a.pembuat}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, color: Colors.black12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8.0,
+                        horizontal: 8.0,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(
+                            child: TextButton.icon(
+                              onPressed: () => _toggleStatus(a),
+                              icon: Icon(
+                                a.statusAktif == 1
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                size: 18,
+                              ),
+                              label: Text(
+                                a.statusAktif == 1 ? 'Nonaktifkan' : 'Aktifkan',
+                              ),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 24,
+                            color: Colors.grey.shade300,
+                          ),
+                          Expanded(
+                            child: TextButton.icon(
+                              onPressed: () => _showFormDialog(announcement: a),
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('Edit'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppTheme.info,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 24,
+                            color: Colors.grey.shade300,
+                          ),
+                          Expanded(
+                            child: TextButton.icon(
+                              onPressed: () => _deleteAnnouncement(a),
+                              icon: const Icon(Icons.delete_outline, size: 18),
+                              label: const Text('Hapus'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppTheme.error,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-              Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  childrenPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-                  title: Text(a.judul, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      a.isi, 
-                      maxLines: 2, 
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)
-                    ),
-                  ),
-                  children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(a.isi, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5)),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
-                        const SizedBox(width: 4),
-                        Text('Dibuat oleh: ${a.pembuat}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: Colors.black12),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Expanded(
-                      child: TextButton.icon(
-                        onPressed: () => _toggleStatus(a),
-                        icon: Icon(a.statusAktif == 1 ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
-                        label: Text(a.statusAktif == 1 ? 'Nonaktifkan' : 'Aktifkan'),
-                        style: TextButton.styleFrom(foregroundColor: AppTheme.textSecondary),
-                      ),
-                    ),
-                    Container(width: 1, height: 24, color: Colors.grey.shade300),
-                    Expanded(
-                      child: TextButton.icon(
-                        onPressed: () => _showFormDialog(announcement: a),
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        label: const Text('Edit'),
-                        style: TextButton.styleFrom(foregroundColor: AppTheme.info),
-                      ),
-                    ),
-                    Container(width: 1, height: 24, color: Colors.grey.shade300),
-                    Expanded(
-                      child: TextButton.icon(
-                        onPressed: () => _deleteAnnouncement(a),
-                        icon: const Icon(Icons.delete_outline, size: 18),
-                        label: const Text('Hapus'),
-                        style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+              );
+            },
           ),
         ),
       ],
@@ -478,4 +637,3 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     );
   }
 }
-

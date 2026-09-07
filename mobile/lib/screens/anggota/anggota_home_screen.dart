@@ -21,7 +21,7 @@ class AnggotaHomeScreen extends StatefulWidget {
 class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
   UserModel? _user;
   DashboardSummary? _summary;
-  
+
   bool _isLoading = true;
   bool _isError = false;
   String _errorMessage = 'Koneksi bermasalah.';
@@ -115,7 +115,9 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
     if (_isError || _user == null || _summary == null) {
       return Center(
@@ -124,9 +126,16 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
             const SizedBox(height: 16),
-            Text(_errorMessage, style: const TextStyle(color: AppTheme.textSecondary)),
+            Text(
+              _errorMessage,
+              style: const TextStyle(color: AppTheme.textSecondary),
+            ),
             const SizedBox(height: 16),
-            CustomButton(text: 'Coba Lagi', onPressed: _loadData, isFullWidth: false),
+            CustomButton(
+              text: 'Coba Lagi',
+              onPressed: _loadData,
+              isFullWidth: false,
+            ),
           ],
         ),
       );
@@ -160,7 +169,13 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
       decoration: const BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -168,8 +183,14 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
             radius: 32,
             backgroundColor: AppTheme.primary.withOpacity(0.1),
             child: Text(
-              _user!.namaPanggilan.isNotEmpty ? _user!.namaPanggilan.substring(0, 1).toUpperCase() : 'U',
-              style: const TextStyle(fontSize: 28, color: AppTheme.primary, fontWeight: FontWeight.bold),
+              _user!.namaPanggilan.isNotEmpty
+                  ? _user!.namaPanggilan.substring(0, 1).toUpperCase()
+                  : 'U',
+              style: const TextStyle(
+                fontSize: 28,
+                color: AppTheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 16),
@@ -179,10 +200,16 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
               children: [
                 Text(
                   'Halo, ${_user!.namaPanggilan} 👋',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
-                Text('Role: ${_formatRole(_user!.roleLevel)}', style: const TextStyle(color: AppTheme.textSecondary)),
+                Text(
+                  'Role: ${_formatRole(_user!.roleLevel)}',
+                  style: const TextStyle(color: AppTheme.textSecondary),
+                ),
               ],
             ),
           ),
@@ -204,17 +231,35 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Acara Terdekat', style: TextStyle(color: Colors.white70, fontSize: 12)),
+              const Text(
+                'Acara Terdekat',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
               const SizedBox(height: 8),
-              Text(event.title, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(
+                event.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text('${event.date} - ${event.time}', style: const TextStyle(color: Colors.white)),
+              Text(
+                '${event.date} - ${event.time}',
+                style: const TextStyle(color: Colors.white),
+              ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceGeofenceScreen())),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AttendanceGeofenceScreen(),
+                  ),
+                ),
                 icon: const Icon(Icons.location_on),
                 label: const Text('Absen Lokasi'),
-              )
+              ),
             ],
           ),
         ),
@@ -231,9 +276,19 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         child: ListTile(
           leading: const Icon(Icons.campaign, color: AppTheme.warning),
-          title: Text(ann.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text(ann.preview, maxLines: 2, overflow: TextOverflow.ellipsis),
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UserPengumumanScreen())),
+          title: Text(
+            ann.title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            ann.preview,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const UserPengumumanScreen()),
+          ),
         ),
       ),
     );
@@ -248,7 +303,10 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         child: ListTile(
           leading: const Icon(Icons.how_to_vote, color: AppTheme.primary),
-          title: Text(vote.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(
+            vote.title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           subtitle: const Text('Voting Aktif'),
         ),
       ),
@@ -264,11 +322,13 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         child: ListTile(
           leading: const Icon(Icons.inventory, color: AppTheme.success),
-          title: Text(loan.inventoryName, style: const TextStyle(fontWeight: FontWeight.bold)),
+          title: Text(
+            loan.inventoryName,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           subtitle: Text('Jumlah: ${loan.quantity} | Status: ${loan.status}'),
         ),
       ),
     );
   }
 }
-

@@ -211,7 +211,10 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                           items: List.generate(20, (index) {
                             final rtVal = index + 1;
                             final rtStr = rtVal.toString().padLeft(2, '0');
-                            return DropdownMenuItem(value: rtVal, child: Text('RT '));
+                            return DropdownMenuItem(
+                              value: rtVal,
+                              child: Text('RT '),
+                            );
                           }),
                           onChanged: (val) {
                             if (val != null)
@@ -535,9 +538,7 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _user == null) {
-      return Center(
-        child: CustomLoadingIndicator(color: AppTheme.primary),
-      );
+      return Center(child: CustomLoadingIndicator(color: AppTheme.primary));
     }
 
     if (_errorMessage != null && _user == null) {

@@ -18,7 +18,7 @@ class AdminPengaturanScreen extends StatefulWidget {
 class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
   final _formKey = GlobalKey<FormState>();
   final _kasBackdateController = TextEditingController();
-  
+
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -38,9 +38,12 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
     if (!mounted) return;
 
     if (result['success']) {
-      final data = result['data'] is Map<String, dynamic> ? result['data'] as Map<String, dynamic> : <String, dynamic>{};
+      final data = result['data'] is Map<String, dynamic>
+          ? result['data'] as Map<String, dynamic>
+          : <String, dynamic>{};
       setState(() {
-        _kasBackdateController.text = data['kas_backdate_limit']?.toString() ?? '30';
+        _kasBackdateController.text =
+            data['kas_backdate_limit']?.toString() ?? '30';
         _isLoading = false;
       });
     } else {
@@ -54,7 +57,9 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
 
     final result = await SettingService.updateSettings({
       'kas_backdate_limit': _kasBackdateController.text,
@@ -62,16 +67,18 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
 
     if (!mounted) return;
 
-    setState(() { _isLoading = false; });
+    setState(() {
+      _isLoading = false;
+    });
 
     if (result['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pengaturan berhasil disimpan.')),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'])),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result['message'])));
     }
   }
 
@@ -85,18 +92,28 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
       ),
       drawer: widget.user != null ? AppDrawer(user: widget.user!) : null,
       backgroundColor: AppTheme.background,
-      body: _isLoading 
-        ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
-        : _errorMessage != null 
+      body: _isLoading
+          ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
+          : _errorMessage != null
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: AppTheme.error,
+                  ),
                   const SizedBox(height: 16),
-                  Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: AppTheme.error),
+                  ),
                   const SizedBox(height: 16),
-                  ElevatedButton(onPressed: _loadSettings, child: const Text('Coba Lagi')),
+                  ElevatedButton(
+                    onPressed: _loadSettings,
+                    child: const Text('Coba Lagi'),
+                  ),
                 ],
               ),
             )
@@ -105,9 +122,22 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  const Text('Kas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                  const Text(
+                    'Kas',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  const Text('Atur berapa hari maksimal seorang bendahara dapat menginput data secara backdate (tanggal lampau).', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                  const Text(
+                    'Atur berapa hari maksimal seorang bendahara dapat menginput data secara backdate (tanggal lampau).',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _kasBackdateController,
@@ -130,9 +160,18 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: const Text('Simpan Pengaturan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    child: const Text(
+                      'Simpan Pengaturan',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ],
               ),

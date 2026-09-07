@@ -16,7 +16,8 @@ class AttendanceHistoryScreen extends StatefulWidget {
   const AttendanceHistoryScreen({super.key});
 
   @override
-  State<AttendanceHistoryScreen> createState() => _AttendanceHistoryScreenState();
+  State<AttendanceHistoryScreen> createState() =>
+      _AttendanceHistoryScreenState();
 }
 
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
@@ -55,15 +56,19 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = (result['message'].toString().toLowerCase().contains('sesi') || 
-                         result['message'].toString().toLowerCase().contains('berakhir'))
+        _errorMessage =
+            (result['message'].toString().toLowerCase().contains('sesi') ||
+                result['message'].toString().toLowerCase().contains('berakhir'))
             ? result['message']
             : 'Riwayat absensi gagal dimuat.';
       });
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       }
     }
   }
@@ -89,7 +94,9 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _history.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _history.isEmpty) {
@@ -99,11 +106,25 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+              decoration: BoxDecoration(
+                color: AppTheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppTheme.error,
+              ),
             ),
             const SizedBox(height: 24),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 24),
             CustomButton(
               text: 'Coba Lagi',
@@ -148,7 +169,10 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                     color: AppTheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check_circle, color: AppTheme.primary),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: AppTheme.primary,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -161,21 +185,34 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                           Expanded(
                             child: Text(
                               item.namaAcara,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: AppTheme.textPrimary,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: item.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                              color: item.isActive
+                                  ? AppTheme.success.withValues(alpha: 0.1)
+                                  : AppTheme.textSecondary.withValues(
+                                      alpha: 0.1,
+                                    ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               item.isActive ? 'AKTIF' : 'SELESAI',
                               style: TextStyle(
-                                color: item.isActive ? AppTheme.success : AppTheme.textSecondary,
+                                color: item.isActive
+                                    ? AppTheme.success
+                                    : AppTheme.textSecondary,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -186,38 +223,62 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.access_time, size: 14, color: AppTheme.textSecondary),
+                          const Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: AppTheme.textSecondary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             item.waktuCheckout != null
                                 ? '${_formatTime(item.waktuAbsen)} - ${_formatTime(item.waktuCheckout!)}'
                                 : '${_formatTime(item.waktuAbsen)} (Check-in)',
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.calendar_month, size: 14, color: AppTheme.textSecondary),
+                          const Icon(
+                            Icons.calendar_month,
+                            size: 14,
+                            color: AppTheme.textSecondary,
+                          ),
                           const SizedBox(width: 4),
-                          Text(_formatDate(item.tanggalAcara), style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                          Text(
+                            _formatDate(item.tanggalAcara),
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
                         ],
                       ),
                       if (item.durasi != null) ...[
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppTheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             'Durasi: ${item.durasi! ~/ 60} Jam ${item.durasi! % 60} Menit',
-                            style: const TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: AppTheme.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ]
+                      ],
                     ],
                   ),
                 ),
@@ -249,4 +310,3 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 }
-

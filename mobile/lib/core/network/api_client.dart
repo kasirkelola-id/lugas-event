@@ -10,7 +10,9 @@ class ApiClient {
   static String get baseUrl => ApiConfig.baseUrl;
   static const Duration _timeout = Duration(seconds: 30);
 
-  static Future<Map<String, String>> getHeaders({bool excludeTenantHeader = false}) async {
+  static Future<Map<String, String>> getHeaders({
+    bool excludeTenantHeader = false,
+  }) async {
     final token = await AuthStorage.getToken();
     final tenant = await AuthStorage.getTenant();
     final headers = {
@@ -26,7 +28,12 @@ class ApiClient {
     return headers;
   }
 
-  static void _logRequest(String method, String url, Map<String, String> headers, [String? body]) {
+  static void _logRequest(
+    String method,
+    String url,
+    Map<String, String> headers, [
+    String? body,
+  ]) {
     if (kDebugMode) {
       final safeHeaders = Map<String, String>.from(headers);
       if (safeHeaders.containsKey('Authorization')) {
@@ -38,7 +45,13 @@ class ApiClient {
         try {
           final Map<String, dynamic> parsedBody = jsonDecode(body);
           final safeMap = Map<String, dynamic>.from(parsedBody);
-          final sensitiveFields = ['password', 'password_confirmation', 'old_password', 'new_password', 'confirm_password'];
+          final sensitiveFields = [
+            'password',
+            'password_confirmation',
+            'old_password',
+            'new_password',
+            'confirm_password',
+          ];
           for (var field in sensitiveFields) {
             if (safeMap.containsKey(field)) {
               safeMap[field] = '[REDACTED]';
@@ -61,9 +74,14 @@ class ApiClient {
     }
   }
 
-  static void _logResponse(String method, String url, int statusCode, String body) {
+  static void _logResponse(
+    String method,
+    String url,
+    int statusCode,
+    String body,
+  ) {
     if (kDebugMode) {
-      // Body is not redacted usually for responses, unless response returns token/password. 
+      // Body is not redacted usually for responses, unless response returns token/password.
       // Lugas API returns token on login. We'll redact token from response just in case.
       String safeBody = body;
       try {
@@ -105,9 +123,15 @@ class ApiClient {
     }
   }
 
-  static Future<http.Response> _executeRequest(String method, String endpoint, Future<http.Response> Function() requestFunc, {Map<String, String>? headers, String? body}) async {
+  static Future<http.Response> _executeRequest(
+    String method,
+    String endpoint,
+    Future<http.Response> Function() requestFunc, {
+    Map<String, String>? headers,
+    String? body,
+  }) async {
     final fullUrl = '${ApiConfig.baseUrl}$endpoint';
-    
+
     _logRequest(method, fullUrl, headers ?? {}, body);
 
     try {
@@ -116,71 +140,120 @@ class ApiClient {
       return response;
     } on TimeoutException catch (e) {
       _logException(fullUrl, e);
-      return http.Response(jsonEncode({'status': false, 'message': 'Request timeout'}), 408);
+      return http.Response(
+        jsonEncode({'status': false, 'message': 'Request timeout'}),
+        408,
+      );
     } on SocketException catch (e) {
       _logException(fullUrl, e);
-      return http.Response(jsonEncode({'status': false, 'message': 'Tidak dapat terhubung ke server'}), 503);
+      return http.Response(
+        jsonEncode({
+          'status': false,
+          'message': 'Tidak dapat terhubung ke server',
+        }),
+        503,
+      );
     } catch (e) {
       _logException(fullUrl, e);
-      return http.Response(jsonEncode({'status': false, 'message': 'Terjadi gangguan pada server. Silakan coba lagi.'}), 500);
+      return http.Response(
+        jsonEncode({
+          'status': false,
+          'message': 'Terjadi gangguan pada server. Silakan coba lagi.',
+        }),
+        500,
+      );
     }
   }
 
-  static Future<http.Response> get(String endpoint, {bool excludeTenantHeader = false}) async {
+  static Future<http.Response> get(
+    String endpoint, {
+    bool excludeTenantHeader = false,
+  }) async {
     final headers = await getHeaders(excludeTenantHeader: excludeTenantHeader);
     return _executeRequest(
-      'GET', 
-      endpoint, 
-      () => http.get(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers),
-      headers: headers
+      'GET',
+      endpoint,
+      () => http.get(
+        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        headers: headers,
+      ),
+      headers: headers,
     );
   }
 
-  static Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
+  static Future<http.Response> post(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
     final headers = await getHeaders();
     final jsonBody = jsonEncode(body);
     return _executeRequest(
-      'POST', 
-      endpoint, 
-      () => http.post(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers, body: jsonBody),
+      'POST',
+      endpoint,
+      () => http.post(
+        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        headers: headers,
+        body: jsonBody,
+      ),
       headers: headers,
-      body: jsonBody
+      body: jsonBody,
     );
   }
 
-  static Future<http.Response> put(String endpoint, Map<String, dynamic> body) async {
+  static Future<http.Response> put(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
     final headers = await getHeaders();
     final jsonBody = jsonEncode(body);
     return _executeRequest(
-      'PUT', 
-      endpoint, 
-      () => http.put(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers, body: jsonBody),
+      'PUT',
+      endpoint,
+      () => http.put(
+        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        headers: headers,
+        body: jsonBody,
+      ),
       headers: headers,
-      body: jsonBody
+      body: jsonBody,
     );
   }
 
-  static Future<http.Response> patch(String endpoint, [Map<String, dynamic>? body]) async {
+  static Future<http.Response> patch(
+    String endpoint, [
+    Map<String, dynamic>? body,
+  ]) async {
     final headers = await getHeaders();
     final jsonBody = body != null ? jsonEncode(body) : null;
     return _executeRequest(
-      'PATCH', 
-      endpoint, 
-      () => http.patch(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers, body: jsonBody),
+      'PATCH',
+      endpoint,
+      () => http.patch(
+        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        headers: headers,
+        body: jsonBody,
+      ),
       headers: headers,
-      body: jsonBody
+      body: jsonBody,
     );
   }
 
-  static Future<http.Response> delete(String endpoint, [Map<String, dynamic>? body]) async {
+  static Future<http.Response> delete(
+    String endpoint, [
+    Map<String, dynamic>? body,
+  ]) async {
     final headers = await getHeaders();
     final jsonBody = body != null ? jsonEncode(body) : null;
     return _executeRequest(
-      'DELETE', 
-      endpoint, 
-      () => http.delete(Uri.parse('${ApiConfig.baseUrl}$endpoint'), headers: headers, body: jsonBody),
+      'DELETE',
+      endpoint,
+      () => http.delete(
+        Uri.parse('${ApiConfig.baseUrl}$endpoint'),
+        headers: headers,
+        body: jsonBody,
+      ),
       headers: headers,
-      body: jsonBody
+      body: jsonBody,
     );
   }
 }

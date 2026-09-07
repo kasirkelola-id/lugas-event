@@ -80,7 +80,9 @@ class _AdminLaporanScreenState extends State<AdminLaporanScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _report == null) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _report == null) {
@@ -92,7 +94,10 @@ class _AdminLaporanScreenState extends State<AdminLaporanScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -106,21 +111,42 @@ class _AdminLaporanScreenState extends State<AdminLaporanScreen> {
       children: [
         const Text(
           'Ringkasan Laporan Sistem Keseluruhan',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
         ),
         const SizedBox(height: 24),
-        
+
         // Block 1: Event Stats
-        const Text('Data Acara', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        const Text(
+          'Data Acara',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Total Acara', _report!.totalAcara.toString(), Icons.event_note, AppTheme.primary),
+              child: _buildStatCard(
+                'Total Acara',
+                _report!.totalAcara.toString(),
+                Icons.event_note,
+                AppTheme.primary,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildStatCard('Acara Aktif', _report!.acaraAktif.toString(), Icons.event_available, AppTheme.success),
+              child: _buildStatCard(
+                'Acara Aktif',
+                _report!.acaraAktif.toString(),
+                Icons.event_available,
+                AppTheme.success,
+              ),
             ),
           ],
         ),
@@ -128,20 +154,28 @@ class _AdminLaporanScreenState extends State<AdminLaporanScreen> {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Total Hadir', _report!.totalHadir.toString(), Icons.how_to_reg, AppTheme.primary),
+              child: _buildStatCard(
+                'Total Hadir',
+                _report!.totalHadir.toString(),
+                Icons.how_to_reg,
+                AppTheme.primary,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: _buildStatCard('Acara Selesai', _report!.acaraSelesai.toString(), Icons.event_busy, AppTheme.textSecondary),
+              child: _buildStatCard(
+                'Acara Selesai',
+                _report!.acaraSelesai.toString(),
+                Icons.event_busy,
+                AppTheme.textSecondary,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 24),
-        
 
-        
         const SizedBox(height: 24),
-        
+
         // Block 3: Percentage
         Container(
           padding: const EdgeInsets.all(24),
@@ -152,22 +186,41 @@ class _AdminLaporanScreenState extends State<AdminLaporanScreen> {
           ),
           child: Column(
             children: [
-              const Text('Rata-rata Kehadiran', style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text(
+                'Rata-rata Kehadiran',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    _report!.totalAcara > 0 ? (_report!.totalHadir / _report!.totalAcara).toStringAsFixed(1) : '0',
-                    style: const TextStyle(color: Colors.white, fontSize: 56, fontWeight: FontWeight.bold, height: 1),
+                    _report!.totalAcara > 0
+                        ? (_report!.totalHadir / _report!.totalAcara)
+                              .toStringAsFixed(1)
+                        : '0',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 56,
+                      fontWeight: FontWeight.bold,
+                      height: 1,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               const Text(
                 'orang / acara',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ],
           ),
@@ -176,7 +229,12 @@ class _AdminLaporanScreenState extends State<AdminLaporanScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 12.0),
       decoration: BoxDecoration(
@@ -198,18 +256,24 @@ class _AdminLaporanScreenState extends State<AdminLaporanScreen> {
           const SizedBox(height: 16),
           Text(
             value,
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
     );
   }
 }
-
-

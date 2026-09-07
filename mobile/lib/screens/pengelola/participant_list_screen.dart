@@ -33,7 +33,8 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
 
   List<ParticipantModel> get _filteredParticipants {
     return _participants.where((p) {
-      bool matchesSearch = _searchQuery.isEmpty || 
+      bool matchesSearch =
+          _searchQuery.isEmpty ||
           p.namaLengkap.toLowerCase().contains(_searchQuery.toLowerCase());
       bool matchesRt = _rtFilter == null || p.userRt.toString() == _rtFilter;
       return matchesSearch && matchesRt;
@@ -68,7 +69,10 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       }
     }
   }
@@ -83,7 +87,8 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: 'Hapus Peserta',
-      content: 'Apakah Anda yakin ingin menghapus ${participant.namaLengkap} dari daftar peserta?',
+      content:
+          'Apakah Anda yakin ingin menghapus ${participant.namaLengkap} dari daftar peserta?',
       isDestructive: true,
     );
 
@@ -93,19 +98,27 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
       _isLoading = true;
     });
 
-    final result = await ParticipantService.removeParticipant(widget.event.id, participant.userId);
-    
+    final result = await ParticipantService.removeParticipant(
+      widget.event.id,
+      participant.userId,
+    );
+
     if (!mounted) return;
 
     if (result['success']) {
       AppSnackBar.showSuccess(context, 'Peserta berhasil dihapus.');
       _loadParticipants();
     } else {
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       } else {
         AppSnackBar.showError(context, result['message']);
       }
@@ -130,7 +143,10 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addParticipant,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Tambah Peserta', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        label: const Text(
+          'Tambah Peserta',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
         backgroundColor: AppTheme.primary,
         elevation: 4,
       ),
@@ -139,7 +155,9 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _participants.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _participants.isEmpty) {
@@ -151,7 +169,10 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadParticipants, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadParticipants,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -173,7 +194,10 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
               borderRadius: AppTheme.radiusLarge,
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
           onChanged: (val) => setState(() => _searchQuery = val),
         ),
@@ -193,13 +217,17 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
                   checkmarkColor: AppTheme.info,
                   labelStyle: TextStyle(
                     color: isSelected ? AppTheme.info : AppTheme.textSecondary,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                   backgroundColor: AppTheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: AppTheme.radiusLarge,
                     side: BorderSide(
-                      color: isSelected ? AppTheme.info.withValues(alpha: 0.5) : Colors.grey.shade300,
+                      color: isSelected
+                          ? AppTheme.info.withValues(alpha: 0.5)
+                          : Colors.grey.shade300,
                     ),
                   ),
                   onSelected: (selected) {
@@ -216,17 +244,32 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Daftar Peserta (${_filteredParticipants.length})', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+            Text(
+              'Daftar Peserta (${_filteredParticipants.length})',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
             TextButton.icon(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => AttendanceListScreen(event: widget.event)),
+                  MaterialPageRoute(
+                    builder: (_) => AttendanceListScreen(event: widget.event),
+                  ),
                 );
               },
-              icon: const Icon(Icons.checklist, color: AppTheme.primary, size: 20),
-              label: const Text('Lihat Absensi', style: TextStyle(color: AppTheme.primary)),
-            )
+              icon: const Icon(
+                Icons.checklist,
+                color: AppTheme.primary,
+                size: 20,
+              ),
+              label: const Text(
+                'Lihat Absensi',
+                style: TextStyle(color: AppTheme.primary),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -236,16 +279,27 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  Icon(Icons.people_outline, size: 80, color: Colors.grey.shade300),
+                  Icon(
+                    Icons.people_outline,
+                    size: 80,
+                    color: Colors.grey.shade300,
+                  ),
                   const SizedBox(height: 16),
-                  const Text('Tidak ada peserta', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Tidak ada peserta',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
           )
         else
           ..._filteredParticipants.map((p) => _buildParticipantCard(p)),
-          
+
         const SizedBox(height: 80),
       ],
     );
@@ -263,19 +317,36 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.event.namaAcara, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+          Text(
+            widget.event.namaAcara,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.calendar_month, size: 16, color: AppTheme.textSecondary),
+              const Icon(
+                Icons.calendar_month,
+                size: 16,
+                color: AppTheme.textSecondary,
+              ),
               const SizedBox(width: 8),
-              Text(widget.event.tanggalAcara, style: const TextStyle(color: AppTheme.textSecondary)),
+              Text(
+                widget.event.tanggalAcara,
+                style: const TextStyle(color: AppTheme.textSecondary),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
-          const Text('Gunakan halaman ini untuk mendaftarkan pengguna sebagai peserta acara.', style: TextStyle(color: AppTheme.textSecondary)),
+          const Text(
+            'Gunakan halaman ini untuk mendaftarkan pengguna sebagai peserta acara.',
+            style: TextStyle(color: AppTheme.textSecondary),
+          ),
         ],
       ),
     );
@@ -295,16 +366,33 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
         leading: CircleAvatar(
           backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
           child: Text(
-            participant.namaPanggilan.isNotEmpty ? participant.namaPanggilan.substring(0, 1).toUpperCase() : 'U',
-            style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
+            participant.namaPanggilan.isNotEmpty
+                ? participant.namaPanggilan.substring(0, 1).toUpperCase()
+                : 'U',
+            style: const TextStyle(
+              color: AppTheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        title: Text(participant.namaLengkap, style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        title: Text(
+          participant.namaLengkap,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text(participant.whatsapp, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+            Text(
+              participant.whatsapp,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+              ),
+            ),
           ],
         ),
         trailing: IconButton(
@@ -315,4 +403,3 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
     );
   }
 }
-

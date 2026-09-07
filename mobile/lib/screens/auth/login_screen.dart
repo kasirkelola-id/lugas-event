@@ -87,9 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
         });
         return;
       }
-      
+
       if (!mounted) return;
-      
+
       if (user.passwordMustChange) {
         Navigator.pushReplacement(
           context,
@@ -134,7 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
         AppDialog.showResult(
           context: context,
           title: 'Menunggu Persetujuan',
-          content: 'Akun Anda sudah terdaftar, tetapi masih menunggu\npersetujuan pengurus Karang Taruna.\n\nSilakan coba login kembali setelah disetujui.',
+          content:
+              'Akun Anda sudah terdaftar, tetapi masih menunggu\npersetujuan pengurus Karang Taruna.\n\nSilakan coba login kembali setelah disetujui.',
           type: DialogType.info,
         );
       } else {
@@ -164,29 +165,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _ktLogoUrl != null 
-                      ? Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              image: NetworkImage(_ktLogoUrl!),
-                              fit: BoxFit.cover,
+                    _ktLogoUrl != null
+                        ? Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: NetworkImage(_ktLogoUrl!),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: 100,
+                            height: 100,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: AssetImage(
+                                  'assets/logo/default_tenant_logo.png',
+                                ),
+                                fit: BoxFit.cover,
+                              ),
                             ),
                           ),
-                        )
-                      : Container(
-                          width: 100,
-                          height: 100,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              image: AssetImage('assets/logo/default_tenant_logo.png'),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
                     const SizedBox(height: 24),
                     const Text(
                       'Selamat Datang',
@@ -210,10 +213,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextButton.icon(
                       onPressed: _changePin,
                       icon: const Icon(Icons.swap_horiz, size: 16),
-                      label: const Text('Ganti Karang Taruna / PIN', style: TextStyle(fontSize: 12)),
+                      label: const Text(
+                        'Ganti Karang Taruna / PIN',
+                        style: TextStyle(fontSize: 12),
+                      ),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.textSecondary,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
@@ -226,16 +235,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           color: AppTheme.error.withValues(alpha: 0.1),
                           borderRadius: AppTheme.radiusSmall,
-                          border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: AppTheme.error.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppTheme.error,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _errorMessage!,
-                                style: const TextStyle(color: AppTheme.error, fontSize: 14),
+                                style: const TextStyle(
+                                  color: AppTheme.error,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ],
@@ -254,7 +272,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: !_isPasswordVisible,
                       readOnly: _isLoading,
                       suffixIcon: IconButton(
-                        icon: Icon(_isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                        icon: Icon(
+                          _isPasswordVisible
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
                         onPressed: () {
                           setState(() {
                             _isPasswordVisible = !_isPasswordVisible;
@@ -272,21 +294,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Belum punya akun? ', style: TextStyle(color: AppTheme.textSecondary)),
+                        const Text(
+                          'Belum punya akun? ',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterScreen(),
+                              ),
                             );
                           },
                           child: const Text(
                             'Daftar',
-                            style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

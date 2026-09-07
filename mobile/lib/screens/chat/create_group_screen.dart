@@ -16,7 +16,7 @@ class CreateGroupScreen extends StatefulWidget {
 class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final ChatService _chatService = ChatService();
-  
+
   bool _isLoading = false;
   bool _isLoadingUsers = true;
   List<UserModel> _users = [];
@@ -39,9 +39,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     } else {
       setState(() => _isLoadingUsers = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'])),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
       }
     }
   }
@@ -65,9 +65,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'])),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
       }
     }
   }
@@ -76,7 +76,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buat Grup Baru', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Buat Grup Baru',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -88,15 +91,23 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               controller: _nameController,
               decoration: InputDecoration(
                 labelText: 'Nama Grup',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 prefixIcon: const Icon(Icons.group),
               ),
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             alignment: Alignment.centerLeft,
-            child: const Text('Pilih Anggota:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            child: const Text(
+              'Pilih Anggota:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
           ),
           Expanded(
             child: _isLoadingUsers
@@ -106,7 +117,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     itemBuilder: (context, index) {
                       final user = _users[index];
                       final isSelected = _selectedUserIds.contains(user.id);
-                      
+
                       return CheckboxListTile(
                         value: isSelected,
                         title: Text(user.namaLengkap),

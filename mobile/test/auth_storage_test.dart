@@ -22,7 +22,7 @@ void main() {
     test('clearTenant removes tenant data', () async {
       // Arrange
       await AuthStorage.saveTenant(456, 'KT Melati');
-      
+
       // Act
       await AuthStorage.clearTenant();
       final tenant = await AuthStorage.getTenant();

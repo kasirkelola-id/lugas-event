@@ -47,7 +47,8 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: 'Hapus Grup',
-      content: 'Apakah Anda yakin ingin menghapus grup ini? Semua pesan akan terhapus dan tidak bisa dikembalikan.',
+      content:
+          'Apakah Anda yakin ingin menghapus grup ini? Semua pesan akan terhapus dan tidak bisa dikembalikan.',
       isDestructive: true,
     );
 
@@ -70,8 +71,10 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool canDelete = widget.roomType == 'custom' && 
-                           (_currentUser?.roleLevel == 'ketua' || _currentUser?.roleLevel == 'superadmin');
+    final bool canDelete =
+        widget.roomType == 'custom' &&
+        (_currentUser?.roleLevel == 'ketua' ||
+            _currentUser?.roleLevel == 'superadmin');
 
     return Scaffold(
       appBar: AppBar(
@@ -79,44 +82,63 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
         backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: _isLoading 
-        ? const Center(child: CustomLoadingIndicator())
-        : Column(
-            children: [
-              const SizedBox(height: 32),
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: widget.roomType == 'default' ? AppTheme.primary : Colors.grey.shade400,
-                child: Icon(widget.roomType == 'default' ? Icons.apartment : Icons.group, color: Colors.white, size: 50),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                widget.roomName,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                widget.roomType == 'default' ? 'Grup utama Karang Taruna' : 'Grup Custom',
-                style: const TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 32),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.people),
-                title: const Text('Anggota Grup'),
-                subtitle: const Text('Fitur manajemen anggota akan datang'),
-                onTap: () {
-                  AppSnackBar.showInfo(context, 'Segera hadir!');
-                },
-              ),
-              const Divider(),
-              if (canDelete)
-                ListTile(
-                  leading: const Icon(Icons.delete, color: Colors.red),
-                  title: const Text('Hapus Grup', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                  onTap: _deleteGroup,
+      body: _isLoading
+          ? const Center(child: CustomLoadingIndicator())
+          : Column(
+              children: [
+                const SizedBox(height: 32),
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: widget.roomType == 'default'
+                      ? AppTheme.primary
+                      : Colors.grey.shade400,
+                  child: Icon(
+                    widget.roomType == 'default'
+                        ? Icons.apartment
+                        : Icons.group,
+                    color: Colors.white,
+                    size: 50,
+                  ),
                 ),
-            ],
-          ),
+                const SizedBox(height: 16),
+                Text(
+                  widget.roomName,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  widget.roomType == 'default'
+                      ? 'Grup utama Karang Taruna'
+                      : 'Grup Custom',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 32),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.people),
+                  title: const Text('Anggota Grup'),
+                  subtitle: const Text('Fitur manajemen anggota akan datang'),
+                  onTap: () {
+                    AppSnackBar.showInfo(context, 'Segera hadir!');
+                  },
+                ),
+                const Divider(),
+                if (canDelete)
+                  ListTile(
+                    leading: const Icon(Icons.delete, color: Colors.red),
+                    title: const Text(
+                      'Hapus Grup',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onTap: _deleteGroup,
+                  ),
+              ],
+            ),
     );
   }
 }

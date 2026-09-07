@@ -21,13 +21,19 @@ class AnnouncementModel {
 
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) {
     return AnnouncementModel(
-      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id'].toString()) ?? 0,
       judul: json['judul'] ?? '',
       isi: json['isi'] ?? '',
-      dibuatOleh: json['dibuat_oleh'] is int ? json['dibuat_oleh'] : int.tryParse(json['dibuat_oleh'].toString()) ?? 0,
+      dibuatOleh: json['dibuat_oleh'] is int
+          ? json['dibuat_oleh']
+          : int.tryParse(json['dibuat_oleh'].toString()) ?? 0,
       pembuat: json['pembuat'] ?? 'Admin',
       targetRole: json['target_role'] ?? 'semua',
-      statusAktif: json['status_aktif'] is int ? json['status_aktif'] : int.tryParse(json['status_aktif'].toString()) ?? 0,
+      statusAktif: json['status_aktif'] is int
+          ? json['status_aktif']
+          : int.tryParse(json['status_aktif'].toString()) ?? 0,
       createdAt: json['created_at'] ?? '',
     );
   }

@@ -42,7 +42,10 @@ class CustomButton extends StatelessWidget {
               ],
               Text(
                 text,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ],
           );
@@ -76,7 +79,10 @@ class CustomButton extends StatelessWidget {
             ? const SizedBox(
                 height: 20,
                 width: 20,
-                child: CustomLoadingIndicator(size: 24, color: AppTheme.primary),
+                child: CustomLoadingIndicator(
+                  size: 24,
+                  color: AppTheme.primary,
+                ),
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
@@ -88,7 +94,10 @@ class CustomButton extends StatelessWidget {
                   ],
                   Text(
                     text,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               );

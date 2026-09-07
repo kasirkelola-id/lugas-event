@@ -36,7 +36,7 @@ class AppSnackBar {
     }
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -57,9 +57,7 @@ class AppSnackBar {
         ),
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: AppTheme.radiusSmall,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusSmall),
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         duration: duration,
         elevation: 4,

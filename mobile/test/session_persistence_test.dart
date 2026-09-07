@@ -22,17 +22,17 @@ void main() {
     test('logout -> storage cleared', () async {
       await AuthStorage.saveToken('valid_opaque_token');
       await AuthStorage.saveTenant(1, 'Karang Taruna Test');
-      
+
       await AuthStorage.removeToken();
       await AuthStorage.clearTenant();
-      
+
       final hasToken = await AuthStorage.hasToken();
       final tenant = await AuthStorage.getTenant();
-      
+
       expect(hasToken, false);
       expect(tenant, null);
     });
-    
+
     test('tenant switch logic check', () async {
       await AuthStorage.saveTenant(1, 'Karang Taruna Test');
       final tenant = await AuthStorage.getTenant();

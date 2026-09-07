@@ -8,7 +8,8 @@ import 'package:intl/intl.dart';
 class LoanRequestScreen extends StatefulWidget {
   final Inventory inventory;
 
-  const LoanRequestScreen({Key? key, required this.inventory}) : super(key: key);
+  const LoanRequestScreen({Key? key, required this.inventory})
+    : super(key: key);
 
   @override
   _LoanRequestScreenState createState() => _LoanRequestScreenState();
@@ -18,7 +19,7 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
   final TextEditingController _qtyController = TextEditingController(text: '1');
   DateTime? _borrowDate;
   DateTime? _returnDate;
-  
+
   bool _isSubmitting = false;
 
   Future<void> _selectDate(BuildContext context, bool isBorrow) async {
@@ -46,19 +47,39 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
     final qty = int.tryParse(qtyText);
 
     if (qty == null || qty <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kuantitas tidak valid, masukkan angka bulat positif')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kuantitas tidak valid, masukkan angka bulat positif'),
+        ),
+      );
       return;
     }
     if (qty > widget.inventory.availableQuantity) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Maksimal peminjaman: ${widget.inventory.availableQuantity}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Maksimal peminjaman: ${widget.inventory.availableQuantity}',
+          ),
+        ),
+      );
       return;
     }
     if (_borrowDate == null || _returnDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pilih tanggal pinjam dan tanggal kembali')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pilih tanggal pinjam dan tanggal kembali'),
+        ),
+      );
       return;
     }
     if (_returnDate!.isBefore(_borrowDate!)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tanggal kembali tidak boleh mendahului tanggal pinjam')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tanggal kembali tidak boleh mendahului tanggal pinjam',
+          ),
+        ),
+      );
       return;
     }
 
@@ -78,7 +99,10 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
     if (result['success']) {
       if (mounted) Navigator.pop(context, true);
     } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
     }
   }
 
@@ -95,7 +119,10 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detail & Pengajuan', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Detail & Pengajuan',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -119,12 +146,19 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
                   CircleAvatar(
                     radius: 40,
                     backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                    child: const Icon(Icons.inventory_2, color: AppTheme.primary, size: 40),
+                    child: const Icon(
+                      Icons.inventory_2,
+                      color: AppTheme.primary,
+                      size: 40,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    widget.inventory.name, 
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    widget.inventory.name,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
@@ -135,19 +169,37 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
                     children: [
                       Column(
                         children: [
-                          const Text('Total Stok', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                          const Text(
+                            'Total Stok',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text('${widget.inventory.totalQuantity}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(
+                            '${widget.inventory.totalQuantity}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ],
                       ),
                       Column(
                         children: [
-                          const Text('Tersedia', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                          const Text(
+                            'Tersedia',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Text(
-                            '${widget.inventory.availableQuantity}', 
+                            '${widget.inventory.availableQuantity}',
                             style: TextStyle(
-                              fontWeight: FontWeight.bold, 
+                              fontWeight: FontWeight.bold,
                               fontSize: 16,
                               color: isAvailable ? Colors.green : Colors.red,
                             ),
@@ -156,9 +208,21 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
                       ),
                       Column(
                         children: [
-                          const Text('Kondisi', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                          const Text(
+                            'Kondisi',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text(widget.inventory.condition ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text(
+                            widget.inventory.condition ?? '-',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -168,14 +232,19 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
             ),
             const SizedBox(height: 32),
             if (isAvailable) ...[
-              const Text('Formulir Pengajuan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                'Formulir Pengajuan',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: _qtyController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Jumlah yang dipinjam',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   prefixIcon: const Icon(Icons.numbers),
                 ),
               ),
@@ -188,10 +257,20 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Tanggal Pinjam',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.calendar_today, size: 18),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.calendar_today,
+                            size: 18,
+                          ),
                         ),
-                        child: Text(_borrowDate != null ? format.format(_borrowDate!) : 'Pilih Tanggal', style: const TextStyle(fontSize: 14)),
+                        child: Text(
+                          _borrowDate != null
+                              ? format.format(_borrowDate!)
+                              : 'Pilih Tanggal',
+                          style: const TextStyle(fontSize: 14),
+                        ),
                       ),
                     ),
                   ),
@@ -202,10 +281,20 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Tanggal Kembali',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          prefixIcon: const Icon(Icons.calendar_month, size: 18),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.calendar_month,
+                            size: 18,
+                          ),
                         ),
-                        child: Text(_returnDate != null ? format.format(_returnDate!) : 'Pilih Tanggal', style: const TextStyle(fontSize: 14)),
+                        child: Text(
+                          _returnDate != null
+                              ? format.format(_returnDate!)
+                              : 'Pilih Tanggal',
+                          style: const TextStyle(fontSize: 14),
+                        ),
                       ),
                     ),
                   ),
@@ -242,7 +331,7 @@ class _LoanRequestScreenState extends State<LoanRequestScreen> {
                   ],
                 ),
               ),
-            ]
+            ],
           ],
         ),
       ),

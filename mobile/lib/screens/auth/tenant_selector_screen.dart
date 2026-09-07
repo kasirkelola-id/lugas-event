@@ -70,8 +70,11 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
 
   void _selectTenant(Map<String, dynamic> membership) async {
     // Save to storage
-    await AuthStorage.saveTenant(membership['karang_taruna_id'], membership['nama']);
-    
+    await AuthStorage.saveTenant(
+      membership['karang_taruna_id'],
+      membership['nama'],
+    );
+
     // Update local user model temporarily for routing
     final updatedUser = UserModel(
       id: widget.user.id,
@@ -124,7 +127,10 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Pilih Karang Taruna', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Pilih Karang Taruna',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primary,
         elevation: 0,
         actions: [
@@ -137,48 +143,59 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
       body: _isLoading
           ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
           : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchMemberships,
-                        child: const Text('Coba Lagi'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: AppTheme.error),
                   ),
-                )
-              : _memberships.isEmpty
-                  ? const Center(child: Text('Anda tidak memiliki keanggotaan aktif.'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _memberships.length,
-                      itemBuilder: (context, index) {
-                        final membership = _memberships[index];
-                        final roleName = membership['role'].toString().toUpperCase();
-                        
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            leading: CircleAvatar(
-                              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                              child: const Icon(Icons.groups, color: AppTheme.primary),
-                            ),
-                            title: Text(
-                              membership['nama'],
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            ),
-                            subtitle: Text('Role: $roleName'),
-                            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                            onTap: () => _selectTenant(membership),
-                          ),
-                        );
-                      },
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _fetchMemberships,
+                    child: const Text('Coba Lagi'),
+                  ),
+                ],
+              ),
+            )
+          : _memberships.isEmpty
+          ? const Center(child: Text('Anda tidak memiliki keanggotaan aktif.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _memberships.length,
+              itemBuilder: (context, index) {
+                final membership = _memberships[index];
+                final roleName = membership['role'].toString().toUpperCase();
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
                     ),
+                    leading: CircleAvatar(
+                      backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                      child: const Icon(Icons.groups, color: AppTheme.primary),
+                    ),
+                    title: Text(
+                      membership['nama'],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    subtitle: Text('Role: $roleName'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => _selectTenant(membership),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

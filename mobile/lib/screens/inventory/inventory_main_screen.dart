@@ -19,9 +19,10 @@ class InventoryMainScreen extends StatefulWidget {
   _InventoryMainScreenState createState() => _InventoryMainScreenState();
 }
 
-class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTickerProviderStateMixin {
+class _InventoryMainScreenState extends State<InventoryMainScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   bool _isLoading = true;
   List<Inventory> _inventories = [];
   List<InventoryLoan> _loans = [];
@@ -47,10 +48,7 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
     if (userResult['success']) {
       _currentUser = userResult['user'];
     }
-    await Future.wait([
-      _fetchInventories(),
-      _fetchLoans(),
-    ]);
+    await Future.wait([_fetchInventories(), _fetchLoans()]);
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -71,10 +69,7 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
   }
 
   Future<void> _refresh() async {
-    await Future.wait([
-      _fetchInventories(),
-      _fetchLoans(),
-    ]);
+    await Future.wait([_fetchInventories(), _fetchLoans()]);
     if (mounted) setState(() {});
   }
 
@@ -87,13 +82,17 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
 
   List<Inventory> get _filteredInventories {
     List<Inventory> list = _inventories.where((item) {
-      bool matchesSearch = item.name.toLowerCase().contains(_searchController.text.toLowerCase());
+      bool matchesSearch = item.name.toLowerCase().contains(
+        _searchController.text.toLowerCase(),
+      );
       bool matchesFilter = true;
-      if (_inventoryFilter == 'Tersedia') matchesFilter = item.availableQuantity > 0;
-      if (_inventoryFilter == 'Habis') matchesFilter = item.availableQuantity == 0;
+      if (_inventoryFilter == 'Tersedia')
+        matchesFilter = item.availableQuantity > 0;
+      if (_inventoryFilter == 'Habis')
+        matchesFilter = item.availableQuantity == 0;
       return matchesSearch && matchesFilter;
     }).toList();
-    
+
     list.sort((a, b) {
       // Available first
       int aAvail = a.availableQuantity > 0 ? 1 : 0;
@@ -109,12 +108,17 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
   List<InventoryLoan> get _filteredLoans {
     List<InventoryLoan> list = _loans.where((item) {
       if (_loanFilter == 'Semua') return true;
-      if (_loanFilter == 'Aktif') return item.status == 'pending' || item.status == 'approved';
-      if (_loanFilter == 'Riwayat') return item.status == 'returned' || item.status == 'rejected';
+      if (_loanFilter == 'Aktif')
+        return item.status == 'pending' || item.status == 'approved';
+      if (_loanFilter == 'Riwayat')
+        return item.status == 'returned' || item.status == 'rejected';
       return true;
     }).toList();
 
-    final bool isKetuaOrAdmin = _currentUser?.roleLevel == 'ketua' || _currentUser?.roleLevel == 'superadmin' || _currentUser?.roleLevel == 'admin';
+    final bool isKetuaOrAdmin =
+        _currentUser?.roleLevel == 'ketua' ||
+        _currentUser?.roleLevel == 'superadmin' ||
+        _currentUser?.roleLevel == 'admin';
 
     list.sort((a, b) {
       if (isKetuaOrAdmin) {
@@ -131,11 +135,17 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    final bool isKetuaOrAdmin = _currentUser?.roleLevel == 'ketua' || _currentUser?.roleLevel == 'superadmin' || _currentUser?.roleLevel == 'admin';
+    final bool isKetuaOrAdmin =
+        _currentUser?.roleLevel == 'ketua' ||
+        _currentUser?.roleLevel == 'superadmin' ||
+        _currentUser?.roleLevel == 'admin';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inventaris Barang', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Inventaris Barang',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
@@ -153,17 +163,16 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
           ? const Center(child: CustomLoadingIndicator())
           : TabBarView(
               controller: _tabController,
-              children: [
-                _buildInventoryTab(),
-                _buildLoanTab(isKetuaOrAdmin),
-              ],
+              children: [_buildInventoryTab(), _buildLoanTab(isKetuaOrAdmin)],
             ),
       floatingActionButton: (_tabController.index == 0 && isKetuaOrAdmin)
           ? FloatingActionButton(
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const CreateInventoryScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const CreateInventoryScreen(),
+                  ),
                 );
                 if (result == true) {
                   setState(() => _isLoading = true);
@@ -191,15 +200,22 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
                   decoration: InputDecoration(
                     hintText: 'Cari barang...',
                     prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               DropdownButton<String>(
                 value: _inventoryFilter,
-                items: ['Semua', 'Tersedia', 'Habis'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                items: ['Semua', 'Tersedia', 'Habis']
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _inventoryFilter = val);
                 },
@@ -213,33 +229,58 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
               : RefreshIndicator(
                   onRefresh: _refresh,
                   child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: _filteredInventories.length,
                     itemBuilder: (context, index) {
                       final item = _filteredInventories[index];
                       final isAvailable = item.availableQuantity > 0;
-                      
+
                       return Card(
                         elevation: 2,
                         margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                            child: const Icon(Icons.inventory_2, color: AppTheme.primary),
+                            backgroundColor: AppTheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            child: const Icon(
+                              Icons.inventory_2,
+                              color: AppTheme.primary,
+                            ),
                           ),
-                          title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text('Total: ${item.totalQuantity} | Kondisi: ${item.condition ?? '-'}'),
+                          title: Text(
+                            item.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            'Total: ${item.totalQuantity} | Kondisi: ${item.condition ?? '-'}',
+                          ),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(isAvailable ? 'Tersedia' : 'Stok Habis', style: TextStyle(fontSize: 10, color: isAvailable ? Colors.grey.shade600 : Colors.red)),
+                              Text(
+                                isAvailable ? 'Tersedia' : 'Stok Habis',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isAvailable
+                                      ? Colors.grey.shade600
+                                      : Colors.red,
+                                ),
+                              ),
                               Text(
                                 '${item.availableQuantity}',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 18,
-                                  color: isAvailable ? Colors.green : Colors.red,
+                                  color: isAvailable
+                                      ? Colors.green
+                                      : Colors.red,
                                 ),
                               ),
                             ],
@@ -247,7 +288,10 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
                           onTap: () async {
                             final result = await Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => LoanRequestScreen(inventory: item)),
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    LoanRequestScreen(inventory: item),
+                              ),
                             );
                             if (result == true) {
                               setState(() => _isLoading = true);
@@ -300,7 +344,7 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
                     itemBuilder: (context, index) {
                       final loan = _filteredLoans[index];
                       final format = DateFormat('dd MMM yyyy');
-                      
+
                       Color statusColor = Colors.grey;
                       String statusText = 'Pending';
                       if (loan.status == 'approved') {
@@ -317,30 +361,43 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
                       return Card(
                         elevation: 2,
                         margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
                                       loan.inventoryName ?? 'Barang',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: statusColor.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
                                       statusText,
-                                      style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12),
+                                      style: TextStyle(
+                                        color: statusColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -348,33 +405,65 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
                               const SizedBox(height: 8),
                               Text('Peminjam: ${loan.userName}'),
                               Text('Jumlah: ${loan.quantity}'),
-                              Text('Tanggal: ${format.format(loan.borrowDate)} s.d ${format.format(loan.returnDate)}'),
-                              
-                              if (isKetuaOrAdmin && (loan.status == 'pending' || loan.status == 'approved')) ...[
+                              Text(
+                                'Tanggal: ${format.format(loan.borrowDate)} s.d ${format.format(loan.returnDate)}',
+                              ),
+
+                              if (isKetuaOrAdmin &&
+                                  (loan.status == 'pending' ||
+                                      loan.status == 'approved')) ...[
                                 const Divider(height: 24),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     if (loan.status == 'pending') ...[
                                       TextButton(
-                                        onPressed: () => _confirmUpdateLoanStatus(loan.id, 'rejected', 'Tolak Peminjaman', 'Tolak peminjaman ${loan.quantity} ${loan.inventoryName} untuk ${loan.userName}?'),
-                                        child: const Text('Tolak', style: TextStyle(color: Colors.red)),
+                                        onPressed: () => _confirmUpdateLoanStatus(
+                                          loan.id,
+                                          'rejected',
+                                          'Tolak Peminjaman',
+                                          'Tolak peminjaman ${loan.quantity} ${loan.inventoryName} untuk ${loan.userName}?',
+                                        ),
+                                        child: const Text(
+                                          'Tolak',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
                                       ),
                                       ElevatedButton(
-                                        onPressed: () => _confirmUpdateLoanStatus(loan.id, 'approved', 'Setujui Peminjaman', 'Setujui peminjaman ${loan.quantity} ${loan.inventoryName} untuk ${loan.userName}?'),
-                                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
-                                        child: const Text('Setujui', style: TextStyle(color: Colors.white)),
+                                        onPressed: () => _confirmUpdateLoanStatus(
+                                          loan.id,
+                                          'approved',
+                                          'Setujui Peminjaman',
+                                          'Setujui peminjaman ${loan.quantity} ${loan.inventoryName} untuk ${loan.userName}?',
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.primary,
+                                        ),
+                                        child: const Text(
+                                          'Setujui',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
                                       ),
                                     ],
                                     if (loan.status == 'approved') ...[
                                       ElevatedButton(
-                                        onPressed: () => _confirmUpdateLoanStatus(loan.id, 'returned', 'Tandai Dikembalikan', 'Tandai barang sudah dikembalikan? Stok akan dikembalikan otomatis.'),
-                                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                                        child: const Text('Dikembalikan', style: TextStyle(color: Colors.white)),
+                                        onPressed: () => _confirmUpdateLoanStatus(
+                                          loan.id,
+                                          'returned',
+                                          'Tandai Dikembalikan',
+                                          'Tandai barang sudah dikembalikan? Stok akan dikembalikan otomatis.',
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                        ),
+                                        child: const Text(
+                                          'Dikembalikan',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
                                       ),
                                     ],
                                   ],
-                                )
+                                ),
                               ],
                             ],
                           ),
@@ -388,7 +477,12 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
     );
   }
 
-  Future<void> _confirmUpdateLoanStatus(int loanId, String status, String title, String message) async {
+  Future<void> _confirmUpdateLoanStatus(
+    int loanId,
+    String status,
+    String title,
+    String message,
+  ) async {
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: title,

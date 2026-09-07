@@ -17,9 +17,10 @@ class ChatListScreen extends StatefulWidget {
   _ChatListScreenState createState() => _ChatListScreenState();
 }
 
-class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProviderStateMixin {
+class _ChatListScreenState extends State<ChatListScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   bool _isLoadingRooms = true;
   bool _isLoadingPrivate = true;
   List<ChatRoom> _rooms = [];
@@ -78,11 +79,16 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    final bool canCreateGroup = _currentUser?.roleLevel == 'ketua' || _currentUser?.roleLevel == 'superadmin';
+    final bool canCreateGroup =
+        _currentUser?.roleLevel == 'ketua' ||
+        _currentUser?.roleLevel == 'superadmin';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forum Diskusi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Forum Diskusi',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
         backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
@@ -98,10 +104,7 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildGroupList(),
-          _buildPrivateList(),
-        ],
+        children: [_buildGroupList(), _buildPrivateList()],
       ),
       floatingActionButton: (_tabController.index == 0 && canCreateGroup)
           ? FloatingActionButton(
@@ -138,20 +141,31 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
         itemBuilder: (context, index) {
           final room = _rooms[index];
           final isDefault = room.type == 'default';
-          
+
           return FadeInSlide(
             delay: 0.1 * index,
             child: ListTile(
               leading: CircleAvatar(
                 radius: 25,
-                backgroundColor: isDefault ? AppTheme.primary : Colors.grey.shade400,
-                child: Icon(isDefault ? Icons.apartment : Icons.group, color: Colors.white, size: 28),
+                backgroundColor: isDefault
+                    ? AppTheme.primary
+                    : Colors.grey.shade400,
+                child: Icon(
+                  isDefault ? Icons.apartment : Icons.group,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
               title: Text(
-                room.name, 
-                style: TextStyle(fontWeight: isDefault ? FontWeight.bold : FontWeight.w600, fontSize: 16),
+                room.name,
+                style: TextStyle(
+                  fontWeight: isDefault ? FontWeight.bold : FontWeight.w600,
+                  fontSize: 16,
+                ),
               ),
-              subtitle: Text(isDefault ? 'Grup utama Karang Taruna' : 'Grup diskusi'),
+              subtitle: Text(
+                isDefault ? 'Grup utama Karang Taruna' : 'Grup diskusi',
+              ),
               onTap: () async {
                 await Navigator.push(
                   context,
@@ -180,7 +194,10 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
 
     if (_privateContacts.isEmpty) {
       return const Center(
-        child: Text("Belum ada pesan pribadi.", style: TextStyle(color: Colors.grey)),
+        child: Text(
+          "Belum ada pesan pribadi.",
+          style: TextStyle(color: Colors.grey),
+        ),
       );
     }
 
@@ -192,19 +209,26 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
         itemBuilder: (context, index) {
           final contact = _privateContacts[index];
           final photoUrl = contact['contact_photo_url'];
-          
+
           return FadeInSlide(
             delay: 0.1 * index,
             child: ListTile(
               leading: CircleAvatar(
                 radius: 25,
                 backgroundColor: Colors.grey.shade300,
-                backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                child: photoUrl == null ? const Icon(Icons.person, color: Colors.white, size: 28) : null,
+                backgroundImage: photoUrl != null
+                    ? NetworkImage(photoUrl)
+                    : null,
+                child: photoUrl == null
+                    ? const Icon(Icons.person, color: Colors.white, size: 28)
+                    : null,
               ),
               title: Text(
-                contact['contact_name'] ?? 'Pengguna', 
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                contact['contact_name'] ?? 'Pengguna',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
               ),
               subtitle: Text(
                 contact['last_message'] ?? '',
@@ -216,7 +240,8 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
                   context,
                   MaterialPageRoute(
                     builder: (_) => ChatRoomScreen(
-                      roomId: contact['contact_id'], // Using roomId field to pass user ID for private chat
+                      roomId:
+                          contact['contact_id'], // Using roomId field to pass user ID for private chat
                       roomName: contact['contact_name'],
                       type: 'private',
                     ),

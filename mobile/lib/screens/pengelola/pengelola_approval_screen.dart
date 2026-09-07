@@ -9,7 +9,8 @@ class PengelolaApprovalScreen extends StatefulWidget {
   const PengelolaApprovalScreen({super.key});
 
   @override
-  State<PengelolaApprovalScreen> createState() => _PengelolaApprovalScreenState();
+  State<PengelolaApprovalScreen> createState() =>
+      _PengelolaApprovalScreenState();
 }
 
 class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
@@ -57,7 +58,7 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
     if (confirm == true) {
       if (!mounted) return;
       AppDialog.showLoading(context, message: 'Menyetujui...');
-      
+
       final result = await UserService.approveMember(user.id);
       if (!mounted) return;
       Navigator.pop(context); // close loading
@@ -92,7 +93,7 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
     if (confirm == true) {
       if (!mounted) return;
       AppDialog.showLoading(context, message: 'Menolak...');
-      
+
       final result = await UserService.rejectMember(user.id);
       if (!mounted) return;
       Navigator.pop(context); // close loading
@@ -131,7 +132,9 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _pendingUsers.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _pendingUsers.isEmpty) {
@@ -143,7 +146,10 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -154,9 +160,16 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.check_circle_outline, size: 80, color: Colors.grey.shade300),
+            Icon(
+              Icons.check_circle_outline,
+              size: 80,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 16),
-            const Text('Tidak ada pendaftaran yang menunggu persetujuan.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            const Text(
+              'Tidak ada pendaftaran yang menunggu persetujuan.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            ),
           ],
         ),
       );
@@ -182,10 +195,17 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                        backgroundColor: AppTheme.primary.withValues(
+                          alpha: 0.1,
+                        ),
                         child: Text(
-                          user.namaPanggilan.isNotEmpty ? user.namaPanggilan[0].toUpperCase() : '?',
-                          style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold),
+                          user.namaPanggilan.isNotEmpty
+                              ? user.namaPanggilan[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -193,15 +213,30 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(user.namaLengkap, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            Text('@${user.username} • RT ${user.rt.toString().padLeft(2, '0')}', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                            Text(
+                              user.namaLengkap,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            Text(
+                              '@${user.username} • RT ${user.rt.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text('No. WhatsApp: ${user.noWhatsapp}', style: const TextStyle(fontSize: 13)),
+                  Text(
+                    'No. WhatsApp: ${user.noWhatsapp}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
                   // Text('Tgl Daftar: ${user.createdAt}', style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                   const SizedBox(height: 16),
                   Row(
@@ -218,7 +253,9 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
                       const SizedBox(width: 12),
                       ElevatedButton(
                         onPressed: () => _handleApprove(user),
-                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                        ),
                         child: const Text('Setujui'),
                       ),
                     ],

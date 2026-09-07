@@ -7,24 +7,32 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 class AuthService {
   static Future<Map<String, dynamic>> verifyPin(String pin) async {
     try {
-      final response = await ApiClient.post('/tenant/verify-pin', {
-        'pin': pin,
-      });
+      final response = await ApiClient.post('/tenant/verify-pin', {'pin': pin});
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['status'] == true) {
         return {'success': true, 'data': data['data']};
       }
-      return {'success': false, 'message': data['message'] ?? 'PIN tidak valid'};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'PIN tidak valid',
+      };
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
     }
   }
 
-  static Future<Map<String, dynamic>> login(String username, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String username,
+    String password,
+  ) async {
     try {
       final tenant = await AuthStorage.getTenant();
       if (tenant == null) {
-        return {'success': false, 'message': 'Karang Taruna belum diatur. Silakan masukkan PIN terlebih dahulu.'};
+        return {
+          'success': false,
+          'message':
+              'Karang Taruna belum diatur. Silakan masukkan PIN terlebih dahulu.',
+        };
       }
 
       final response = await ApiClient.post('/login', {
@@ -37,23 +45,26 @@ class AuthService {
         final token = data['data']['token'];
         await AuthStorage.saveToken(token);
         return {
-            'success': true, 
-            'user': UserModel.fromJson(data['data']['user']),
-            'memberships': data['data']['memberships'] ?? [],
-            'requires_tenant_selection': data['data']['requires_tenant_selection'] ?? false,
+          'success': true,
+          'user': UserModel.fromJson(data['data']['user']),
+          'memberships': data['data']['memberships'] ?? [],
+          'requires_tenant_selection':
+              data['data']['requires_tenant_selection'] ?? false,
         };
       }
       return {
-        'success': false, 
+        'success': false,
         'message': data['message'] ?? 'Login gagal',
-        'code': data['code']
+        'code': data['code'],
       };
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan: $e'};
     }
   }
 
-  static Future<Map<String, dynamic>> register(Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> register(
+    Map<String, dynamic> data,
+  ) async {
     try {
       final tenant = await AuthStorage.getTenant();
       if (tenant != null) {
@@ -62,22 +73,22 @@ class AuthService {
 
       final response = await ApiClient.post('/register', data);
       final responseData = jsonDecode(response.body);
-      
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         if (responseData['status'] == true) {
           return {'success': true, 'message': responseData['message']};
         }
       }
-      
+
       String message = responseData['message'] ?? 'Gagal mendaftar';
       if (response.statusCode == 422 && responseData['errors'] != null) {
-         final errors = responseData['errors'] as Map<String, dynamic>;
-         message = errors.values.first.toString();
+        final errors = responseData['errors'] as Map<String, dynamic>;
+        message = errors.values.first.toString();
       } else if (responseData['data'] != null && responseData['data'] is Map) {
-         final errors = responseData['data'] as Map<String, dynamic>;
-         message = errors.values.first.toString();
+        final errors = responseData['data'] as Map<String, dynamic>;
+        message = errors.values.first.toString();
       }
-      
+
       return {'success': false, 'message': message};
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
@@ -89,16 +100,31 @@ class AuthService {
       final response = await ApiClient.get('/me');
       if (response.statusCode == 401) {
         await AuthStorage.removeToken();
-        return {'success': false, 'message': 'Sesi Anda telah berakhir, silakan login kembali.', 'statusCode': 401};
+        return {
+          'success': false,
+          'message': 'Sesi Anda telah berakhir, silakan login kembali.',
+          'statusCode': 401,
+        };
       }
       final data = jsonDecode(response.body);
       if (response.statusCode == 403) {
-        return {'success': false, 'message': data['message'] ?? 'Akses ke Karang Taruna ini ditolak atau keanggotaan tidak aktif.', 'statusCode': 403, 'errorCode': data['errorCode']};
+        return {
+          'success': false,
+          'message':
+              data['message'] ??
+              'Akses ke Karang Taruna ini ditolak atau keanggotaan tidak aktif.',
+          'statusCode': 403,
+          'errorCode': data['errorCode'],
+        };
       }
       if (response.statusCode == 200 && data['status'] == true) {
         return {'success': true, 'user': UserModel.fromJson(data['data'])};
       }
-      return {'success': false, 'message': data['message'] ?? 'Gagal mengambil profil', 'statusCode': response.statusCode};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Gagal mengambil profil',
+        'statusCode': response.statusCode,
+      };
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
     }
@@ -107,15 +133,26 @@ class AuthService {
   static Future<Map<String, dynamic>> getMemberships() async {
     try {
       // Intentionally omitting tenant_id headers to hit the global /memberships endpoint
-      final response = await ApiClient.get('/memberships', excludeTenantHeader: true);
+      final response = await ApiClient.get(
+        '/memberships',
+        excludeTenantHeader: true,
+      );
       if (response.statusCode == 401) {
-        return {'success': false, 'message': 'Sesi Anda telah berakhir, silakan login kembali.', 'statusCode': 401};
+        return {
+          'success': false,
+          'message': 'Sesi Anda telah berakhir, silakan login kembali.',
+          'statusCode': 401,
+        };
       }
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['status'] == true) {
         return {'success': true, 'data': data['data']};
       }
-      return {'success': false, 'message': data['message'] ?? 'Gagal mengambil memberships', 'statusCode': response.statusCode};
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Gagal mengambil memberships',
+        'statusCode': response.statusCode,
+      };
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
     }
@@ -132,7 +169,7 @@ class AuthService {
       } catch (e) {
         // Ignore FCM errors
       }
-      
+
       await ApiClient.post('/logout', {});
     } catch (e) {
       // Ignore network errors on logout
@@ -140,7 +177,10 @@ class AuthService {
     await AuthStorage.removeToken();
   }
 
-  static Future<Map<String, dynamic>> updatePassword(String newPassword, String confirmPassword) async {
+  static Future<Map<String, dynamic>> updatePassword(
+    String newPassword,
+    String confirmPassword,
+  ) async {
     try {
       final response = await ApiClient.post('/profile/password', {
         'new_password': newPassword,
@@ -150,16 +190,16 @@ class AuthService {
       if (response.statusCode == 200 && data['status'] == true) {
         return {'success': true, 'message': data['message']};
       }
-      
+
       String message = data['message'] ?? 'Gagal mengubah password';
       if (response.statusCode == 422 && data['errors'] != null) {
-         final errors = data['errors'] as Map<String, dynamic>;
-         message = errors.values.first.toString();
+        final errors = data['errors'] as Map<String, dynamic>;
+        message = errors.values.first.toString();
       } else if (data['data'] != null && data['data'] is Map) {
-         final errors = data['data'] as Map<String, dynamic>;
-         message = errors.values.first.toString();
+        final errors = data['data'] as Map<String, dynamic>;
+        message = errors.values.first.toString();
       }
-      
+
       return {'success': false, 'message': message};
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};

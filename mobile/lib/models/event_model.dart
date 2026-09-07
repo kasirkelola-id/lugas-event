@@ -39,21 +39,43 @@ class EventModel {
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
     return EventModel(
-      id: json['id'] != null ? (json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0) : 0,
+      id: json['id'] != null
+          ? (json['id'] is int
+                ? json['id']
+                : int.tryParse(json['id'].toString()) ?? 0)
+          : 0,
       namaAcara: json['nama_acara'] ?? '',
       tanggalAcara: json['tanggal_acara'] ?? '',
       waktuMulai: json['waktu_mulai'],
       waktuSelesai: json['waktu_selesai'],
       kodeQr: json['kode_qr'] ?? '',
-      statusAktif: json['status_aktif'] != null ? (json['status_aktif'] is int ? json['status_aktif'] : int.tryParse(json['status_aktif'].toString()) ?? 0) : 0,
+      statusAktif: json['status_aktif'] != null
+          ? (json['status_aktif'] is int
+                ? json['status_aktif']
+                : int.tryParse(json['status_aktif'].toString()) ?? 0)
+          : 0,
       statusKegiatan: json['status_kegiatan'],
       userAttendanceStatus: json['user_attendance_status'],
-      dibuatOleh: json['dibuat_oleh'] != null ? (json['dibuat_oleh'] is int ? json['dibuat_oleh'] : int.tryParse(json['dibuat_oleh'].toString()) ?? 0) : 0,
-      jumlahHadir: json['jumlah_hadir'] != null ? (json['jumlah_hadir'] is int ? json['jumlah_hadir'] : int.tryParse(json['jumlah_hadir'].toString())) : null,
+      dibuatOleh: json['dibuat_oleh'] != null
+          ? (json['dibuat_oleh'] is int
+                ? json['dibuat_oleh']
+                : int.tryParse(json['dibuat_oleh'].toString()) ?? 0)
+          : 0,
+      jumlahHadir: json['jumlah_hadir'] != null
+          ? (json['jumlah_hadir'] is int
+                ? json['jumlah_hadir']
+                : int.tryParse(json['jumlah_hadir'].toString()))
+          : null,
       requireGps: json['require_gps'] == 1 || json['require_gps'] == true,
-      latitude: json['latitude'] != null ? double.tryParse(json['latitude'].toString()) : null,
-      longitude: json['longitude'] != null ? double.tryParse(json['longitude'].toString()) : null,
-      radius: json['radius'] != null ? int.tryParse(json['radius'].toString()) : null,
+      latitude: json['latitude'] != null
+          ? double.tryParse(json['latitude'].toString())
+          : null,
+      longitude: json['longitude'] != null
+          ? double.tryParse(json['longitude'].toString())
+          : null,
+      radius: json['radius'] != null
+          ? int.tryParse(json['radius'].toString())
+          : null,
       createdAt: json['created_at'] ?? '',
     );
   }

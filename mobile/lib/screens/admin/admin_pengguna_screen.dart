@@ -21,10 +21,10 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   UserModel? _currentUser;
   List<UserModel> _users = [];
   List<UserModel> _filteredUsers = [];
-  
+
   bool _isLoading = true;
   String? _errorMessage;
-  
+
   String _searchQuery = '';
   String _roleFilter = 'Semua';
   int? _rtFilter;
@@ -43,7 +43,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     super.initState();
     _loadData();
   }
-  
+
   @override
   void dispose() {
     _namaLengkapController.dispose();
@@ -85,15 +85,19 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   void _applyFilters() {
     setState(() {
       _filteredUsers = _users.where((user) {
-        final matchesSearch = user.namaLengkap.toLowerCase().contains(_searchQuery.toLowerCase()) || 
-                              user.username.toLowerCase().contains(_searchQuery.toLowerCase());
-        final matchesRole = _roleFilter == 'Semua' || 
-                            (_roleFilter == 'Admin' && user.roleLevel == 'admin') ||
-                            (_roleFilter == 'Ketua' && user.roleLevel == 'ketua') ||
-                            (_roleFilter == 'Sekretaris' && user.roleLevel == 'sekretaris') ||
-                            (_roleFilter == 'Bendahara' && user.roleLevel == 'bendahara') ||
-                            (_roleFilter == 'Pengelola' && user.roleLevel == 'pengelola') ||
-                            (_roleFilter == 'Anggota' && user.roleLevel == 'anggota');
+        final matchesSearch =
+            user.namaLengkap.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            ) ||
+            user.username.toLowerCase().contains(_searchQuery.toLowerCase());
+        final matchesRole =
+            _roleFilter == 'Semua' ||
+            (_roleFilter == 'Admin' && user.roleLevel == 'admin') ||
+            (_roleFilter == 'Ketua' && user.roleLevel == 'ketua') ||
+            (_roleFilter == 'Sekretaris' && user.roleLevel == 'sekretaris') ||
+            (_roleFilter == 'Bendahara' && user.roleLevel == 'bendahara') ||
+            (_roleFilter == 'Pengelola' && user.roleLevel == 'pengelola') ||
+            (_roleFilter == 'Anggota' && user.roleLevel == 'anggota');
         final matchesRt = _rtFilter == null || user.rt == _rtFilter;
         return matchesSearch && matchesRole && matchesRt;
       }).toList();
@@ -107,7 +111,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     });
     _showSnackbar(message, isError: true);
   }
-  
+
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
     FeedbackDialogs.showSnackbar(context, message, isError: isError);
@@ -115,7 +119,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
 
   Future<void> _showUserForm({UserModel? user}) async {
     final isEditing = user != null;
-    
+
     if (isEditing) {
       _namaLengkapController.text = user.namaLengkap;
       _namaPanggilanController.text = user.namaPanggilan;
@@ -152,122 +156,182 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(isEditing ? 'Edit Pengguna' : 'Tambah Pengguna', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                        Text(
+                          isEditing ? 'Edit Pengguna' : 'Tambah Pengguna',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
                         const SizedBox(height: 24),
                         CustomTextField(
-                        controller: _namaLengkapController,
-                        label: 'Nama Lengkap',
-                        validator: (value) => value == null || value.isEmpty ? 'Nama lengkap wajib diisi' : null,
-                      ),
-                      CustomTextField(
-                        controller: _namaPanggilanController,
-                        label: 'Nama Panggilan',
-                        validator: (value) => value == null || value.isEmpty ? 'Nama panggilan wajib diisi' : null,
-                      ),
-                      CustomTextField(
-                        controller: _usernameController,
-                        label: 'Username',
-                        validator: (value) => value == null || value.isEmpty ? 'Username wajib diisi' : null,
-                      ),
-                      CustomTextField(
-                        controller: _whatsappController,
-                        label: 'No. WhatsApp',
-                      ),
-                      CustomTextField(
-                        controller: _rtController,
-                        label: 'RT (Rukun Tetangga)',
-                        keyboardType: TextInputType.number,
-                        validator: (value) => value == null || value.isEmpty ? 'RT wajib diisi' : null,
-                      ),
-                      if (!isEditing)
+                          controller: _namaLengkapController,
+                          label: 'Nama Lengkap',
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Nama lengkap wajib diisi'
+                              : null,
+                        ),
                         CustomTextField(
-                          controller: _passwordController,
-                          label: 'Password',
-                          obscureText: true,
-                          validator: (value) => value == null || value.length < 6 ? 'Password min. 6 karakter' : null,
+                          controller: _namaPanggilanController,
+                          label: 'Nama Panggilan',
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Nama panggilan wajib diisi'
+                              : null,
                         ),
-                      if (!isEditing)
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedRole,
-                          decoration: InputDecoration(
-                            labelText: 'Role', 
-                            border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
+                        CustomTextField(
+                          controller: _usernameController,
+                          label: 'Username',
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Username wajib diisi'
+                              : null,
+                        ),
+                        CustomTextField(
+                          controller: _whatsappController,
+                          label: 'No. WhatsApp',
+                        ),
+                        CustomTextField(
+                          controller: _rtController,
+                          label: 'RT (Rukun Tetangga)',
+                          keyboardType: TextInputType.number,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'RT wajib diisi'
+                              : null,
+                        ),
+                        if (!isEditing)
+                          CustomTextField(
+                            controller: _passwordController,
+                            label: 'Password',
+                            obscureText: true,
+                            validator: (value) =>
+                                value == null || value.length < 6
+                                ? 'Password min. 6 karakter'
+                                : null,
                           ),
-                          items: const [
-                            DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                            DropdownMenuItem(value: 'ketua', child: Text('Ketua')),
-                            DropdownMenuItem(value: 'sekretaris', child: Text('Sekretaris')),
-                            DropdownMenuItem(value: 'bendahara', child: Text('Bendahara')),
-                            DropdownMenuItem(value: 'pengelola', child: Text('Pengelola')),
-                            DropdownMenuItem(value: 'anggota', child: Text('Anggota')),
+                        if (!isEditing)
+                          DropdownButtonFormField<String>(
+                            initialValue: _selectedRole,
+                            decoration: InputDecoration(
+                              labelText: 'Role',
+                              border: OutlineInputBorder(
+                                borderRadius: AppTheme.radiusMedium,
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'admin',
+                                child: Text('Admin'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'ketua',
+                                child: Text('Ketua'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'sekretaris',
+                                child: Text('Sekretaris'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'bendahara',
+                                child: Text('Bendahara'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'pengelola',
+                                child: Text('Pengelola'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'anggota',
+                                child: Text('Anggota'),
+                              ),
+                            ],
+                            onChanged: (val) {
+                              if (val != null)
+                                setStateDialog(() => _selectedRole = val);
+                            },
+                          ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: isLoadingSubmit
+                                  ? null
+                                  : () => Navigator.pop(context),
+                              child: const Text(
+                                'Batal',
+                                style: TextStyle(color: AppTheme.textSecondary),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            CustomButton(
+                              text: 'Simpan',
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setStateDialog(() => isLoadingSubmit = true);
+
+                                  final data = {
+                                    'nama_lengkap': _namaLengkapController.text,
+                                    'nama_panggilan':
+                                        _namaPanggilanController.text,
+                                    'username': _usernameController.text,
+                                    'no_whatsapp': _whatsappController.text,
+                                    'rt': int.tryParse(_rtController.text) ?? 1,
+                                  };
+
+                                  Map<String, dynamic> result;
+                                  if (isEditing) {
+                                    result = await UserService.updateUser(
+                                      user.id,
+                                      data,
+                                    );
+                                  } else {
+                                    data['password'] = _passwordController.text;
+                                    data['role_level'] = _selectedRole;
+                                    result = await UserService.createUser(data);
+                                  }
+
+                                  if (result['success']) {
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      _showSnackbar(
+                                        isEditing
+                                            ? 'Pengguna berhasil diupdate'
+                                            : 'Pengguna berhasil dibuat',
+                                      );
+                                      _loadData();
+                                    }
+                                  } else {
+                                    setStateDialog(
+                                      () => isLoadingSubmit = false,
+                                    );
+                                    _showSnackbar(
+                                      result['message'],
+                                      isError: true,
+                                    );
+                                  }
+                                }
+                              },
+                              isLoading: isLoadingSubmit,
+                              isFullWidth: false,
+                            ),
                           ],
-                          onChanged: (val) {
-                            if (val != null) setStateDialog(() => _selectedRole = val);
-                          },
                         ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                    child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  CustomButton(
-                    text: 'Simpan',
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        setStateDialog(() => isLoadingSubmit = true);
-                        
-                        final data = {
-                          'nama_lengkap': _namaLengkapController.text,
-                          'nama_panggilan': _namaPanggilanController.text,
-                          'username': _usernameController.text,
-                          'no_whatsapp': _whatsappController.text,
-                          'rt': int.tryParse(_rtController.text) ?? 1,
-                        };
-
-                        Map<String, dynamic> result;
-                        if (isEditing) {
-                          result = await UserService.updateUser(user.id, data);
-                        } else {
-                          data['password'] = _passwordController.text;
-                          data['role_level'] = _selectedRole;
-                          result = await UserService.createUser(data);
-                        }
-
-                        if (result['success']) {
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            _showSnackbar(isEditing ? 'Pengguna berhasil diupdate' : 'Pengguna berhasil dibuat');
-                            _loadData();
-                          }
-                        } else {
-                          setStateDialog(() => isLoadingSubmit = false);
-                          _showSnackbar(result['message'], isError: true);
-                        }
-                      }
-                    },
-                    isLoading: isLoadingSubmit,
-                    isFullWidth: false,
-                  ),
-                ],
+                ),
               ),
-
-                    ], 
-                  ), 
-                ), 
-              ),
-            ),
-          );
-        }
+            );
+          },
         );
       },
     );
   }
 
-  Future<void> _confirmAction(String title, String content, Future<Map<String, dynamic>> Function() action, {bool isDestructive = false}) async {
+  Future<void> _confirmAction(
+    String title,
+    String content,
+    Future<Map<String, dynamic>> Function() action, {
+    bool isDestructive = false,
+  }) async {
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: title,
@@ -286,7 +350,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
       }
     }
   }
-  
+
   void _showRoleDialog(UserModel user) {
     String selectedRole = user.roleLevel;
     showDialog(
@@ -300,20 +364,34 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('Ubah Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+              const Text(
+                'Ubah Role',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
                 initialValue: selectedRole,
                 decoration: InputDecoration(
-                  labelText: 'Pilih Role Baru', 
-                  border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium)
+                  labelText: 'Pilih Role Baru',
+                  border: OutlineInputBorder(
+                    borderRadius: AppTheme.radiusMedium,
+                  ),
                 ),
                 items: const [
                   DropdownMenuItem(value: 'admin', child: Text('Admin')),
                   DropdownMenuItem(value: 'ketua', child: Text('Ketua')),
-                  DropdownMenuItem(value: 'sekretaris', child: Text('Sekretaris')),
-                  DropdownMenuItem(value: 'bendahara', child: Text('Bendahara')),
-                  DropdownMenuItem(value: 'pengelola', child: Text('Pengelola')),
+                  DropdownMenuItem(
+                    value: 'sekretaris',
+                    child: Text('Sekretaris'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'bendahara',
+                    child: Text('Bendahara'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'pengelola',
+                    child: Text('Pengelola'),
+                  ),
                   DropdownMenuItem(value: 'anggota', child: Text('Anggota')),
                 ],
                 onChanged: (val) {
@@ -325,8 +403,11 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context), 
-                    child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary))
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Batal',
+                      style: TextStyle(color: AppTheme.textSecondary),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -334,16 +415,18 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                       Navigator.pop(context);
                       if (selectedRole != user.roleLevel) {
                         _confirmAction(
-                          'Ubah Role', 
-                          'Anda yakin ingin mengubah role ${user.namaLengkap} menjadi $selectedRole?', 
-                          () => UserService.changeRole(user.id, selectedRole)
+                          'Ubah Role',
+                          'Anda yakin ingin mengubah role ${user.namaLengkap} menjadi $selectedRole?',
+                          () => UserService.changeRole(user.id, selectedRole),
                         );
                       }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: AppTheme.radiusMedium,
+                      ),
                     ),
                     child: const Text('Simpan'),
                   ),
@@ -360,14 +443,15 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: 'Reset Password',
-      content: 'Anda yakin ingin mereset password ${user.namaLengkap}? Pengguna akan dipaksa mengganti password pada login berikutnya.',
+      content:
+          'Anda yakin ingin mereset password ${user.namaLengkap}? Pengguna akan dipaksa mengganti password pada login berikutnya.',
       isDestructive: true,
     );
 
     if (confirm == true) {
       setState(() => _isLoading = true);
       final result = await UserService.resetPassword(user.id);
-      
+
       if (result['success']) {
         if (!mounted) return;
         final tempPass = result['temporary_password'] ?? '-';
@@ -381,11 +465,25 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.check_circle_outline, color: AppTheme.success, size: 64),
+                  const Icon(
+                    Icons.check_circle_outline,
+                    color: AppTheme.success,
+                    size: 64,
+                  ),
                   const SizedBox(height: 16),
-                  const Text('Password Berhasil Direset', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.success, fontSize: 20)),
+                  const Text(
+                    'Password Berhasil Direset',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.success,
+                      fontSize: 20,
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  Text('Silakan berikan password sementara ini kepada ${user.namaLengkap}:', textAlign: TextAlign.center),
+                  Text(
+                    'Silakan berikan password sementara ini kepada ${user.namaLengkap}:',
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 16),
                   Container(
                     width: double.infinity,
@@ -398,7 +496,12 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                     child: Center(
                       child: SelectableText(
                         tempPass,
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary, letterSpacing: 2),
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primary,
+                          letterSpacing: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -407,11 +510,11 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                     text: 'Tutup',
                     onPressed: () => Navigator.pop(context),
                     isFullWidth: true,
-                  )
+                  ),
                 ],
               ),
             ),
-          )
+          ),
         );
         _loadData();
       } else {
@@ -443,7 +546,10 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                   TextField(
                     decoration: InputDecoration(
                       hintText: 'Cari nama atau username...',
-                      prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppTheme.textSecondary,
+                      ),
                       filled: true,
                       fillColor: AppTheme.surface,
                       border: OutlineInputBorder(
@@ -458,7 +564,10 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                         borderRadius: AppTheme.radiusLarge,
                         borderSide: const BorderSide(color: AppTheme.primary),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                     onChanged: (val) {
                       setState(() {
@@ -471,35 +580,54 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: ['Semua', 'Admin', 'Ketua', 'Sekretaris', 'Bendahara', 'Pengelola', 'Anggota'].map((role) {
-                        final isSelected = _roleFilter == role;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: FilterChip(
-                            label: Text(role),
-                            selected: isSelected,
-                            selectedColor: AppTheme.primary.withValues(alpha: 0.15),
-                            checkmarkColor: AppTheme.primary,
-                            labelStyle: TextStyle(
-                              color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                            ),
-                            backgroundColor: AppTheme.surface,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppTheme.radiusLarge,
-                              side: BorderSide(
-                                color: isSelected ? AppTheme.primary.withValues(alpha: 0.5) : Colors.grey.shade300,
+                      children:
+                          [
+                            'Semua',
+                            'Admin',
+                            'Ketua',
+                            'Sekretaris',
+                            'Bendahara',
+                            'Pengelola',
+                            'Anggota',
+                          ].map((role) {
+                            final isSelected = _roleFilter == role;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: FilterChip(
+                                label: Text(role),
+                                selected: isSelected,
+                                selectedColor: AppTheme.primary.withValues(
+                                  alpha: 0.15,
+                                ),
+                                checkmarkColor: AppTheme.primary,
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? AppTheme.primary
+                                      : AppTheme.textSecondary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                                backgroundColor: AppTheme.surface,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: AppTheme.radiusLarge,
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? AppTheme.primary.withValues(
+                                            alpha: 0.5,
+                                          )
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _roleFilter = role;
+                                    _applyFilters();
+                                  });
+                                },
                               ),
-                            ),
-                            onSelected: (selected) {
-                              setState(() {
-                                _roleFilter = role;
-                                _applyFilters();
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
+                            );
+                          }).toList(),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -514,17 +642,25 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                           child: FilterChip(
                             label: Text(label),
                             selected: isSelected,
-                            selectedColor: AppTheme.info.withValues(alpha: 0.15),
+                            selectedColor: AppTheme.info.withValues(
+                              alpha: 0.15,
+                            ),
                             checkmarkColor: AppTheme.info,
                             labelStyle: TextStyle(
-                              color: isSelected ? AppTheme.info : AppTheme.textSecondary,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected
+                                  ? AppTheme.info
+                                  : AppTheme.textSecondary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                             backgroundColor: AppTheme.surface,
                             shape: RoundedRectangleBorder(
                               borderRadius: AppTheme.radiusLarge,
                               side: BorderSide(
-                                color: isSelected ? AppTheme.info.withValues(alpha: 0.5) : Colors.grey.shade300,
+                                color: isSelected
+                                    ? AppTheme.info.withValues(alpha: 0.5)
+                                    : Colors.grey.shade300,
                               ),
                             ),
                             onSelected: (selected) {
@@ -549,12 +685,14 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
         onPressed: () => _showUserForm(),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.person_add_outlined, color: Colors.white),
-        label: const Text('Tambah', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        label: const Text(
+          'Tambah',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
 
-  
   List<int> get _availableRts {
     final rts = _users.map((u) => u.rt).toSet().toList();
     rts.sort();
@@ -563,7 +701,9 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _users.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _users.isEmpty) {
@@ -573,11 +713,25 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+              decoration: BoxDecoration(
+                color: AppTheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppTheme.error,
+              ),
             ),
             const SizedBox(height: 24),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 24),
             CustomButton(
               text: 'Coba Lagi',
@@ -621,23 +775,32 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
             child: ExpansionTile(
               collapsedBackgroundColor: Colors.transparent,
               backgroundColor: Colors.transparent,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
               leading: Container(
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isActive ? AppTheme.primary.withValues(alpha: 0.3) : Colors.grey.shade300, 
-                    width: 2
+                    color: isActive
+                        ? AppTheme.primary.withValues(alpha: 0.3)
+                        : Colors.grey.shade300,
+                    width: 2,
                   ),
                 ),
                 child: CircleAvatar(
-                  backgroundColor: isActive ? AppTheme.primary.withValues(alpha: 0.1) : Colors.grey.shade100,
+                  backgroundColor: isActive
+                      ? AppTheme.primary.withValues(alpha: 0.1)
+                      : Colors.grey.shade100,
                   radius: 22,
                   child: Text(
-                    user.namaPanggilan.isNotEmpty ? user.namaPanggilan.substring(0, 1).toUpperCase() : '?',
+                    user.namaPanggilan.isNotEmpty
+                        ? user.namaPanggilan.substring(0, 1).toUpperCase()
+                        : '?',
                     style: TextStyle(
-                      color: isActive ? AppTheme.primary : Colors.grey.shade500, 
+                      color: isActive ? AppTheme.primary : Colors.grey.shade500,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -648,8 +811,11 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${user.namaLengkap} ${isMe ? '(Anda)' : ''}', 
-                      style: TextStyle(fontWeight: FontWeight.bold, color: isActive ? AppTheme.textPrimary : Colors.grey),
+                      '${user.namaLengkap} ${isMe ? '(Anda)' : ''}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isActive ? AppTheme.textPrimary : Colors.grey,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -657,46 +823,81 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                   if (!isActive) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.error.withValues(alpha: 0.1),
                         borderRadius: AppTheme.radiusSmall,
                       ),
-                      child: const Text('NONAKTIF', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: AppTheme.error)),
-                    )
-                  ]
+                      child: const Text(
+                        'NONAKTIF',
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
                   '${user.username} • RT 0${user.rt} • ${user.roleLevel.toUpperCase()}',
-                  style: TextStyle(color: isActive ? AppTheme.textSecondary : Colors.grey.shade400, fontSize: 13),
+                  style: TextStyle(
+                    color: isActive
+                        ? AppTheme.textSecondary
+                        : Colors.grey.shade400,
+                    fontSize: 13,
+                  ),
                 ),
               ),
               childrenPadding: const EdgeInsets.all(0),
               children: [
                 Container(
                   color: Colors.grey.shade50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildActionButton(Icons.edit_outlined, 'Edit', AppTheme.info, () => _showUserForm(user: user)),
-                      _buildActionButton(Icons.manage_accounts_outlined, 'Role', AppTheme.warning, () => _showRoleDialog(user)),
-                      _buildActionButton(Icons.lock_reset, 'Reset', Colors.purple, () => _resetPassword(user)),
                       _buildActionButton(
-                        isActive ? Icons.block : Icons.check_circle_outline, 
-                        isActive ? 'Nonaktifkan' : 'Aktifkan', 
-                        isActive ? AppTheme.error : AppTheme.success, 
+                        Icons.edit_outlined,
+                        'Edit',
+                        AppTheme.info,
+                        () => _showUserForm(user: user),
+                      ),
+                      _buildActionButton(
+                        Icons.manage_accounts_outlined,
+                        'Role',
+                        AppTheme.warning,
+                        () => _showRoleDialog(user),
+                      ),
+                      _buildActionButton(
+                        Icons.lock_reset,
+                        'Reset',
+                        Colors.purple,
+                        () => _resetPassword(user),
+                      ),
+                      _buildActionButton(
+                        isActive ? Icons.block : Icons.check_circle_outline,
+                        isActive ? 'Nonaktifkan' : 'Aktifkan',
+                        isActive ? AppTheme.error : AppTheme.success,
                         () {
                           _confirmAction(
-                            isActive ? 'Nonaktifkan Pengguna' : 'Aktifkan Pengguna', 
-                            'Anda yakin ingin ${isActive ? 'menonaktifkan' : 'mengaktifkan'} ${user.namaLengkap}?', 
+                            isActive
+                                ? 'Nonaktifkan Pengguna'
+                                : 'Aktifkan Pengguna',
+                            'Anda yakin ingin ${isActive ? 'menonaktifkan' : 'mengaktifkan'} ${user.namaLengkap}?',
                             () => UserService.toggleStatus(user.id),
                             isDestructive: isActive,
                           );
-                        }
+                        },
                       ),
                     ],
                   ),
@@ -709,7 +910,12 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     );
   }
 
-  Widget _buildActionButton(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: AppTheme.radiusSmall,
@@ -726,11 +932,17 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
               child: Icon(icon, color: color, size: 20),
             ),
             const SizedBox(height: 6),
-            Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
-

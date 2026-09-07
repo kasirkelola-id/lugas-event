@@ -81,7 +81,9 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _events.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _events.isEmpty) {
@@ -93,7 +95,10 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -106,9 +111,19 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
           children: [
             Icon(Icons.event_busy, size: 80, color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            const Text('Belum Ada Acara', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(
+              'Belum Ada Acara',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
-            const Text('Belum ada acara untuk dilihat daftar hadirnya.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            const Text(
+              'Belum ada acara untuk dilihat daftar hadirnya.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            ),
           ],
         ),
       );
@@ -124,7 +139,10 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
             padding: const EdgeInsets.only(bottom: 24),
             child: Text(
               'Pilih Acara untuk Lihat Kehadiran',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
             ),
           );
         }
@@ -143,7 +161,9 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => AttendanceListScreen(event: event)),
+                MaterialPageRoute(
+                  builder: (_) => AttendanceListScreen(event: event),
+                ),
               );
             },
             child: Padding(
@@ -153,10 +173,17 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: event.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                      color: event.isActive
+                          ? AppTheme.success.withValues(alpha: 0.1)
+                          : AppTheme.textSecondary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.people_alt, color: event.isActive ? AppTheme.success : AppTheme.textSecondary),
+                    child: Icon(
+                      Icons.people_alt,
+                      color: event.isActive
+                          ? AppTheme.success
+                          : AppTheme.textSecondary,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -165,26 +192,53 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                       children: [
                         Text(
                           event.namaAcara,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppTheme.textPrimary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.calendar_month, size: 14, color: AppTheme.textSecondary),
+                            const Icon(
+                              Icons.calendar_month,
+                              size: 14,
+                              color: AppTheme.textSecondary,
+                            ),
                             const SizedBox(width: 4),
-                            Text(event.tanggalAcara, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                            Text(
+                              event.tanggalAcara,
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: event.isActive ? AppTheme.success.withValues(alpha: 0.1) : AppTheme.textSecondary.withValues(alpha: 0.1),
+                                color: event.isActive
+                                    ? AppTheme.success.withValues(alpha: 0.1)
+                                    : AppTheme.textSecondary.withValues(
+                                        alpha: 0.1,
+                                      ),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 event.isActive ? 'Aktif' : 'Selesai',
-                                style: TextStyle(color: event.isActive ? AppTheme.success : AppTheme.textSecondary, fontSize: 10, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: event.isActive
+                                      ? AppTheme.success
+                                      : AppTheme.textSecondary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
@@ -193,16 +247,30 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              const Icon(Icons.people, size: 14, color: AppTheme.primary),
+                              const Icon(
+                                Icons.people,
+                                size: 14,
+                                color: AppTheme.primary,
+                              ),
                               const SizedBox(width: 4),
-                              Text('${event.jumlahHadir} hadir', style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                              Text(
+                                '${event.jumlahHadir} hadir',
+                                style: const TextStyle(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
                             ],
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: AppTheme.textSecondary,
+                  ),
                 ],
               ),
             ),
@@ -212,4 +280,3 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
     );
   }
 }
-

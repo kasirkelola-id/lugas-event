@@ -23,7 +23,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedLocation = widget.initialLocation ?? const LatLng(-6.200000, 106.816666);
+    _selectedLocation =
+        widget.initialLocation ?? const LatLng(-6.200000, 106.816666);
   }
 
   Future<void> _getCurrentLocation() async {
@@ -35,20 +36,26 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) throw Exception('Izin ditolak');
+        if (permission == LocationPermission.denied)
+          throw Exception('Izin ditolak');
       }
-      if (permission == LocationPermission.deniedForever) throw Exception('Izin ditolak permanen');
+      if (permission == LocationPermission.deniedForever)
+        throw Exception('Izin ditolak permanen');
 
-      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
       final newLocation = LatLng(position.latitude, position.longitude);
-      
+
       setState(() {
         _selectedLocation = newLocation;
       });
       _mapController.move(newLocation, 16.0);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
       if (mounted) {
@@ -64,8 +71,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         title: const Text('Pilih Lokasi Acara'),
         actions: [
           IconButton(
-            icon: _isLoadingLocation 
-                ? const SizedBox(width: 20, height: 20, child: CustomLoadingIndicator(size: 24, ))
+            icon: _isLoadingLocation
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CustomLoadingIndicator(size: 24),
+                  )
                 : const Icon(Icons.my_location),
             onPressed: _isLoadingLocation ? null : _getCurrentLocation,
             tooltip: 'Gunakan Lokasi Saat Ini',
@@ -97,7 +108,9 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           // Center Marker (Pin)
           const Center(
             child: Padding(
-              padding: EdgeInsets.only(bottom: 40.0), // Offset to point to exact center
+              padding: EdgeInsets.only(
+                bottom: 40.0,
+              ), // Offset to point to exact center
               child: Icon(Icons.location_on, size: 48, color: AppTheme.error),
             ),
           ),
@@ -111,12 +124,17 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 4),
+                ],
               ),
               child: Text(
                 'Geser peta untuk menentukan titik koordinat.\nLat: ${_selectedLocation.latitude.toStringAsFixed(6)}, Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -131,7 +149,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                 Navigator.pop(context, _selectedLocation);
               },
             ),
-          )
+          ),
         ],
       ),
     );

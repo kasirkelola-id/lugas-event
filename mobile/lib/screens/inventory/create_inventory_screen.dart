@@ -13,8 +13,10 @@ class CreateInventoryScreen extends StatefulWidget {
 class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _qtyController = TextEditingController();
-  final TextEditingController _conditionController = TextEditingController(text: 'Baik');
-  
+  final TextEditingController _conditionController = TextEditingController(
+    text: 'Baik',
+  );
+
   bool _isSubmitting = false;
 
   Future<void> _submit() async {
@@ -23,23 +25,25 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
     final condition = _conditionController.text.trim();
 
     if (name.isEmpty || qtyText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nama dan kuantitas wajib diisi')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama dan kuantitas wajib diisi')),
+      );
       return;
     }
 
     final qty = int.tryParse(qtyText);
     if (qty == null || qty <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Kuantitas harus berupa angka lebih dari 0')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kuantitas harus berupa angka lebih dari 0'),
+        ),
+      );
       return;
     }
 
     setState(() => _isSubmitting = true);
 
-    final data = {
-      'name': name,
-      'total_quantity': qty,
-      'condition': condition,
-    };
+    final data = {'name': name, 'total_quantity': qty, 'condition': condition};
 
     final result = await InventoryService.createInventory(data);
     setState(() => _isSubmitting = false);
@@ -47,7 +51,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
     if (result['success']) {
       if (mounted) Navigator.pop(context, true);
     } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
     }
   }
 
@@ -63,7 +70,10 @@ class _CreateInventoryScreenState extends State<CreateInventoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tambah Barang', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Tambah Barang',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),

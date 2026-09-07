@@ -25,10 +25,16 @@ class ChatRoom {
       karangTarunaId: int.parse(json['karang_taruna_id'].toString()),
       name: json['name'],
       type: json['type'],
-      createdBy: json['created_by'] != null ? int.parse(json['created_by'].toString()) : null,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
+      createdBy: json['created_by'] != null
+          ? int.parse(json['created_by'].toString())
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
       lastMessage: json['last_message'],
-      lastMessageAt: json['last_message_at'] != null ? DateTime.parse(json['last_message_at']) : null,
+      lastMessageAt: json['last_message_at'] != null
+          ? DateTime.parse(json['last_message_at'])
+          : null,
     );
   }
 }

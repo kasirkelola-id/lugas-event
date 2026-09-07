@@ -41,7 +41,11 @@ class _AdminPrinterScreenState extends State<AdminPrinterScreen> {
             children: [
               Icon(Icons.construction, size: 64, color: Colors.orange),
               SizedBox(height: 16),
-              Text('Pengaturan Printer secara global akan segera hadir. Saat ini pengaturan printer dapat diakses langsung dari Detail Acara.', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey)),
+              Text(
+                'Pengaturan Printer secara global akan segera hadir. Saat ini pengaturan printer dapat diakses langsung dari Detail Acara.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
             ],
           ),
         ),

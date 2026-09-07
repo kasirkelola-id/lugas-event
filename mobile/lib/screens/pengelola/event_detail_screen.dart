@@ -28,37 +28,59 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     try {
       final parts = dateStr.split('-');
       if (parts.length != 3) return dateStr;
-      
+
       final y = int.parse(parts[0]);
       final m = int.parse(parts[1]);
       final d = int.parse(parts[2]);
-      
+
       final date = DateTime(y, m, d);
-      
-      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-      const months = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-      
+
+      const days = [
+        'Minggu',
+        'Senin',
+        'Selasa',
+        'Rabu',
+        'Kamis',
+        'Jumat',
+        'Sabtu',
+      ];
+      const months = [
+        '',
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+
       final dayName = days[date.weekday % 7];
       final monthName = months[m];
-      
+
       String formattedDate = '$dayName, $d $monthName $y';
-      
+
       String? formatTime(String? t) {
         if (t == null || t.isEmpty) return null;
         final tParts = t.split(':');
         if (tParts.length >= 2) return '${tParts[0]}.${tParts[1]}';
         return t;
       }
-      
+
       final sTime = formatTime(startTime);
       final eTime = formatTime(endTime);
-      
+
       if (sTime != null && eTime != null) {
         return '$formattedDate\n$sTime – $eTime';
       } else if (sTime != null) {
         return '$formattedDate\n$sTime';
       }
-      
+
       return formattedDate;
     } catch (e) {
       return dateStr;
@@ -93,7 +115,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       }
     }
   }
@@ -102,7 +127,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     final confirm = await AppDialog.showConfirmation(
       context: context,
       title: 'Tutup Acara?',
-      content: 'Setelah acara ditutup, anggota tidak dapat melakukan absensi lagi.',
+      content:
+          'Setelah acara ditutup, anggota tidak dapat melakukan absensi lagi.',
       type: DialogType.error,
     );
 
@@ -127,7 +153,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       } else {
         await AppDialog.showResult(
           context: context,
@@ -154,13 +183,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               onPressed: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => EditEventScreen(event: _event!)),
+                  MaterialPageRoute(
+                    builder: (_) => EditEventScreen(event: _event!),
+                  ),
                 );
                 if (result == true) {
                   _loadEvent();
                 }
               },
-            )
+            ),
         ],
       ),
       backgroundColor: AppTheme.background,
@@ -170,7 +201,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _event == null) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _event == null) {
@@ -182,7 +215,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadEvent, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadEvent,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -217,7 +253,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (parts.length == 3) {
         day = parts[2];
         int m = int.parse(parts[1]);
-        const shortMonths = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
+        const shortMonths = [
+          '',
+          'JAN',
+          'FEB',
+          'MAR',
+          'APR',
+          'MEI',
+          'JUN',
+          'JUL',
+          'AGU',
+          'SEP',
+          'OKT',
+          'NOV',
+          'DES',
+        ];
         if (m >= 1 && m <= 12) monthStr = shortMonths[m];
       }
     } catch (_) {}
@@ -240,23 +290,43 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               Expanded(
                 child: Text(
                   _event!.namaAcara,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary, height: 1.2),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                    height: 1.2,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(_event!.statusKegiatan ?? (_event!.isActive ? 'berlangsung' : 'selesai')).withValues(alpha: 0.1),
+                  color: _getStatusColor(
+                    _event!.statusKegiatan ??
+                        (_event!.isActive ? 'berlangsung' : 'selesai'),
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: _getStatusColor(_event!.statusKegiatan ?? (_event!.isActive ? 'berlangsung' : 'selesai')).withValues(alpha: 0.3),
+                    color: _getStatusColor(
+                      _event!.statusKegiatan ??
+                          (_event!.isActive ? 'berlangsung' : 'selesai'),
+                    ).withValues(alpha: 0.3),
                   ),
                 ),
                 child: Text(
-                  _getStatusText(_event!.statusKegiatan ?? (_event!.isActive ? 'berlangsung' : 'selesai')),
+                  _getStatusText(
+                    _event!.statusKegiatan ??
+                        (_event!.isActive ? 'berlangsung' : 'selesai'),
+                  ),
                   style: TextStyle(
-                    color: _getStatusColor(_event!.statusKegiatan ?? (_event!.isActive ? 'berlangsung' : 'selesai')),
+                    color: _getStatusColor(
+                      _event!.statusKegiatan ??
+                          (_event!.isActive ? 'berlangsung' : 'selesai'),
+                    ),
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
@@ -269,17 +339,38 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             children: [
               // Visual Date Block
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.1),
                   borderRadius: AppTheme.radiusMedium,
-                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: AppTheme.primary.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Column(
                   children: [
-                    Text(day, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.primary, height: 1)),
+                    Text(
+                      day,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primary,
+                        height: 1,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text(monthStr, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.primary, letterSpacing: 1)),
+                    Text(
+                      monthStr,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.primary,
+                        letterSpacing: 1,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -290,19 +381,44 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today, size: 14, color: AppTheme.textSecondary),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 14,
+                          color: AppTheme.textSecondary,
+                        ),
                         const SizedBox(width: 6),
-                        Expanded(child: Text(_formatDateTime(_event!.tanggalAcara, null, null).replaceAll('\n', ''), style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, fontWeight: FontWeight.w600))),
+                        Expanded(
+                          child: Text(
+                            _formatDateTime(
+                              _event!.tanggalAcara,
+                              null,
+                              null,
+                            ).replaceAll('\n', ''),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.access_time, size: 14, color: AppTheme.textSecondary),
+                        const Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: AppTheme.textSecondary,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           '${_event!.waktuMulai ?? '??:??'} – ${_event!.waktuSelesai ?? '??:??'}',
-                          style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary, fontWeight: FontWeight.bold)
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -310,15 +426,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 14,
+                            color: AppTheme.textSecondary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Area Absensi: ${_event!.radius}m',
-                            style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                            ),
                           ),
                         ],
                       ),
-                    ]
+                    ],
                   ],
                 ),
               ),
@@ -330,7 +453,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildMiniStat('Total Hadir', _event!.jumlahHadir?.toString() ?? '0', Icons.how_to_reg, AppTheme.success),
+              _buildMiniStat(
+                'Total Hadir',
+                _event!.jumlahHadir?.toString() ?? '0',
+                Icons.how_to_reg,
+                AppTheme.success,
+              ),
             ],
           ),
         ],
@@ -338,14 +466,33 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  Widget _buildMiniStat(String title, String value, IconData icon, Color color) {
+  Widget _buildMiniStat(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 28),
         const SizedBox(height: 8),
-        Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(title, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppTheme.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }
@@ -354,7 +501,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Aksi Cepat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        const Text(
+          'Aksi Cepat',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -366,7 +520,9 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => AttendanceListScreen(event: _event!)),
+                    MaterialPageRoute(
+                      builder: (_) => AttendanceListScreen(event: _event!),
+                    ),
                   );
                 },
               ),
@@ -379,15 +535,30 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: _isLoading ? null : _closeEvent,
-              icon: _isLoading 
-                ? const SizedBox(width: 20, height: 20, child: CustomLoadingIndicator(size: 24, color: AppTheme.error))
-                : const Icon(Icons.close, color: AppTheme.error),
-              label: Text(_isLoading ? 'Menutup...' : 'Tutup Acara', style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600)),
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CustomLoadingIndicator(
+                        size: 24,
+                        color: AppTheme.error,
+                      ),
+                    )
+                  : const Icon(Icons.close, color: AppTheme.error),
+              label: Text(
+                _isLoading ? 'Menutup...' : 'Tutup Acara',
+                style: const TextStyle(
+                  color: AppTheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: AppTheme.error.withValues(alpha: 0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: AppTheme.error.withValues(alpha: 0.05),
-                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppTheme.radiusMedium,
+                ),
               ),
             ),
           ),
@@ -396,7 +567,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  Widget _buildActionBtn(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionBtn(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: AppTheme.radiusMedium,
@@ -411,7 +587,14 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           children: [
             Icon(icon, color: color, size: 28),
             const SizedBox(height: 8),
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 14)),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
           ],
         ),
       ),
@@ -429,15 +612,30 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ),
       child: Column(
         children: [
-          const Text('QR Code Absensi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.textPrimary)),
+          const Text(
+            'QR Code Absensi',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: AppTheme.textPrimary,
+            ),
+          ),
           const SizedBox(height: 8),
           Text(
-            _event!.isActive ? 'Peserta dapat memindai QR ini untuk absensi' : 'Acara sudah selesai',
-            style: TextStyle(color: _event!.isActive ? AppTheme.textSecondary : AppTheme.error, fontSize: 14),
+            _event!.isActive
+                ? 'Peserta dapat memindai QR ini untuk absensi'
+                : 'Acara sudah selesai',
+            style: TextStyle(
+              color: _event!.isActive ? AppTheme.textSecondary : AppTheme.error,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 24),
           if (_event!.kodeQr.isEmpty)
-            const Text('QR Code tidak tersedia.', style: TextStyle(color: AppTheme.error))
+            const Text(
+              'QR Code tidak tersedia.',
+              style: TextStyle(color: AppTheme.error),
+            )
           else
             Container(
               padding: const EdgeInsets.all(20),
@@ -445,7 +643,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 color: Colors.white,
                 borderRadius: AppTheme.radiusMedium,
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, spreadRadius: 2),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
                 ],
               ),
               child: QrImageView(
@@ -466,9 +668,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.qr_code, size: 20, color: AppTheme.textSecondary),
+                const Icon(
+                  Icons.qr_code,
+                  size: 20,
+                  color: AppTheme.textSecondary,
+                ),
                 const SizedBox(width: 12),
-                Text(_event!.kodeQr, style: const TextStyle(fontFamily: 'monospace', fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 2, color: AppTheme.primary)),
+                Text(
+                  _event!.kodeQr,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                    color: AppTheme.primary,
+                  ),
+                ),
               ],
             ),
           ),
@@ -476,6 +691,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       ),
     );
   }
+
   Widget _buildAttendanceCTA() {
     if (_event!.statusKegiatan == 'akan_datang') {
       return _buildCTABtn('Absensi Belum Dibuka', AppTheme.info, null);
@@ -490,11 +706,15 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
         return _buildCTABtn('Sudah Absen', AppTheme.success, null);
       }
       return _buildCTABtn('Absen Sekarang', AppTheme.primary, () {
-        // Navigate to attendance screen (might not be available directly here for Pengelola, 
+        // Navigate to attendance screen (might not be available directly here for Pengelola,
         // but we can redirect to AttendanceGeofenceScreen)
         Navigator.pop(context); // back to home? or just show a message.
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Silakan gunakan fitur Absensi Lokasi dari Beranda Anggota')),
+          const SnackBar(
+            content: Text(
+              'Silakan gunakan fitur Absensi Lokasi dari Beranda Anggota',
+            ),
+          ),
         );
       });
     }
@@ -506,12 +726,17 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: onPressed == null ? color.withValues(alpha: 0.5) : color,
+          backgroundColor: onPressed == null
+              ? color.withValues(alpha: 0.5)
+              : color,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         ),
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        child: Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
       ),
     );
   }
@@ -540,5 +765,3 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
   }
 }
-
-

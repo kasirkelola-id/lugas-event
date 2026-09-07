@@ -31,8 +31,12 @@ class Chat {
       karangTarunaId: int.parse(json['karang_taruna_id'].toString()),
       type: json['type'],
       senderId: int.parse(json['sender_id'].toString()),
-      receiverId: json['receiver_id'] != null ? int.parse(json['receiver_id'].toString()) : null,
-      chatRoomId: json['chat_room_id'] != null ? int.parse(json['chat_room_id'].toString()) : null,
+      receiverId: json['receiver_id'] != null
+          ? int.parse(json['receiver_id'].toString())
+          : null,
+      chatRoomId: json['chat_room_id'] != null
+          ? int.parse(json['chat_room_id'].toString())
+          : null,
       message: json['message'],
       createdAt: DateTime.parse(json['created_at']),
       namaLengkap: json['nama_lengkap'],

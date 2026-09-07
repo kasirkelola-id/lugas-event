@@ -5,7 +5,6 @@ import 'auth_service.dart';
 import '../storage/auth_storage.dart';
 import '../main.dart' as main_app;
 
-
 class NotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
@@ -56,41 +55,45 @@ class NotificationService {
     // Determine target screen based on data payload
     String? type = message.data['type'];
     String? tenantIdStr = message.data['tenant_id'];
-    
+
     debugPrint('Notification tapped. Type: $type, Tenant ID: $tenantIdStr');
-    
+
     final currentTenant = await AuthStorage.getTenant();
-    
+
     // Check if logged in at all
     final token = await AuthStorage.getToken();
     if (token == null) {
-       // Logged out, ignore notification or send to login screen
-       debugPrint('Notification tap ignored: User logged out');
-       main_app.navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const main_app.MyApp()),
-          (route) => false
-       );
-       return;
+      // Logged out, ignore notification or send to login screen
+      debugPrint('Notification tap ignored: User logged out');
+      main_app.navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const main_app.MyApp()),
+        (route) => false,
+      );
+      return;
     }
 
     if (tenantIdStr != null) {
       int tenantId = int.parse(tenantIdStr);
       if (currentTenant == null || currentTenant['id'] != tenantId) {
         debugPrint('Switching tenant to $tenantId requested by notification.');
-        
+
         // 1. Fetch validated memberships from global API
         final membershipResult = await AuthService.getMemberships();
-        
+
         if (!membershipResult['success']) {
-          debugPrint('Failed to fetch memberships: ${membershipResult['message']}');
+          debugPrint(
+            'Failed to fetch memberships: ${membershipResult['message']}',
+          );
           // If network fails, do not blindly switch tenant. Keep current.
           if (membershipResult['statusCode'] == 401) {
             main_app.navigatorKey.currentState?.pushAndRemoveUntil(
               MaterialPageRoute(builder: (_) => const main_app.MyApp()),
-              (route) => false
+              (route) => false,
             );
           } else {
-            _showErrorSnackBar('Gagal memverifikasi keanggotaan. Periksa koneksi Anda.');
+            _showErrorSnackBar(
+              'Gagal memverifikasi keanggotaan. Periksa koneksi Anda.',
+            );
           }
           return;
         }
@@ -99,32 +102,36 @@ class NotificationService {
         final memberships = membershipResult['data'] as List<dynamic>;
         final targetMembership = memberships.firstWhere(
           (m) => m['karang_taruna_id'] == tenantId && m['status'] == 1,
-          orElse: () => null
+          orElse: () => null,
         );
 
         if (targetMembership == null) {
-           debugPrint('User is not an active member of tenant $tenantId');
-           _showErrorSnackBar('Akses Karang Taruna sudah tidak tersedia');
-           return;
+          debugPrint('User is not an active member of tenant $tenantId');
+          _showErrorSnackBar('Akses Karang Taruna sudah tidak tersedia');
+          return;
         }
 
         // 3. Set active tenant and restart app state
         debugPrint('Membership validated. Switching tenant to $tenantId');
         await AuthStorage.saveTenant(
-            targetMembership['karang_taruna_id'],
-            targetMembership['nama'],
-            logoUrl: null // We might not have logo_url here, will be fetched in getMe
+          targetMembership['karang_taruna_id'],
+          targetMembership['nama'],
+          logoUrl:
+              null, // We might not have logo_url here, will be fetched in getMe
         );
-        
+
         // Use InitialScreen to reload APIs and reconnect socket
         main_app.navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => main_app.InitialScreen(pendingNavigation: message.data)),
-          (route) => false
+          MaterialPageRoute(
+            builder: (_) =>
+                main_app.InitialScreen(pendingNavigation: message.data),
+          ),
+          (route) => false,
         );
         return;
       }
     }
-    
+
     // Same tenant, just navigate
     navigateBasedOnPayload(message.data);
   }
@@ -132,30 +139,30 @@ class NotificationService {
   static void _showErrorSnackBar(String message) {
     final context = main_app.navigatorKey.currentContext;
     if (context != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
   static void navigateBasedOnPayload(Map<String, dynamic> data) {
     String? type = data['type'];
     if (type == null) return;
-    
+
     final context = main_app.navigatorKey.currentContext;
     if (context == null) return;
 
     if (type == 'private_chat' || type == 'group_chat') {
-       String? roomIdStr = data['room_id'];
-       String? senderId = data['sender_id'];
-       // For real app, navigate to ChatRoomScreen using roomId
-       // Navigator.push(context, MaterialPageRoute(builder: (_) => ChatRoomScreen(roomId: int.parse(roomIdStr!))));
+      String? roomIdStr = data['room_id'];
+      String? senderId = data['sender_id'];
+      // For real app, navigate to ChatRoomScreen using roomId
+      // Navigator.push(context, MaterialPageRoute(builder: (_) => ChatRoomScreen(roomId: int.parse(roomIdStr!))));
     } else if (type == 'announcement') {
-       // Navigator.push(context, MaterialPageRoute(builder: (_) => AnnouncementScreen()));
+      // Navigator.push(context, MaterialPageRoute(builder: (_) => AnnouncementScreen()));
     } else if (type == 'event') {
-       // Navigator.push(context, MaterialPageRoute(builder: (_) => EventScreen()));
+      // Navigator.push(context, MaterialPageRoute(builder: (_) => EventScreen()));
     } else if (type == 'inventory_loan') {
-       // Navigator.push(context, MaterialPageRoute(builder: (_) => InventoryScreen()));
+      // Navigator.push(context, MaterialPageRoute(builder: (_) => InventoryScreen()));
     }
   }
 

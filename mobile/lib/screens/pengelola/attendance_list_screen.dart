@@ -30,7 +30,8 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
 
   List<AttendanceModel> get _filteredAttendees {
     return _attendees.where((a) {
-      bool matchesSearch = _searchQuery.isEmpty || 
+      bool matchesSearch =
+          _searchQuery.isEmpty ||
           a.namaLengkap.toLowerCase().contains(_searchQuery.toLowerCase());
       bool matchesRt = _rtFilter == null || a.userRt.toString() == _rtFilter;
       return matchesSearch && matchesRt;
@@ -60,15 +61,19 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = (result['message'].toString().toLowerCase().contains('sesi') || 
-                         result['message'].toString().toLowerCase().contains('berakhir'))
+        _errorMessage =
+            (result['message'].toString().toLowerCase().contains('sesi') ||
+                result['message'].toString().toLowerCase().contains('berakhir'))
             ? result['message']
             : 'Daftar hadir gagal dimuat.';
       });
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       }
     }
   }
@@ -93,7 +98,9 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
 
   Widget _buildBody() {
     if (_isLoading && _attendees.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _attendees.isEmpty) {
@@ -105,7 +112,10 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadAttendees, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadAttendees,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -127,7 +137,10 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
               borderRadius: AppTheme.radiusLarge,
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
           ),
           onChanged: (val) => setState(() => _searchQuery = val),
         ),
@@ -147,13 +160,17 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                   checkmarkColor: AppTheme.info,
                   labelStyle: TextStyle(
                     color: isSelected ? AppTheme.info : AppTheme.textSecondary,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                   backgroundColor: AppTheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: AppTheme.radiusLarge,
                     side: BorderSide(
-                      color: isSelected ? AppTheme.info.withValues(alpha: 0.5) : Colors.grey.shade300,
+                      color: isSelected
+                          ? AppTheme.info.withValues(alpha: 0.5)
+                          : Colors.grey.shade300,
                     ),
                   ),
                   onSelected: (selected) {
@@ -167,7 +184,13 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        Text('Anggota Hadir (${_filteredAttendees.length})', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        Text(
+          'Anggota Hadir (${_filteredAttendees.length})',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         const SizedBox(height: 16),
         if (_filteredAttendees.isEmpty)
           Center(
@@ -175,9 +198,20 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  Icon(Icons.event_available, size: 80, color: Colors.grey.shade300),
+                  Icon(
+                    Icons.event_available,
+                    size: 80,
+                    color: Colors.grey.shade300,
+                  ),
                   const SizedBox(height: 16),
-                  const Text('Tidak ada anggota hadir', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Tidak ada anggota hadir',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -188,7 +222,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
             final item = entry.value;
             return _buildAttendeeCard(index, item);
           }),
-          
+
         const SizedBox(height: 40),
       ],
     );
@@ -206,19 +240,36 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.event.namaAcara, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+          Text(
+            widget.event.namaAcara,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.calendar_month, size: 16, color: AppTheme.textSecondary),
+              const Icon(
+                Icons.calendar_month,
+                size: 16,
+                color: AppTheme.textSecondary,
+              ),
               const SizedBox(width: 8),
-              Text(widget.event.tanggalAcara, style: const TextStyle(color: AppTheme.textSecondary)),
+              Text(
+                widget.event.tanggalAcara,
+                style: const TextStyle(color: AppTheme.textSecondary),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
-          const Text('Halaman ini menampilkan log waktu saat peserta berhasil melakukan scan QR Code.', style: TextStyle(color: AppTheme.textSecondary)),
+          const Text(
+            'Halaman ini menampilkan log waktu saat peserta berhasil melakukan scan QR Code.',
+            style: TextStyle(color: AppTheme.textSecondary),
+          ),
         ],
       ),
     );
@@ -245,22 +296,48 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
           child: Center(
             child: Text(
               '${index + 1}',
-              style: const TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: AppTheme.success,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
-        title: Text(item.namaPanggilan.isNotEmpty ? item.namaPanggilan : 'Peserta', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        title: Text(
+          item.namaPanggilan.isNotEmpty ? item.namaPanggilan : 'Peserta',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text(item.namaLengkap, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+            Text(
+              item.namaLengkap,
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 13,
+              ),
+            ),
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.access_time, size: 12, color: AppTheme.success),
+                const Icon(
+                  Icons.access_time,
+                  size: 12,
+                  color: AppTheme.success,
+                ),
                 const SizedBox(width: 4),
-                Text(item.waktuAbsen, style: const TextStyle(color: AppTheme.success, fontSize: 12, fontWeight: FontWeight.w600)),
+                Text(
+                  item.waktuAbsen,
+                  style: const TextStyle(
+                    color: AppTheme.success,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ],
@@ -269,5 +346,3 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
     );
   }
 }
-
-

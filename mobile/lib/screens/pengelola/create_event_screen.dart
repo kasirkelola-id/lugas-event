@@ -22,7 +22,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _namaController = TextEditingController();
   final _tanggalController = TextEditingController();
   bool _isLoading = false;
-  
+
   bool _requireGps = false;
   LatLng? _selectedLocation;
   double _radius = 50.0;
@@ -75,19 +75,22 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     if (!mounted) return;
 
     if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Acara berhasil dibuat.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Acara berhasil dibuat.')));
       Navigator.pop(context, true); // return true to refresh
     } else {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'])),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
       }
     }
   }
@@ -103,7 +106,10 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
           children: [
             TextFormField(
               controller: _namaController,
-              decoration: const InputDecoration(labelText: 'Nama Acara', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Nama Acara',
+                border: OutlineInputBorder(),
+              ),
               enabled: !_isLoading,
               validator: (v) => v!.isEmpty ? 'Nama acara harus diisi' : null,
             ),
@@ -122,21 +128,31 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
             const SizedBox(height: 16),
             SwitchListTile(
               title: const Text('Batasi Presensi dengan GPS'),
-              subtitle: const Text('Anggota hanya bisa absen di sekitar lokasi acara'),
+              subtitle: const Text(
+                'Anggota hanya bisa absen di sekitar lokasi acara',
+              ),
               value: _requireGps,
               activeColor: AppTheme.primary,
-              onChanged: _isLoading ? null : (val) {
-                setState(() {
-                  _requireGps = val;
-                  if (val && _selectedLocation == null) {
-                    _selectedLocation = const LatLng(-6.200000, 106.816666); // Default Jakarta
-                  }
-                });
-              },
+              onChanged: _isLoading
+                  ? null
+                  : (val) {
+                      setState(() {
+                        _requireGps = val;
+                        if (val && _selectedLocation == null) {
+                          _selectedLocation = const LatLng(
+                            -6.200000,
+                            106.816666,
+                          ); // Default Jakarta
+                        }
+                      });
+                    },
             ),
             if (_requireGps) ...[
               const SizedBox(height: 16),
-              const Text('Lokasi Acara', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Lokasi Acara',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
@@ -149,7 +165,11 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 child: Column(
                   children: [
                     if (_selectedLocation != null) ...[
-                      const Icon(Icons.location_on, color: AppTheme.error, size: 48),
+                      const Icon(
+                        Icons.location_on,
+                        color: AppTheme.error,
+                        size: 48,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'Lat: ${_selectedLocation!.latitude.toStringAsFixed(6)}\nLng: ${_selectedLocation!.longitude.toStringAsFixed(6)}',
@@ -158,25 +178,36 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       ),
                       const SizedBox(height: 16),
                     ] else ...[
-                      const Icon(Icons.map_outlined, color: Colors.grey, size: 48),
+                      const Icon(
+                        Icons.map_outlined,
+                        color: Colors.grey,
+                        size: 48,
+                      ),
                       const SizedBox(height: 8),
-                      const Text('Lokasi belum dipilih', style: TextStyle(color: Colors.grey)),
+                      const Text(
+                        'Lokasi belum dipilih',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                       const SizedBox(height: 16),
                     ],
                     ElevatedButton.icon(
-                      onPressed: _isLoading ? null : () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MapPickerScreen(initialLocation: _selectedLocation),
-                          ),
-                        );
-                        if (result != null && result is LatLng) {
-                          setState(() {
-                            _selectedLocation = result;
-                          });
-                        }
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => MapPickerScreen(
+                                    initialLocation: _selectedLocation,
+                                  ),
+                                ),
+                              );
+                              if (result != null && result is LatLng) {
+                                setState(() {
+                                  _selectedLocation = result;
+                                });
+                              }
+                            },
                       icon: const Icon(Icons.open_in_full, size: 16),
                       label: const Text('Buka Peta Interaktif'),
                       style: ElevatedButton.styleFrom(
@@ -188,11 +219,17 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text('Ketuk peta untuk memindahkan lokasi acara.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const Text(
+                'Ketuk peta untuk memindahkan lokasi acara.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Text('Radius (meter):', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Radius (meter):',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Expanded(
                     child: Slider(
                       value: _radius,
@@ -201,21 +238,28 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                       divisions: 99,
                       label: '${_radius.toInt()} m',
                       activeColor: AppTheme.primary,
-                      onChanged: _isLoading ? null : (val) {
-                        setState(() {
-                          _radius = val;
-                        });
-                      },
+                      onChanged: _isLoading
+                          ? null
+                          : (val) {
+                              setState(() {
+                                _radius = val;
+                              });
+                            },
                     ),
                   ),
-                  Text('${_radius.toInt()} m', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    '${_radius.toInt()} m',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ],
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
-              child: _isLoading ? const CustomLoadingIndicator() : const Text('Buat Acara'),
+              child: _isLoading
+                  ? const CustomLoadingIndicator()
+                  : const Text('Buat Acara'),
             ),
           ],
         ),
@@ -223,4 +267,3 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     );
   }
 }
-

@@ -21,7 +21,11 @@ class FeedbackDialogs {
     );
   }
 
-  static void showSnackbar(BuildContext context, String message, {bool isError = false}) {
+  static void showSnackbar(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     if (isError) {
       AppSnackBar.showError(context, message);
     } else {

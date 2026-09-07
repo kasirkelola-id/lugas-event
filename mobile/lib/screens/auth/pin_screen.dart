@@ -13,8 +13,12 @@ class PinScreen extends StatefulWidget {
   State<PinScreen> createState() => _PinScreenState();
 }
 
-class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMixin {
-  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+class _PinScreenState extends State<PinScreen>
+    with SingleTickerProviderStateMixin {
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   final List<bool> _obscured = List.generate(6, (_) => true);
   bool _isLoading = false;
@@ -52,7 +56,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
         _obscured[index] = false; // Tampilkan angka sebentar
         _currentIndex++;
       });
-      
+
       // Ubah kembali menjadi titik setelah jeda
       Future.delayed(const Duration(milliseconds: 600), () {
         if (mounted) {
@@ -98,11 +102,11 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
     if (result['success']) {
       final data = result['data'];
       await AuthStorage.saveTenant(
-        data['karang_taruna_id'], 
+        data['karang_taruna_id'],
         data['nama_organisasi'],
-        logoUrl: data['logo_url']
+        logoUrl: data['logo_url'],
       );
-      
+
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -112,7 +116,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
       setState(() {
         _isLoading = false;
         _errorMessage = result['message'];
-        
+
         // Reset PIN fields on error
         for (var i = 0; i < 6; i++) {
           _controllers[i].text = '';
@@ -127,7 +131,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
     final text = _controllers[index].text;
     final isActive = index == _currentIndex;
     final isFilled = text.isNotEmpty;
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       curve: Curves.easeOut,
@@ -137,16 +141,20 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
         color: isActive ? Colors.white : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isActive ? AppTheme.primary : (isFilled ? Colors.grey.shade400 : Colors.grey.shade200),
+          color: isActive
+              ? AppTheme.primary
+              : (isFilled ? Colors.grey.shade400 : Colors.grey.shade200),
           width: isActive ? 2.0 : 1.0,
         ),
-        boxShadow: isActive ? [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          )
-        ] : null,
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
       ),
       child: Center(
         child: AnimatedSwitcher(
@@ -162,24 +170,24 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
               ),
             );
           },
-          child: text.isEmpty 
-              ? (isActive 
-                  ? FadeTransition(
-                      key: const ValueKey('cursor'),
-                      opacity: _cursorController,
-                      child: Container(
-                        width: 2, 
-                        height: 26, 
-                        color: AppTheme.primary.withValues(alpha: 0.6)
-                      ),
-                    ) 
-                  : const SizedBox(key: ValueKey('empty')))
+          child: text.isEmpty
+              ? (isActive
+                    ? FadeTransition(
+                        key: const ValueKey('cursor'),
+                        opacity: _cursorController,
+                        child: Container(
+                          width: 2,
+                          height: 26,
+                          color: AppTheme.primary.withValues(alpha: 0.6),
+                        ),
+                      )
+                    : const SizedBox(key: ValueKey('empty')))
               : Text(
                   _obscured[index] ? '•' : text,
                   key: ValueKey('digit_${index}_${_obscured[index]}'),
                   style: TextStyle(
-                    fontSize: _obscured[index] ? 40 : 28, 
-                    fontWeight: FontWeight.bold, 
+                    fontSize: _obscured[index] ? 40 : 28,
+                    fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
                     height: _obscured[index] ? 1.2 : null,
                   ),
@@ -205,9 +213,17 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildIconButton(Icons.backspace_outlined, _onBackspacePressed, color: AppTheme.error),
+            _buildIconButton(
+              Icons.backspace_outlined,
+              _onBackspacePressed,
+              color: AppTheme.error,
+            ),
             _buildNumButton('0'),
-            _buildIconButton(Icons.check_circle_outline, _verifyPin, color: AppTheme.primary),
+            _buildIconButton(
+              Icons.check_circle_outline,
+              _verifyPin,
+              color: AppTheme.primary,
+            ),
           ],
         ),
       ],
@@ -232,7 +248,11 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
           child: Center(
             child: Text(
               num,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
             ),
           ),
         ),
@@ -240,7 +260,11 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildIconButton(IconData icon, VoidCallback onTap, {Color color = AppTheme.textSecondary}) {
+  Widget _buildIconButton(
+    IconData icon,
+    VoidCallback onTap, {
+    Color color = AppTheme.textSecondary,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -255,9 +279,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
             shape: BoxShape.circle,
             color: Colors.grey.shade100,
           ),
-          child: Center(
-            child: Icon(icon, size: 28, color: color),
-          ),
+          child: Center(child: Icon(icon, size: 28, color: color)),
         ),
       ),
     );
@@ -278,7 +300,10 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                 side: BorderSide(color: Colors.grey.shade200),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 24.0,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -292,8 +317,8 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                             color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
-                          )
-                        ]
+                          ),
+                        ],
                       ),
                       child: Image.asset(
                         'assets/logo/app_logo.png',
@@ -339,16 +364,25 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                         decoration: BoxDecoration(
                           color: AppTheme.error.withValues(alpha: 0.1),
                           borderRadius: AppTheme.radiusSmall,
-                          border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
+                          border: Border.all(
+                            color: AppTheme.error.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppTheme.error, size: 20),
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppTheme.error,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _errorMessage!,
-                                style: const TextStyle(color: AppTheme.error, fontSize: 14),
+                                style: const TextStyle(
+                                  color: AppTheme.error,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                           ],
@@ -356,7 +390,10 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                       ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: List.generate(6, (index) => _buildPinField(index)),
+                      children: List.generate(
+                        6,
+                        (index) => _buildPinField(index),
+                      ),
                     ),
                     const SizedBox(height: 32),
                     if (_isLoading)

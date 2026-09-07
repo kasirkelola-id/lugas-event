@@ -33,8 +33,8 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
     final query = _searchController.text.toLowerCase();
     setState(() {
       _filteredAnnouncements = _announcements.where((a) {
-        return a.judul.toLowerCase().contains(query) || 
-               a.isi.toLowerCase().contains(query);
+        return a.judul.toLowerCase().contains(query) ||
+            a.isi.toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -60,7 +60,8 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
         });
       } else {
         setState(() {
-          _errorMessage = announcementResult['message'] ?? 'Gagal memuat pengumuman';
+          _errorMessage =
+              announcementResult['message'] ?? 'Gagal memuat pengumuman';
           _isLoading = false;
         });
       }
@@ -88,7 +89,9 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null) {
@@ -100,7 +103,10 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
             const SizedBox(height: 16),
             Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -111,11 +117,25 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.campaign_outlined, size: 80, color: Colors.grey.shade300),
+            Icon(
+              Icons.campaign_outlined,
+              size: 80,
+              color: Colors.grey.shade300,
+            ),
             const SizedBox(height: 16),
-            const Text('Belum Ada Pengumuman', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(
+              'Belum Ada Pengumuman',
+              style: TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
-            const Text('Belum ada pengumuman untuk Anda.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+            const Text(
+              'Belum ada pengumuman untuk Anda.',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            ),
           ],
         ),
       );
@@ -129,7 +149,10 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Cari pengumuman...',
-              prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+              prefixIcon: const Icon(
+                Icons.search,
+                color: AppTheme.textSecondary,
+              ),
               filled: true,
               fillColor: AppTheme.surface,
               border: OutlineInputBorder(
@@ -151,7 +174,14 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                 children: [
                   Icon(Icons.search_off, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  const Text('Tidak ada hasil.', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Tidak ada hasil.',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -172,21 +202,37 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                     border: Border.all(color: Colors.grey.shade200),
                   ),
                   child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    data: Theme.of(
+                      context,
+                    ).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(
-                      tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                      childrenPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                      tilePadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      childrenPadding: const EdgeInsets.only(
+                        left: 20,
+                        right: 20,
+                        bottom: 20,
+                      ),
                       title: Text(
-                        a.judul, 
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary)
+                        a.judul,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primary,
+                        ),
                       ),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
-                          a.isi, 
-                          maxLines: 2, 
+                          a.isi,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)
+                          style: const TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                       leading: Container(
@@ -195,14 +241,25 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                           color: AppTheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.campaign_outlined, color: AppTheme.primary, size: 24),
+                        child: const Icon(
+                          Icons.campaign_outlined,
+                          color: AppTheme.primary,
+                          size: 24,
+                        ),
                       ),
                       children: [
                         const Divider(height: 1, color: Colors.black12),
                         const SizedBox(height: 16),
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: Text(a.isi, style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5)),
+                          child: Text(
+                            a.isi,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.textSecondary,
+                              height: 1.5,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Row(
@@ -210,27 +267,51 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
+                                Icon(
+                                  Icons.person_outline,
+                                  size: 14,
+                                  color: Colors.grey.shade500,
+                                ),
                                 const SizedBox(width: 4),
-                                Text('Oleh: ${a.pembuat}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                                Text(
+                                  'Oleh: ${a.pembuat}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                               ],
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: a.targetRole == 'semua' ? Colors.blue.shade50 : Colors.orange.shade50,
+                                color: a.targetRole == 'semua'
+                                    ? Colors.blue.shade50
+                                    : Colors.orange.shade50,
                                 borderRadius: AppTheme.radiusSmall,
                                 border: Border.all(
-                                  color: a.targetRole == 'semua' ? Colors.blue.shade200 : Colors.orange.shade200,
+                                  color: a.targetRole == 'semua'
+                                      ? Colors.blue.shade200
+                                      : Colors.orange.shade200,
                                 ),
                               ),
                               child: Text(
-                                a.targetRole == 'semua' ? 'UNTUK SEMUA' : (a.targetRole == 'pengelola' ? 'UNTUK PENGELOLA' : 'UNTUK ANGGOTA'),
+                                a.targetRole == 'semua'
+                                    ? 'UNTUK SEMUA'
+                                    : (a.targetRole == 'pengelola'
+                                          ? 'UNTUK PENGELOLA'
+                                          : 'UNTUK ANGGOTA'),
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: a.targetRole == 'semua' ? Colors.blue.shade700 : Colors.orange.shade700,
-                                  fontWeight: FontWeight.bold
-                                )
+                                  color: a.targetRole == 'semua'
+                                      ? Colors.blue.shade700
+                                      : Colors.orange.shade700,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],
@@ -246,4 +327,3 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
     );
   }
 }
-

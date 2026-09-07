@@ -13,7 +13,7 @@ class CreateVotingScreen extends StatefulWidget {
 class _CreateVotingScreenState extends State<CreateVotingScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
-  
+
   final List<TextEditingController> _optionControllers = [
     TextEditingController(),
     TextEditingController(),
@@ -34,14 +34,18 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
         _optionControllers.removeAt(index);
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Minimal harus ada 2 opsi pilihan')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Minimal harus ada 2 opsi pilihan')),
+      );
     }
   }
 
   Future<void> _submit() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Judul voting wajib diisi')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Judul voting wajib diisi')));
       return;
     }
 
@@ -54,7 +58,9 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
     }
 
     if (options.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Minimal 2 opsi pilihan wajib diisi')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Minimal 2 opsi pilihan wajib diisi')),
+      );
       return;
     }
 
@@ -75,7 +81,9 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
       }
     }
   }
@@ -94,7 +102,10 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buat Voting Baru', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Buat Voting Baru',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppTheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -120,9 +131,12 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Opsi Pilihan:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text(
+              'Opsi Pilihan:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             const SizedBox(height: 8),
-            
+
             ...List.generate(_optionControllers.length, (index) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -134,26 +148,32 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
                         decoration: InputDecoration(
                           labelText: 'Opsi ${index + 1}',
                           border: const OutlineInputBorder(),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                       ),
                     ),
                     if (_optionControllers.length > 2)
                       IconButton(
-                        icon: const Icon(Icons.remove_circle, color: Colors.red),
+                        icon: const Icon(
+                          Icons.remove_circle,
+                          color: Colors.red,
+                        ),
                         onPressed: () => _removeOption(index),
-                      )
+                      ),
                   ],
                 ),
               );
             }),
-            
+
             TextButton.icon(
               onPressed: _addOption,
               icon: const Icon(Icons.add),
               label: const Text('Tambah Opsi'),
             ),
-            
+
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,

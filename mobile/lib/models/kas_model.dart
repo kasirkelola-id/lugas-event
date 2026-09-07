@@ -23,12 +23,24 @@ class KasModel {
 
   factory KasModel.fromJson(Map<String, dynamic> json) {
     return KasModel(
-      id: json['id'] != null ? (json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0) : 0,
+      id: json['id'] != null
+          ? (json['id'] is int
+                ? json['id']
+                : int.tryParse(json['id'].toString()) ?? 0)
+          : 0,
       jenis: json['jenis'] ?? '',
-      nominal: json['nominal'] != null ? (json['nominal'] is int ? json['nominal'] : int.tryParse(json['nominal'].toString()) ?? 0) : 0,
+      nominal: json['nominal'] != null
+          ? (json['nominal'] is int
+                ? json['nominal']
+                : int.tryParse(json['nominal'].toString()) ?? 0)
+          : 0,
       keterangan: json['keterangan'] ?? '',
       tanggal: json['tanggal'] ?? '',
-      dibuatOleh: json['dibuat_oleh'] != null ? (json['dibuat_oleh'] is int ? json['dibuat_oleh'] : int.tryParse(json['dibuat_oleh'].toString()) ?? 0) : 0,
+      dibuatOleh: json['dibuat_oleh'] != null
+          ? (json['dibuat_oleh'] is int
+                ? json['dibuat_oleh']
+                : int.tryParse(json['dibuat_oleh'].toString()) ?? 0)
+          : 0,
       pembuat: json['pembuat'],
       createdAt: json['created_at'] ?? '',
     );

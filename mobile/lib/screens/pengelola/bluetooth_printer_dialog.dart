@@ -46,11 +46,12 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
 
     final devices = await BluetoothPrinterService.getDevices();
     if (!mounted) return;
-    
+
     if (devices.isEmpty) {
       setState(() {
         _isLoading = false;
-        _statusMessage = 'Belum ada printer yang dipasangkan.\nPasangkan printer melalui pengaturan Bluetooth terlebih dahulu.';
+        _statusMessage =
+            'Belum ada printer yang dipasangkan.\nPasangkan printer melalui pengaturan Bluetooth terlebih dahulu.';
       });
     } else {
       setState(() {
@@ -88,7 +89,7 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
       widget.tanggalAcara,
       widget.kodeQr,
     );
-    
+
     // Disconnect after printing
     await BluetoothPrinterService.disconnect();
 
@@ -98,7 +99,7 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
       _connectingDevice = null;
       _statusMessage = success ? 'QR berhasil dicetak.' : 'QR gagal dicetak.';
     });
-    
+
     if (success) {
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) Navigator.pop(context);
@@ -115,8 +116,13 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isError = _statusMessage.contains('gagal') || _statusMessage.contains('mati') || _statusMessage.contains('Belum ada');
-    final bool isSuccess = _statusMessage.contains('berhasil') || _statusMessage.contains('terhubung');
+    final bool isError =
+        _statusMessage.contains('gagal') ||
+        _statusMessage.contains('mati') ||
+        _statusMessage.contains('Belum ada');
+    final bool isSuccess =
+        _statusMessage.contains('berhasil') ||
+        _statusMessage.contains('terhubung');
     final bool isWorking = _connectingDevice != null || _isLoading;
 
     return Dialog(
@@ -128,35 +134,60 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Cetak QR Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            const Text(
+              'Cetak QR Code',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
             const SizedBox(height: 16),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isError ? Colors.red.withValues(alpha: 0.1) : (isSuccess ? Colors.green.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1)),
+                color: isError
+                    ? Colors.red.withValues(alpha: 0.1)
+                    : (isSuccess
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.blue.withValues(alpha: 0.1)),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: isError ? Colors.red.withValues(alpha: 0.3) : (isSuccess ? Colors.green.withValues(alpha: 0.3) : Colors.blue.withValues(alpha: 0.3))),
+                border: Border.all(
+                  color: isError
+                      ? Colors.red.withValues(alpha: 0.3)
+                      : (isSuccess
+                            ? Colors.green.withValues(alpha: 0.3)
+                            : Colors.blue.withValues(alpha: 0.3)),
+                ),
               ),
-              child: Text(_statusMessage, style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: isError ? Colors.red : (isSuccess ? Colors.green : Colors.blue.shade800),
-              ), textAlign: TextAlign.center),
+              child: Text(
+                _statusMessage,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: isError
+                      ? Colors.red
+                      : (isSuccess ? Colors.green : Colors.blue.shade800),
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 16),
-            
+
             if (_isLoading)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: CustomLoadingIndicator(),
-              ))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: CustomLoadingIndicator(),
+                ),
+              )
             else if (_devices.isEmpty)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24.0),
                   child: Column(
                     children: [
-                      const Icon(Icons.bluetooth_disabled, size: 48, color: Colors.grey),
+                      const Icon(
+                        Icons.bluetooth_disabled,
+                        size: 48,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         onPressed: () {
@@ -180,13 +211,17 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
                   itemCount: _devices.length,
                   itemBuilder: (context, index) {
                     final device = _devices[index];
-                    final isThisDeviceLoading = _connectingDevice?.address == device.address;
-                    final isDisabled = _connectingDevice != null && !isThisDeviceLoading;
-                    
+                    final isThisDeviceLoading =
+                        _connectingDevice?.address == device.address;
+                    final isDisabled =
+                        _connectingDevice != null && !isThisDeviceLoading;
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 8),
                       elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Column(
@@ -194,14 +229,31 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.print, color: Colors.blueGrey, size: 28),
+                                const Icon(
+                                  Icons.print,
+                                  color: Colors.blueGrey,
+                                  size: 28,
+                                ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(device.name ?? 'Unknown Device', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                      Text(device.address ?? '', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                      Text(
+                                        device.name ?? 'Unknown Device',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text(
+                                        device.address ?? '',
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -211,16 +263,31 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: (isDisabled || isThisDeviceLoading) ? null : () => _connectAndPrint(device),
+                                onPressed: (isDisabled || isThisDeviceLoading)
+                                    ? null
+                                    : () => _connectAndPrint(device),
                                 style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
-                                child: isThisDeviceLoading 
-                                  ? const SizedBox(width: 20, height: 20, child: CustomLoadingIndicator(size: 24, ))
-                                  : const Text('Hubungkan & Cetak', style: TextStyle(fontWeight: FontWeight.bold)),
+                                child: isThisDeviceLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CustomLoadingIndicator(size: 24),
+                                      )
+                                    : const Text(
+                                        'Hubungkan & Cetak',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -235,11 +302,14 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Tutup', style: TextStyle(color: Colors.grey)),
+                    child: const Text(
+                      'Tutup',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
                 ],
               ),
-            ]
+            ],
           ],
         ),
       ),

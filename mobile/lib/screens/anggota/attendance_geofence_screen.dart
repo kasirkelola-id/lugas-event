@@ -11,7 +11,8 @@ class AttendanceGeofenceScreen extends StatefulWidget {
   const AttendanceGeofenceScreen({Key? key}) : super(key: key);
 
   @override
-  State<AttendanceGeofenceScreen> createState() => _AttendanceGeofenceScreenState();
+  State<AttendanceGeofenceScreen> createState() =>
+      _AttendanceGeofenceScreenState();
 }
 
 class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
@@ -20,7 +21,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
   Position? _currentPosition;
   List<EventModel> _nearbyEvents = [];
   List<int> _activeCheckinEventIds = [];
-  
+
   @override
   void initState() {
     super.initState();
@@ -37,7 +38,8 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
-          _errorMessage = 'Layanan Lokasi (GPS) tidak aktif.\nMohon aktifkan GPS Anda.';
+          _errorMessage =
+              'Layanan Lokasi (GPS) tidak aktif.\nMohon aktifkan GPS Anda.';
           _isLoading = false;
         });
         return;
@@ -51,7 +53,8 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
             final confirm = await AppDialog.showConfirmation(
               context: context,
               title: 'Lokasi Diperlukan',
-              content: 'KARTAR membutuhkan akses lokasi untuk memastikan absensi dilakukan di area kegiatan.',
+              content:
+                  'KARTAR membutuhkan akses lokasi untuk memastikan absensi dilakukan di area kegiatan.',
               confirmText: 'Buka Pengaturan',
               cancelText: 'Nanti',
               type: DialogType.warning,
@@ -70,14 +73,17 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
 
       if (permission == LocationPermission.deniedForever) {
         setState(() {
-          _errorMessage = 'Izin lokasi ditolak secara permanen. Mohon ubah di pengaturan aplikasi.';
+          _errorMessage =
+              'Izin lokasi ditolak secara permanen. Mohon ubah di pengaturan aplikasi.';
           _isLoading = false;
         });
         return;
       }
 
-      _currentPosition = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      
+      _currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
       if (_currentPosition!.isMocked) {
         setState(() {
           _errorMessage = 'Terdeteksi penggunaan Fake GPS. Akses ditolak.';
@@ -89,7 +95,8 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
       await _fetchData();
     } catch (e) {
       setState(() {
-        _errorMessage = 'Gagal mendapatkan lokasi Anda. Pastikan sinyal GPS baik.';
+        _errorMessage =
+            'Gagal mendapatkan lokasi Anda. Pastikan sinyal GPS baik.';
         _isLoading = false;
       });
     }
@@ -101,20 +108,25 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
 
     if (eventResult['success'] && statusResult['success']) {
       final List<EventModel> allEvents = eventResult['events'];
-      _activeCheckinEventIds = (statusResult['active_event_ids'] as List).map((e) => e is int ? e : int.parse(e.toString())).toList();
-      
+      _activeCheckinEventIds = (statusResult['active_event_ids'] as List)
+          .map((e) => e is int ? e : int.parse(e.toString()))
+          .toList();
+
       _nearbyEvents = [];
       for (var event in allEvents) {
         if (!event.isActive) continue;
-        
-        if (event.requireGps && event.latitude != null && event.longitude != null && event.radius != null) {
+
+        if (event.requireGps &&
+            event.latitude != null &&
+            event.longitude != null &&
+            event.radius != null) {
           double distance = Geolocator.distanceBetween(
-            _currentPosition!.latitude, 
-            _currentPosition!.longitude, 
-            event.latitude!, 
-            event.longitude!
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+            event.latitude!,
+            event.longitude!,
           );
-          
+
           if (distance <= event.radius!) {
             _nearbyEvents.add(event);
           }
@@ -122,7 +134,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
           _nearbyEvents.add(event);
         }
       }
-      
+
       setState(() {
         _isLoading = false;
       });
@@ -144,7 +156,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
     );
     if (!mounted) return;
     Navigator.pop(context); // close loading
-    
+
     if (result['success']) {
       await AppDialog.showResult(
         context: context,
@@ -170,7 +182,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
       content: 'Apakah Anda yakin ingin check-out dari acara ini sekarang?',
       type: DialogType.info,
     );
-    
+
     if (confirm != true) return;
 
     if (!mounted) return;
@@ -183,7 +195,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
     );
     if (!mounted) return;
     Navigator.pop(context); // close loading
-    
+
     if (result['success']) {
       await AppDialog.showResult(
         context: context,
@@ -219,9 +231,18 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Lokasi Tidak Tersedia', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.error)),
+                  const Text(
+                    'Lokasi Tidak Tersedia',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.error,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(_errorMessage, style: const TextStyle(fontSize: 12, color: AppTheme.error)),
+                  Text(
+                    _errorMessage,
+                    style: const TextStyle(fontSize: 12, color: AppTheme.error),
+                  ),
                 ],
               ),
             ),
@@ -246,9 +267,18 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Lokasi Ditemukan', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.success)),
+                  Text(
+                    'Lokasi Ditemukan',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.success,
+                    ),
+                  ),
                   SizedBox(height: 4),
-                  Text('Akurasi GPS baik. Siap untuk absensi.', style: TextStyle(fontSize: 12, color: AppTheme.success)),
+                  Text(
+                    'Akurasi GPS baik. Siap untuk absensi.',
+                    style: TextStyle(fontSize: 12, color: AppTheme.success),
+                  ),
                 ],
               ),
             ),
@@ -315,13 +345,21 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
           const SizedBox(height: 24),
           const Text(
             'Tidak Ada Acara Terdekat',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           const Text(
             'Anda berada di luar area absensi kegiatan atau belum ada acara yang sedang aktif.',
-            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
+            style: TextStyle(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+              height: 1.5,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -357,40 +395,78 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                         color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: AppTheme.radiusMedium,
                       ),
-                      child: const Icon(Icons.event_available, color: AppTheme.primary),
+                      child: const Icon(
+                        Icons.event_available,
+                        color: AppTheme.primary,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(event.namaAcara, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                          Text(
+                            event.namaAcara,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text(event.tanggalAcara, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                          Text(
+                            event.tanggalAcara,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Status Box
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isCheckedIn ? AppTheme.success.withValues(alpha: 0.05) : AppTheme.background,
+                    color: isCheckedIn
+                        ? AppTheme.success.withValues(alpha: 0.05)
+                        : AppTheme.background,
                     borderRadius: AppTheme.radiusMedium,
-                    border: Border.all(color: isCheckedIn ? AppTheme.success.withValues(alpha: 0.2) : Colors.grey.shade200),
+                    border: Border.all(
+                      color: isCheckedIn
+                          ? AppTheme.success.withValues(alpha: 0.2)
+                          : Colors.grey.shade200,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(isCheckedIn ? Icons.check_circle : Icons.info_outline, color: isCheckedIn ? AppTheme.success : AppTheme.textSecondary, size: 24),
+                      Icon(
+                        isCheckedIn ? Icons.check_circle : Icons.info_outline,
+                        color: isCheckedIn
+                            ? AppTheme.success
+                            : AppTheme.textSecondary,
+                        size: 24,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          isCheckedIn ? 'Kehadiran Anda telah tercatat pada sistem.' : 'Silakan lakukan absensi kehadiran.',
-                          style: TextStyle(fontSize: 13, color: isCheckedIn ? AppTheme.success : AppTheme.textSecondary, fontWeight: isCheckedIn ? FontWeight.w600 : FontWeight.normal),
+                          isCheckedIn
+                              ? 'Kehadiran Anda telah tercatat pada sistem.'
+                              : 'Silakan lakukan absensi kehadiran.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isCheckedIn
+                                ? AppTheme.success
+                                : AppTheme.textSecondary,
+                            fontWeight: isCheckedIn
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
                         ),
                       ),
                     ],
@@ -399,28 +475,43 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
               ],
             ),
           ),
-          
+
           // CTA Block
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppTheme.background,
-              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
             ),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => isCheckedIn ? _handleCheckOut(event) : _handleCheckIn(event),
-                icon: Icon(isCheckedIn ? Icons.logout : Icons.login, color: Colors.white),
+                onPressed: () => isCheckedIn
+                    ? _handleCheckOut(event)
+                    : _handleCheckIn(event),
+                icon: Icon(
+                  isCheckedIn ? Icons.logout : Icons.login,
+                  color: Colors.white,
+                ),
                 label: Text(
                   isCheckedIn ? 'Check-Out' : 'Absen Sekarang',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isCheckedIn ? Colors.orange : AppTheme.primary,
+                  backgroundColor: isCheckedIn
+                      ? Colors.orange
+                      : AppTheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppTheme.radiusMedium,
+                  ),
                   elevation: 0,
                 ),
               ),

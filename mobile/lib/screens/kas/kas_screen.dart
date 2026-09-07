@@ -73,13 +73,16 @@ class _KasScreenState extends State<KasScreen> {
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: 'Hapus Transaksi?',
-      content: 'Apakah Anda yakin ingin menghapus data kas ini? Saldo akan dihitung ulang secara otomatis.',
+      content:
+          'Apakah Anda yakin ingin menghapus data kas ini? Saldo akan dihitung ulang secara otomatis.',
       isDestructive: true,
     );
 
     if (confirm != true) return;
 
-    setState(() { _isLoading = true; });
+    setState(() {
+      _isLoading = true;
+    });
     final result = await KasService.deleteTransaksi(id);
     if (!mounted) return;
 
@@ -87,18 +90,25 @@ class _KasScreenState extends State<KasScreen> {
       FeedbackDialogs.showSnackbar(context, 'Transaksi dihapus.');
       _loadData();
     } else {
-      setState(() { _isLoading = false; });
+      setState(() {
+        _isLoading = false;
+      });
       FeedbackDialogs.showSnackbar(context, result['message'], isError: true);
     }
   }
 
   String _formatCurrency(int amount) {
-    return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(amount);
+    return NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(amount);
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool canManage = widget.user != null && 
+    final bool canManage =
+        widget.user != null &&
         ['admin', 'ketua', 'bendahara'].contains(widget.user!.roleLevel);
 
     return Scaffold(
@@ -115,27 +125,37 @@ class _KasScreenState extends State<KasScreen> {
         color: AppTheme.primary,
         child: _buildBody(canManage),
       ),
-      floatingActionButton: canManage ? FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddKasScreen()),
-          );
-          if (result == true) {
-            _loadData();
-          }
-        },
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Catat Transaksi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-        backgroundColor: AppTheme.primary,
-        elevation: 4,
-      ) : null,
+      floatingActionButton: canManage
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddKasScreen()),
+                );
+                if (result == true) {
+                  _loadData();
+                }
+              },
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Catat Transaksi',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              backgroundColor: AppTheme.primary,
+              elevation: 4,
+            )
+          : null,
     );
   }
 
   Widget _buildBody(bool canManage) {
     if (_isLoading && _transaksi.isEmpty) {
-      return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
     }
 
     if (_errorMessage != null && _transaksi.isEmpty) {
@@ -145,11 +165,25 @@ class _KasScreenState extends State<KasScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), shape: BoxShape.circle),
-              child: const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+              decoration: BoxDecoration(
+                color: AppTheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppTheme.error,
+              ),
             ),
             const SizedBox(height: 24),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
             const SizedBox(height: 24),
             CustomButton(
               text: 'Coba Lagi',
@@ -169,7 +203,11 @@ class _KasScreenState extends State<KasScreen> {
         const SizedBox(height: 24),
         const Text(
           'Riwayat Transaksi',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
         ),
         const SizedBox(height: 12),
         if (_transaksi.isEmpty)
@@ -217,14 +255,25 @@ class _KasScreenState extends State<KasScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total Saldo Kas', style: TextStyle(color: Colors.white70, fontSize: 16)),
-                Icon(Icons.account_balance_wallet, color: Colors.white.withValues(alpha: 0.5)),
+                const Text(
+                  'Total Saldo Kas',
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                ),
+                Icon(
+                  Icons.account_balance_wallet,
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               _formatCurrency(_saldo),
-              style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: -1),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -1,
+              ),
             ),
             const SizedBox(height: 24),
             Container(
@@ -240,15 +289,25 @@ class _KasScreenState extends State<KasScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Pemasukan Bulan Ini', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      const Text(
+                        'Pemasukan Bulan Ini',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.arrow_downward, color: Colors.greenAccent, size: 16),
+                          const Icon(
+                            Icons.arrow_downward,
+                            color: Colors.greenAccent,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             _formatCurrency(_pemasukanBulanIni),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -257,15 +316,25 @@ class _KasScreenState extends State<KasScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text('Pengeluaran Bulan Ini', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      const Text(
+                        'Pengeluaran Bulan Ini',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.arrow_upward, color: Colors.redAccent, size: 16),
+                          const Icon(
+                            Icons.arrow_upward,
+                            color: Colors.redAccent,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             _formatCurrency(_pengeluaranBulanIni),
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -292,7 +361,10 @@ class _KasScreenState extends State<KasScreen> {
       elevation: 2,
       shadowColor: Colors.black12,
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -301,12 +373,19 @@ class _KasScreenState extends State<KasScreen> {
           ),
           child: Icon(icon, color: color),
         ),
-        title: Text(t.keterangan, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        title: Text(
+          t.keterangan,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 6.0),
           child: Row(
             children: [
-              Icon(Icons.calendar_today, size: 12, color: AppTheme.textSecondary),
+              Icon(
+                Icons.calendar_today,
+                size: 12,
+                color: AppTheme.textSecondary,
+              ),
               const SizedBox(width: 4),
               Text(t.tanggal, style: const TextStyle(fontSize: 12)),
             ],
@@ -321,21 +400,32 @@ class _KasScreenState extends State<KasScreen> {
               children: [
                 Text(
                   '$sign${_formatCurrency(t.nominal)}',
-                  style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15),
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
                 if (t.pembuat != null)
-                  Text(t.pembuat!, style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                  Text(
+                    t.pembuat!,
+                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                  ),
               ],
             ),
             if (canManage) ...[
               const SizedBox(width: 8),
               IconButton(
-                icon: const Icon(Icons.delete_outline, color: AppTheme.error, size: 22),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppTheme.error,
+                  size: 22,
+                ),
                 onPressed: () => _deleteTransaksi(t.id),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-            ]
+            ],
           ],
         ),
       ),
