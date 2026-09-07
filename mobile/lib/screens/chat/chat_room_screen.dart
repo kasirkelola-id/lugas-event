@@ -200,21 +200,28 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     });
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     if (_msgController.text.trim().isEmpty) return;
     if (_isSending) return; // Prevent rapid duplicate
     
     setState(() { _isSending = true; });
     
-    _chatService.sendMessage(
-      _msgController.text.trim(),
+    final text = _msgController.text.trim();
+    _msgController.clear();
+
+    final sentChat = await _chatService.sendMessage(
+      text,
       type: widget.type,
       receiverId: widget.receiverId,
       chatRoomId: widget.roomId,
     );
     
-    _msgController.clear();
-    setState(() { _isSending = false; });
+    if (mounted) {
+      if (sentChat != null) {
+        _addNewMessage(sentChat);
+      }
+      setState(() { _isSending = false; });
+    }
   }
 
   Color _getColorForUser(int userId) {

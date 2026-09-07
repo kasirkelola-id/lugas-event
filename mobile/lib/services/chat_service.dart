@@ -78,7 +78,7 @@ class ChatService {
   }
 
   // Send message via REST API (Triggers FCM)
-  Future<bool> sendMessageViaApi(String message, {String type = 'group', int? receiverId, int? chatRoomId}) async {
+  Future<Chat?> sendMessageViaApi(String message, {String type = 'group', int? receiverId, int? chatRoomId}) async {
     try {
       final response = await ApiClient.post('/chats/messages', {
         'type': type,
@@ -86,14 +86,21 @@ class ChatService {
         'receiver_id': receiverId,
         'chat_room_id': chatRoomId,
       });
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        if (data['data'] != null) {
+          return Chat.fromJson(data['data']);
+        }
+      }
+      return null;
     } catch (e) {
-      return false;
+      print("Error sending message via API: $e");
+      return null;
     }
   }
 
   // Keep WebSocket send as primary, fallback to REST if disconnected
-  void sendMessage(String message, {String type = 'group', int? receiverId, int? chatRoomId}) {
+  Future<Chat?> sendMessage(String message, {String type = 'group', int? receiverId, int? chatRoomId}) async {
     if (_socket != null && _socket!.connected) {
       _socket!.emit('send_message', {
         'type': type,
@@ -102,9 +109,10 @@ class ChatService {
         'chat_room_id': chatRoomId,
       });
       // Do NOT trigger REST API here if socket is connected. Node.js server will handle DB insertion and FCM trigger.
+      return null; // Local UI will wait for websocket broadcast
     } else {
       // Fallback to REST API if socket not connected
-      sendMessageViaApi(message, type: type, receiverId: receiverId, chatRoomId: chatRoomId);
+      return await sendMessageViaApi(message, type: type, receiverId: receiverId, chatRoomId: chatRoomId);
     }
   }
 

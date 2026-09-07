@@ -248,6 +248,10 @@ class ChatController extends BaseApiController
         }
 
         $chatModel->insert($data);
+        $data['id'] = $chatModel->getInsertID();
+        $data['nama_lengkap'] = $user['nama_lengkap'];
+        $data['role_level'] = $user['role_level'];
+        $data['sender_photo_url'] = !empty($user['profile_photo']) ? base_url($user['profile_photo']) : null;
 
         return $this->sendSuccess('Pesan terkirim', $data);
     }
