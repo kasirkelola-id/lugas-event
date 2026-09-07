@@ -248,7 +248,7 @@ class AppDrawer extends StatelessWidget {
       
       if (isBendahara) ...[
         _buildSectionLabel('Keuangan'),
-        _buildItem(context, Icons.account_balance_wallet_outlined, 'Kas Warga', KasScreen(user: user)),
+        _buildItem(context, Icons.account_balance_wallet_outlined, 'Kas', KasScreen(user: user)),
       ],
 
       _buildSectionLabel('Kegiatan'),
@@ -291,7 +291,7 @@ class AppDrawer extends StatelessWidget {
       _buildItem(context, Icons.insert_chart_outlined, 'Laporan', const AdminLaporanScreen()),
       
       _buildSectionLabel('Keuangan'),
-      _buildItem(context, Icons.account_balance_wallet_outlined, 'Kas Warga', KasScreen(user: user)),
+      _buildItem(context, Icons.account_balance_wallet_outlined, 'Kas', KasScreen(user: user)),
       
       _buildSectionLabel('Sistem'),
       _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const AdminPengumumanScreen()),

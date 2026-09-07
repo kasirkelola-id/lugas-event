@@ -105,7 +105,7 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  const Text('Kas Warga', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                  const Text('Kas', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary)),
                   const SizedBox(height: 8),
                   const Text('Atur berapa hari maksimal seorang bendahara dapat menginput data secara backdate (tanggal lampau).', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
                   const SizedBox(height: 16),

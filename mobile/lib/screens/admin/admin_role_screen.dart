@@ -182,7 +182,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             count: _summary?['bendahara'] ?? 0,
             description: 'Bertanggung jawab atas keuangan.',
             capabilities: [
-              'Mengelola fitur kas warga (pemasukan/pengeluaran).',
+              'Mengelola fitur kas (pemasukan/pengeluaran).',
               'Melihat data pengguna dan laporan.'
             ],
           ),

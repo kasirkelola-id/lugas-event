@@ -41,7 +41,7 @@ class _AddKasScreenState extends State<AddKasScreen> {
     if (!mounted) return;
     
     if (result['success']) {
-      final data = result['data'] as Map<String, dynamic>;
+      final data = result['data'] is Map<String, dynamic> ? result['data'] as Map<String, dynamic> : <String, dynamic>{};
       final limit = int.tryParse(data['kas_backdate_limit']?.toString() ?? '30') ?? 30;
       setState(() {
         _limitDays = limit;
