@@ -240,8 +240,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                   context,
                   MaterialPageRoute(
                     builder: (_) => ChatRoomScreen(
-                      roomId:
-                          contact['contact_id'], // Using roomId field to pass user ID for private chat
+                      receiverId: contact['contact_id'],
                       roomName: contact['contact_name'],
                       type: 'private',
                     ),
