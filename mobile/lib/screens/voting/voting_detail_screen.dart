@@ -7,6 +7,7 @@ import '../../services/auth_service.dart';
 import '../../services/voting_service.dart';
 import '../widgets/common/custom_button.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:mobile/screens/widgets/common/app_dialog.dart';
 
 class VotingDetailScreen extends StatefulWidget {
   final int votingId;
@@ -57,60 +58,56 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
 
   Future<void> _submitVote() async {
     if (_selectedOptionId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silakan pilih salah satu opsi')));
+      AppDialog.showResult(context: context, title: 'Perhatian', content: 'Silakan pilih salah satu opsi', type: DialogType.warning);
       return;
     }
 
-    final confirm = await showDialog<bool>(
+    final confirm = await AppDialog.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Pilihan'),
-        content: const Text('Pilihan Anda tidak dapat diubah setelah dikirim.\nLanjutkan?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Kirim', style: TextStyle(color: AppTheme.primary))),
-        ],
-      ),
+      title: 'Konfirmasi Pilihan',
+      content: 'Pilihan Anda tidak dapat diubah setelah dikirim.\nLanjutkan?',
+      type: DialogType.info,
     );
 
     if (confirm != true) return;
 
-    setState(() => _isSubmitting = true);
+    if (!mounted) return;
+    AppDialog.showLoading(context, message: 'Mengirim...');
+
     final result = await VotingService.submitVote(widget.votingId, _selectedOptionId!);
-    setState(() => _isSubmitting = false);
+    if (!mounted) return;
+    Navigator.pop(context); // close loading
 
     if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      await AppDialog.showResult(context: context, title: 'Berhasil', content: result['message'], type: DialogType.success);
       _fetchDetail(); // reload to show results
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'], style: const TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+      await AppDialog.showResult(context: context, title: 'Gagal', content: result['message'], type: DialogType.error);
     }
   }
 
   Future<void> _closeVoting() async {
-    final confirm = await showDialog<bool>(
+    final confirm = await AppDialog.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Tutup Voting'),
-        content: const Text('Apakah Anda yakin ingin menutup voting ini? Anggota tidak akan bisa memilih lagi.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Tutup', style: TextStyle(color: Colors.red))),
-        ],
-      ),
+      title: 'Tutup Voting',
+      content: 'Apakah Anda yakin ingin menutup voting ini? Anggota tidak akan bisa memilih lagi.',
+      type: DialogType.error,
     );
 
     if (confirm != true) return;
 
-    setState(() => _isSubmitting = true);
+    if (!mounted) return;
+    AppDialog.showLoading(context, message: 'Menutup...');
+    
     final result = await VotingService.changeStatus(widget.votingId, 'closed');
-    setState(() => _isSubmitting = false);
+    if (!mounted) return;
+    Navigator.pop(context);
 
     if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      await AppDialog.showResult(context: context, title: 'Voting Ditutup', content: result['message'], type: DialogType.success);
       _fetchDetail();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+      await AppDialog.showResult(context: context, title: 'Gagal', content: result['message'], type: DialogType.error);
     }
   }
 

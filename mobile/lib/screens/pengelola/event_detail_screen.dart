@@ -9,6 +9,7 @@ import 'edit_event_screen.dart';
 import 'attendance_list_screen.dart';
 import 'bluetooth_printer_dialog.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:mobile/screens/widgets/common/app_dialog.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;
@@ -98,51 +99,42 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   void _closeEvent() async {
-    final confirm = await showDialog<bool>(
+    final confirm = await AppDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Tutup Acara?', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Setelah acara ditutup, anggota tidak dapat melakukan absensi lagi.'),
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batalkan', style: TextStyle(color: AppTheme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.error,
-              foregroundColor: Colors.white,
-              elevation: 0,
-            ),
-            child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+      title: 'Tutup Acara?',
+      content: 'Setelah acara ditutup, anggota tidak dapat melakukan absensi lagi.',
+      type: DialogType.error,
     );
 
     if (confirm != true) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    if (!mounted) return;
+    AppDialog.showLoading(context, message: 'Menutup...');
 
     final result = await EventService.closeEvent(widget.eventId);
-    
     if (!mounted) return;
+    Navigator.pop(context); // close loading
 
     if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Acara berhasil ditutup.'), backgroundColor: AppTheme.success));
+      await AppDialog.showResult(
+        context: context,
+        title: 'Berhasil',
+        content: 'Acara berhasil ditutup.',
+        type: DialogType.success,
+      );
       _loadEvent(); // Refresh data
     } else {
-      setState(() { _isLoading = false; });
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message']), backgroundColor: AppTheme.error));
+        await AppDialog.showResult(
+          context: context,
+          title: 'Gagal',
+          content: result['message'] ?? 'Terjadi kesalahan.',
+          type: DialogType.error,
+        );
       }
     }
   }
@@ -219,6 +211,19 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildHeroSection() {
+    // Parse date for visual block
+    String day = '--';
+    String monthStr = '---';
+    try {
+      final parts = _event!.tanggalAcara.split('-');
+      if (parts.length == 3) {
+        day = parts[2];
+        int m = int.parse(parts[1]);
+        const shortMonths = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MEI', 'JUN', 'JUL', 'AGU', 'SEP', 'OKT', 'NOV', 'DES'];
+        if (m >= 1 && m <= 12) monthStr = shortMonths[m];
+      }
+    } catch (_) {}
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -264,25 +269,60 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           const SizedBox(height: 24),
           Row(
             children: [
+              // Visual Date Block
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: AppTheme.radiusSmall,
+                  borderRadius: AppTheme.radiusMedium,
+                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
                 ),
-                child: const Icon(Icons.calendar_month, color: AppTheme.primary, size: 24),
+                child: Column(
+                  children: [
+                    Text(day, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.primary, height: 1)),
+                    const SizedBox(height: 4),
+                    Text(monthStr, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppTheme.primary, letterSpacing: 1)),
+                  ],
+                ),
               ),
               const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Waktu Acara', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(
-                    _formatDateTime(_event!.tanggalAcara, _event!.waktuMulai, _event!.waktuSelesai), 
-                    style: const TextStyle(fontSize: 15, color: AppTheme.textPrimary, fontWeight: FontWeight.w500)
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.calendar_today, size: 14, color: AppTheme.textSecondary),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(_formatDateTime(_event!.tanggalAcara, null, null).replaceAll('\n', ''), style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, fontWeight: FontWeight.w600))),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time, size: 14, color: AppTheme.textSecondary),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_event!.waktuMulai ?? '??:??'} – ${_event!.waktuSelesai ?? '??:??'}',
+                          style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary, fontWeight: FontWeight.bold)
+                        ),
+                      ],
+                    ),
+                    if (_event!.radius != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Area Absensi: ${_event!.radius}m',
+                            style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)
+                          ),
+                        ],
+                      ),
+                    ]
+                  ],
+                ),
               ),
             ],
           ),

@@ -3,7 +3,7 @@ import '../../core/theme/app_theme.dart';
 import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/common/custom_loading_indicator.dart';
-import '../widgets/common/feedback_dialogs.dart';
+import '../widgets/common/app_dialog.dart';
 
 class PengelolaApprovalScreen extends StatefulWidget {
   const PengelolaApprovalScreen({super.key});
@@ -47,53 +47,70 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
   }
 
   void _handleApprove(UserModel user) async {
-    final confirm = await FeedbackDialogs.showConfirmation(
+    final confirm = await AppDialog.showConfirmation(
       context: context,
       title: 'Setujui Pendaftaran',
       content: 'Setujui ${user.namaLengkap} sebagai anggota?',
+      type: DialogType.info,
     );
 
     if (confirm == true) {
-      setState(() => _isLoading = true);
+      if (!mounted) return;
+      AppDialog.showLoading(context, message: 'Menyetujui...');
+      
       final result = await UserService.approveMember(user.id);
       if (!mounted) return;
+      Navigator.pop(context); // close loading
 
       if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Anggota disetujui'), backgroundColor: AppTheme.success),
+        await AppDialog.showResult(
+          context: context,
+          title: 'Berhasil',
+          content: 'Anggota disetujui',
+          type: DialogType.success,
         );
         _loadData();
       } else {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Gagal'), backgroundColor: AppTheme.error),
+        await AppDialog.showResult(
+          context: context,
+          title: 'Gagal',
+          content: result['message'] ?? 'Gagal menyetujui anggota',
+          type: DialogType.error,
         );
       }
     }
   }
 
   void _handleReject(UserModel user) async {
-    final confirm = await FeedbackDialogs.showConfirmation(
+    final confirm = await AppDialog.showConfirmation(
       context: context,
       title: 'Tolak Pendaftaran',
       content: 'Tolak pendaftaran ${user.namaLengkap}?',
-      isDestructive: true,
+      type: DialogType.error,
     );
 
     if (confirm == true) {
-      setState(() => _isLoading = true);
+      if (!mounted) return;
+      AppDialog.showLoading(context, message: 'Menolak...');
+      
       final result = await UserService.rejectMember(user.id);
       if (!mounted) return;
+      Navigator.pop(context); // close loading
 
       if (result['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pendaftaran ditolak'), backgroundColor: AppTheme.success),
+        await AppDialog.showResult(
+          context: context,
+          title: 'Pendaftaran Ditolak',
+          content: 'Pendaftaran anggota telah ditolak',
+          type: DialogType.success,
         );
         _loadData();
       } else {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Gagal'), backgroundColor: AppTheme.error),
+        await AppDialog.showResult(
+          context: context,
+          title: 'Gagal',
+          content: result['message'] ?? 'Gagal menolak anggota',
+          type: DialogType.error,
         );
       }
     }

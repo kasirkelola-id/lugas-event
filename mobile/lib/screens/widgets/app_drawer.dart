@@ -33,6 +33,7 @@ import '../anggota/anggota_profil_screen.dart';
 import '../chat/chat_list_screen.dart';
 import '../voting/voting_list_screen.dart';
 import '../inventory/inventory_main_screen.dart';
+import 'common/app_dialog.dart';
 
 class AppDrawer extends StatelessWidget {
   final UserModel user;
@@ -40,8 +41,21 @@ class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key, required this.user});
 
   void _logout(BuildContext context) async {
+    final confirm = await AppDialog.showConfirmation(
+      context: context,
+      title: 'Keluar?',
+      content: 'Anda yakin ingin keluar dari akun ini?',
+      confirmText: 'Keluar',
+      type: DialogType.error,
+    );
+    if (confirm != true) return;
+
+    if (!context.mounted) return;
+    AppDialog.showLoading(context, message: 'Keluar...');
+
     await AuthService.logout();
     if (!context.mounted) return;
+    Navigator.pop(context); // pop loading dialog
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const PinScreen()),

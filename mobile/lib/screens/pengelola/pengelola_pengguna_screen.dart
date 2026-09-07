@@ -8,6 +8,7 @@ import '../widgets/app_drawer.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import '../widgets/common/custom_button.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:mobile/screens/widgets/common/app_dialog.dart';
 
 class PengelolaPenggunaScreen extends StatefulWidget {
   const PengelolaPenggunaScreen({super.key});
@@ -138,28 +139,11 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   }
 
   Future<void> _confirmAction(String title, String content, Future<Map<String, dynamic>> Function() action, {bool isDestructive = false}) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await AppDialog.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(content),
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false), 
-            child: const Text('Batalkan', style: TextStyle(color: AppTheme.textSecondary))
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isDestructive ? AppTheme.error : AppTheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+      title: title,
+      content: content,
+      type: isDestructive ? DialogType.error : DialogType.warning,
     );
 
     if (confirm == true) {
@@ -459,39 +443,31 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
       if (result['success']) {
         if (!mounted) return;
         final tempPass = result['temporary_password'] ?? '-';
-        await showDialog(
+        await AppDialog.showResult(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Password Berhasil Direset', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.success)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Silakan berikan password sementara ini kepada ${user.namaLengkap}:'),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: AppTheme.radiusMedium,
-                    border: Border.all(color: AppTheme.primary),
-                  ),
-                  child: Center(
-                    child: SelectableText(
-                      tempPass,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary, letterSpacing: 2),
-                    ),
+          title: 'Password Direset',
+          type: DialogType.success,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Silakan berikan password sementara ini kepada ${user.namaLengkap}:', textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: AppTheme.radiusMedium,
+                  border: Border.all(color: AppTheme.primary),
+                ),
+                child: Center(
+                  child: SelectableText(
+                    tempPass,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primary, letterSpacing: 2),
                   ),
                 ),
-              ],
-            ),
-            actions: [
-              CustomButton(
-                text: 'Tutup',
-                onPressed: () => Navigator.pop(context),
-                isFullWidth: true,
-              )
+              ),
             ],
-          )
+          ),
         );
         _loadData();
       } else {
