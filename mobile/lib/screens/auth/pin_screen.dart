@@ -200,7 +200,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                 _buildNumButton((i * 3 + j).toString()),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
         ],
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -223,8 +223,8 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
         splashColor: AppTheme.primary.withValues(alpha: 0.2),
         highlightColor: AppTheme.primary.withValues(alpha: 0.1),
         child: Ink(
-          width: 65,
-          height: 65,
+          width: 60,
+          height: 60,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.grey.shade100,
@@ -249,8 +249,8 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
         splashColor: color.withValues(alpha: 0.2),
         highlightColor: color.withValues(alpha: 0.1),
         child: Ink(
-          width: 65,
-          height: 65,
+          width: 60,
+          height: 60,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.grey.shade100,
@@ -278,7 +278,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                 side: BorderSide(color: Colors.grey.shade200),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -297,8 +297,8 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                       ),
                       child: Image.asset(
                         'assets/logo/app_logo.png',
-                        width: 80,
-                        height: 80,
+                        width: 70,
+                        height: 70,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -331,7 +331,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                         color: AppTheme.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 24),
                     if (_errorMessage != null)
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -358,7 +358,7 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: List.generate(6, (index) => _buildPinField(index)),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
                     if (_isLoading)
                       const CustomLoadingIndicator(color: AppTheme.primary)
                     else
