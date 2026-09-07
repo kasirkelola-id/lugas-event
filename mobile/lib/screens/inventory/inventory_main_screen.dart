@@ -9,6 +9,8 @@ import 'create_inventory_screen.dart';
 import 'loan_request_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/common/feedback_dialogs.dart';
+import '../widgets/common/app_snackbar.dart';
 
 class InventoryMainScreen extends StatefulWidget {
   const InventoryMainScreen({Key? key}) : super(key: key);
@@ -387,20 +389,10 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
   }
 
   Future<void> _confirmUpdateLoanStatus(int loanId, String status, String title, String message) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Batal')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true), 
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
-            child: const Text('Ya', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      )
+      title: title,
+      content: message,
     );
 
     if (confirm == true) {
@@ -415,7 +407,7 @@ class _InventoryMainScreenState extends State<InventoryMainScreen> with SingleTi
       await _refresh();
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'])));
+        AppSnackBar.showError(context, result['message']);
       }
     }
     setState(() => _isLoading = false);

@@ -508,52 +508,68 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          return AlertDialog(
-            title: const Text('Ubah Role', style: TextStyle(fontWeight: FontWeight.bold)),
-            content: SingleChildScrollView(
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
+            insetPadding: const EdgeInsets.all(20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: roles.map((role) {
-                  return RadioListTile<String>(
-                    title: Text(role.toUpperCase(), style: const TextStyle(fontSize: 14)),
-                    value: role,
-                    groupValue: selectedRole,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (val) {
-                      if (val != null) {
-                        setDialogState(() => selectedRole = val);
-                      }
-                    },
-                  );
-                }).toList(),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text('Ubah Role', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  const SizedBox(height: 16),
+                  SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: roles.map((role) {
+                        return RadioListTile<String>(
+                          title: Text(role.toUpperCase(), style: const TextStyle(fontSize: 14)),
+                          value: role,
+                          groupValue: selectedRole,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: (val) {
+                            if (val != null) {
+                              setDialogState(() => selectedRole = val);
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          setState(() => _isLoading = true);
+                          final result = await UserService.changeRole(user.id, selectedRole);
+                          if (result['success']) {
+                            _showSnackbar('Role berhasil diubah');
+                            _loadData();
+                          } else {
+                            _handleError(result['message']);
+                          }
+                        },
+                        child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-                ),
-                onPressed: () async {
-                  Navigator.pop(context);
-                  setState(() => _isLoading = true);
-                  final result = await UserService.changeRole(user.id, selectedRole);
-                  if (result['success']) {
-                    _showSnackbar('Role berhasil diubah');
-                    _loadData();
-                  } else {
-                    _handleError(result['message']);
-                  }
-                },
-                child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ],
           );
         }
       ),

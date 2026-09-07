@@ -119,15 +119,17 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
     final bool isSuccess = _statusMessage.contains('berhasil') || _statusMessage.contains('terhubung');
     final bool isWorking = _connectingDevice != null || _isLoading;
 
-    return AlertDialog(
-      title: const Text('Cetak QR Code', style: TextStyle(fontWeight: FontWeight.bold)),
+    return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      content: SizedBox(
-        width: double.maxFinite,
+      insetPadding: const EdgeInsets.all(20),
+      child: Container(
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const Text('Cetak QR Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            const SizedBox(height: 16),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -226,16 +228,21 @@ class _BluetoothPrinterDialogState extends State<BluetoothPrinterDialog> {
                   },
                 ),
               ),
+            if (!isWorking) ...[
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Tutup', style: TextStyle(color: Colors.grey)),
+                  ),
+                ],
+              ),
+            ]
           ],
         ),
       ),
-      actions: [
-        if (!isWorking)
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup', style: TextStyle(color: Colors.grey)),
-          ),
-      ],
     );
   }
 }

@@ -8,6 +8,7 @@ import '../../models/user_model.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/custom_button.dart';
+import '../widgets/common/app_dialog.dart';
 import 'force_change_password_screen.dart';
 import 'register_screen.dart';
 import 'pin_screen.dart';
@@ -130,25 +131,11 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       if (result['code'] == 'MEMBERSHIP_PENDING_APPROVAL') {
         if (!mounted) return;
-        showDialog(
+        AppDialog.showResult(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Pendaftaran Menunggu Persetujuan'),
-            content: const Text(
-                'Akun Anda sudah terdaftar, tetapi masih menunggu\n'
-                'persetujuan pengurus Karang Taruna.\n\n'
-                'Silakan coba login kembali setelah pendaftaran disetujui.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Kembali'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Coba Lagi'),
-              ),
-            ],
-          ),
+          title: 'Menunggu Persetujuan',
+          content: 'Akun Anda sudah terdaftar, tetapi masih menunggu\npersetujuan pengurus Karang Taruna.\n\nSilakan coba login kembali setelah disetujui.',
+          type: DialogType.info,
         );
       } else {
         setState(() {

@@ -7,6 +7,8 @@ import '../../services/auth_service.dart';
 import 'package:mobile/screens/auth/pin_screen.dart';
 import 'attendance_list_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/common/feedback_dialogs.dart';
+import '../widgets/common/app_snackbar.dart';
 
 class ParticipantListScreen extends StatefulWidget {
   final EventModel event;
@@ -57,28 +59,15 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
   Future<void> _addParticipant() async {
     // This is a placeholder for adding participant
     // For real app, we need a bottom sheet to select users
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pilih pengguna untuk ditambahkan')));
+    AppSnackBar.showInfo(context, 'Pilih pengguna untuk ditambahkan');
   }
 
   Future<void> _removeParticipant(ParticipantModel participant) async {
-    final confirm = await showDialog<bool>(
+    final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Hapus Peserta', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Apakah Anda yakin ingin menghapus ${participant.namaLengkap} dari daftar peserta?'),
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false), 
-            child: const Text('Batalkan', style: TextStyle(color: AppTheme.textSecondary))
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('Konfirmasi', style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+      title: 'Hapus Peserta',
+      content: 'Apakah Anda yakin ingin menghapus ${participant.namaLengkap} dari daftar peserta?',
+      isDestructive: true,
     );
 
     if (confirm != true) return;
@@ -92,7 +81,7 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
     if (!mounted) return;
 
     if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Peserta berhasil dihapus.'), backgroundColor: AppTheme.success));
+      AppSnackBar.showSuccess(context, 'Peserta berhasil dihapus.');
       _loadParticipants();
     } else {
       setState(() { _isLoading = false; });
@@ -101,7 +90,7 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
         if (!mounted) return;
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message']), backgroundColor: AppTheme.error));
+        AppSnackBar.showError(context, result['message']);
       }
     }
   }

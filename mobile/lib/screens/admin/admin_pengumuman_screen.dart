@@ -91,16 +91,20 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: Text(announcement == null ? 'Buat Pengumuman' : 'Edit Pengumuman', style: const TextStyle(fontWeight: FontWeight.bold)),
+            return Dialog(
               shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-              content: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CustomTextField(
+              insetPadding: const EdgeInsets.all(20),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(announcement == null ? 'Buat Pengumuman' : 'Edit Pengumuman', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                        const SizedBox(height: 24),
+                        CustomTextField(
                         controller: judulController,
                         label: 'Judul',
                         validator: (value) => value == null || value.isEmpty ? 'Wajib diisi' : null,
@@ -136,53 +140,60 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                         activeTrackColor: AppTheme.primary.withValues(alpha: 0.5),
                         activeThumbColor: AppTheme.primary,
                       ),
-                    ],
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
+                    child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
                   ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                  child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
-                ),
-                CustomButton(
-                  text: 'Simpan',
-                  onPressed: () async {
-                    if (formKey.currentState!.validate()) {
-                      setStateDialog(() => isLoadingSubmit = true);
-                      
-                      final data = {
-                        'judul': judulController.text,
-                        'isi': isiController.text,
-                        'target_role': targetRole,
-                        'status_aktif': statusAktif ? 1 : 0,
-                      };
+                  const SizedBox(width: 8),
+                  CustomButton(
+                    text: 'Simpan',
+                    onPressed: () async {
+                      if (formKey.currentState!.validate()) {
+                        setStateDialog(() => isLoadingSubmit = true);
+                        
+                        final data = {
+                          'judul': judulController.text,
+                          'isi': isiController.text,
+                          'target_role': targetRole,
+                          'status_aktif': statusAktif ? 1 : 0,
+                        };
 
-                      Map<String, dynamic> result;
-                      if (announcement == null) {
-                        result = await AnnouncementService.createAnnouncement(data);
-                      } else {
-                        result = await AnnouncementService.updateAnnouncement(announcement.id, data);
-                      }
-
-                      if (result['success']) {
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          _showSnackbar(announcement == null ? 'Pengumuman dibuat' : 'Pengumuman diperbarui');
-                          _loadData();
+                        Map<String, dynamic> result;
+                        if (announcement == null) {
+                          result = await AnnouncementService.createAnnouncement(data);
+                        } else {
+                          result = await AnnouncementService.updateAnnouncement(announcement.id, data);
                         }
-                      } else {
-                        setStateDialog(() => isLoadingSubmit = false);
-                        _showSnackbar(result['message'], isError: true);
+
+                        if (result['success']) {
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            _showSnackbar(announcement == null ? 'Pengumuman dibuat' : 'Pengumuman diperbarui');
+                            _loadData();
+                          }
+                        } else {
+                          setStateDialog(() => isLoadingSubmit = false);
+                          _showSnackbar(result['message'], isError: true);
+                        }
                       }
-                    }
-                  },
-                  isLoading: isLoadingSubmit,
-                  isFullWidth: false,
-                ),
-              ],
-            );
-          }
+                    },
+                    isLoading: isLoadingSubmit,
+                    isFullWidth: false,
+                  ),
+                ],
+              ),
+
+                    ], 
+                  ), 
+                ), 
+              ),
+            ),
+          );
+        }
         );
       },
     );

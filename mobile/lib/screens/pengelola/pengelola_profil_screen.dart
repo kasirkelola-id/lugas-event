@@ -7,6 +7,8 @@ import '../widgets/app_drawer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/common/app_snackbar.dart';
+import '../widgets/common/app_error_state.dart';
 
 class PengelolaProfilScreen extends StatefulWidget {
   const PengelolaProfilScreen({super.key});
@@ -51,14 +53,11 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
   
   void _showSnackbar(String message, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? AppTheme.error : AppTheme.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-      ),
-    );
+    if (isError) {
+      AppSnackBar.showError(context, message);
+    } else {
+      AppSnackBar.showSuccess(context, message);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -102,16 +101,20 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text('Edit Profil', style: TextStyle(fontWeight: FontWeight.bold)),
+            return Dialog(
               shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-              content: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
+              insetPadding: const EdgeInsets.all(20),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Edit Profil', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                        const SizedBox(height: 24),
+                        Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         alignment: Alignment.centerLeft,
                         child: const Text('Identitas Global', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary)),
@@ -173,56 +176,62 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                           if (val != null) setStateDialog(() => selectedRt = val);
                         },
                       ),
-                    ],
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
+                              child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: isLoadingSubmit
+                                  ? null
+                                  : () async {
+                                      if (formKey.currentState!.validate()) {
+                                        setStateDialog(() => isLoadingSubmit = true);
+                                        
+                                        final data = {
+                                          'nama_lengkap': namaLengkapController.text,
+                                          'nama_panggilan': namaPanggilanController.text,
+                                          'username': usernameController.text,
+                                          'no_whatsapp': whatsappController.text,
+                                          'rt': selectedRt,
+                                        };
+
+                                        final result = await ProfileService.updateProfile(data);
+
+                                        if (result['success']) {
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                            _showSnackbar('Profil berhasil diperbarui');
+                                            _loadUser();
+                                          }
+                                        } else {
+                                          setStateDialog(() => isLoadingSubmit = false);
+                                          _showSnackbar(result['message'], isError: true);
+                                        }
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                              ),
+                              child: isLoadingSubmit 
+                                  ? const SizedBox(width: 16, height: 16, child: CustomLoadingIndicator(size: 24, color: Colors.white)) 
+                                  : const Text('Simpan'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                  child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
-                ),
-                ElevatedButton(
-                  onPressed: isLoadingSubmit
-                      ? null
-                      : () async {
-                          if (formKey.currentState!.validate()) {
-                            setStateDialog(() => isLoadingSubmit = true);
-                            
-                            final data = {
-                              'nama_lengkap': namaLengkapController.text,
-                              'nama_panggilan': namaPanggilanController.text,
-                              'username': usernameController.text,
-                              'no_whatsapp': whatsappController.text,
-                              'rt': selectedRt,
-                            };
-
-                            final result = await ProfileService.updateProfile(data);
-
-                            if (result['success']) {
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                                _showSnackbar('Profil berhasil diperbarui');
-                                _loadUser();
-                              }
-                            } else {
-                              setStateDialog(() => isLoadingSubmit = false);
-                              _showSnackbar(result['message'], isError: true);
-                            }
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-                  ),
-                  child: isLoadingSubmit 
-                      ? const SizedBox(width: 16, height: 16, child: CustomLoadingIndicator(size: 24, color: Colors.white)) 
-                      : const Text('Simpan'),
-                ),
-              ],
             );
-          }
+          },
         );
       },
     );
@@ -242,16 +251,20 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text('Ubah Password', style: TextStyle(fontWeight: FontWeight.bold)),
+            return Dialog(
               shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-              content: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
+              insetPadding: const EdgeInsets.all(20),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Ubah Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                        const SizedBox(height: 24),
+                        TextFormField(
                         controller: newPasswordController,
                         decoration: InputDecoration(
                           labelText: 'Password Baru', 
@@ -282,52 +295,58 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                         obscureText: obscureConfirm,
                         validator: (value) => value != newPasswordController.text ? 'Password tidak sama' : null,
                       ),
-                    ],
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
+                              child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: isLoadingSubmit
+                                  ? null
+                                  : () async {
+                                      if (formKey.currentState!.validate()) {
+                                        setStateDialog(() => isLoadingSubmit = true);
+                                        
+                                        final data = {
+                                          'new_password': newPasswordController.text,
+                                          'confirm_password': confirmPasswordController.text,
+                                        };
+
+                                        final result = await ProfileService.updatePassword(data);
+
+                                        if (result['success']) {
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                            _showSnackbar('Password berhasil diubah');
+                                          }
+                                        } else {
+                                          setStateDialog(() => isLoadingSubmit = false);
+                                          _showSnackbar(result['message'], isError: true);
+                                        }
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.warning,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+                              ),
+                              child: isLoadingSubmit 
+                                  ? const SizedBox(width: 16, height: 16, child: CustomLoadingIndicator(size: 24, color: Colors.white)) 
+                                  : const Text('Ganti Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: isLoadingSubmit ? null : () => Navigator.pop(context),
-                  child: const Text('Batal', style: TextStyle(color: AppTheme.textSecondary)),
-                ),
-                ElevatedButton(
-                  onPressed: isLoadingSubmit
-                      ? null
-                      : () async {
-                          if (formKey.currentState!.validate()) {
-                            setStateDialog(() => isLoadingSubmit = true);
-                            
-                            final data = {
-                              'new_password': newPasswordController.text,
-                              'confirm_password': confirmPasswordController.text,
-                            };
-
-                            final result = await ProfileService.updatePassword(data);
-
-                            if (result['success']) {
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                                _showSnackbar('Password berhasil diubah');
-                              }
-                            } else {
-                              setStateDialog(() => isLoadingSubmit = false);
-                              _showSnackbar(result['message'], isError: true);
-                            }
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.warning,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-                  ),
-                  child: isLoadingSubmit 
-                      ? const SizedBox(width: 16, height: 16, child: CustomLoadingIndicator(size: 24, color: Colors.white)) 
-                      : const Text('Ganti Password', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                ),
-              ],
             );
-          }
+          },
         );
       },
     );
@@ -361,15 +380,9 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
 
     if (_errorMessage != null && _user == null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
-            const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadUser, child: const Text('Coba Lagi')),
-          ],
+        child: AppErrorState(
+          message: _errorMessage!,
+          onRetry: _loadUser,
         ),
       );
     }

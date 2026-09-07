@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
-import 'custom_button.dart';
+import 'app_dialog.dart';
+import 'app_snackbar.dart';
 
 class FeedbackDialogs {
   static Future<bool?> showConfirmation({
@@ -11,37 +11,21 @@ class FeedbackDialogs {
     String cancelText = 'Batal',
     bool isDestructive = false,
   }) {
-    return showDialog<bool>(
+    return AppDialog.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(cancelText, style: const TextStyle(color: AppTheme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isDestructive ? AppTheme.error : AppTheme.primary,
-            ),
-            child: Text(confirmText),
-          ),
-        ],
-      ),
+      title: title,
+      content: content,
+      confirmText: confirmText,
+      cancelText: cancelText,
+      type: isDestructive ? DialogType.error : DialogType.info,
     );
   }
 
   static void showSnackbar(BuildContext context, String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? AppTheme.error : AppTheme.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-        margin: const EdgeInsets.all(16),
-      ),
-    );
+    if (isError) {
+      AppSnackBar.showError(context, message);
+    } else {
+      AppSnackBar.showSuccess(context, message);
+    }
   }
 }

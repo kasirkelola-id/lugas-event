@@ -4,6 +4,8 @@ import '../../services/chat_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/common/feedback_dialogs.dart';
+import '../widgets/common/app_snackbar.dart';
 
 class GroupInfoScreen extends StatefulWidget {
   final int roomId;
@@ -42,22 +44,11 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
   }
 
   Future<void> _deleteGroup() async {
-    final confirm = await showDialog<bool>(
+    final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Hapus Grup'),
-        content: const Text('Apakah Anda yakin ingin menghapus grup ini? Semua pesan akan terhapus dan tidak bisa dikembalikan.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: 'Hapus Grup',
+      content: 'Apakah Anda yakin ingin menghapus grup ini? Semua pesan akan terhapus dan tidak bisa dikembalikan.',
+      isDestructive: true,
     );
 
     if (confirm != true) return;
@@ -72,9 +63,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal menghapus grup')),
-        );
+        AppSnackBar.showError(context, 'Gagal menghapus grup');
       }
     }
   }
@@ -116,9 +105,7 @@ class _GroupInfoScreenState extends State<GroupInfoScreen> {
                 title: const Text('Anggota Grup'),
                 subtitle: const Text('Fitur manajemen anggota akan datang'),
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Segera hadir!')),
-                  );
+                  AppSnackBar.showInfo(context, 'Segera hadir!');
                 },
               ),
               const Divider(),
