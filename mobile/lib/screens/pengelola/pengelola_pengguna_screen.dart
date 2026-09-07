@@ -239,7 +239,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: [null, 1, 2, 3, 4].map((rt) {
+                      children: [null, ..._availableRts].map((rt) {
                         final isSelected = _rtFilter == rt;
                         final label = rt == null ? 'Semua RT' : 'RT 0$rt';
                         return Padding(
@@ -279,6 +279,13 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
         ),
       ),
     );
+  }
+
+  
+  List<int> get _availableRts {
+    final rts = _users.map((u) => u.rt).toSet().toList();
+    rts.sort();
+    return rts;
   }
 
   Widget _buildBody() {

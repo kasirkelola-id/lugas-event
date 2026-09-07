@@ -5,6 +5,7 @@ class ParticipantModel {
   final String namaPanggilan;
   final String whatsapp;
   final String roleLevel;
+  final int userRt;
 
   ParticipantModel({
     required this.participantId,
@@ -13,6 +14,7 @@ class ParticipantModel {
     required this.namaPanggilan,
     required this.whatsapp,
     required this.roleLevel,
+    this.userRt = 0,
   });
 
   factory ParticipantModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class ParticipantModel {
       namaPanggilan: json['nama_panggilan'] ?? '',
       whatsapp: json['whatsapp'] ?? '',
       roleLevel: json['role_level'] ?? '',
+      userRt: json['user_rt'] != null ? (json['user_rt'] is int ? json['user_rt'] : int.tryParse(json['user_rt'].toString()) ?? 0) : 0,
     );
   }
 }

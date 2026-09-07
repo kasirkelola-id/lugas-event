@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/pin_screen.dart';
+import 'package:mobile/screens/auth/login_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -83,7 +83,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result['message'])),

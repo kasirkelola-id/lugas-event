@@ -9,6 +9,7 @@ class AttendanceModel {
   final int statusEvent;
   final String namaLengkap;
   final String namaPanggilan;
+  final int userRt;
 
   AttendanceModel({
     required this.absensiId,
@@ -21,6 +22,7 @@ class AttendanceModel {
     required this.statusEvent,
     this.namaLengkap = '',
     this.namaPanggilan = '',
+    this.userRt = 0,
   });
 
   bool get isActive => statusEvent == 1;
@@ -37,6 +39,7 @@ class AttendanceModel {
       statusEvent: json['status_event'] != null ? (json['status_event'] is int ? json['status_event'] : int.parse(json['status_event'].toString())) : 0,
       namaLengkap: json['nama_lengkap'] ?? '',
       namaPanggilan: json['nama_panggilan'] ?? '',
+      userRt: json['user_rt'] != null ? (json['user_rt'] is int ? json['user_rt'] : int.tryParse(json['user_rt'].toString()) ?? 0) : 0,
     );
   }
 }

@@ -4,7 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/dashboard_service.dart';
 import '../../models/user_model.dart';
 import '../../models/dashboard_summary_model.dart';
-import 'package:mobile/screens/auth/pin_screen.dart';
+import 'package:mobile/screens/auth/login_screen.dart';
 import '../anggota/attendance_geofence_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
@@ -49,6 +49,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           return;
         }
         setState(() {
+          _isLoading = false;
           _isError = true;
           _errorMessage = userResult['message'];
         });
@@ -60,6 +61,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
       if (!summaryResult['success']) {
         setState(() {
+          _isLoading = false;
           _isError = true;
           _errorMessage = summaryResult['message'];
         });
@@ -87,7 +89,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const PinScreen()),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
   }
@@ -147,6 +149,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
+  String _formatRole(String role) {
+    if (role == 'wakil_ketua') return 'Wakil Ketua';
+    return role.substring(0, 1).toUpperCase() + role.substring(1);
+  }
+
   Widget _buildHeaderSection() {
     return Container(
       padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 24),
@@ -175,7 +182,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
-                const Text('Role: Admin / Ketua', style: TextStyle(color: AppTheme.textSecondary)),
+                Text('Role: ${_formatRole(_user!.roleLevel)}', style: const TextStyle(color: AppTheme.textSecondary)),
               ],
             ),
           ),

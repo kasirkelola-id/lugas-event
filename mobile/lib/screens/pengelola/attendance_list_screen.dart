@@ -4,7 +4,7 @@ import '../../models/attendance_model.dart';
 import '../../models/event_model.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/pin_screen.dart';
+import 'package:mobile/screens/auth/login_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AttendanceListScreen extends StatefulWidget {
@@ -19,6 +19,23 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   List<AttendanceModel> _attendees = [];
   bool _isLoading = true;
   String? _errorMessage;
+  String _searchQuery = '';
+  String? _rtFilter;
+
+  List<int> get _availableRts {
+    final rts = _attendees.map((a) => a.userRt).toSet().toList();
+    rts.sort();
+    return rts;
+  }
+
+  List<AttendanceModel> get _filteredAttendees {
+    return _attendees.where((a) {
+      bool matchesSearch = _searchQuery.isEmpty || 
+          a.namaLengkap.toLowerCase().contains(_searchQuery.toLowerCase());
+      bool matchesRt = _rtFilter == null || a.userRt.toString() == _rtFilter;
+      return matchesSearch && matchesRt;
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -51,7 +68,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       }
     }
   }
@@ -100,25 +117,73 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
       children: [
         _buildHeader(),
         const SizedBox(height: 24),
-        Text('Riwayat Kehadiran (${_attendees.length})', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        TextField(
+          decoration: InputDecoration(
+            hintText: 'Cari anggota...',
+            prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+            filled: true,
+            fillColor: AppTheme.surface,
+            border: OutlineInputBorder(
+              borderRadius: AppTheme.radiusLarge,
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          onChanged: (val) => setState(() => _searchQuery = val),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [null, ..._availableRts].map((rt) {
+              final isSelected = _rtFilter == rt?.toString();
+              final label = rt == null ? 'Semua RT' : 'RT 0$rt';
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: FilterChip(
+                  label: Text(label),
+                  selected: isSelected,
+                  selectedColor: AppTheme.info.withValues(alpha: 0.15),
+                  checkmarkColor: AppTheme.info,
+                  labelStyle: TextStyle(
+                    color: isSelected ? AppTheme.info : AppTheme.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  backgroundColor: AppTheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppTheme.radiusLarge,
+                    side: BorderSide(
+                      color: isSelected ? AppTheme.info.withValues(alpha: 0.5) : Colors.grey.shade300,
+                    ),
+                  ),
+                  onSelected: (selected) {
+                    setState(() {
+                      _rtFilter = rt?.toString();
+                    });
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
         const SizedBox(height: 16),
-        if (_attendees.isEmpty)
+        Text('Anggota Hadir (${_filteredAttendees.length})', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+        const SizedBox(height: 16),
+        if (_filteredAttendees.isEmpty)
           Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
               child: Column(
                 children: [
-                  Icon(Icons.history_toggle_off, size: 80, color: Colors.grey.shade300),
+                  Icon(Icons.event_available, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  const Text('Belum Ada Kehadiran', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  const Text('Belum ada peserta yang hadir.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                  const Text('Tidak ada anggota hadir', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
           )
         else
-          ..._attendees.asMap().entries.map((entry) {
+          ..._filteredAttendees.asMap().entries.map((entry) {
             final index = entry.key;
             final item = entry.value;
             return _buildAttendeeCard(index, item);

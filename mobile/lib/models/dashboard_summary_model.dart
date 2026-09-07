@@ -28,14 +28,14 @@ class UpcomingEventSummary {
   final int id;
   final String title;
   final String date;
-  final String time;
+  final String? time;
   final dynamic status;
 
   UpcomingEventSummary({
     required this.id,
     required this.title,
     required this.date,
-    required this.time,
+    this.time,
     this.status,
   });
 

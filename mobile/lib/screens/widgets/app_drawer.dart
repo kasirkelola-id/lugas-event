@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/pin_screen.dart';
+import 'package:mobile/screens/auth/login_screen.dart';
 
 import '../pengelola/pengelola_home_screen.dart';
 import '../pengelola/pengelola_acara_screen.dart';
@@ -58,7 +58,7 @@ class AppDrawer extends StatelessWidget {
     Navigator.pop(context); // pop loading dialog
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const PinScreen()),
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
   }
@@ -295,7 +295,7 @@ class AppDrawer extends StatelessWidget {
       
       _buildSectionLabel('Sistem'),
       _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const AdminPengumumanScreen()),
-      _buildItem(context, Icons.print_outlined, 'Printer', const AdminPrinterScreen()),
+
       _buildItem(context, Icons.settings_outlined, 'Pengaturan', AdminPengaturanScreen(user: user)),
       
       _buildSectionLabel('Akun'),

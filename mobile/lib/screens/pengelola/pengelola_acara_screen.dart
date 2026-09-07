@@ -20,6 +20,8 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
   UserModel? _user;
   List<EventModel> _events = [];
   bool _isLoading = true;
+  String _searchQuery = '';
+  String _sortBy = 'Tanggal Acara (Terdekat)';
   String? _errorMessage;
 
   @override
@@ -95,6 +97,24 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
     );
   }
 
+  List<EventModel> get _filteredEvents {
+    var result = _events.where((e) {
+      if (_searchQuery.isEmpty) return true;
+      return e.namaAcara.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+    
+    result.sort((a, b) {
+      if (_sortBy == 'Nama Acara') {
+        return a.namaAcara.compareTo(b.namaAcara);
+      } else if (_sortBy == 'Tanggal Dibuat') {
+        return b.createdAt.compareTo(a.createdAt);
+      }
+      return a.tanggalAcara.compareTo(b.tanggalAcara);
+    });
+    
+    return result;
+  }
+
   Widget _buildBody() {
     if (_isLoading && _events.isEmpty) {
       return const Center(child: CustomLoadingIndicator(color: AppTheme.primary));
@@ -149,14 +169,64 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 80),
-      physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: _events.length,
-      itemBuilder: (context, index) {
-        final event = _events[index];
-        return _buildEventCard(event);
-      },
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Cari nama acara...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  ),
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _sortBy,
+                    icon: const Icon(Icons.sort),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() => _sortBy = newValue);
+                      }
+                    },
+                    items: <String>['Tanggal Acara (Terdekat)', 'Tanggal Dibuat', 'Nama Acara']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value, style: const TextStyle(fontSize: 14)),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 80),
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: _filteredEvents.length,
+            itemBuilder: (context, index) {
+              final event = _filteredEvents[index];
+              return _buildEventCard(event);
+            },
+          ),
+        ),
+      ],
     );
   }
 

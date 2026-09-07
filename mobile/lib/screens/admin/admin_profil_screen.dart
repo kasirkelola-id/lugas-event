@@ -208,12 +208,11 @@ class _AdminProfilScreenState extends State<AdminProfilScreen> {
                               borderRadius: AppTheme.radiusMedium,
                             ),
                           ),
-                          items: const [
-                            DropdownMenuItem(value: 1, child: Text('RT 01')),
-                            DropdownMenuItem(value: 2, child: Text('RT 02')),
-                            DropdownMenuItem(value: 3, child: Text('RT 03')),
-                            DropdownMenuItem(value: 4, child: Text('RT 04')),
-                          ],
+                          items: List.generate(20, (index) {
+                            final rtVal = index + 1;
+                            final rtStr = rtVal.toString().padLeft(2, '0');
+                            return DropdownMenuItem(value: rtVal, child: Text('RT '));
+                          }),
                           onChanged: (val) {
                             if (val != null)
                               setStateDialog(() => selectedRt = val);

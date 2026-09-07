@@ -4,7 +4,7 @@ import '../../models/event_model.dart';
 import '../../models/participant_model.dart';
 import '../../services/participant_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/pin_screen.dart';
+import 'package:mobile/screens/auth/login_screen.dart';
 import 'attendance_list_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/feedback_dialogs.dart';
@@ -22,6 +22,23 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
   List<ParticipantModel> _participants = [];
   bool _isLoading = true;
   String? _errorMessage;
+  String _searchQuery = '';
+  String? _rtFilter;
+
+  List<int> get _availableRts {
+    final rts = _participants.map((p) => p.userRt).toSet().toList();
+    rts.sort();
+    return rts;
+  }
+
+  List<ParticipantModel> get _filteredParticipants {
+    return _participants.where((p) {
+      bool matchesSearch = _searchQuery.isEmpty || 
+          p.namaLengkap.toLowerCase().contains(_searchQuery.toLowerCase());
+      bool matchesRt = _rtFilter == null || p.userRt.toString() == _rtFilter;
+      return matchesSearch && matchesRt;
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -51,7 +68,7 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       }
     }
   }
@@ -88,7 +105,7 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       } else {
         AppSnackBar.showError(context, result['message']);
       }
@@ -146,10 +163,60 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
       children: [
         _buildHeader(),
         const SizedBox(height: 24),
+        TextField(
+          decoration: InputDecoration(
+            hintText: 'Cari peserta...',
+            prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+            filled: true,
+            fillColor: AppTheme.surface,
+            border: OutlineInputBorder(
+              borderRadius: AppTheme.radiusLarge,
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          onChanged: (val) => setState(() => _searchQuery = val),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [null, ..._availableRts].map((rt) {
+              final isSelected = _rtFilter == rt?.toString();
+              final label = rt == null ? 'Semua RT' : 'RT 0$rt';
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: FilterChip(
+                  label: Text(label),
+                  selected: isSelected,
+                  selectedColor: AppTheme.info.withValues(alpha: 0.15),
+                  checkmarkColor: AppTheme.info,
+                  labelStyle: TextStyle(
+                    color: isSelected ? AppTheme.info : AppTheme.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  backgroundColor: AppTheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppTheme.radiusLarge,
+                    side: BorderSide(
+                      color: isSelected ? AppTheme.info.withValues(alpha: 0.5) : Colors.grey.shade300,
+                    ),
+                  ),
+                  onSelected: (selected) {
+                    setState(() {
+                      _rtFilter = rt?.toString();
+                    });
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Daftar Peserta (${_participants.length})', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+            Text('Daftar Peserta (${_filteredParticipants.length})', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
             TextButton.icon(
               onPressed: () {
                 Navigator.push(
@@ -163,7 +230,7 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        if (_participants.isEmpty)
+        if (_filteredParticipants.isEmpty)
           Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -171,15 +238,13 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
                 children: [
                   Icon(Icons.people_outline, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
-                  const Text('Belum Ada Peserta', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  const Text('Belum ada peserta yang didaftarkan.', style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                  const Text('Tidak ada peserta', style: TextStyle(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
           )
         else
-          ..._participants.map((p) => _buildParticipantCard(p)),
+          ..._filteredParticipants.map((p) => _buildParticipantCard(p)),
           
         const SizedBox(height: 80),
       ],

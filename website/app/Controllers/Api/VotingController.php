@@ -81,6 +81,7 @@ class VotingController extends BaseController
     public function create()
     {
         $tenantId = AuthService::getTenantId();
+        $userId = AuthService::getGlobalUserId();
         if (!$tenantId || !AuthService::can('voting.manage')) {
             return $this->failForbidden('Akses ditolak');
         }

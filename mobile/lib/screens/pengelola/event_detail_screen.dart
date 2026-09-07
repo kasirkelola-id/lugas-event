@@ -4,7 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/pin_screen.dart';
+import 'package:mobile/screens/auth/login_screen.dart';
 import 'edit_event_screen.dart';
 import 'attendance_list_screen.dart';
 import 'bluetooth_printer_dialog.dart';
@@ -93,7 +93,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       }
     }
   }
@@ -127,7 +127,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       } else {
         await AppDialog.showResult(
           context: context,
@@ -202,8 +202,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           _buildAttendanceCTA(),
           const SizedBox(height: 24),
           _buildQuickActions(),
-          const SizedBox(height: 24),
-          _buildQrSection(),
           const SizedBox(height: 40), // Spacing
         ],
       ),
@@ -369,25 +367,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => AttendanceListScreen(event: _event!)),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionBtn(
-                'Cetak QR',
-                Icons.print,
-                AppTheme.secondary,
-                () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => BluetoothPrinterDialog(
-                      eventId: widget.eventId,
-                      namaAcara: _event!.namaAcara,
-                      tanggalAcara: _event!.tanggalAcara,
-                      kodeQr: _event!.kodeQr,
-                    ),
                   );
                 },
               ),

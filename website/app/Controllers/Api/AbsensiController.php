@@ -291,7 +291,7 @@ class AbsensiController extends BaseApiController
 
         $absensiModel = new AbsensiModel();
         $builder = $absensiModel->builder();
-        $builder->select('absensi.id as absensi_id, absensi.user_id, absensi.waktu_absen, absensi.waktu_checkout, users.nama_lengkap, users.nama_panggilan');
+        $builder->select('absensi.id as absensi_id, absensi.user_id, absensi.waktu_absen, absensi.waktu_checkout, users.nama_lengkap, users.nama_panggilan, users.rt as user_rt');
         $builder->join('users', 'users.id = absensi.user_id');
         $builder->where('absensi.event_id', $eventId);
         $builder->orderBy('absensi.waktu_absen', 'ASC');

@@ -117,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           MaterialPageRoute(builder: (_) => const PengelolaHomeScreen()),
         );
-      } else if (user.roleLevel == 'admin') {
+      } else if (user.roleLevel == 'admin' || user.roleLevel == 'ketua') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const AdminHomeScreen()),

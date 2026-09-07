@@ -138,7 +138,6 @@ class AuthService {
       // Ignore network errors on logout
     }
     await AuthStorage.removeToken();
-    await AuthStorage.clearTenant();
   }
 
   static Future<Map<String, dynamic>> updatePassword(String newPassword, String confirmPassword) async {

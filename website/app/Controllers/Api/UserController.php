@@ -124,7 +124,7 @@ class UserController extends BaseApiController
             'nama_panggilan' => 'required|max_length[100]',
             'username'       => 'required',
             'role_level'     => 'required|in_list[ketua,wakil_ketua,sekretaris,wakil_sekretaris,bendahara,wakil_bendahara,pengelola,anggota]',
-            'rt'             => 'permit_empty|in_list[1,2,3,4]'
+            'rt'             => 'permit_empty|is_natural_no_zero|less_than[100]'
         ];
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();

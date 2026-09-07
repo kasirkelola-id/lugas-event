@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/pin_screen.dart';
+import 'package:mobile/screens/auth/login_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
@@ -70,7 +70,7 @@ class _EditEventScreenState extends State<EditEventScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result['message'])),

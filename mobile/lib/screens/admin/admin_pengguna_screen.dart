@@ -35,6 +35,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _whatsappController = TextEditingController();
+  final _rtController = TextEditingController();
   String _selectedRole = 'pengelola';
 
   @override
@@ -50,6 +51,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     _whatsappController.dispose();
+    _rtController.dispose();
     super.dispose();
   }
 
@@ -113,13 +115,13 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
 
   Future<void> _showUserForm({UserModel? user}) async {
     final isEditing = user != null;
-    int selectedRt = user?.rt ?? 1;
     
     if (isEditing) {
       _namaLengkapController.text = user.namaLengkap;
       _namaPanggilanController.text = user.namaPanggilan;
       _usernameController.text = user.username;
       _whatsappController.text = user.noWhatsapp;
+      _rtController.text = user.rt.toString();
       _selectedRole = user.roleLevel;
     } else {
       _namaLengkapController.clear();
@@ -127,6 +129,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
       _usernameController.clear();
       _passwordController.clear();
       _whatsappController.clear();
+      _rtController.text = '1';
       _selectedRole = 'pengelola';
     }
 
@@ -170,24 +173,11 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                         controller: _whatsappController,
                         label: 'No. WhatsApp',
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: DropdownButtonFormField<int>(
-                          value: selectedRt,
-                          decoration: InputDecoration(
-                            labelText: 'RT (Rukun Tetangga)', 
-                            border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
-                          ),
-                          items: const [
-                            DropdownMenuItem(value: 1, child: Text('RT 01')),
-                            DropdownMenuItem(value: 2, child: Text('RT 02')),
-                            DropdownMenuItem(value: 3, child: Text('RT 03')),
-                            DropdownMenuItem(value: 4, child: Text('RT 04')),
-                          ],
-                          onChanged: (val) {
-                            if (val != null) setStateDialog(() => selectedRt = val);
-                          },
-                        ),
+                      CustomTextField(
+                        controller: _rtController,
+                        label: 'RT (Rukun Tetangga)',
+                        keyboardType: TextInputType.number,
+                        validator: (value) => value == null || value.isEmpty ? 'RT wajib diisi' : null,
                       ),
                       if (!isEditing)
                         CustomTextField(
@@ -235,7 +225,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                           'nama_panggilan': _namaPanggilanController.text,
                           'username': _usernameController.text,
                           'no_whatsapp': _whatsappController.text,
-                          'rt': selectedRt,
+                          'rt': int.tryParse(_rtController.text) ?? 1,
                         };
 
                         Map<String, dynamic> result;
@@ -516,7 +506,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: [null, 1, 2, 3, 4].map((rt) {
+                      children: [null, ..._availableRts].map((rt) {
                         final isSelected = _rtFilter == rt;
                         final label = rt == null ? 'Semua RT' : 'RT 0$rt';
                         return Padding(
@@ -562,6 +552,13 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
         label: const Text('Tambah', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
       ),
     );
+  }
+
+  
+  List<int> get _availableRts {
+    final rts = _users.map((u) => u.rt).toSet().toList();
+    rts.sort();
+    return rts;
   }
 
   Widget _buildBody() {
