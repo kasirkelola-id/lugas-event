@@ -155,7 +155,7 @@ class ActiveTenantContextTest extends CIUnitTestCase
         $memberModel->insert(['user_id' => $userId, 'karang_taruna_id' => 41, 'role_level' => 'ketua', 'status_aktif' => 1]);
         $memberModel->insert(['user_id' => $userId, 'karang_taruna_id' => 42, 'role_level' => 'pengelola', 'status_aktif' => 1]);
         
-        $token = $this->generateTokenForUser($userModel->find($userId));
+        $token = $this->generateTokenForUser(['id' => $userId, 'karang_taruna_id' => null]);
         
         // No explicit header, but multiple active memberships!
         // We use /api/events since /api/me is now a global endpoint and doesn't require a tenant header.

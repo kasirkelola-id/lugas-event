@@ -341,7 +341,11 @@ class UserController extends BaseApiController
         $memberModel = new \App\Models\OrganizationMemberModel();
         $membership = $memberModel->where('user_id', $user['id'])->where('karang_taruna_id', $tenantId)->first();
         
-        if (!$membership || (int)$membership['status_aktif'] !== 1) {
+        if (!$membership) {
+            return $this->sendError('Pengguna tidak ditemukan', null, 404);
+        }
+        
+        if ((int)$membership['status_aktif'] !== 1) {
             return $this->sendError('Pengguna tidak aktif di Karang Taruna ini', null, 403);
         }
 

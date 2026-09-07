@@ -128,9 +128,33 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } else {
-      setState(() {
-        _errorMessage = result['message'];
-      });
+      if (result['code'] == 'MEMBERSHIP_PENDING_APPROVAL') {
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Pendaftaran Menunggu Persetujuan'),
+            content: const Text(
+                'Akun Anda sudah terdaftar, tetapi masih menunggu\n'
+                'persetujuan pengurus Karang Taruna.\n\n'
+                'Silakan coba login kembali setelah pendaftaran disetujui.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Kembali'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Coba Lagi'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        setState(() {
+          _errorMessage = result['message'];
+        });
+      }
     }
   }
 
@@ -171,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             image: DecorationImage(
-                              image: AssetImage('assets/logo/default_kartar.png'),
+                              image: AssetImage('assets/logo/default_tenant_logo.png'),
                               fit: BoxFit.cover,
                             ),
                           ),

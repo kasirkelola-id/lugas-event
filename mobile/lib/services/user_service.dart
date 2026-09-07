@@ -107,4 +107,40 @@ class UserService {
       return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
     }
   }
+
+  static Future<Map<String, dynamic>> getFilterOptions() async {
+    try {
+      final response = await ApiClient.get('/memberships/filter-options');
+      return _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getPendingMembers() async {
+    try {
+      final response = await ApiClient.get('/memberships/pending');
+      return _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> approveMember(int id) async {
+    try {
+      final response = await ApiClient.post('/memberships/$id/approve', {});
+      return _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> rejectMember(int id) async {
+    try {
+      final response = await ApiClient.post('/memberships/$id/reject', {});
+      return _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan sistem.'};
+    }
+  }
 }

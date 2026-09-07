@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
-import '../auth/login_screen.dart';
+import 'package:mobile/screens/auth/pin_screen.dart';
 
 import '../pengelola/pengelola_home_screen.dart';
 import '../pengelola/pengelola_acara_screen.dart';
@@ -11,6 +11,7 @@ import '../pengelola/pengelola_peserta_screen.dart';
 import '../pengelola/pengelola_laporan_screen.dart';
 import '../pengelola/pengelola_profil_screen.dart';
 import '../pengelola/pengelola_pengguna_screen.dart';
+import '../pengelola/pengelola_approval_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 
 import '../admin/admin_home_screen.dart';
@@ -43,7 +44,7 @@ class AppDrawer extends StatelessWidget {
     if (!context.mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(builder: (_) => const PinScreen()),
       (route) => false,
     );
   }
@@ -245,6 +246,7 @@ class AppDrawer extends StatelessWidget {
       
       if (isSekretaris) ...[
         _buildSectionLabel('Manajemen'),
+        _buildItem(context, Icons.how_to_reg_outlined, 'Persetujuan Anggota', const PengelolaApprovalScreen()),
         _buildItem(context, Icons.campaign_outlined, 'Kelola Pengumuman', const AdminPengumumanScreen()),
       ] else ...[
         _buildItem(context, Icons.campaign_outlined, 'Pengumuman', const UserPengumumanScreen()),
@@ -309,4 +311,5 @@ class AppDrawer extends StatelessWidget {
     );
   }
 }
+
 

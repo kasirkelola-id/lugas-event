@@ -17,6 +17,7 @@ class OrganizationMemberModel extends Model
         'karang_taruna_id',
         'username', // NEW tenant-scoped username
         'role_level',
+        'approval_status',
         'status_aktif',
         'joined_at'
     ];

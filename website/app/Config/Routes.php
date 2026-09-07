@@ -13,6 +13,10 @@ $routes->group('api', function ($routes) {
     $routes->post('fcm-token', 'Api\AuthController::updateFcmToken', ['filter' => 'auth']);
     $routes->delete('fcm-token', 'Api\AuthController::removeFcmToken', ['filter' => 'auth']);
     $routes->get('memberships', 'Api\MembershipController::index', ['filter' => 'auth']);
+    $routes->get('memberships/pending', 'Api\MembershipController::pending', ['filter' => 'auth']);
+    $routes->post('memberships/(:num)/approve', 'Api\MembershipController::approve/$1', ['filter' => 'auth']);
+    $routes->post('memberships/(:num)/reject', 'Api\MembershipController::reject/$1', ['filter' => 'auth']);
+    $routes->get('memberships/filter-options', 'Api\MembershipController::filterOptions', ['filter' => 'auth']);
     
     // Profile Management
     $routes->put('profile', 'Api\ProfileController::updateProfile', ['filter' => 'auth']);

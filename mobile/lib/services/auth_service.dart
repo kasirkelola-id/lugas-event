@@ -43,7 +43,11 @@ class AuthService {
             'requires_tenant_selection': data['data']['requires_tenant_selection'] ?? false,
         };
       }
-      return {'success': false, 'message': data['message'] ?? 'Login gagal'};
+      return {
+        'success': false, 
+        'message': data['message'] ?? 'Login gagal',
+        'code': data['code']
+      };
     } catch (e) {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan: $e'};
     }
@@ -87,10 +91,10 @@ class AuthService {
         await AuthStorage.removeToken();
         return {'success': false, 'message': 'Sesi Anda telah berakhir, silakan login kembali.', 'statusCode': 401};
       }
-      if (response.statusCode == 403) {
-        return {'success': false, 'message': 'Akses ke Karang Taruna ini ditolak atau keanggotaan tidak aktif.', 'statusCode': 403};
-      }
       final data = jsonDecode(response.body);
+      if (response.statusCode == 403) {
+        return {'success': false, 'message': data['message'] ?? 'Akses ke Karang Taruna ini ditolak atau keanggotaan tidak aktif.', 'statusCode': 403, 'errorCode': data['errorCode']};
+      }
       if (response.statusCode == 200 && data['status'] == true) {
         return {'success': true, 'user': UserModel.fromJson(data['data'])};
       }
@@ -134,6 +138,7 @@ class AuthService {
       // Ignore network errors on logout
     }
     await AuthStorage.removeToken();
+    await AuthStorage.clearTenant();
   }
 
   static Future<Map<String, dynamic>> updatePassword(String newPassword, String confirmPassword) async {

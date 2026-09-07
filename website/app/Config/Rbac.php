@@ -35,6 +35,7 @@ class Rbac extends BaseConfig
             'members.view',
             'members.manage',
             'members.create',
+            'members.approve',
             'members.change_role',
             'members.deactivate',
             'members.reset_password',
@@ -56,6 +57,7 @@ class Rbac extends BaseConfig
             'chat.read',
             'chat.send',
             'members.view',
+            'members.approve',
             'report.view'
         ],
         'bendahara' => [
@@ -73,6 +75,7 @@ class Rbac extends BaseConfig
             'announcement.view',
             'chat.read',
             'chat.send',
+            'members.approve',
             'report.view'
         ],
         'pengelola' => [
@@ -135,6 +138,10 @@ class Rbac extends BaseConfig
             'settings.manage',
             'report.view',
             'report.finance.view'
+        ],
+        'superadmin' => [
+            'members.view',
+            'members.approve'
         ]
     ];
 }

@@ -5,7 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/feedback_dialogs.dart';
-import 'login_screen.dart';
+import 'package:mobile/screens/auth/pin_screen.dart';
 import '../pengelola/pengelola_home_screen.dart';
 import '../anggota/anggota_home_screen.dart';
 import '../admin/admin_home_screen.dart';
@@ -199,7 +199,7 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
                         onPressed: _isLoading ? null : () async {
                           await AuthService.logout();
                           if (context.mounted) {
-                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
                           }
                         },
                         child: const Text('Batal & Keluar', style: TextStyle(color: AppTheme.error)),
@@ -215,3 +215,4 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
     );
   }
 }
+

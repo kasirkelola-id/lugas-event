@@ -4,7 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
-import '../auth/login_screen.dart';
+import 'package:mobile/screens/auth/pin_screen.dart';
 import 'edit_event_screen.dart';
 import 'attendance_list_screen.dart';
 import 'bluetooth_printer_dialog.dart';
@@ -22,6 +22,47 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   EventModel? _event;
   bool _isLoading = true;
   String? _errorMessage;
+
+  String _formatDateTime(String dateStr, String? startTime, String? endTime) {
+    try {
+      final parts = dateStr.split('-');
+      if (parts.length != 3) return dateStr;
+      
+      final y = int.parse(parts[0]);
+      final m = int.parse(parts[1]);
+      final d = int.parse(parts[2]);
+      
+      final date = DateTime(y, m, d);
+      
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const months = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      
+      final dayName = days[date.weekday % 7];
+      final monthName = months[m];
+      
+      String formattedDate = '$dayName, $d $monthName $y';
+      
+      String? formatTime(String? t) {
+        if (t == null || t.isEmpty) return null;
+        final tParts = t.split(':');
+        if (tParts.length >= 2) return '${tParts[0]}.${tParts[1]}';
+        return t;
+      }
+      
+      final sTime = formatTime(startTime);
+      final eTime = formatTime(endTime);
+      
+      if (sTime != null && eTime != null) {
+        return '$formattedDate\n$sTime – $eTime';
+      } else if (sTime != null) {
+        return '$formattedDate\n$sTime';
+      }
+      
+      return formattedDate;
+    } catch (e) {
+      return dateStr;
+    }
+  }
 
   @override
   void initState() {
@@ -51,7 +92,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
       }
     }
   }
@@ -99,7 +140,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message']), backgroundColor: AppTheme.error));
       }
@@ -235,9 +276,12 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Tanggal Acara', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+                  const Text('Waktu Acara', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Text(_event!.tanggalAcara, style: const TextStyle(fontSize: 16, color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
+                  Text(
+                    _formatDateTime(_event!.tanggalAcara, _event!.waktuMulai, _event!.waktuSelesai), 
+                    style: const TextStyle(fontSize: 15, color: AppTheme.textPrimary, fontWeight: FontWeight.w500)
+                  ),
                 ],
               ),
             ],
@@ -477,4 +521,5 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
   }
 }
+
 

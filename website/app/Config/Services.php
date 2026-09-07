@@ -19,6 +19,21 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    public static function migrations(?\Config\Migrations $config = null, ?\CodeIgniter\Database\ConnectionInterface $db = null, bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('migrations', $config, $db);
+        }
+
+        $config ??= config('Migrations');
+
+        if (ENVIRONMENT === 'testing') {
+            return new \App\Database\TestMigrationRunner($config, $db);
+        }
+
+        return new \CodeIgniter\Database\MigrationRunner($config, $db);
+    }
+
     /*
      * public static function example($getShared = true)
      * {

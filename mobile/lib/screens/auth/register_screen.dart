@@ -20,7 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  int _selectedRt = 1;
+  final _rtController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
   bool _obscurePassword = true;
@@ -61,7 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'nama_panggilan': namaPanggilan,
         'username': username,
         'no_whatsapp': whatsapp,
-        'rt': _selectedRt,
+        'rt': int.tryParse(_rtController.text.trim()) ?? 1,
         'password': password,
         'confirm_password': confirmPassword,
       });
@@ -171,20 +171,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       keyboardType: TextInputType.phone,
                       readOnly: _isLoading,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: DropdownButtonFormField<int>(
-                        value: _selectedRt,
-                        decoration: const InputDecoration(labelText: 'Pilih RT', prefixIcon: Icon(Icons.home_outlined)),
-                        items: List.generate(10, (index) {
-                          final rt = index + 1;
-                          final rtString = rt.toString().padLeft(2, '0');
-                          return DropdownMenuItem(value: rt, child: Text('RT $rtString'));
-                        }),
-                        onChanged: _isLoading ? null : (val) {
-                          if (val != null) setState(() => _selectedRt = val);
-                        },
-                      ),
+                    CustomTextField(
+                      controller: _rtController,
+                      label: 'RT (contoh: 03 atau 3)',
+                      prefixIcon: Icons.home_outlined,
+                      keyboardType: TextInputType.number,
+                      readOnly: _isLoading,
                     ),
                     CustomTextField(
                       controller: _passwordController,

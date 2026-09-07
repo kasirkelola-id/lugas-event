@@ -59,7 +59,7 @@ class AuthController extends BaseApiController
         
         // Find user by joining organization_members (where the tenant-scoped username lives)
         $memberInfo = $db->table('organization_members')
-                         ->select('users.*, organization_members.username as tenant_username, organization_members.role_level as tenant_role, organization_members.status_aktif as tenant_status')
+                         ->select('users.*, organization_members.username as tenant_username, organization_members.role_level as tenant_role, organization_members.status_aktif as tenant_status, organization_members.approval_status as tenant_approval')
                          ->join('users', 'users.id = organization_members.user_id')
                          ->where('organization_members.username', $username)
                          ->where('organization_members.karang_taruna_id', $karangTarunaId)
@@ -81,6 +81,14 @@ class AuthController extends BaseApiController
             }
 
             $isSuperAdmin = true;
+        }
+
+        if (!$isSuperAdmin && $user['tenant_approval'] === 'pending') {
+            return $this->sendError('Pendaftaran Anda masih menunggu persetujuan pengurus.', null, 401, 'MEMBERSHIP_PENDING_APPROVAL');
+        }
+
+        if (!$isSuperAdmin && $user['tenant_approval'] === 'rejected') {
+            return $this->sendError('Pendaftaran belum disetujui. Silakan hubungi pengurus Karang Taruna.', null, 401, 'MEMBERSHIP_REJECTED');
         }
 
         if (!$isSuperAdmin && $user['tenant_status'] != 1) {
@@ -265,6 +273,7 @@ class AuthController extends BaseApiController
             'karang_taruna_id' => $karangTarunaId,
             'username' => $rawInput['username'], // The real tenant-scoped username
             'role_level' => 'anggota',
+            'approval_status' => 'pending',
             'status_aktif' => 1,
             'joined_at' => date('Y-m-d H:i:s'),
             'created_at' => date('Y-m-d H:i:s'),

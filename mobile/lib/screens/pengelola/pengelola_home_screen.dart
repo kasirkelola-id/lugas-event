@@ -4,7 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/dashboard_service.dart';
 import '../../models/user_model.dart';
 import '../../models/dashboard_summary_model.dart';
-import '../auth/login_screen.dart';
+import 'package:mobile/screens/auth/pin_screen.dart';
 import '../anggota/attendance_geofence_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
@@ -87,7 +87,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(builder: (_) => const PinScreen()),
       (route) => false,
     );
   }
@@ -292,3 +292,4 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
     );
   }
 }
+

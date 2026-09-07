@@ -147,9 +147,6 @@ class ProfileTest extends CIUnitTestCase
                        ->put("api/profile", [
                            'username' => 'user_same' // try to use user 2's username from Tenant B
                        ]);
-        if ($result->getStatus() !== 200) {
-            echo "\nDEBUG:\n" . $result->getJSON() . "\n";
-        }
         $result->assertStatus(200); // Should succeed, different tenant namespace
     }
 }

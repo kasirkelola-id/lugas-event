@@ -149,7 +149,7 @@ class _InitialScreenState extends State<InitialScreen> {
         NotificationService.navigateBasedOnPayload(widget.pendingNavigation!);
       }
     } else {
-      if (result['statusCode'] == 403) {
+      if (result['errorCode'] == 'TENANT_ACCESS_REVOKED' || result['errorCode'] == 'ACTIVE_MEMBERSHIP_REVOKED') {
         // Membership revoked or inactive for the current tenant.
         await AuthStorage.clearTenant();
         

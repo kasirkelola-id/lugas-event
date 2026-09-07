@@ -4,7 +4,7 @@ import '../../models/attendance_model.dart';
 import '../../models/event_model.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
-import '../auth/login_screen.dart';
+import 'package:mobile/screens/auth/pin_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AttendanceListScreen extends StatefulWidget {
@@ -51,7 +51,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
       }
     }
   }
@@ -204,4 +204,5 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
     );
   }
 }
+
 

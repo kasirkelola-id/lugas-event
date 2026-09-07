@@ -22,7 +22,7 @@ class BaseApiController extends ResourceController
         return $this->respond($response, $statusCode);
     }
 
-    protected function sendError(string $message, $errors = null, int $statusCode = 400)
+    protected function sendError(string $message, $errors = null, int $statusCode = 400, string $code = null)
     {
         $response = [
             'status'  => false,
@@ -30,6 +30,9 @@ class BaseApiController extends ResourceController
         ];
         if ($errors !== null) {
             $response['errors'] = $errors;
+        }
+        if ($code !== null) {
+            $response['code'] = $code;
         }
 
         return $this->respond($response, $statusCode);

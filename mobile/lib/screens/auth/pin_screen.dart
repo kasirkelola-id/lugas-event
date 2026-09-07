@@ -283,41 +283,47 @@ class _PinScreenState extends State<PinScreen> with SingleTickerProviderStateMix
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppTheme.primary, AppTheme.info],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 8),
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           )
                         ]
                       ),
-                      child: const Icon(
-                        Icons.vpn_key_rounded,
-                        size: 56,
-                        color: Colors.white,
+                      child: Image.asset(
+                        'assets/logo/app_logo.png',
+                        width: 80,
+                        height: 80,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
                     const Text(
-                      'Masukkan PIN',
+                      'KARTAR',
                       style: TextStyle(
-                        fontSize: 30,
+                        fontSize: 22,
                         fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Masukkan PIN Karang Taruna',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: -0.5,
                         color: AppTheme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 12),
                     const Text(
-                      'Ketik 6-digit PIN Karang Taruna Anda\nuntuk melanjutkan',
+                      'Ketik 6-digit PIN untuk melanjutkan',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,

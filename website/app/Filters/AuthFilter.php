@@ -96,7 +96,11 @@ class AuthFilter implements FilterInterface
                                           ->first();
                 if (!$membership || (int)$membership['status_aktif'] !== 1) {
                     return Services::response()
-                        ->setJSON(['status' => false, 'message' => 'Membership is inactive or denied'])
+                        ->setJSON([
+                            'status' => false, 
+                            'message' => 'Membership is inactive or denied',
+                            'errorCode' => 'TENANT_ACCESS_REVOKED'
+                        ])
                         ->setStatusCode(403);
                 }
                 
@@ -134,7 +138,11 @@ class AuthFilter implements FilterInterface
                         // If the user has no memberships AND no legacy ID, block them unless it's a global endpoint (e.g. logout)
                         if (!$isGlobal) {
                             return Services::response()
-                                ->setJSON(['status' => false, 'message' => 'No active organization memberships found'])
+                                ->setJSON([
+                                    'status' => false, 
+                                    'message' => 'No active organization memberships found',
+                                    'errorCode' => 'ACTIVE_MEMBERSHIP_REVOKED'
+                                ])
                                 ->setStatusCode(403);
                         }
                     }

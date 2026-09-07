@@ -4,7 +4,7 @@ import '../../models/attendance_model.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
-import '../auth/login_screen.dart';
+import 'package:mobile/screens/auth/pin_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/empty_state.dart';
@@ -63,7 +63,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
       }
     }
   }
@@ -249,3 +249,4 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
   }
 }
+

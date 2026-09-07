@@ -20,13 +20,14 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   UserModel? _currentUser;
   List<UserModel> _users = [];
   List<UserModel> _filteredUsers = [];
+  List<String> _rtOptions = [];
   
   bool _isLoading = true;
   String? _errorMessage;
   
   String _searchQuery = '';
   String _roleFilter = 'Semua';
-  int? _rtFilter;
+  String? _rtFilter;
   
   Timer? _debounce;
   int _currentPage = 1;
@@ -61,6 +62,13 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
       _errorMessage = null;
     });
 
+    final optionsResult = await UserService.getFilterOptions();
+    if (optionsResult['success'] && mounted) {
+      setState(() {
+        _rtOptions = List<String>.from(optionsResult['data']['rt'] ?? []);
+      });
+    }
+
     final userResult = await AuthService.getMe();
     if (!userResult['success']) {
       if (mounted) _handleError(userResult['message']);
@@ -83,7 +91,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
         
         // Local RT filter application since backend doesn't filter RT currently
         if (_rtFilter != null) {
-          _filteredUsers = _users.where((u) => u.rt == _rtFilter).toList();
+          _filteredUsers = _users.where((u) => u.rt.toString() == _rtFilter).toList();
         } else {
           _filteredUsers = _users;
         }
@@ -270,7 +278,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                             ),
                             onSelected: (selected) {
                               setState(() {
-                                _rtFilter = rt;
+                                _rtFilter = rt?.toString();
                                 _applyFilters();
                               });
                             },

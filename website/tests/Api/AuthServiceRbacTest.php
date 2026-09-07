@@ -40,6 +40,7 @@ class AuthServiceRbacTest extends CIUnitTestCase
         $this->assertTrue(AuthService::can('cash.create'));
         $this->assertTrue(AuthService::can('inventory.approve'));
         $this->assertTrue(AuthService::can('members.change_role'));
+        $this->assertTrue(AuthService::can('members.approve'));
     }
 
     public function testBendaharaPermissions()
@@ -49,6 +50,7 @@ class AuthServiceRbacTest extends CIUnitTestCase
         $this->assertTrue(AuthService::can('cash.create'));
         $this->assertFalse(AuthService::can('inventory.approve'));
         $this->assertFalse(AuthService::can('members.change_role'));
+        $this->assertTrue(AuthService::can('members.approve'));
     }
 
     public function testSekretarisPermissions()
@@ -56,6 +58,7 @@ class AuthServiceRbacTest extends CIUnitTestCase
         AuthService::setUser(['role_level' => 'sekretaris']);
         $this->assertTrue(AuthService::can('announcement.manage'));
         $this->assertFalse(AuthService::can('cash.create'));
+        $this->assertTrue(AuthService::can('members.approve'));
     }
 
     public function testPengelolaPermissions()
@@ -63,6 +66,7 @@ class AuthServiceRbacTest extends CIUnitTestCase
         AuthService::setUser(['role_level' => 'pengelola']);
         $this->assertTrue(AuthService::can('event.manage'));
         $this->assertFalse(AuthService::can('cash.create'));
+        $this->assertFalse(AuthService::can('members.approve'));
     }
 
     public function testAnggotaPermissions()
@@ -71,6 +75,20 @@ class AuthServiceRbacTest extends CIUnitTestCase
         $this->assertTrue(AuthService::can('cash.view'));
         $this->assertFalse(AuthService::can('cash.create'));
         $this->assertFalse(AuthService::can('inventory.approve'));
+        $this->assertFalse(AuthService::can('members.approve'));
+    }
+
+    public function testAdminPermissions()
+    {
+        AuthService::setUser(['role_level' => 'admin']);
+        $this->assertTrue(AuthService::can('members.manage'));
+        $this->assertFalse(AuthService::can('members.approve'));
+    }
+
+    public function testSuperadminPermissions()
+    {
+        AuthService::setUser(['role_level' => 'superadmin']);
+        $this->assertTrue(AuthService::can('members.approve'));
     }
 
     public function testSameUserDifferentMembershipRole()

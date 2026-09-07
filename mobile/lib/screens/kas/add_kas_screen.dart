@@ -5,7 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../services/kas_service.dart';
 import '../../services/setting_service.dart';
 import '../../services/auth_service.dart';
-import '../auth/login_screen.dart';
+import 'package:mobile/screens/auth/pin_screen.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/feedback_dialogs.dart';
@@ -104,7 +104,7 @@ class _AddKasScreenState extends State<AddKasScreen> {
       if (result['statusCode'] == 401) {
         await AuthService.logout();
         if (!mounted) return;
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PinScreen()));
       } else {
         FeedbackDialogs.showSnackbar(context, result['message'], isError: true);
       }
@@ -198,3 +198,4 @@ class _AddKasScreenState extends State<AddKasScreen> {
     );
   }
 }
+
