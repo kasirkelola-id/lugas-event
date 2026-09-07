@@ -29,11 +29,11 @@ class ChatRoom {
           ? int.parse(json['created_by'].toString())
           : null,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
+          ? DateTime.parse(json['created_at']).toLocal()
           : null,
       lastMessage: json['last_message'],
       lastMessageAt: json['last_message_at'] != null
-          ? DateTime.parse(json['last_message_at'])
+          ? DateTime.parse(json['last_message_at']).toLocal()
           : null,
     );
   }
