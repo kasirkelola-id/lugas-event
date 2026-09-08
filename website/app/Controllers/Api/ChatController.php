@@ -234,7 +234,7 @@ class ChatController extends BaseApiController
             }
             $data['chat_room_id'] = $roomId;
             // TODO: Trigger Notification to all members
-            $this->sendGroupNotification($roomId, $user['nama_lengkap'], $message, clone (object)$data);
+            $this->sendGroupNotification($roomId, $user['nama_lengkap'], $message, $data);
         } else {
             // Validate receiver
             $userModel = new UserModel();
@@ -244,7 +244,7 @@ class ChatController extends BaseApiController
             }
             $data['receiver_id'] = $receiverId;
             // TODO: Trigger Notification to receiver
-            $this->sendPrivateNotification($receiverId, $user['nama_lengkap'], $message, clone (object)$data);
+            $this->sendPrivateNotification($receiverId, $user['nama_lengkap'], $message, $data);
         }
 
         $chatModel->insert($data);
