@@ -95,13 +95,20 @@ class _ChatListScreenState extends State<ChatListScreen>
         iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.white,
+          labelColor: AppTheme.primary,
           unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
+          indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+          ),
+          indicatorPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           tabs: const [
             Tab(text: 'Grup'),
             Tab(text: 'Pesan Pribadi'),
           ],
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
       ),
       body: TabBarView(
@@ -137,51 +144,75 @@ class _ChatListScreenState extends State<ChatListScreen>
 
     return RefreshIndicator(
       onRefresh: _fetchRooms,
-      child: ListView.separated(
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 16, bottom: 80, left: 16, right: 16),
         itemCount: _rooms.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final room = _rooms[index];
           final isDefault = room.type == 'default';
 
           return FadeInSlide(
             delay: 0.1 * index,
-            child: ListTile(
-              leading: CircleAvatar(
-                radius: 25,
-                backgroundColor: isDefault
-                    ? AppTheme.primary
-                    : Colors.grey.shade400,
-                child: Icon(
-                  isDefault ? Icons.apartment : Icons.group,
-                  color: Colors.white,
-                  size: 28,
-                ),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              title: Text(
-                room.name,
-                style: TextStyle(
-                  fontWeight: isDefault ? FontWeight.bold : FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-              subtitle: Text(
-                isDefault ? 'Grup utama Karang Taruna' : 'Grup diskusi',
-              ),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatRoomScreen(
-                      roomName: room.name,
-                      roomId: room.id,
-                      type: 'group',
-                      roomType: room.type,
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 2),
+                  ),
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: isDefault
+                        ? AppTheme.primary.withOpacity(0.1)
+                        : Colors.grey.shade100,
+                    child: Icon(
+                      isDefault ? Icons.apartment : Icons.group,
+                      color: isDefault ? AppTheme.primary : Colors.grey.shade600,
+                      size: 26,
                     ),
                   ),
-                );
-                _fetchRooms();
-              },
+                ),
+                title: Text(
+                  room.name,
+                  style: TextStyle(
+                    fontWeight: isDefault ? FontWeight.bold : FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: Text(
+                  isDefault ? 'Grup utama Karang Taruna' : 'Grup diskusi',
+                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                ),
+                trailing: const Icon(Icons.chevron_right, color: Colors.black26),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatRoomScreen(
+                        roomName: room.name,
+                        roomId: room.id,
+                        type: 'group',
+                        roomType: room.type,
+                      ),
+                    ),
+                  );
+                  _fetchRooms();
+                },
+              ),
             ),
           );
         },
@@ -205,51 +236,68 @@ class _ChatListScreenState extends State<ChatListScreen>
 
     return RefreshIndicator(
       onRefresh: _fetchPrivateContacts,
-      child: ListView.separated(
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 16, bottom: 80, left: 16, right: 16),
         itemCount: _privateContacts.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final contact = _privateContacts[index];
           final photoUrl = contact['contact_photo_url'];
 
           return FadeInSlide(
             delay: 0.1 * index,
-            child: ListTile(
-              leading: CircleAvatar(
-                radius: 25,
-                backgroundColor: Colors.grey.shade300,
-                backgroundImage: photoUrl != null
-                    ? NetworkImage(photoUrl)
-                    : null,
-                child: photoUrl == null
-                    ? const Icon(Icons.person, color: Colors.white, size: 28)
-                    : null,
-              ),
-              title: Text(
-                contact['contact_name'] ?? 'Pengguna',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-              subtitle: Text(
-                contact['last_message'] ?? '',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatRoomScreen(
-                      receiverId: contact['contact_id'],
-                      roomName: contact['contact_name'],
-                      type: 'private',
-                    ),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
-                );
-                _fetchPrivateContacts(); // refresh if new message
-              },
+                ],
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: CircleAvatar(
+                  radius: 26,
+                  backgroundColor: Colors.grey.shade200,
+                  backgroundImage: photoUrl != null
+                      ? NetworkImage(photoUrl)
+                      : null,
+                  child: photoUrl == null
+                      ? const Icon(Icons.person, color: Colors.grey, size: 28)
+                      : null,
+                ),
+                title: Text(
+                  contact['contact_name'] ?? 'Pengguna',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: Text(
+                  contact['last_message'] ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                ),
+                trailing: const Icon(Icons.chevron_right, color: Colors.black26),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatRoomScreen(
+                        receiverId: contact['contact_id'],
+                        roomName: contact['contact_name'],
+                        type: 'private',
+                      ),
+                    ),
+                  );
+                  _fetchPrivateContacts(); // refresh if new message
+                },
+              ),
             ),
           );
         },

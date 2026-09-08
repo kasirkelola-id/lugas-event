@@ -411,7 +411,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
         backgroundColor: AppTheme.primary,
         titleSpacing: 0,
@@ -666,34 +666,24 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: isMe
-                                                  ? const Color(0xFFDCF8C6)
+                                                  ? AppTheme.primary
                                                   : Colors.white,
                                               borderRadius: BorderRadius.only(
-                                                topLeft: const Radius.circular(
-                                                  12,
-                                                ),
-                                                topRight: const Radius.circular(
-                                                  12,
-                                                ),
+                                                topLeft: const Radius.circular(16),
+                                                topRight: const Radius.circular(16),
                                                 bottomLeft: Radius.circular(
-                                                  isMe || isSameSenderAsPrevious
-                                                      ? 12
-                                                      : 0,
+                                                  isMe || isSameSenderAsPrevious ? 16 : 4,
                                                 ),
                                                 bottomRight: Radius.circular(
-                                                  !isMe ||
-                                                          isSameSenderAsPrevious
-                                                      ? 12
-                                                      : 0,
+                                                  !isMe || isSameSenderAsPrevious ? 16 : 4,
                                                 ),
                                               ),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.05),
-                                                  spreadRadius: 1,
-                                                  blurRadius: 1,
-                                                  offset: const Offset(0, 1),
+                                                  color: Colors.black.withOpacity(0.04),
+                                                  spreadRadius: 0,
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
                                                 ),
                                               ],
                                             ),
@@ -743,9 +733,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                         ),
                                                       Text(
                                                         chat.message,
-                                                        style: const TextStyle(
+                                                        style: TextStyle(
                                                           fontSize: 15,
-                                                          color: Colors.black87,
+                                                          color: isMe ? Colors.white : Colors.black87,
                                                         ),
                                                       ),
                                                     ],
@@ -760,8 +750,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                         time,
                                                         style: TextStyle(
                                                           fontSize: 10,
-                                                          color:
-                                                              Colors.grey[600],
+                                                          color: isMe ? Colors.white70 : Colors.grey[600],
                                                         ),
                                                       ),
                                                       if (isMe) ...[
@@ -771,7 +760,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                         const Icon(
                                                           Icons.done_all,
                                                           size: 14,
-                                                          color: Colors.blue,
+                                                          color: Colors.white70,
                                                         ), // Hardcoded to read for MVP
                                                       ],
                                                     ],
@@ -813,9 +802,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 ),
                 SafeArea(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                    padding: const EdgeInsets.only(
+                      left: 12,
+                      right: 12,
+                      bottom: 12,
+                      top: 8,
                     ),
                     color: Colors.transparent,
                     child: Row(
@@ -828,9 +819,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  spreadRadius: 1,
-                                  blurRadius: 1,
+                                  color: Colors.black.withOpacity(0.08),
+                                  spreadRadius: 0,
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
