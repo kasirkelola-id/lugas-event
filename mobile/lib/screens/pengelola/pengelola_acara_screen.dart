@@ -8,6 +8,7 @@ import '../widgets/app_drawer.dart';
 import 'create_event_screen.dart';
 import 'event_detail_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/animations/fade_in_slide.dart';
 
 class PengelolaAcaraScreen extends StatefulWidget {
   const PengelolaAcaraScreen({super.key});
@@ -67,8 +68,9 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kelola Acara'),
-        backgroundColor: AppTheme.surface,
+        title: const Text('Kelola Acara', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: AppTheme.primary,
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
@@ -195,46 +197,72 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
       );
     }
 
-    return Column(
+    return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Cari nama acara...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 0,
-                      horizontal: 16,
-                    ),
-                  ),
-                  onChanged: (value) => setState(() => _searchQuery = value),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+        // Gradient Header Background
+        Container(
+          height: 180,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+            ),
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+          ),
+        ),
+        
+        Column(
+          children: [
+            // Floating Search & Filter Bar
+            FadeInSlide(
+              delay: 0.1,
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _sortBy,
-                    icon: const Icon(Icons.sort),
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        setState(() => _sortBy = newValue);
-                      }
-                    },
-                    items:
-                        <String>[
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: const InputDecoration(
+                          hintText: 'Cari nama acara...',
+                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          border: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                      ),
+                    ),
+                    Container(
+                      height: 32,
+                      width: 1,
+                      color: Colors.grey.shade300,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _sortBy,
+                        icon: const Icon(Icons.tune, color: AppTheme.primary),
+                        alignment: AlignmentDirectional.centerEnd,
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() => _sortBy = newValue);
+                          }
+                        },
+                        items: <String>[
                           'Tanggal Acara (Terdekat)',
                           'Tanggal Dibuat',
                           'Nama Acara',
@@ -242,151 +270,174 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                           return DropdownMenuItem<String>(
                             value: value,
                             child: Text(
-                              value,
-                              style: const TextStyle(fontSize: 14),
+                              value == 'Tanggal Acara (Terdekat)' ? 'Terdekat' : value == 'Tanggal Dibuat' ? 'Terbaru' : 'Nama',
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primary),
                             ),
                           );
                         }).toList(),
-                  ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(
-              top: 16,
-              left: 20,
-              right: 20,
-              bottom: 80,
             ),
-            physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: _filteredEvents.length,
-            itemBuilder: (context, index) {
-              final event = _filteredEvents[index];
-              return _buildEventCard(event);
-            },
-          ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.only(
+                  top: 8,
+                  left: 20,
+                  right: 20,
+                  bottom: 100, // Extra space for FAB
+                ),
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: _filteredEvents.length,
+                itemBuilder: (context, index) {
+                  final event = _filteredEvents[index];
+                  return FadeInSlide(
+                    delay: 0.2 + (0.1 * index),
+                    child: _buildEventCard(event),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildEventCard(EventModel event) {
+    Color statusColor = _getStatusColor(event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai'));
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: AppTheme.radiusMedium,
-        boxShadow: AppTheme.shadowSoft,
-        border: Border.all(color: Colors.grey.shade200),
+        color: Colors.white,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: InkWell(
-        borderRadius: AppTheme.radiusMedium,
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => EventDetailScreen(eventId: event.id),
+      child: ClipRRect(
+        borderRadius: AppTheme.radiusLarge,
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(color: statusColor, width: 6),
             ),
-          );
-          if (result == true) {
-            _loadData();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+          child: InkWell(
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EventDetailScreen(eventId: event.id),
+                ),
+              );
+              if (result == true) {
+                _loadData();
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      event.namaAcara,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(
-                        event.statusKegiatan ??
-                            (event.isActive ? 'berlangsung' : 'selesai'),
-                      ).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: _getStatusColor(
-                          event.statusKegiatan ??
-                              (event.isActive ? 'berlangsung' : 'selesai'),
-                        ).withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Text(
-                      _getStatusText(
-                        event.statusKegiatan ??
-                            (event.isActive ? 'berlangsung' : 'selesai'),
-                      ),
-                      style: TextStyle(
-                        color: _getStatusColor(
-                          event.statusKegiatan ??
-                              (event.isActive ? 'berlangsung' : 'selesai'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          event.namaAcara,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          _getStatusText(
+                            event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai'),
+                          ),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.calendar_month, size: 20, color: AppTheme.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Waktu Pelaksanaan', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                          const SizedBox(height: 2),
+                          Text(
+                            event.tanggalAcara,
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(height: 1, color: Colors.black12),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.people_alt_outlined, size: 16, color: AppTheme.textSecondary),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Kehadiran: ${event.jumlahHadir ?? 0} Orang',
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_month,
-                    size: 16,
-                    color: AppTheme.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    event.tanggalAcara,
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.people_alt_outlined,
-                    size: 16,
-                    color: AppTheme.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Jumlah Hadir: ${event.jumlahHadir ?? 0}',
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
