@@ -4,6 +4,8 @@ import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_dialog.dart';
+import '../../services/auth_service.dart';
+import '../widgets/app_drawer.dart';
 
 class PengelolaApprovalScreen extends StatefulWidget {
   const PengelolaApprovalScreen({super.key});
@@ -17,6 +19,7 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
   List<UserModel> _pendingUsers = [];
   bool _isLoading = true;
   String? _errorMessage;
+  UserModel? _currentUser;
 
   @override
   void initState() {
@@ -29,6 +32,11 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
+
+    final userResult = await AuthService.getMe();
+    if (userResult['success']) {
+      _currentUser = userResult['user'];
+    }
 
     final result = await UserService.getPendingMembers();
     if (!mounted) return;
@@ -120,6 +128,7 @@ class _PengelolaApprovalScreenState extends State<PengelolaApprovalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       appBar: AppBar(
         title: const Text('Persetujuan Anggota'),
         backgroundColor: AppTheme.surface,

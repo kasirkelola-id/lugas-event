@@ -9,6 +9,7 @@ import '../../services/auth_service.dart';
 import '../../models/chat_room_model.dart';
 import '../../models/user_model.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/app_drawer.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({Key? key}) : super(key: key);
@@ -84,6 +85,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         _currentUser?.roleLevel == 'superadmin';
 
     return Scaffold(
+      drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       appBar: AppBar(
         title: const Text(
           'Forum Diskusi',

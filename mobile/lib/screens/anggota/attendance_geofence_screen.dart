@@ -6,6 +6,9 @@ import '../../services/attendance_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_dialog.dart';
+import '../../services/auth_service.dart';
+import '../../models/user_model.dart';
+import '../widgets/app_drawer.dart';
 
 class AttendanceGeofenceScreen extends StatefulWidget {
   const AttendanceGeofenceScreen({Key? key}) : super(key: key);
@@ -21,6 +24,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
   Position? _currentPosition;
   List<EventModel> _nearbyEvents = [];
   List<int> _activeCheckinEventIds = [];
+  UserModel? _currentUser;
 
   @override
   void initState() {
@@ -35,6 +39,11 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
     });
 
     try {
+      final userResult = await AuthService.getMe();
+      if (userResult['success']) {
+        _currentUser = userResult['user'];
+      }
+
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         setState(() {
@@ -293,6 +302,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       appBar: AppBar(
         title: const Text('Absensi Lokasi'),
         backgroundColor: AppTheme.surface,

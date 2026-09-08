@@ -265,7 +265,6 @@ class AppDrawer extends StatelessWidget {
         Icons.forum_outlined,
         'Forum / Chat',
         const ChatListScreen(),
-        replace: false,
       ),
 
       _buildSectionLabel('Manajemen'),
@@ -355,7 +354,6 @@ class AppDrawer extends StatelessWidget {
         Icons.forum_outlined,
         'Forum / Chat',
         const ChatListScreen(),
-        replace: false,
       ),
       _buildItem(
         context,
@@ -388,14 +386,12 @@ class AppDrawer extends StatelessWidget {
         Icons.how_to_vote_outlined,
         'Voting & Pemilu',
         const VotingListScreen(),
-        replace: false,
       ),
       _buildItem(
         context,
         Icons.inventory_2_outlined,
         'Inventaris',
         const InventoryMainScreen(),
-        replace: false,
       ),
 
       if (isSekretaris) ...[
@@ -446,7 +442,6 @@ class AppDrawer extends StatelessWidget {
         Icons.forum_outlined,
         'Forum / Chat',
         const ChatListScreen(),
-        replace: false,
       ),
 
       _buildSectionLabel('Manajemen'),
@@ -537,7 +532,7 @@ class AppDrawer extends StatelessWidget {
     IconData icon,
     String title,
     Widget? targetScreen, {
-    bool replace = false,
+    bool replace = true,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),

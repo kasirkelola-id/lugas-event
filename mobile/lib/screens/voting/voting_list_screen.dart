@@ -9,6 +9,7 @@ import 'create_voting_screen.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/app_drawer.dart';
 
 class VotingListScreen extends StatefulWidget {
   const VotingListScreen({Key? key}) : super(key: key);
@@ -58,6 +59,7 @@ class _VotingListScreenState extends State<VotingListScreen> {
         _currentUser?.roleLevel == 'superadmin';
 
     return Scaffold(
+      drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       appBar: AppBar(
         title: const Text(
           'Voting & Pemilu',

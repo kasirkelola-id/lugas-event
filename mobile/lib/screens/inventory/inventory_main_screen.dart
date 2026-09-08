@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import '../widgets/common/app_snackbar.dart';
+import '../widgets/app_drawer.dart';
 
 class InventoryMainScreen extends StatefulWidget {
   const InventoryMainScreen({Key? key}) : super(key: key);
@@ -141,6 +142,7 @@ class _InventoryMainScreenState extends State<InventoryMainScreen>
         _currentUser?.roleLevel == 'admin';
 
     return Scaffold(
+      drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       appBar: AppBar(
         title: const Text(
           'Inventaris Barang',
