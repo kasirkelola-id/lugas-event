@@ -311,6 +311,14 @@ class AppDrawer extends StatelessWidget {
         replace: false,
       ),
 
+      _buildSectionLabel('Keuangan'),
+      _buildItem(
+        context,
+        Icons.account_balance_wallet_outlined,
+        'Kas (Transparansi)',
+        KasScreen(user: user),
+      ),
+
       _buildSectionLabel('Analisis'),
       _buildItem(
         context,
@@ -362,15 +370,13 @@ class AppDrawer extends StatelessWidget {
         const AttendanceGeofenceScreen(),
       ),
 
-      if (isBendahara) ...[
-        _buildSectionLabel('Keuangan'),
-        _buildItem(
-          context,
-          Icons.account_balance_wallet_outlined,
-          'Kas',
-          KasScreen(user: user),
-        ),
-      ],
+      _buildSectionLabel('Keuangan'),
+      _buildItem(
+        context,
+        Icons.account_balance_wallet_outlined,
+        'Kas (Transparansi)',
+        KasScreen(user: user),
+      ),
 
       _buildSectionLabel('Kegiatan'),
       _buildItem(
