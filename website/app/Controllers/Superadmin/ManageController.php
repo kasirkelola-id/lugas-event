@@ -50,7 +50,7 @@ class ManageController extends BaseController
         
         $db = \Config\Database::connect();
         $data['users'] = $db->table('organization_members')
-            ->select('users.id, users.nama_lengkap, users.username, users.no_whatsapp, organization_members.role_level, organization_members.status_aktif')
+            ->select('users.id, users.nama_lengkap, users.username, users.no_whatsapp, organization_members.role_level, organization_members.status_aktif, organization_members.approval_status, organization_members.id as membership_id')
             ->join('users', 'users.id = organization_members.user_id')
             ->where('organization_members.karang_taruna_id', $kt_id)
             ->get()->getResultArray();
@@ -165,6 +165,59 @@ class ManageController extends BaseController
         ]);
 
         return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Password pengguna berhasil direset menjadi: {$temporaryPassword}");
+    }
+
+    public function approveUser($kt_id, $membership_id)
+    {
+        return $this->processApproval($kt_id, $membership_id, 'approved');
+    }
+
+    public function rejectUser($kt_id, $membership_id)
+    {
+        return $this->processApproval($kt_id, $membership_id, 'rejected');
+    }
+
+    private function processApproval($kt_id, $membership_id, $action)
+    {
+        $this->getKarangTaruna($kt_id);
+
+        $memberModel = new \App\Models\OrganizationMemberModel();
+        $membership = $memberModel->where('id', $membership_id)->where('karang_taruna_id', $kt_id)->first();
+
+        if (!$membership) {
+            return redirect()->back()->with('error', 'Data anggota tidak ditemukan di Karang Taruna ini.');
+        }
+
+        if ($membership['approval_status'] !== 'pending') {
+            return redirect()->back()->with('error', 'Status pendaftaran anggota ini tidak dalam status pending.');
+        }
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $memberModel->update($membership_id, [
+            'approval_status' => $action
+        ]);
+
+        $historyModel = new \App\Models\MembershipApprovalHistoryModel();
+        $historyModel->insert([
+            'organization_member_id' => $membership_id,
+            'karang_taruna_id' => $kt_id,
+            'action' => $action,
+            'actor_user_id' => session()->get('superadmin_id'),
+            'actor_type' => 'superadmin',
+            'note' => null,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Gagal memproses approval.');
+        }
+
+        $statusStr = $action === 'approved' ? 'disetujui' : 'ditolak';
+        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Pendaftaran pengguna berhasil {$statusStr}.");
     }
 
     public function events($kt_id)

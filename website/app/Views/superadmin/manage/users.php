@@ -46,22 +46,35 @@ Manajemen Pengguna
                                 </span>
                             </td>
                             <td>
-                                <?php if($user['status_aktif'] == 1): ?>
+                                <?php if($user['approval_status'] === 'pending'): ?>
+                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="bi bi-hourglass-split me-1"></i> Menunggu Persetujuan</span>
+                                <?php elseif($user['approval_status'] === 'rejected'): ?>
+                                    <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="bi bi-x-circle-fill me-1"></i> Ditolak</span>
+                                <?php elseif($user['status_aktif'] == 1): ?>
                                     <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Aktif</span>
                                 <?php else: ?>
                                     <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill"><i class="bi bi-x-circle-fill me-1"></i> Nonaktif</span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-end px-4">
-                                <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/status" class="btn btn-sm <?= $user['status_aktif'] == 1 ? 'btn-outline-danger' : 'btn-outline-success' ?> me-1 confirm-action" data-confirm-message="Yakin ingin <?= $user['status_aktif'] == 1 ? 'menonaktifkan' : 'mengaktifkan' ?> pengguna ini?" title="<?= $user['status_aktif'] == 1 ? 'Nonaktifkan' : 'Aktifkan' ?>">
-                                    <i class="bi <?= $user['status_aktif'] == 1 ? 'bi-person-x' : 'bi-person-check' ?>"></i> 
-                                </a>
-                                <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/reset-password" class="btn btn-sm btn-outline-warning me-1 confirm-action" data-confirm-message="Yakin ingin mereset password pengguna ini? Pengguna akan diminta mengubah password pada saat login berikutnya." title="Reset Password">
-                                    <i class="bi bi-key"></i> 
-                                </a>
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#roleModal<?= $user['id'] ?>">
-                                    <i class="bi bi-pencil-square"></i> Ubah Role
-                                </button>
+                                <?php if($user['approval_status'] === 'pending'): ?>
+                                    <a href="/superadmin/manage/<?= $kt['id'] ?>/users/approve/<?= $user['membership_id'] ?>" class="btn btn-sm btn-success me-1 confirm-action" data-confirm-message="Yakin ingin menyetujui pengguna ini?" title="Setujui">
+                                        <i class="bi bi-check-circle"></i> Setujui
+                                    </a>
+                                    <a href="/superadmin/manage/<?= $kt['id'] ?>/users/reject/<?= $user['membership_id'] ?>" class="btn btn-sm btn-danger me-1 confirm-action" data-confirm-message="Yakin ingin menolak pengguna ini?" title="Tolak">
+                                        <i class="bi bi-x-circle"></i> Tolak
+                                    </a>
+                                <?php else: ?>
+                                    <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/status" class="btn btn-sm <?= $user['status_aktif'] == 1 ? 'btn-outline-danger' : 'btn-outline-success' ?> me-1 confirm-action" data-confirm-message="Yakin ingin <?= $user['status_aktif'] == 1 ? 'menonaktifkan' : 'mengaktifkan' ?> pengguna ini?" title="<?= $user['status_aktif'] == 1 ? 'Nonaktifkan' : 'Aktifkan' ?>">
+                                        <i class="bi <?= $user['status_aktif'] == 1 ? 'bi-person-x' : 'bi-person-check' ?>"></i> 
+                                    </a>
+                                    <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/reset-password" class="btn btn-sm btn-outline-warning me-1 confirm-action" data-confirm-message="Yakin ingin mereset password pengguna ini? Pengguna akan diminta mengubah password pada saat login berikutnya." title="Reset Password">
+                                        <i class="bi bi-key"></i> 
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#roleModal<?= $user['id'] ?>">
+                                        <i class="bi bi-pencil-square"></i> Ubah Role
+                                    </button>
+                                <?php endif; ?>
 
                                 <!-- Modal Ubah Role -->
                                 <div class="modal fade text-start" id="roleModal<?= $user['id'] ?>" tabindex="-1" aria-hidden="true">

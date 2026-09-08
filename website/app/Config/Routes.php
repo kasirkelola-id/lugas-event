@@ -137,6 +137,8 @@ $routes->group('superadmin', ['namespace' => 'App\Controllers\Superadmin'], func
         $routes->post('manage/(:num)/users/(:num)/role', 'ManageController::updateUserRole/$1/$2');
         $routes->get('manage/(:num)/users/(:num)/status', 'ManageController::toggleUserStatus/$1/$2');
         $routes->get('manage/(:num)/users/(:num)/reset-password', 'ManageController::resetPassword/$1/$2');
+        $routes->get('manage/(:num)/users/approve/(:num)', 'ManageController::approveUser/$1/$2');
+        $routes->get('manage/(:num)/users/reject/(:num)', 'ManageController::rejectUser/$1/$2');
         $routes->get('manage/(:num)/events', 'ManageController::events/$1');
         $routes->get('manage/(:num)/pengumuman', 'ManageController::pengumuman/$1');
         $routes->post('manage/(:num)/pengumuman/create', 'ManageController::createPengumuman/$1');
