@@ -30,6 +30,7 @@ class DashboardController extends BaseApiController
             'latest_announcement' => null,
             'active_voting' => null,
             'my_active_loan' => null,
+            'kas_balance' => 0,
             'management' => null
         ];
 
@@ -131,6 +132,10 @@ class DashboardController extends BaseApiController
                 'return_date' => $myLoan['return_date']
             ];
         }
+
+        // 4.5. Kas Balance
+        $kasModel = new \App\Models\KasModel();
+        $data['kas_balance'] = (int) $kasModel->getTotalSaldo($tenantId);
 
         // 5. Management Metrics
         // Gunakan RBAC permission untuk melihat metrik

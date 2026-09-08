@@ -4,6 +4,7 @@ class DashboardSummary {
   final ActiveVotingSummary? activeVoting;
   final MyActiveLoanSummary? myActiveLoan;
   final ManagementMetrics? management;
+  final int kasBalance;
 
   DashboardSummary({
     this.upcomingEvent,
@@ -11,6 +12,7 @@ class DashboardSummary {
     this.activeVoting,
     this.myActiveLoan,
     this.management,
+    this.kasBalance = 0,
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
@@ -30,6 +32,9 @@ class DashboardSummary {
       management: json['management'] != null
           ? ManagementMetrics.fromJson(json['management'])
           : null,
+      kasBalance: json['kas_balance'] != null
+          ? int.tryParse(json['kas_balance'].toString()) ?? 0
+          : 0,
     );
   }
 }

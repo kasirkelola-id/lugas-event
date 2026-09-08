@@ -6,6 +6,7 @@ import '../../models/user_model.dart';
 import '../../models/dashboard_summary_model.dart';
 import 'package:mobile/screens/auth/login_screen.dart';
 import 'attendance_geofence_screen.dart';
+import '../kas/kas_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
@@ -148,6 +149,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         children: [
           _buildHeaderSection(),
           const SizedBox(height: 16),
+          _buildKasInfo(),
           _buildUpcomingEvent(),
           _buildLatestAnnouncement(),
           _buildActiveVoting(),
@@ -214,6 +216,46 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildKasInfo() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+        elevation: 2,
+        shadowColor: AppTheme.primary.withOpacity(0.1),
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.account_balance_wallet, color: AppTheme.success),
+          ),
+          title: const Text(
+            'Kas Terkini',
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          ),
+          subtitle: Text(
+            'Rp ${_summary!.kasBalance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => KasScreen(user: _user)),
+            );
+          },
+        ),
       ),
     );
   }
