@@ -219,60 +219,6 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children:
-                          [
-                            'Semua',
-                            'Admin',
-                            'Ketua',
-                            'Sekretaris',
-                            'Bendahara',
-                            'Pengelola',
-                            'Anggota',
-                          ].map((role) {
-                            final isSelected = _roleFilter == role;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: FilterChip(
-                                label: Text(role),
-                                selected: isSelected,
-                                selectedColor: AppTheme.primary.withValues(
-                                  alpha: 0.15,
-                                ),
-                                checkmarkColor: AppTheme.primary,
-                                labelStyle: TextStyle(
-                                  color: isSelected
-                                      ? AppTheme.primary
-                                      : AppTheme.textSecondary,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                ),
-                                backgroundColor: AppTheme.surface,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: AppTheme.radiusLarge,
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? AppTheme.primary.withValues(
-                                            alpha: 0.5,
-                                          )
-                                        : Colors.grey.shade300,
-                                  ),
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    _roleFilter = role;
-                                    _applyFilters();
-                                  });
-                                },
-                              ),
-                            );
-                          }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
                       children: [null, ..._availableRts].map((rt) {
                         final isSelected = _rtFilter == rt;
                         final label = rt == null ? 'Semua RT' : 'RT 0$rt';

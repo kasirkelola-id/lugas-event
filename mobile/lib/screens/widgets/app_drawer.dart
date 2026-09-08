@@ -237,11 +237,11 @@ class AppDrawer extends StatelessWidget {
 
   Widget _buildSectionLabel(String label) {
     return Padding(
-      padding: const EdgeInsets.only(left: 24, top: 16, bottom: 8),
+      padding: const EdgeInsets.only(left: 24, top: 12, bottom: 4),
       child: Text(
         label.toUpperCase(),
         style: const TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.bold,
           color: AppTheme.textSecondary,
           letterSpacing: 1.2,
@@ -535,13 +535,17 @@ class AppDrawer extends StatelessWidget {
     bool replace = true,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
       child: ListTile(
-        leading: Icon(icon, color: AppTheme.primary.withValues(alpha: 0.8)),
+        dense: true,
+        visualDensity: const VisualDensity(vertical: -2),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+        leading: Icon(icon, color: AppTheme.primary.withValues(alpha: 0.8), size: 22),
         title: Text(
           title,
           style: const TextStyle(
             fontWeight: FontWeight.w500,
+            fontSize: 14,
             color: AppTheme.textPrimary,
           ),
         ),
