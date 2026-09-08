@@ -11,6 +11,11 @@ class CustomLoadingIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SpinKitThreeBounce(color: color ?? AppTheme.primary, size: size);
+    // Gunakan FadingCircle untuk tombol/komponen kecil agar tetap rapi
+    if (size < 40) {
+      return SpinKitFadingCircle(color: color ?? AppTheme.primary, size: size);
+    }
+    // Gunakan FadingCube atau FoldingCube untuk layar utama agar terasa premium
+    return SpinKitFoldingCube(color: color ?? AppTheme.primary, size: size);
   }
 }
