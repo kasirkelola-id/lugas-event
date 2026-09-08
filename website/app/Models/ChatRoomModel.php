@@ -27,16 +27,13 @@ class ChatRoomModel extends Model
     {
         // 1. Get default room for the karang taruna
         // 2. Get custom rooms where user is a member
+        $userIdInt = (int)$userId;
         $builder = $this->db->table($this->table)
                         ->select('chat_rooms.*')
                         ->where('chat_rooms.karang_taruna_id', $karangTarunaId)
                         ->groupStart()
                             ->where('chat_rooms.type', 'default')
-                            ->orGroupStart()
-                                ->where('chat_rooms.type', 'custom')
-                                ->join('chat_room_members', 'chat_room_members.chat_room_id = chat_rooms.id')
-                                ->where('chat_room_members.user_id', $userId)
-                            ->groupEnd()
+                            ->orWhere("chat_rooms.id IN (SELECT chat_room_id FROM chat_room_members WHERE user_id = {$userIdInt})", null, false)
                         ->groupEnd()
                         ->orderBy('chat_rooms.created_at', 'ASC');
 
