@@ -227,34 +227,123 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         elevation: 2,
         shadowColor: AppTheme.primary.withOpacity(0.1),
-        child: ListTile(
-          leading: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.success.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.account_balance_wallet, color: AppTheme.success),
-          ),
-          title: const Text(
-            'Kas Terkini',
-            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-          ),
-          subtitle: Text(
-            'Rp ${_summary!.kasBalance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+        child: InkWell(
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => KasScreen(user: _user)),
             );
           },
+          borderRadius: AppTheme.radiusMedium,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.success.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.account_balance_wallet, color: AppTheme.success, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Kas Terkini',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Rp ${_summary!.kasBalance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Divider(height: 1, color: Colors.black12),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.arrow_downward, color: Colors.green, size: 12),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Pemasukan', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                Text(
+                                  'Rp ${_summary!.kasPemasukan.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(width: 1, height: 30, color: Colors.black12),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.arrow_upward, color: Colors.red, size: 12),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Pengeluaran', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                Text(
+                                  'Rp ${_summary!.kasPengeluaran.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -137,6 +137,23 @@ class DashboardController extends BaseApiController
         $kasModel = new \App\Models\KasModel();
         $data['kas_balance'] = (int) $kasModel->getTotalSaldo($tenantId);
 
+        $currentMonth = date('Y-m');
+        $data['kas_pemasukan'] = (int) $kasModel->where('karang_taruna_id', $tenantId)
+                                                ->where('jenis', 'pemasukan')
+                                                ->like('tanggal', $currentMonth, 'after')
+                                                ->selectSum('nominal')
+                                                ->get()
+                                                ->getRow()
+                                                ->nominal ?? 0;
+
+        $data['kas_pengeluaran'] = (int) $kasModel->where('karang_taruna_id', $tenantId)
+                                                  ->where('jenis', 'pengeluaran')
+                                                  ->like('tanggal', $currentMonth, 'after')
+                                                  ->selectSum('nominal')
+                                                  ->get()
+                                                  ->getRow()
+                                                  ->nominal ?? 0;
+
         // 5. Management Metrics
         // Gunakan RBAC permission untuk melihat metrik
         $canSeeManagement = AuthService::can('inventory.approve') || AuthService::can('members.manage') || AuthService::can('report.view');
