@@ -10,6 +10,7 @@ import '../kas/kas_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
+import '../widgets/animations/fade_in_slide.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
 class AnggotaHomeScreen extends StatefulWidget {
@@ -106,11 +107,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         scrolledUnderElevation: 0,
       ),
       drawer: _user != null ? AppDrawer(user: _user!) : null,
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        color: AppTheme.primary,
-        child: _buildBody(),
-      ),
+      body: _buildBody(),
     );
   }
 
@@ -142,21 +139,44 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
       );
     }
 
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildHeaderSection(),
-          const SizedBox(height: 16),
-          _buildKasInfo(),
-          _buildUpcomingEvent(),
-          _buildLatestAnnouncement(),
-          _buildActiveVoting(),
-          _buildMyActiveLoan(),
-          const SizedBox(height: 40),
-        ],
-      ),
+    return Stack(
+      children: [
+        // Gradient Header Background
+        Container(
+          height: 240,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.primary,
+                AppTheme.primary.withOpacity(0.8),
+              ],
+            ),
+            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+          ),
+        ),
+        // Content
+        RefreshIndicator(
+          onRefresh: _loadData,
+          color: AppTheme.primary,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeaderContent(),
+                FadeInSlide(delay: 0.1, child: _buildKasInfo()),
+                FadeInSlide(delay: 0.2, child: _buildUpcomingEvent()),
+                FadeInSlide(delay: 0.3, child: _buildLatestAnnouncement()),
+                FadeInSlide(delay: 0.4, child: _buildActiveVoting()),
+                FadeInSlide(delay: 0.5, child: _buildMyActiveLoan()),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -165,32 +185,21 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
     return role.substring(0, 1).toUpperCase() + role.substring(1);
   }
 
-  Widget _buildHeaderSection() {
-    return Container(
-      padding: const EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 24),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
+  Widget _buildHeaderContent() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 20),
       child: Row(
         children: [
           CircleAvatar(
             radius: 32,
-            backgroundColor: AppTheme.primary.withOpacity(0.1),
+            backgroundColor: Colors.white24,
             child: Text(
               _user!.namaPanggilan.isNotEmpty
                   ? _user!.namaPanggilan.substring(0, 1).toUpperCase()
                   : 'U',
               style: const TextStyle(
                 fontSize: 28,
-                color: AppTheme.primary,
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -205,12 +214,20 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Role: ${_formatRole(_user!.roleLevel)}',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _formatRole(_user!.roleLevel),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
                 ),
               ],
             ),
