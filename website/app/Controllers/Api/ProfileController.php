@@ -10,7 +10,7 @@ class ProfileController extends BaseApiController
     public function updateProfile()
     {
         $userId = AuthService::getGlobalUserId();
-        if (!$userId) {
+        if ($userId === null) {
             return $this->sendError('Unauthorized', null, 401);
         }
 
@@ -78,7 +78,7 @@ class ProfileController extends BaseApiController
     public function changePassword()
     {
         $userId = AuthService::getGlobalUserId();
-        if (!$userId) {
+        if ($userId === null) {
             return $this->sendError('Unauthorized', null, 401);
         }
 
@@ -110,7 +110,7 @@ class ProfileController extends BaseApiController
     public function updateProfilePhoto()
     {
         $userId = AuthService::getGlobalUserId();
-        if (!$userId) {
+        if ($userId === null) {
             return $this->sendError('Unauthorized', null, 401);
         }
 

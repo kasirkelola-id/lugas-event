@@ -18,7 +18,7 @@ class DashboardController extends BaseApiController
         $userId = AuthService::getGlobalUserId();
         $role = AuthService::getRole();
 
-        if (!$tenantId || !$userId) {
+        if (!$tenantId || $userId === null) {
             return $this->sendError('Unauthorized', null, 401);
         }
 

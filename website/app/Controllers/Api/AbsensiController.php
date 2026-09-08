@@ -220,7 +220,7 @@ class AbsensiController extends BaseApiController
     public function status()
     {
         $userId = AuthService::getGlobalUserId();
-        if (!$userId) {
+        if ($userId === null) {
             return $this->sendError('Forbidden', null, 403);
         }
 

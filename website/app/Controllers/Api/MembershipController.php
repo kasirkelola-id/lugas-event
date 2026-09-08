@@ -10,7 +10,7 @@ class MembershipController extends BaseApiController
     public function index()
     {
         $userId = AuthService::getGlobalUserId();
-        if (!$userId) {
+        if ($userId === null) {
             return $this->sendError('Unauthorized', null, 401);
         }
 
