@@ -9,6 +9,7 @@ import '../widgets/common/app_dialog.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/animations/fade_in_slide.dart';
 
 class AttendanceGeofenceScreen extends StatefulWidget {
   const AttendanceGeofenceScreen({Key? key}) : super(key: key);
@@ -224,79 +225,62 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
   }
 
   Widget _buildLocationStatusCard() {
-    if (_errorMessage.isNotEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.error.withValues(alpha: 0.1),
-          borderRadius: AppTheme.radiusLarge,
-          border: Border.all(color: AppTheme.error.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.location_off, color: AppTheme.error, size: 32),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Lokasi Tidak Tersedia',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.error,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _errorMessage,
-                    style: const TextStyle(fontSize: 12, color: AppTheme.error),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    bool isError = _errorMessage.isNotEmpty;
+    bool isSuccess = _currentPosition != null;
+    if (!isError && !isSuccess) return const SizedBox();
 
-    if (_currentPosition != null) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.success.withValues(alpha: 0.1),
-          borderRadius: AppTheme.radiusLarge,
-          border: Border.all(color: AppTheme.success.withValues(alpha: 0.3)),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.my_location, color: AppTheme.success, size: 32),
-            SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Lokasi Ditemukan',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.success,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Akurasi GPS baik. Siap untuk absensi.',
-                    style: TextStyle(fontSize: 12, color: AppTheme.success),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    Color accentColor = isError ? AppTheme.error : AppTheme.success;
+    IconData iconData = isError ? Icons.location_off : Icons.my_location;
+    String title = isError ? 'Lokasi Tidak Tersedia' : 'Lokasi Ditemukan';
+    String desc = isError ? _errorMessage : 'Akurasi GPS baik. Siap untuk absensi.';
 
-    return const SizedBox();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: accentColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(iconData, color: accentColor, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: accentColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  desc,
+                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -304,44 +288,63 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
     return Scaffold(
       drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       appBar: AppBar(
-        title: const Text('Absensi Lokasi'),
-        backgroundColor: AppTheme.surface,
+        title: const Text('Absensi Lokasi', style: TextStyle(color: Colors.white)),
+        backgroundColor: AppTheme.primary,
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
       backgroundColor: AppTheme.background,
       body: _isLoading
           ? const Center(child: CustomLoadingIndicator(color: AppTheme.primary))
-          : RefreshIndicator(
-              onRefresh: _initLocationAndData,
-              color: AppTheme.primary,
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: [
-                  _buildLocationStatusCard(),
-                  const SizedBox(height: 24),
-                  if (_nearbyEvents.isEmpty && _errorMessage.isEmpty)
-                    _buildEmptyState()
-                  else
-                    ..._nearbyEvents.map((event) => _buildEventCard(event)),
-                  if (_errorMessage.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24),
-                      child: ElevatedButton.icon(
-                        onPressed: _initLocationAndData,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Coba Lagi'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.surface,
-                          foregroundColor: AppTheme.primary,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                      ),
+          : Stack(
+              children: [
+                Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
                     ),
-                ],
-              ),
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+                  ),
+                ),
+                RefreshIndicator(
+                  onRefresh: _initLocationAndData,
+                  color: AppTheme.primary,
+                  child: ListView(
+                    padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 40),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      FadeInSlide(delay: 0.1, child: _buildLocationStatusCard()),
+                      const SizedBox(height: 32),
+                      if (_nearbyEvents.isEmpty && _errorMessage.isEmpty)
+                        FadeInSlide(delay: 0.2, child: _buildEmptyState())
+                      else
+                        ..._nearbyEvents.asMap().entries.map((entry) => FadeInSlide(
+                          delay: 0.2 + (0.1 * entry.key), 
+                          child: _buildEventCard(entry.value),
+                        )),
+                      if (_errorMessage.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 24),
+                          child: ElevatedButton.icon(
+                            onPressed: _initLocationAndData,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Coba Lagi'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppTheme.primary,
+                              elevation: 2,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
     );
   }
@@ -381,12 +384,17 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
     final isCheckedIn = _activeCheckinEventIds.contains(event.id);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: Colors.white,
         borderRadius: AppTheme.radiusLarge,
-        boxShadow: AppTheme.shadowSoft,
-        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +410,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.1),
+                        color: AppTheme.primary.withOpacity(0.1),
                         borderRadius: AppTheme.radiusMedium,
                       ),
                       child: const Icon(
@@ -436,22 +444,17 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
                 // Status Box
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: isCheckedIn
-                        ? AppTheme.success.withValues(alpha: 0.05)
-                        : AppTheme.background,
+                        ? AppTheme.success.withOpacity(0.1)
+                        : Colors.grey.shade50,
                     borderRadius: AppTheme.radiusMedium,
-                    border: Border.all(
-                      color: isCheckedIn
-                          ? AppTheme.success.withValues(alpha: 0.2)
-                          : Colors.grey.shade200,
-                    ),
                   ),
                   child: Row(
                     children: [
@@ -460,7 +463,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                         color: isCheckedIn
                             ? AppTheme.success
                             : AppTheme.textSecondary,
-                        size: 24,
+                        size: 20,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -485,17 +488,51 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
               ],
             ),
           ),
+          
+          // Ticket dashed line
+          Row(
+            children: [
+              Container(
+                width: 12,
+                height: 24,
+                decoration: const BoxDecoration(
+                  color: AppTheme.background,
+                  borderRadius: BorderRadius.horizontal(right: Radius.circular(12)),
+                ),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Flex(
+                      direction: Axis.horizontal,
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(
+                        (constraints.constrainWidth() / 10).floor(),
+                        (index) => const SizedBox(
+                          width: 5,
+                          height: 1.5,
+                          child: DecoratedBox(decoration: BoxDecoration(color: Colors.black12)),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Container(
+                width: 12,
+                height: 24,
+                decoration: const BoxDecoration(
+                  color: AppTheme.background,
+                  borderRadius: BorderRadius.horizontal(left: Radius.circular(12)),
+                ),
+              ),
+            ],
+          ),
 
           // CTA Block
-          Container(
+          Padding(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppTheme.background,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -520,7 +557,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.radiusMedium,
+                    borderRadius: BorderRadius.circular(100), // Fully rounded
                   ),
                   elevation: 0,
                 ),
