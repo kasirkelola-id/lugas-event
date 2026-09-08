@@ -250,16 +250,17 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AttendanceGeofenceScreen(),
+              if (event.isOngoing)
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AttendanceGeofenceScreen(),
+                    ),
                   ),
+                  icon: const Icon(Icons.location_on),
+                  label: const Text('Absen Lokasi'),
                 ),
-                icon: const Icon(Icons.location_on),
-                label: const Text('Absen Lokasi'),
-              ),
             ],
           ),
         ),

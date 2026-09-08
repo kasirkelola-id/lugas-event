@@ -40,6 +40,7 @@ class UpcomingEventSummary {
   final String date;
   final String? time;
   final dynamic status;
+  final bool isOngoing;
 
   UpcomingEventSummary({
     required this.id,
@@ -47,6 +48,7 @@ class UpcomingEventSummary {
     required this.date,
     this.time,
     this.status,
+    this.isOngoing = false,
   });
 
   factory UpcomingEventSummary.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class UpcomingEventSummary {
       date: json['date'],
       time: json['time'],
       status: json['status'],
+      isOngoing: json['is_ongoing'] == true,
     );
   }
 }

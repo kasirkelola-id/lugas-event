@@ -69,7 +69,8 @@ class DashboardController extends BaseApiController
                 'title' => $selectedEvent['nama_acara'],
                 'date' => $selectedEvent['tanggal_acara'],
                 'time' => $selectedEvent['waktu_mulai'],
-                'status' => $selectedEvent['status_aktif']
+                'status' => $selectedEvent['status_aktif'],
+                'is_ongoing' => !empty($ongoingEvent)
             ];
         }
 
