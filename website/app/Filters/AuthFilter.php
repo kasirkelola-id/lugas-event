@@ -44,7 +44,7 @@ class AuthFilter implements FilterInterface
 
         $user = null;
 
-        if ($tokenData['user_id'] == 0) {
+        if ($tokenData['user_id'] === null) {
             // It's a Superadmin
             $user = [
                 'id' => 0,

@@ -108,7 +108,7 @@ class AuthController extends BaseApiController
         // Expiration in 30 days
         $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
 
-        $userId = $isSuperAdmin ? 0 : $user['id']; // Token table user_id is INT
+        $userId = $isSuperAdmin ? null : $user['id']; // Token table user_id is INT
 
         $tokenModel->insert([
             'karang_taruna_id' => $karangTarunaId,
