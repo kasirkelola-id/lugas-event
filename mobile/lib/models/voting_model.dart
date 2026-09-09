@@ -5,9 +5,11 @@ class Voting {
   final int karangTarunaId;
   final String title;
   final String? description;
-  final String status; // active, closed
+  final String status; // scheduled, active, ended
   final int createdBy;
   final DateTime createdAt;
+  final DateTime? waktuMulai;
+  final DateTime? waktuSelesai;
   final bool hasVoted;
   final int? totalVotes;
   final int? votedOptionId;
@@ -21,6 +23,8 @@ class Voting {
     required this.status,
     required this.createdBy,
     required this.createdAt,
+    this.waktuMulai,
+    this.waktuSelesai,
     this.hasVoted = false,
     this.totalVotes,
     this.votedOptionId,
@@ -36,6 +40,12 @@ class Voting {
       status: json['status'] ?? 'active',
       createdBy: int.parse(json['created_by'].toString()),
       createdAt: DateTime.parse(json['created_at']),
+      waktuMulai: json['waktu_mulai'] != null
+          ? DateTime.parse(json['waktu_mulai'])
+          : null,
+      waktuSelesai: json['waktu_selesai'] != null
+          ? DateTime.parse(json['waktu_selesai'])
+          : null,
       hasVoted: json['has_voted'] ?? false,
       totalVotes: json['total_votes'] != null
           ? int.parse(json['total_votes'].toString())

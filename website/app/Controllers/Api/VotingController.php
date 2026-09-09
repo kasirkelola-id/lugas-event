@@ -22,6 +22,14 @@ class VotingController extends BaseApiController
         $this->voteModel = new VotingVoteModel();
     }
 
+    private function getDynamicStatus($voting) {
+        if ($voting['status'] === 'closed') return 'ended';
+        $now = date('Y-m-d H:i:s');
+        if ($now < $voting['waktu_mulai']) return 'scheduled';
+        if ($now >= $voting['waktu_selesai']) return 'ended';
+        return 'active';
+    }
+
     public function index()
     {
         $tenantId = AuthService::getTenantId();
@@ -33,11 +41,17 @@ class VotingController extends BaseApiController
                                      ->findAll();
 
         foreach ($votings as &$voting) {
+            $voting['status'] = $this->getDynamicStatus($voting);
             $hasVoted = $this->voteModel->where('voting_id', $voting['id'])
                                         ->where('user_id', $userId)
                                         ->first();
             $voting['has_voted'] = $hasVoted ? true : false;
-            $voting['total_votes'] = $this->voteModel->where('voting_id', $voting['id'])->countAllResults();
+            
+            if ($voting['status'] === 'ended') {
+                $voting['total_votes'] = $this->voteModel->where('voting_id', $voting['id'])->countAllResults();
+            } else {
+                $voting['total_votes'] = null;
+            }
         }
 
         return $this->sendSuccess('Daftar voting', $votings);
@@ -55,19 +69,25 @@ class VotingController extends BaseApiController
 
         if (!$voting) return $this->sendError('Voting tidak ditemukan', null, 404);
 
+        $voting['status'] = $this->getDynamicStatus($voting);
         $options = $this->optionModel->where('voting_id', $id)->findAll();
         $hasVoted = $this->voteModel->where('voting_id', $id)->where('user_id', $userId)->first();
 
         $voting['has_voted'] = $hasVoted ? true : false;
         $voting['voted_option_id'] = $hasVoted ? $hasVoted['option_id'] : null;
-        $voting['total_votes'] = $this->voteModel->where('voting_id', $id)->countAllResults();
 
-        // Calculate percentages if user has voted or voting is closed
-        if ($voting['has_voted'] || $voting['status'] == 'closed') {
+        if ($voting['status'] === 'ended') {
+            $voting['total_votes'] = $this->voteModel->where('voting_id', $id)->countAllResults();
             foreach ($options as &$option) {
                 $optionVotes = $this->voteModel->where('option_id', $option['id'])->countAllResults();
                 $option['vote_count'] = $optionVotes;
                 $option['percentage'] = $voting['total_votes'] > 0 ? round(($optionVotes / $voting['total_votes']) * 100, 1) : 0;
+            }
+        } else {
+            $voting['total_votes'] = null;
+            foreach ($options as &$option) {
+                $option['vote_count'] = null;
+                $option['percentage'] = null;
             }
         }
 
@@ -89,10 +109,16 @@ class VotingController extends BaseApiController
         $rules = [
             'title'   => 'required|min_length[3]',
             'options' => 'required',
+            'waktu_mulai'   => 'required|valid_date[Y-m-d H:i:s]',
+            'waktu_selesai' => 'required|valid_date[Y-m-d H:i:s]',
         ];
 
         if (!$this->validateData($rawInput, $rules)) {
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
+        }
+        
+        if (strtotime($rawInput['waktu_mulai']) >= strtotime($rawInput['waktu_selesai'])) {
+             return $this->sendError('Validasi gagal', ['waktu_selesai' => 'Waktu selesai harus setelah waktu mulai'], 422);
         }
 
         $options = $rawInput['options'] ?? null;
@@ -107,6 +133,8 @@ class VotingController extends BaseApiController
             'karang_taruna_id' => $tenantId,
             'title'            => $rawInput['title'],
             'description'      => $rawInput['description'] ?? null,
+            'waktu_mulai'      => $rawInput['waktu_mulai'],
+            'waktu_selesai'    => $rawInput['waktu_selesai'],
             'status'           => 'active',
             'created_by'       => $userId
         ];
@@ -148,7 +176,11 @@ class VotingController extends BaseApiController
                                     ->first();
 
         if (!$voting) return $this->sendError('Voting tidak ditemukan', null, 404);
-        if ($voting['status'] == 'closed') return $this->sendError('Voting telah ditutup', null, 400);
+        
+        $dynamicStatus = $this->getDynamicStatus($voting);
+        if ($dynamicStatus === 'ended' || $dynamicStatus === 'scheduled') {
+            return $this->sendError('Voting tidak aktif', null, 400);
+        }
 
         $hasVoted = $this->voteModel->where('voting_id', $id)->where('user_id', $userId)->first();
         if ($hasVoted) return $this->sendError('Anda sudah memberikan suara', null, 400);

@@ -12,7 +12,7 @@ class VotingModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['karang_taruna_id', 'title', 'description', 'status', 'created_by', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['karang_taruna_id', 'title', 'description', 'status', 'created_by', 'created_at', 'updated_at', 'waktu_mulai', 'waktu_selesai'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

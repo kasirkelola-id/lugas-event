@@ -101,9 +101,18 @@ class DashboardController extends BaseApiController
 
         // 3. Active Voting
         $votingModel = new VotingModel();
+        $nowStr = date('Y-m-d H:i:s');
         $activeVoting = $votingModel
             ->where('karang_taruna_id', $tenantId)
-            ->where('status', 'active')
+            ->where('status !=', 'closed')
+            ->groupStart()
+                ->where('waktu_mulai <=', $nowStr)
+                ->orWhere('waktu_mulai IS NULL')
+            ->groupEnd()
+            ->groupStart()
+                ->where('waktu_selesai >', $nowStr)
+                ->orWhere('waktu_selesai IS NULL')
+            ->groupEnd()
             ->orderBy('created_at', 'DESC')
             ->first();
 
@@ -111,7 +120,7 @@ class DashboardController extends BaseApiController
             $data['active_voting'] = [
                 'id' => $activeVoting['id'],
                 'title' => $activeVoting['title'],
-                'status' => $activeVoting['status']
+                'status' => 'active'
             ];
         }
 

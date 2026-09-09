@@ -170,8 +170,9 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
     final bool isKetuaOrAdmin =
         _currentUser?.roleLevel == 'ketua' ||
         _currentUser?.roleLevel == 'superadmin';
-    final bool showResults = _voting!.hasVoted || _voting!.status == 'closed';
+    final bool showResults = _voting!.status == 'ended';
     final bool canVote = !_voting!.hasVoted && _voting!.status == 'active';
+    final bool isScheduled = _voting!.status == 'scheduled';
 
     return Scaffold(
       appBar: AppBar(
@@ -200,15 +201,23 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
               decoration: BoxDecoration(
                 color: _voting!.status == 'active'
                     ? Colors.green.shade100
-                    : Colors.red.shade100,
+                    : (_voting!.status == 'scheduled'
+                          ? Colors.orange.shade100
+                          : Colors.red.shade100),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                _voting!.status == 'active' ? 'AKTIF' : 'DITUTUP',
+                _voting!.status == 'active'
+                    ? 'AKTIF'
+                    : (_voting!.status == 'scheduled'
+                          ? 'BELUM MULAI'
+                          : 'SELESAI'),
                 style: TextStyle(
                   color: _voting!.status == 'active'
                       ? Colors.green.shade800
-                      : Colors.red.shade800,
+                      : (_voting!.status == 'scheduled'
+                            ? Colors.orange.shade800
+                            : Colors.red.shade800),
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -231,7 +240,9 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
             const SizedBox(height: 8),
 
             Text(
-              showResults ? 'Hasil Pemilihan:' : 'Silakan Pilih:',
+              showResults
+                  ? 'Hasil Pemilihan:'
+                  : (isScheduled ? 'Opsi Pemilihan:' : 'Silakan Pilih:'),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -242,18 +253,32 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
                   // Tampilkan Bar Hasil
                   return _buildResultBar(option);
                 } else {
-                  // Tampilkan Radio Button
+                  // Jika active dan sudah vote, disable tap dan tunjukkan mana yang dipilih tanpa %
+                  final bool isMyChoice = _voting!.votedOptionId == option.id;
+
                   return RadioListTile<int>(
-                    title: Text(option.optionName),
+                    title: Text(
+                      option.optionName,
+                      style: TextStyle(
+                        fontWeight: isMyChoice
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        color: isMyChoice ? AppTheme.primary : Colors.black87,
+                      ),
+                    ),
                     value: option.id,
-                    groupValue: _selectedOptionId,
+                    groupValue: _voting!.hasVoted
+                        ? _voting!.votedOptionId
+                        : _selectedOptionId,
                     activeColor: AppTheme.primary,
                     contentPadding: EdgeInsets.zero,
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedOptionId = val;
-                      });
-                    },
+                    onChanged: canVote
+                        ? (val) {
+                            setState(() {
+                              _selectedOptionId = val;
+                            });
+                          }
+                        : null,
                   );
                 }
               }).toList(),
@@ -281,7 +306,53 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
                 ),
               ),
 
-            if (!canVote && _voting!.status == 'active')
+            if (isScheduled)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.schedule, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Voting ini belum dimulai. Silakan cek kembali pada jadwal yang ditentukan.',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (!_voting!.hasVoted && _voting!.status == 'ended')
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.grey),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Voting telah berakhir. Anda tidak memberikan suara.',
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (_voting!.hasVoted && _voting!.status != 'ended')
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -296,7 +367,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Anda sudah memberikan suara pada voting ini. Menunggu voting ditutup oleh pengelola.',
+                        'Suara Anda sudah tercatat. Hasil dapat dilihat setelah voting selesai.',
                         style: TextStyle(color: Colors.blue),
                       ),
                     ),
@@ -314,7 +385,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
     final double pct = option.percentage ?? 0.0;
 
     bool isWinner = false;
-    if (_voting!.status == 'closed' && _voting!.options != null) {
+    if (_voting!.status == 'ended' && _voting!.options != null) {
       int maxVotes = 0;
       for (var opt in _voting!.options!) {
         if ((opt.voteCount ?? 0) > maxVotes) {

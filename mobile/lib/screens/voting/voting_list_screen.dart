@@ -79,8 +79,21 @@ class _VotingListScreenState extends State<VotingListScreen> {
                 itemCount: _votings.length,
                 itemBuilder: (context, index) {
                   final voting = _votings[index];
-                  final isActive = voting.status == 'active';
                   final dateFormat = DateFormat('dd MMM yyyy, HH:mm');
+
+                  Color statusColor;
+                  String statusText;
+
+                  if (voting.status == 'scheduled') {
+                    statusColor = Colors.orange;
+                    statusText = 'Belum Mulai';
+                  } else if (voting.status == 'active') {
+                    statusColor = Colors.green;
+                    statusText = 'Aktif';
+                  } else {
+                    statusColor = Colors.red;
+                    statusText = 'Selesai';
+                  }
 
                   return FadeInSlide(
                     delay: 0.1 * index,
@@ -127,17 +140,13 @@ class _VotingListScreenState extends State<VotingListScreen> {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: isActive
-                                          ? Colors.green.shade100
-                                          : Colors.red.shade100,
+                                      color: statusColor.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(
-                                      isActive ? 'Aktif' : 'Ditutup',
+                                      statusText,
                                       style: TextStyle(
-                                        color: isActive
-                                            ? Colors.green.shade800
-                                            : Colors.red.shade800,
+                                        color: statusColor,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -160,23 +169,27 @@ class _VotingListScreenState extends State<VotingListScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.how_to_vote,
-                                        size: 16,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${voting.totalVotes ?? 0} Suara',
-                                        style: TextStyle(
+                                  if (voting.status == 'ended' &&
+                                      voting.totalVotes != null)
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.how_to_vote,
+                                          size: 16,
                                           color: Colors.grey.shade600,
-                                          fontSize: 13,
                                         ),
-                                      ),
-                                    ],
-                                  ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${voting.totalVotes} Suara',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  else
+                                    const SizedBox(),
                                   Text(
                                     dateFormat.format(voting.createdAt),
                                     style: TextStyle(

@@ -14,6 +14,12 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
 
+  final TextEditingController _tanggalMulaiController = TextEditingController();
+  final TextEditingController _jamMulaiController = TextEditingController();
+  final TextEditingController _tanggalSelesaiController =
+      TextEditingController();
+  final TextEditingController _jamSelesaiController = TextEditingController();
+
   final List<TextEditingController> _optionControllers = [
     TextEditingController(),
     TextEditingController(),
@@ -40,12 +46,73 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
     }
   }
 
+  Future<void> _pilihTanggal(TextEditingController controller) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        controller.text =
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      });
+    }
+  }
+
+  Future<void> _pilihJam(TextEditingController controller) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        controller.text =
+            "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00";
+      });
+    }
+  }
+
   Future<void> _submit() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Judul voting wajib diisi')));
+      return;
+    }
+
+    if (_tanggalMulaiController.text.isEmpty ||
+        _jamMulaiController.text.isEmpty ||
+        _tanggalSelesaiController.text.isEmpty ||
+        _jamSelesaiController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Waktu mulai dan selesai wajib diisi')),
+      );
+      return;
+    }
+
+    final waktuMulaiStr =
+        '${_tanggalMulaiController.text} ${_jamMulaiController.text}';
+    final waktuSelesaiStr =
+        '${_tanggalSelesaiController.text} ${_jamSelesaiController.text}';
+
+    try {
+      final start = DateTime.parse(waktuMulaiStr);
+      final end = DateTime.parse(waktuSelesaiStr);
+      if (start.isAfter(end) || start.isAtSameMomentAs(end)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Waktu selesai harus lebih besar dari waktu mulai'),
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Format waktu tidak valid')));
       return;
     }
 
@@ -69,6 +136,8 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
     final data = {
       'title': title,
       'description': _descController.text.trim(),
+      'waktu_mulai': waktuMulaiStr,
+      'waktu_selesai': waktuSelesaiStr,
       'options': options,
     };
 
@@ -92,6 +161,10 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
   void dispose() {
     _titleController.dispose();
     _descController.dispose();
+    _tanggalMulaiController.dispose();
+    _jamMulaiController.dispose();
+    _tanggalSelesaiController.dispose();
+    _jamSelesaiController.dispose();
     for (var c in _optionControllers) {
       c.dispose();
     }
@@ -129,6 +202,67 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
                 labelText: 'Deskripsi (Opsional)',
                 border: OutlineInputBorder(),
               ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Jadwal Voting:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _tanggalMulaiController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Tgl Mulai',
+                      border: OutlineInputBorder(),
+                    ),
+                    onTap: () => _pilihTanggal(_tanggalMulaiController),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: _jamMulaiController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Jam Mulai',
+                      border: OutlineInputBorder(),
+                    ),
+                    onTap: () => _pilihJam(_jamMulaiController),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _tanggalSelesaiController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Tgl Selesai',
+                      border: OutlineInputBorder(),
+                    ),
+                    onTap: () => _pilihTanggal(_tanggalSelesaiController),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: _jamSelesaiController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Jam Selesai',
+                      border: OutlineInputBorder(),
+                    ),
+                    onTap: () => _pilihJam(_jamSelesaiController),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             const Text(
