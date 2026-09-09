@@ -7,6 +7,7 @@ import '../../models/event_model.dart';
 import '../widgets/app_drawer.dart';
 import 'attendance_list_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/animations/fade_in_slide.dart';
 
 class PengelolaPesertaScreen extends StatefulWidget {
   const PengelolaPesertaScreen({super.key});
@@ -19,6 +20,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
   UserModel? _user;
   List<EventModel> _events = [];
   bool _isLoading = true;
+  String _searchQuery = '';
   String? _errorMessage;
 
   @override
@@ -60,26 +62,124 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
     });
   }
 
+  bool _isEventActive(EventModel e) {
+    if (e.statusKegiatan != null) {
+      return e.statusKegiatan == 'berlangsung' || e.statusKegiatan == 'akan_datang';
+    }
+    return e.isActive;
+  }
+
+  List<EventModel> _getFilteredEvents(bool active) {
+    var result = _events.where((e) {
+      bool matchesStatus = _isEventActive(e) == active;
+      bool matchesSearch = _searchQuery.isEmpty || e.namaAcara.toLowerCase().contains(_searchQuery.toLowerCase());
+      return matchesStatus && matchesSearch;
+    }).toList();
+
+    result.sort((a, b) {
+      return a.tanggalAcara.compareTo(b.tanggalAcara);
+    });
+
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Peserta & Absensi'),
-        backgroundColor: AppTheme.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
-      drawer: _user != null ? AppDrawer(user: _user!) : null,
-      backgroundColor: AppTheme.background,
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        color: AppTheme.primary,
-        child: _buildBody(),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        drawer: _user != null ? AppDrawer(user: _user!) : null,
+        backgroundColor: AppTheme.background,
+        body: RefreshIndicator(
+          onRefresh: _loadData,
+          color: AppTheme.primary,
+          child: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) {
+              return [
+                SliverAppBar(
+                  title: const Text('Peserta & Absensi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  backgroundColor: AppTheme.primary,
+                  iconTheme: const IconThemeData(color: Colors.white),
+                  pinned: true,
+                  floating: true,
+                  elevation: 0,
+                  flexibleSpace: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+                      ),
+                    ),
+                  ),
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(130),
+                    child: Column(
+                      children: [
+                        // Floating Search Bar
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.search, color: Colors.grey),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  decoration: const InputDecoration(
+                                    hintText: 'Cari acara...',
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                  onChanged: (value) => setState(() => _searchQuery = value),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Tab Bar
+                        TabBar(
+                          indicatorColor: Colors.white,
+                          indicatorWeight: 3,
+                          labelColor: Colors.white,
+                          unselectedLabelColor: Colors.white.withOpacity(0.6),
+                          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          tabs: const [
+                            Tab(text: 'Aktif'),
+                            Tab(text: 'Selesai'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ];
+            },
+            body: TabBarView(
+              children: [
+                _buildEventList(true),
+                _buildEventList(false),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildEventList(bool active) {
     if (_isLoading && _events.isEmpty) {
       return const Center(
         child: CustomLoadingIndicator(color: AppTheme.primary),
@@ -104,25 +204,27 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
       );
     }
 
-    if (_events.isEmpty) {
+    final filtered = _getFilteredEvents(active);
+
+    if (filtered.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.event_busy, size: 80, color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            const Text(
-              'Belum Ada Acara',
-              style: TextStyle(
+            Text(
+              active ? 'Belum Ada Acara Aktif' : 'Belum Ada Acara Selesai',
+              style: const TextStyle(
                 color: AppTheme.textPrimary,
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Belum ada acara untuk dilihat daftar hadirnya.',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+            Text(
+              'Pilih acara untuk melihat daftar peserta & absensi.',
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
             ),
           ],
         ),
@@ -130,34 +232,49 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const EdgeInsets.only(
+        top: 20,
+        left: 20,
+        right: 20,
+        bottom: 80,
+      ),
       physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: _events.length + 1,
+      itemCount: filtered.length,
       itemBuilder: (context, index) {
-        if (index == 0) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: Text(
-              'Pilih Acara untuk Lihat Kehadiran',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-          );
-        }
+        final event = filtered[index];
+        return FadeInSlide(
+          delay: 0.1 * (index % 10), // Limit delay for large lists
+          child: _buildEventCard(event, active),
+        );
+      },
+    );
+  }
 
-        final event = _events[index - 1];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
+  Widget _buildEventCard(EventModel event, bool active) {
+    Color statusColor = active ? AppTheme.success : AppTheme.textSecondary;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: AppTheme.radiusLarge,
+        child: Container(
           decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: AppTheme.radiusMedium,
-            boxShadow: AppTheme.shadowSoft,
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border(
+              left: BorderSide(color: statusColor, width: 6),
+            ),
           ),
           child: InkWell(
-            borderRadius: AppTheme.radiusMedium,
             onTap: () {
               Navigator.push(
                 context,
@@ -173,16 +290,12 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: event.isActive
-                          ? AppTheme.success.withValues(alpha: 0.1)
-                          : AppTheme.textSecondary.withValues(alpha: 0.1),
+                      color: statusColor.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.people_alt,
-                      color: event.isActive
-                          ? AppTheme.success
-                          : AppTheme.textSecondary,
+                      color: statusColor,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -200,7 +313,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Row(
                           children: [
                             const Icon(
@@ -216,35 +329,10 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                                 fontSize: 13,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: event.isActive
-                                    ? AppTheme.success.withValues(alpha: 0.1)
-                                    : AppTheme.textSecondary.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                event.isActive ? 'Aktif' : 'Selesai',
-                                style: TextStyle(
-                                  color: event.isActive
-                                      ? AppTheme.success
-                                      : AppTheme.textSecondary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                         if (event.jumlahHadir != null) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Row(
                             children: [
                               const Icon(
@@ -275,8 +363,8 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
