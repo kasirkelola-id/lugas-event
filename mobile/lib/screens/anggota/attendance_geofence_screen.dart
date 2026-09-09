@@ -232,7 +232,9 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
     Color accentColor = isError ? AppTheme.error : AppTheme.success;
     IconData iconData = isError ? Icons.location_off : Icons.my_location;
     String title = isError ? 'Lokasi Tidak Tersedia' : 'Lokasi Ditemukan';
-    String desc = isError ? _errorMessage : 'Akurasi GPS baik. Siap untuk absensi.';
+    String desc = isError
+        ? _errorMessage
+        : 'Akurasi GPS baik. Siap untuk absensi.';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -244,7 +246,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
             color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -273,7 +275,10 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                 const SizedBox(height: 4),
                 Text(
                   desc,
-                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -326,11 +331,18 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              const Icon(Icons.location_on, color: Colors.white, size: 48),
+                              const Icon(
+                                Icons.location_on,
+                                color: Colors.white,
+                                size: 48,
+                              ),
                               const SizedBox(height: 8),
                               const Text(
                                 'Catat Kehadiran Anda',
-                                style: TextStyle(color: Colors.white, fontSize: 16),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
                               ),
                               const SizedBox(height: 24),
                             ],
@@ -344,15 +356,20 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
                         children: [
-                          FadeInSlide(delay: 0.1, child: _buildLocationStatusCard()),
+                          FadeInSlide(
+                            delay: 0.1,
+                            child: _buildLocationStatusCard(),
+                          ),
                           const SizedBox(height: 32),
                           if (_nearbyEvents.isEmpty && _errorMessage.isEmpty)
                             FadeInSlide(delay: 0.2, child: _buildEmptyState())
                           else
-                            ..._nearbyEvents.asMap().entries.map((entry) => FadeInSlide(
-                              delay: 0.2 + (0.1 * entry.key), 
-                              child: _buildEventCard(entry.value),
-                            )),
+                            ..._nearbyEvents.asMap().entries.map(
+                              (entry) => FadeInSlide(
+                                delay: 0.2 + (0.1 * entry.key),
+                                child: _buildEventCard(entry.value),
+                              ),
+                            ),
                           if (_errorMessage.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 24),
@@ -364,7 +381,10 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                                   backgroundColor: Colors.white,
                                   foregroundColor: AppTheme.primary,
                                   elevation: 2,
-                                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                    horizontal: 24,
+                                  ),
                                 ),
                               ),
                             ),
@@ -423,7 +443,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
             color: Colors.black.withOpacity(0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -479,7 +499,10 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                 // Status Box
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: isCheckedIn
                         ? AppTheme.success.withOpacity(0.1)
@@ -518,7 +541,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
               ],
             ),
           ),
-          
+
           // Ticket dashed line
           Row(
             children: [
@@ -527,7 +550,9 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                 height: 24,
                 decoration: const BoxDecoration(
                   color: AppTheme.background,
-                  borderRadius: BorderRadius.horizontal(right: Radius.circular(12)),
+                  borderRadius: BorderRadius.horizontal(
+                    right: Radius.circular(12),
+                  ),
                 ),
               ),
               Expanded(
@@ -542,7 +567,9 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                         (index) => const SizedBox(
                           width: 5,
                           height: 1.5,
-                          child: DecoratedBox(decoration: BoxDecoration(color: Colors.black12)),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(color: Colors.black12),
+                          ),
                         ),
                       ),
                     );
@@ -554,7 +581,9 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                 height: 24,
                 decoration: const BoxDecoration(
                   color: AppTheme.background,
-                  borderRadius: BorderRadius.horizontal(left: Radius.circular(12)),
+                  borderRadius: BorderRadius.horizontal(
+                    left: Radius.circular(12),
+                  ),
                 ),
               ),
             ],

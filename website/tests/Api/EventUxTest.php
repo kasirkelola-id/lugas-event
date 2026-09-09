@@ -3,7 +3,6 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use App\Models\EventModel;
 use App\Models\AbsensiModel;
@@ -11,14 +10,15 @@ use App\Models\UserModel;
 use App\Models\KarangTarunaModel;
 use Tests\Support\AuthTrait;
 
-class EventUxTest extends CIUnitTestCase
+class EventUxTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = false;
+    
     protected $namespace = 'App';
 
     protected function setUp(): void
@@ -26,17 +26,20 @@ class EventUxTest extends CIUnitTestCase
         parent::setUp();
         // Clear databases
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('absensi')->emptyTable();
         $db->table('events')->emptyTable();
         $db->table('users')->emptyTable();
         $db->table('karang_taruna')->emptyTable();
         $db->table('organization_members')->emptyTable();
+        $db->enableForeignKeyChecks();
     }
 
     public function testCannotEditSensitiveFieldsIfAttendanceExists()
     {
         $tenantId = 1;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('karang_taruna')->insert([
             'id' => $tenantId,
             'nama_organisasi' => 'KT Test',

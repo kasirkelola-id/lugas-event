@@ -148,12 +148,11 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppTheme.primary,
-                AppTheme.primary.withOpacity(0.8),
-              ],
+              colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
             ),
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(32),
+            ),
           ),
         ),
         // Content
@@ -219,7 +218,10 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white24,
                     borderRadius: BorderRadius.circular(12),
@@ -268,7 +270,11 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                             color: AppTheme.success.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.account_balance_wallet, color: AppTheme.success, size: 20),
+                          child: const Icon(
+                            Icons.account_balance_wallet,
+                            color: AppTheme.success,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         const Text(
@@ -281,7 +287,10 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                         ),
                       ],
                     ),
-                    const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AppTheme.textSecondary,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -307,17 +316,31 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                               color: Colors.green.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.arrow_downward, color: Colors.green, size: 12),
+                            child: const Icon(
+                              Icons.arrow_downward,
+                              color: Colors.green,
+                              size: 12,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Pemasukan', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                const Text(
+                                  'Pemasukan',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
                                 Text(
                                   'Rp ${_summary!.kasPemasukan.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.green),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],
@@ -337,17 +360,31 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                               color: Colors.red.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.arrow_upward, color: Colors.red, size: 12),
+                            child: const Icon(
+                              Icons.arrow_upward,
+                              color: Colors.red,
+                              size: 12,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Pengeluaran', style: TextStyle(fontSize: 10, color: AppTheme.textSecondary)),
+                                const Text(
+                                  'Pengeluaran',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
                                 Text(
                                   'Rp ${_summary!.kasPengeluaran.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.red),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ],

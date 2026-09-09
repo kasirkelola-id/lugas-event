@@ -121,9 +121,7 @@ class _KasScreenState extends State<KasScreen> {
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             _buildSliverAppBar(),
-            SliverToBoxAdapter(
-              child: _buildBody(canManage),
-            ),
+            SliverToBoxAdapter(child: _buildBody(canManage)),
           ],
         ),
       ),
@@ -174,10 +172,7 @@ class _KasScreenState extends State<KasScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppTheme.primary,
-                AppTheme.primary.withOpacity(0.8),
-              ],
+              colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
             ),
           ),
           child: SafeArea(
@@ -213,7 +208,10 @@ class _KasScreenState extends State<KasScreen> {
                   ),
                   const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(16),
@@ -227,7 +225,10 @@ class _KasScreenState extends State<KasScreen> {
                           children: [
                             const Text(
                               'Pemasukan Bln Ini',
-                              style: TextStyle(color: Colors.white70, fontSize: 11),
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Row(
@@ -255,7 +256,10 @@ class _KasScreenState extends State<KasScreen> {
                           children: [
                             const Text(
                               'Pengeluaran Bln Ini',
-                              style: TextStyle(color: Colors.white70, fontSize: 11),
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Row(
@@ -294,9 +298,7 @@ class _KasScreenState extends State<KasScreen> {
     if (_isLoading && _transaksi.isEmpty) {
       return const Padding(
         padding: EdgeInsets.only(top: 100),
-        child: Center(
-          child: CustomLoadingIndicator(color: AppTheme.primary),
-        ),
+        child: Center(child: CustomLoadingIndicator(color: AppTheme.primary)),
       );
     }
 
@@ -391,9 +393,7 @@ class _KasScreenState extends State<KasScreen> {
         borderRadius: AppTheme.radiusLarge,
         child: Container(
           decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(color: color, width: 4),
-            ),
+            border: Border(left: BorderSide(color: color, width: 4)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),

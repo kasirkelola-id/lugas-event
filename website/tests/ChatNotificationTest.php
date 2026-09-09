@@ -2,18 +2,18 @@
 
 namespace Tests;
 
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use CodeIgniter\Test\CIUnitTestCase;
 
-class ChatNotificationTest extends CIUnitTestCase
+class ChatNotificationTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
 
     protected $migrate     = true;
-    protected $migrateOnce = false;
-    protected $refresh     = true;
+    
+    
     protected $namespace   = 'App';
 
     protected function setUp(): void

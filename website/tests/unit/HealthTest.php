@@ -7,7 +7,7 @@ use Tests\Support\Libraries\ConfigReader;
 /**
  * @internal
  */
-final class HealthTest extends CIUnitTestCase
+final class HealthTest extends \Tests\Support\BaseTest
 {
     public function testIsDefinedAppPath(): void
     {

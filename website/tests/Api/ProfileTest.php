@@ -3,19 +3,19 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use App\Models\UserModel;
 use Tests\Support\AuthTrait;
 
-class ProfileTest extends CIUnitTestCase
+class ProfileTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = false;
+    
     protected $namespace = 'App';
 
     protected function setUp(): void
@@ -23,9 +23,11 @@ class ProfileTest extends CIUnitTestCase
         parent::setUp();
         // Clear databases
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('users')->emptyTable();
         $db->table('karang_taruna')->emptyTable();
         $db->table('organization_members')->emptyTable();
+        $db->enableForeignKeyChecks();
     }
 
     public function testUpdateProfileTenantIsolation()
@@ -33,6 +35,7 @@ class ProfileTest extends CIUnitTestCase
         $tenantA = 1;
         $tenantB = 2;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         
         $db->table('karang_taruna')->insertBatch([
             ['id' => $tenantA, 'nama_organisasi' => 'KT A', 'kode_pin' => '111111', 'status_aktif' => 1, 'created_at' => date('Y-m-d H:i:s')],
@@ -84,6 +87,7 @@ class ProfileTest extends CIUnitTestCase
     {
         $tenantA = 1;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('karang_taruna')->insert(['id' => $tenantA, 'nama_organisasi' => 'KT A', 'kode_pin' => '111111', 'status_aktif' => 1]);
 
         $userId1 = 100;
@@ -108,9 +112,6 @@ class ProfileTest extends CIUnitTestCase
                        ->put("api/profile", [
                            'username' => 'user_2' // try to use user 2's username
                        ]);
-        if ($result->getStatus() !== 409) {
-            echo "\nDEBUG:\n" . $result->getJSON() . "\n";
-        }
         $result->assertStatus(409); // Conflict
     }
 
@@ -119,6 +120,7 @@ class ProfileTest extends CIUnitTestCase
         $tenantA = 1;
         $tenantB = 2;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         
         $db->table('karang_taruna')->insertBatch([
             ['id' => $tenantA, 'nama_organisasi' => 'KT A', 'kode_pin' => '111111', 'status_aktif' => 1],

@@ -66,7 +66,8 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
 
   bool _isEventActive(EventModel e) {
     if (e.statusKegiatan != null) {
-      return e.statusKegiatan == 'berlangsung' || e.statusKegiatan == 'akan_datang';
+      return e.statusKegiatan == 'berlangsung' ||
+          e.statusKegiatan == 'akan_datang';
     }
     return e.isActive;
   }
@@ -74,7 +75,9 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
   List<EventModel> _getFilteredAndSorted(bool active) {
     var result = _events.where((e) {
       bool matchesStatus = _isEventActive(e) == active;
-      bool matchesSearch = _searchQuery.isEmpty || e.namaAcara.toLowerCase().contains(_searchQuery.toLowerCase());
+      bool matchesSearch =
+          _searchQuery.isEmpty ||
+          e.namaAcara.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesStatus && matchesSearch;
     }).toList();
 
@@ -105,7 +108,13 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
                 SliverAppBar(
-                  title: const Text('Kelola Acara', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  title: const Text(
+                    'Kelola Acara',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   backgroundColor: AppTheme.primary,
                   iconTheme: const IconThemeData(color: Colors.white),
                   pinned: true,
@@ -116,7 +125,10 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+                        colors: [
+                          AppTheme.primary,
+                          AppTheme.primary.withOpacity(0.8),
+                        ],
                       ),
                     ),
                   ),
@@ -126,8 +138,14 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                       children: [
                         // Floating Search Bar
                         Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
@@ -149,40 +167,60 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                                     hintText: 'Cari acara...',
                                     border: InputBorder.none,
                                     isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                   ),
-                                  onChanged: (value) => setState(() => _searchQuery = value),
+                                  onChanged: (value) =>
+                                      setState(() => _searchQuery = value),
                                 ),
                               ),
                               Container(
                                 height: 24,
                                 width: 1,
                                 color: Colors.grey.shade300,
-                                margin: const EdgeInsets.symmetric(horizontal: 8),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                               ),
                               DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: _sortBy,
-                                  icon: const Icon(Icons.tune, color: AppTheme.primary, size: 20),
+                                  icon: const Icon(
+                                    Icons.tune,
+                                    color: AppTheme.primary,
+                                    size: 20,
+                                  ),
                                   alignment: AlignmentDirectional.centerEnd,
                                   onChanged: (String? newValue) {
                                     if (newValue != null) {
                                       setState(() => _sortBy = newValue);
                                     }
                                   },
-                                  items: <String>[
-                                    'Tanggal Acara (Terdekat)',
-                                    'Tanggal Dibuat',
-                                    'Nama Acara',
-                                  ].map<DropdownMenuItem<String>>((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(
-                                        value == 'Tanggal Acara (Terdekat)' ? 'Terdekat' : value == 'Tanggal Dibuat' ? 'Terbaru' : 'Nama',
-                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primary),
-                                      ),
-                                    );
-                                  }).toList(),
+                                  items:
+                                      <String>[
+                                        'Tanggal Acara (Terdekat)',
+                                        'Tanggal Dibuat',
+                                        'Nama Acara',
+                                      ].map<DropdownMenuItem<String>>((
+                                        String value,
+                                      ) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(
+                                            value == 'Tanggal Acara (Terdekat)'
+                                                ? 'Terdekat'
+                                                : value == 'Tanggal Dibuat'
+                                                ? 'Terbaru'
+                                                : 'Nama',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppTheme.primary,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
                                 ),
                               ),
                             ],
@@ -194,7 +232,10 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                           indicatorWeight: 3,
                           labelColor: Colors.white,
                           unselectedLabelColor: Colors.white.withOpacity(0.6),
-                          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                           tabs: const [
                             Tab(text: 'Aktif'),
                             Tab(text: 'Selesai'),
@@ -207,10 +248,7 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
               ];
             },
             body: TabBarView(
-              children: [
-                _buildEventList(true),
-                _buildEventList(false),
-              ],
+              children: [_buildEventList(true), _buildEventList(false)],
             ),
           ),
         ),
@@ -280,8 +318,13 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              active ? 'Acara yang sedang berjalan akan tampil di sini.' : 'Riwayat acara akan tampil di sini.',
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              active
+                  ? 'Acara yang sedang berjalan akan tampil di sini.'
+                  : 'Riwayat acara akan tampil di sini.',
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
@@ -308,8 +351,10 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
   }
 
   Widget _buildEventCard(EventModel event) {
-    Color statusColor = _getStatusColor(event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai'));
-    
+    Color statusColor = _getStatusColor(
+      event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai'),
+    );
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -327,9 +372,7 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
         borderRadius: AppTheme.radiusLarge,
         child: Container(
           decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(color: statusColor, width: 6),
-            ),
+            border: Border(left: BorderSide(color: statusColor, width: 6)),
           ),
           child: InkWell(
             onTap: () async {
@@ -375,7 +418,8 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                         ),
                         child: Text(
                           _getStatusText(
-                            event.statusKegiatan ?? (event.isActive ? 'berlangsung' : 'selesai'),
+                            event.statusKegiatan ??
+                                (event.isActive ? 'berlangsung' : 'selesai'),
                           ),
                           style: TextStyle(
                             color: statusColor,
@@ -396,13 +440,23 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                           color: Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.calendar_month, size: 20, color: AppTheme.primary),
+                        child: const Icon(
+                          Icons.calendar_month,
+                          size: 20,
+                          color: AppTheme.primary,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Waktu Pelaksanaan', style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                          const Text(
+                            'Waktu Pelaksanaan',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             event.tanggalAcara,
@@ -425,15 +479,27 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.people_alt_outlined, size: 16, color: AppTheme.textSecondary),
+                          const Icon(
+                            Icons.people_alt_outlined,
+                            size: 16,
+                            color: AppTheme.textSecondary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Kehadiran: ${event.jumlahHadir ?? 0} Orang',
-                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
-                      const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: Colors.grey,
+                      ),
                     ],
                   ),
                 ],

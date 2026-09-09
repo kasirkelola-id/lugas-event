@@ -18,7 +18,7 @@ class AuthController extends BaseApiController
         }
 
         $pin = $this->request->getVar('pin');
-        
+
         $ktModel = new \App\Models\KarangTarunaModel();
         $kt = $ktModel->where('kode_pin', $pin)->first();
 
@@ -54,9 +54,9 @@ class AuthController extends BaseApiController
         $password = $this->request->getVar('password');
 
         $userModel = new UserModel();
-        
+
         $db = \Config\Database::connect();
-        
+
         // Find user by joining organization_members (where the tenant-scoped username lives)
         $memberInfo = $db->table('organization_members')
                          ->select('users.*, organization_members.username as tenant_username, organization_members.role_level as tenant_role, organization_members.status_aktif as tenant_status, organization_members.approval_status as tenant_approval')
@@ -104,11 +104,11 @@ class AuthController extends BaseApiController
         $tokenHash = hash('sha256', $plainToken);
 
         $tokenModel = new UserTokenModel();
-        
+
         // Expiration in 30 days
         $expiresAt = date('Y-m-d H:i:s', strtotime('+30 days'));
 
-        $userId = $isSuperAdmin ? null : $user['id']; // Token table user_id is INT
+        $userId = $isSuperAdmin ? null : $user['id']; // Superadmin has no user_id (NULL)
 
         $tokenModel->insert([
             'karang_taruna_id' => $karangTarunaId,
@@ -203,7 +203,7 @@ class AuthController extends BaseApiController
             'id' => (int)$user['id'],
             'nama_lengkap' => $user['nama_lengkap'],
             'nama_panggilan' => $user['nama_panggilan'],
-            'username' => $user['username'], 
+            'username' => $user['username'],
             'no_whatsapp' => $user['no_whatsapp'],
             'role_level' => $user['role_level'],
             'rt' => (int)$user['rt'],
@@ -237,7 +237,7 @@ class AuthController extends BaseApiController
         }
 
         $memberModel = new \App\Models\OrganizationMemberModel();
-        
+
         // Check if username already exists IN THIS TENANT
         $existingMember = $memberModel->where('username', $rawInput['username'])
                                       ->where('karang_taruna_id', $karangTarunaId)
@@ -280,7 +280,7 @@ class AuthController extends BaseApiController
             'updated_at' => date('Y-m-d H:i:s'),
         ];
         $memberModel->insert($memberData);
-        
+
         return $this->sendSuccess('Registrasi berhasil. Silakan login.', null, 201);
     }
 
@@ -303,10 +303,10 @@ class AuthController extends BaseApiController
         }
 
         $deviceModel = new \App\Models\UserDeviceModel();
-        
+
         // Find existing token
         $existing = $deviceModel->where('fcm_token', $rawInput['fcm_token'])->first();
-        
+
         if ($existing) {
             // Update owner and device type if token already exists (handles logout/login to another account on same device)
             $deviceModel->update($existing['id'], [
@@ -342,7 +342,7 @@ class AuthController extends BaseApiController
         }
 
         $deviceModel = new \App\Models\UserDeviceModel();
-        
+
         // Only allow deleting token if it belongs to the current user
         $deviceModel->where('user_id', (string)$user['id'])
                     ->where('fcm_token', $rawInput['fcm_token'])

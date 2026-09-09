@@ -267,7 +267,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
           const Divider(),
           const SizedBox(height: 16),
           const Text(
-            'Halaman ini menampilkan log waktu saat peserta berhasil melakukan scan QR Code.',
+            'Halaman ini menampilkan log waktu saat peserta berhasil melakukan absensi lokasi (Geofence).',
             style: TextStyle(color: AppTheme.textSecondary),
           ),
         ],

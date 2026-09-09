@@ -64,7 +64,8 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
 
   bool _isEventActive(EventModel e) {
     if (e.statusKegiatan != null) {
-      return e.statusKegiatan == 'berlangsung' || e.statusKegiatan == 'akan_datang';
+      return e.statusKegiatan == 'berlangsung' ||
+          e.statusKegiatan == 'akan_datang';
     }
     return e.isActive;
   }
@@ -72,7 +73,9 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
   List<EventModel> _getFilteredEvents(bool active) {
     var result = _events.where((e) {
       bool matchesStatus = _isEventActive(e) == active;
-      bool matchesSearch = _searchQuery.isEmpty || e.namaAcara.toLowerCase().contains(_searchQuery.toLowerCase());
+      bool matchesSearch =
+          _searchQuery.isEmpty ||
+          e.namaAcara.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesStatus && matchesSearch;
     }).toList();
 
@@ -97,7 +100,13 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
                 SliverAppBar(
-                  title: const Text('Peserta & Absensi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  title: const Text(
+                    'Peserta & Absensi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   backgroundColor: AppTheme.primary,
                   iconTheme: const IconThemeData(color: Colors.white),
                   pinned: true,
@@ -108,7 +117,10 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+                        colors: [
+                          AppTheme.primary,
+                          AppTheme.primary.withOpacity(0.8),
+                        ],
                       ),
                     ),
                   ),
@@ -118,8 +130,14 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                       children: [
                         // Floating Search Bar
                         Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
@@ -141,9 +159,12 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                                     hintText: 'Cari acara...',
                                     border: InputBorder.none,
                                     isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                   ),
-                                  onChanged: (value) => setState(() => _searchQuery = value),
+                                  onChanged: (value) =>
+                                      setState(() => _searchQuery = value),
                                 ),
                               ),
                             ],
@@ -155,7 +176,10 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                           indicatorWeight: 3,
                           labelColor: Colors.white,
                           unselectedLabelColor: Colors.white.withOpacity(0.6),
-                          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
                           tabs: const [
                             Tab(text: 'Aktif'),
                             Tab(text: 'Selesai'),
@@ -168,10 +192,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
               ];
             },
             body: TabBarView(
-              children: [
-                _buildEventList(true),
-                _buildEventList(false),
-              ],
+              children: [_buildEventList(true), _buildEventList(false)],
             ),
           ),
         ),
@@ -224,7 +245,10 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
             const SizedBox(height: 8),
             Text(
               'Pilih acara untuk melihat daftar peserta & absensi.',
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
@@ -232,12 +256,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(
-        top: 20,
-        left: 20,
-        right: 20,
-        bottom: 80,
-      ),
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 80),
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: filtered.length,
       itemBuilder: (context, index) {
@@ -252,7 +271,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
 
   Widget _buildEventCard(EventModel event, bool active) {
     Color statusColor = active ? AppTheme.success : AppTheme.textSecondary;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -270,9 +289,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
         borderRadius: AppTheme.radiusLarge,
         child: Container(
           decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(color: statusColor, width: 6),
-            ),
+            border: Border(left: BorderSide(color: statusColor, width: 6)),
           ),
           child: InkWell(
             onTap: () {
@@ -293,10 +310,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                       color: statusColor.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.people_alt,
-                      color: statusColor,
-                    ),
+                    child: Icon(Icons.people_alt, color: statusColor),
                   ),
                   const SizedBox(width: 16),
                   Expanded(

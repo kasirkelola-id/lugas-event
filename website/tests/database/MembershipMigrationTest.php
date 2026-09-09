@@ -3,18 +3,18 @@
 namespace Tests\Database;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use App\Models\UserModel;
 use App\Models\OrganizationMemberModel;
 use Tests\Support\AuthTrait;
 
-class MembershipMigrationTest extends CIUnitTestCase
+class MembershipMigrationTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = false; // We want a fresh DB for each test to verify migrations fully
+     // We want a fresh DB for each test to verify migrations fully
     protected $namespace = 'App';
 
     public function testLegacyBackfillIntegrity()

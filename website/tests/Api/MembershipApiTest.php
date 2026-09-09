@@ -3,20 +3,20 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use App\Models\UserModel;
 use App\Models\OrganizationMemberModel;
 use Tests\Support\AuthTrait;
 
-class MembershipApiTest extends CIUnitTestCase
+class MembershipApiTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = false;
+    
     protected $namespace = 'App';
 
     public function testGetMembershipsReturnsOnlyActiveMembershipsForLoggedUser()

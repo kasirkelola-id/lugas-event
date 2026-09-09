@@ -159,49 +159,42 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                           child: ListView(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
-                            children:
-                                [null, ..._rtOptions].map((rt) {
-                                  final isSelected = _rtFilter == rt;
-                                  final label =
-                                      rt == null ? 'Semua RT' : 'RT 0$rt';
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: ChoiceChip(
-                                      label: Text(
-                                        label,
-                                        style: TextStyle(
-                                          color:
-                                              isSelected
-                                                  ? AppTheme.primary
-                                                  : Colors.white,
-                                          fontWeight:
-                                              isSelected
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                        ),
-                                      ),
-                                      selected: isSelected,
-                                      selectedColor: Colors.white,
-                                      backgroundColor: Colors.white.withOpacity(
-                                        0.2,
-                                      ),
-                                      showCheckmark: false,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                        side: BorderSide(
-                                          color:
-                                              isSelected
-                                                  ? Colors.white
-                                                  : Colors.transparent,
-                                        ),
-                                      ),
-                                      onSelected:
-                                          (_) => _onRtFilterChanged(
-                                            rt?.toString(),
-                                          ),
+                            children: [null, ..._rtOptions].map((rt) {
+                              final isSelected = _rtFilter == rt;
+                              final label = rt == null ? 'Semua RT' : 'RT 0$rt';
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: ChoiceChip(
+                                  label: Text(
+                                    label,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? AppTheme.primary
+                                          : Colors.white,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
                                     ),
-                                  );
-                                }).toList(),
+                                  ),
+                                  selected: isSelected,
+                                  selectedColor: Colors.white,
+                                  backgroundColor: Colors.white.withOpacity(
+                                    0.2,
+                                  ),
+                                  showCheckmark: false,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.transparent,
+                                    ),
+                                  ),
+                                  onSelected: (_) =>
+                                      _onRtFilterChanged(rt?.toString()),
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
                       const SizedBox(height: 10),
@@ -333,10 +326,9 @@ class _UserListTabState extends State<_UserListTab>
 
       // Apply RT filter locally if set (since API might not support RT filtering directly)
       if (widget.rtFilter != null) {
-        fetchedUsers =
-            fetchedUsers
-                .where((u) => u.rt.toString() == widget.rtFilter)
-                .toList();
+        fetchedUsers = fetchedUsers
+            .where((u) => u.rt.toString() == widget.rtFilter)
+            .toList();
       }
 
       if ((usersResult['users'] as List).length < _limit) {
@@ -415,12 +407,12 @@ class _UserListTabState extends State<_UserListTab>
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
             const SizedBox(height: 16),
-            Text(
-              _errorMessage!,
-              style: const TextStyle(color: AppTheme.error),
-            ),
+            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -499,27 +491,22 @@ class _UserListTabState extends State<_UserListTab>
         child: ExpansionTile(
           collapsedBackgroundColor: Colors.transparent,
           backgroundColor: Colors.transparent,
-          tilePadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           leading: Container(
             padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color:
-                    isActive
-                        ? AppTheme.primary.withOpacity(0.3)
-                        : Colors.grey.shade300,
+                color: isActive
+                    ? AppTheme.primary.withOpacity(0.3)
+                    : Colors.grey.shade300,
                 width: 2,
               ),
             ),
             child: CircleAvatar(
-              backgroundColor:
-                  isActive
-                      ? AppTheme.primary.withOpacity(0.1)
-                      : Colors.grey.shade100,
+              backgroundColor: isActive
+                  ? AppTheme.primary.withOpacity(0.1)
+                  : Colors.grey.shade100,
               radius: 22,
               child: Text(
                 user.namaPanggilan.isNotEmpty
@@ -583,10 +570,7 @@ class _UserListTabState extends State<_UserListTab>
           children: [
             Container(
               color: Colors.grey.shade50,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 20,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -769,102 +753,95 @@ class _UserListTabState extends State<_UserListTab>
 
     showDialog(
       context: context,
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setDialogState) {
-              return Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: AppTheme.radiusLarge,
-                ),
-                insetPadding: const EdgeInsets.all(20),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
+            insetPadding: const EdgeInsets.all(20),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Ubah Role',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
+                  const SizedBox(height: 16),
+                  SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: roles.map((role) {
+                        return RadioListTile<String>(
+                          title: Text(
+                            role.toUpperCase(),
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          value: role,
+                          groupValue: selectedRole,
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: AppTheme.primary,
+                          onChanged: (val) {
+                            if (val != null) {
+                              setDialogState(() => selectedRole = val);
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      const Text(
-                        'Ubah Role',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: AppTheme.textSecondary),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children:
-                              roles.map((role) {
-                                return RadioListTile<String>(
-                                  title: Text(
-                                    role.toUpperCase(),
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                  value: role,
-                                  groupValue: selectedRole,
-                                  contentPadding: EdgeInsets.zero,
-                                  activeColor: AppTheme.primary,
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      setDialogState(() => selectedRole = val);
-                                    }
-                                  },
-                                );
-                              }).toList(),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppTheme.radiusMedium,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text(
-                              'Batal',
-                              style: TextStyle(color: AppTheme.textSecondary),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: AppTheme.radiusMedium,
-                              ),
-                            ),
-                            onPressed: () async {
-                              Navigator.pop(context);
-                              setState(() => _isLoading = true);
-                              final result = await UserService.changeRole(
-                                user.id,
-                                selectedRole,
-                              );
-                              if (result['success']) {
-                                _showSnackbar('Role berhasil diubah');
-                                _loadData();
-                              } else {
-                                setState(() => _isLoading = false);
-                                _showSnackbar(
-                                  result['message'] ?? 'Gagal ubah role',
-                                  isError: true,
-                                );
-                              }
-                            },
-                            child: const Text(
-                              'Simpan',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          setState(() => _isLoading = true);
+                          final result = await UserService.changeRole(
+                            user.id,
+                            selectedRole,
+                          );
+                          if (result['success']) {
+                            _showSnackbar('Role berhasil diubah');
+                            _loadData();
+                          } else {
+                            setState(() => _isLoading = false);
+                            _showSnackbar(
+                              result['message'] ?? 'Gagal ubah role',
+                              isError: true,
+                            );
+                          }
+                        },
+                        child: const Text(
+                          'Simpan',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ],
                   ),
-                ),
-              );
-            },
-          ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

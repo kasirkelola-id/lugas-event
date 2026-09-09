@@ -3,16 +3,16 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 
-class PlatformSuperAdminTest extends CIUnitTestCase
+class PlatformSuperAdminTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = true;
+    
     protected $namespace = 'App';
 
     public function testSuperadminLoginAndProfile()
@@ -24,6 +24,12 @@ class PlatformSuperAdminTest extends CIUnitTestCase
             'nama_organisasi' => 'KT Superadmin Test',
             'kode_pin' => '000000',
             'status_aktif' => 1
+        ]);
+
+        $db->table('superadmins')->ignore(true)->insert([
+            'username' => 'superadmin',
+            'password' => password_hash('superadmin123', PASSWORD_BCRYPT),
+            'nama_lengkap' => 'Administrator Sistem',
         ]);
 
         $resLogin = $this->withBodyFormat('json')->post('api/login', [

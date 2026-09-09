@@ -120,9 +120,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(60),
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.transparent,
-                    ),
+                    decoration: const BoxDecoration(color: Colors.transparent),
                     child: TabBar(
                       controller: _tabController,
                       indicatorColor: Colors.white,
@@ -153,7 +151,9 @@ class _ChatListScreenState extends State<ChatListScreen>
                 onPressed: () async {
                   final result = await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const CreateGroupScreen(),
+                    ),
                   );
                   if (result == true) {
                     _fetchRooms();
@@ -161,7 +161,13 @@ class _ChatListScreenState extends State<ChatListScreen>
                 },
                 backgroundColor: AppTheme.primary,
                 icon: const Icon(Icons.group_add, color: Colors.white),
-                label: const Text('Buat Grup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'Buat Grup',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               )
             : null,
       ),
@@ -180,7 +186,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     return RefreshIndicator(
       onRefresh: _fetchRooms,
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 16, bottom: 80, left: 16, right: 16),
+        padding: const EdgeInsets.only(
+          top: 16,
+          bottom: 80,
+          left: 16,
+          right: 16,
+        ),
         itemCount: _rooms.length,
         itemBuilder: (context, index) {
           final room = _rooms[index];
@@ -202,12 +213,18 @@ class _ChatListScreenState extends State<ChatListScreen>
                 ],
               ),
               child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 leading: Container(
                   padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 2),
+                    border: Border.all(
+                      color: AppTheme.primary.withOpacity(0.2),
+                      width: 2,
+                    ),
                   ),
                   child: CircleAvatar(
                     radius: 24,
@@ -216,7 +233,9 @@ class _ChatListScreenState extends State<ChatListScreen>
                         : Colors.grey.shade100,
                     child: Icon(
                       isDefault ? Icons.apartment : Icons.group,
-                      color: isDefault ? AppTheme.primary : Colors.grey.shade600,
+                      color: isDefault
+                          ? AppTheme.primary
+                          : Colors.grey.shade600,
                       size: 26,
                     ),
                   ),
@@ -230,9 +249,15 @@ class _ChatListScreenState extends State<ChatListScreen>
                 ),
                 subtitle: Text(
                   isDefault ? 'Grup utama Karang Taruna' : 'Grup diskusi',
-                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
-                trailing: const Icon(Icons.chevron_right, color: Colors.black26),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: Colors.black26,
+                ),
                 onTap: () async {
                   await Navigator.push(
                     context,
@@ -272,7 +297,12 @@ class _ChatListScreenState extends State<ChatListScreen>
     return RefreshIndicator(
       onRefresh: _fetchPrivateContacts,
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 16, bottom: 80, left: 16, right: 16),
+        padding: const EdgeInsets.only(
+          top: 16,
+          bottom: 80,
+          left: 16,
+          right: 16,
+        ),
         itemCount: _privateContacts.length,
         itemBuilder: (context, index) {
           final contact = _privateContacts[index];
@@ -294,7 +324,10 @@ class _ChatListScreenState extends State<ChatListScreen>
                 ],
               ),
               child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 leading: CircleAvatar(
                   radius: 26,
                   backgroundColor: Colors.grey.shade200,
@@ -316,9 +349,15 @@ class _ChatListScreenState extends State<ChatListScreen>
                   contact['last_message'] ?? '',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
-                trailing: const Icon(Icons.chevron_right, color: Colors.black26),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: Colors.black26,
+                ),
                 onTap: () async {
                   await Navigator.push(
                     context,

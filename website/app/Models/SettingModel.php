@@ -7,12 +7,13 @@ use CodeIgniter\Model;
 class SettingModel extends Model
 {
     protected $table            = 'settings';
-    protected $primaryKey       = 'setting_key';
-    protected $useAutoIncrement = false;
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
+        'id',
         'karang_taruna_id',
         'setting_key', 
         'setting_value', 

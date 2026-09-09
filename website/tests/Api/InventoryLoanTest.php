@@ -3,19 +3,19 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use App\Models\UserModel;
 use Tests\Support\AuthTrait;
 
-class InventoryLoanTest extends CIUnitTestCase
+class InventoryLoanTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = false;
+    
     protected $namespace = 'App';
 
     protected function setUp(): void
@@ -23,17 +23,20 @@ class InventoryLoanTest extends CIUnitTestCase
         parent::setUp();
         // Clear databases
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('inventory_loans')->emptyTable();
         $db->table('inventories')->emptyTable();
         $db->table('users')->emptyTable();
         $db->table('karang_taruna')->emptyTable();
         $db->table('organization_members')->emptyTable();
+        $db->enableForeignKeyChecks();
     }
 
     public function testInsufficientStockAndIdempotency()
     {
         $tenantId = 1;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('karang_taruna')->insert([
             'id' => $tenantId,
             'nama_organisasi' => 'KT Test',

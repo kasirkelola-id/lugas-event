@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../widgets/common/custom_button.dart';
 import 'login_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../../main.dart';
 
 class PinScreen extends StatefulWidget {
   const PinScreen({super.key});
@@ -108,10 +109,20 @@ class _PinScreenState extends State<PinScreen>
       );
 
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+      final hasToken = await AuthStorage.hasToken();
+      if (!mounted) return;
+
+      if (hasToken) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const InitialScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
     } else {
       setState(() {
         _isLoading = false;

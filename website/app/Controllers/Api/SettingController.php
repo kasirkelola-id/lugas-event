@@ -35,25 +35,30 @@ class SettingController extends BaseApiController
         }
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
-        
+
         if (empty($rawInput) || !is_array($rawInput)) {
              return $this->sendError('Validasi gagal', ['settings' => 'Payload tidak valid.'], 422);
         }
 
         $settingModel = new SettingModel();
-        
+
         $db = \Config\Database::connect();
         $db->transStart();
-        
+
         $tenantId = AuthService::getTenantId();
         foreach ($rawInput as $key => $value) {
-            $existing = $settingModel->where('karang_taruna_id', $tenantId)->find($key);
+            $existing = $settingModel->where('karang_taruna_id', $tenantId)->where('setting_key', $key)->first();
             if ($existing) {
-                $settingModel->where('karang_taruna_id', $tenantId)
-                             ->update($key, ['setting_value' => (string)$value]);
+                $settingModel->update($existing['id'], ['setting_value' => (string)$value]);
+            } else {
+                $settingModel->insert([
+                    'karang_taruna_id' => $tenantId,
+                    'setting_key' => $key,
+                    'setting_value' => (string)$value
+                ]);
             }
         }
-        
+
         $db->transComplete();
 
         if ($db->transStatus() === false) {

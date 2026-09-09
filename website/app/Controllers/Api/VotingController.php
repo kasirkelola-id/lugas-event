@@ -9,10 +9,8 @@ use App\Models\VotingVoteModel;
 use App\Services\AuthService;
 use CodeIgniter\API\ResponseTrait;
 
-class VotingController extends BaseController
+class VotingController extends BaseApiController
 {
-    use ResponseTrait;
-
     protected $votingModel;
     protected $optionModel;
     protected $voteModel;
@@ -28,7 +26,7 @@ class VotingController extends BaseController
     {
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
-        if (!$tenantId || !AuthService::can('voting.view')) return $this->failForbidden('Tidak diizinkan');
+        if (!$tenantId || !AuthService::can('voting.view')) return $this->sendError('Tidak diizinkan', null, 403);
 
         $votings = $this->votingModel->where('karang_taruna_id', $tenantId)
                                      ->orderBy('created_at', 'DESC')
@@ -42,24 +40,24 @@ class VotingController extends BaseController
             $voting['total_votes'] = $this->voteModel->where('voting_id', $voting['id'])->countAllResults();
         }
 
-        return $this->respond(['status' => true, 'data' => $votings], 200);
+        return $this->sendSuccess('Daftar voting', $votings);
     }
 
-    public function show($id)
+    public function show($id = null)
     {
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
-        if (!$tenantId || !AuthService::can('voting.view')) return $this->failForbidden('Tidak diizinkan');
+        if (!$tenantId || !AuthService::can('voting.view')) return $this->sendError('Tidak diizinkan', null, 403);
 
         $voting = $this->votingModel->where('karang_taruna_id', $tenantId)
                                     ->where('id', $id)
                                     ->first();
 
-        if (!$voting) return $this->failNotFound('Voting tidak ditemukan');
+        if (!$voting) return $this->sendError('Voting tidak ditemukan', null, 404);
 
         $options = $this->optionModel->where('voting_id', $id)->findAll();
         $hasVoted = $this->voteModel->where('voting_id', $id)->where('user_id', $userId)->first();
-        
+
         $voting['has_voted'] = $hasVoted ? true : false;
         $voting['voted_option_id'] = $hasVoted ? $hasVoted['option_id'] : null;
         $voting['total_votes'] = $this->voteModel->where('voting_id', $id)->countAllResults();
@@ -75,7 +73,7 @@ class VotingController extends BaseController
 
         $voting['options'] = $options;
 
-        return $this->respond(['status' => true, 'data' => $voting], 200);
+        return $this->sendSuccess('Detail voting', $voting);
     }
 
     public function create()
@@ -83,21 +81,23 @@ class VotingController extends BaseController
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
         if (!$tenantId || !AuthService::can('voting.manage')) {
-            return $this->failForbidden('Akses ditolak');
+            return $this->sendError('Akses ditolak', null, 403);
         }
+
+        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
 
         $rules = [
             'title'   => 'required|min_length[3]',
             'options' => 'required',
         ];
 
-        if (!$this->validate($rules)) {
-            return $this->failValidationErrors($this->validator->getErrors());
+        if (!$this->validateData($rawInput, $rules)) {
+            return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
 
-        $options = $this->request->getVar('options');
+        $options = $rawInput['options'] ?? null;
         if (!is_array($options) || count($options) < 2) {
-            return $this->failValidationErrors('Minimal 2 pilihan (options) harus diberikan');
+            return $this->sendError('Validasi gagal', ['options' => 'Minimal 2 pilihan (options) harus diberikan'], 422);
         }
 
         $db = \Config\Database::connect();
@@ -105,8 +105,8 @@ class VotingController extends BaseController
 
         $votingData = [
             'karang_taruna_id' => $tenantId,
-            'title'            => $this->request->getVar('title'),
-            'description'      => $this->request->getVar('description'),
+            'title'            => $rawInput['title'],
+            'description'      => $rawInput['description'] ?? null,
             'status'           => 'active',
             'created_by'       => $userId
         ];
@@ -115,10 +115,15 @@ class VotingController extends BaseController
         $votingId = $this->votingModel->getInsertID();
 
         foreach ($options as $opt) {
-            if (trim($opt) != '') {
+            if (is_string($opt) && trim($opt) != '') {
                 $this->optionModel->insert([
                     'voting_id'   => $votingId,
                     'option_name' => trim($opt)
+                ]);
+            } else if (is_array($opt) && isset($opt['option_name']) && trim($opt['option_name']) != '') {
+                $this->optionModel->insert([
+                    'voting_id'   => $votingId,
+                    'option_name' => trim($opt['option_name'])
                 ]);
             }
         }
@@ -126,33 +131,34 @@ class VotingController extends BaseController
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            return $this->failServerError('Gagal membuat voting');
+            return $this->sendError('Gagal membuat voting', null, 500);
         }
 
-        return $this->respondCreated(['status' => true, 'message' => 'Voting berhasil dibuat']);
+        return $this->sendSuccess('Voting berhasil dibuat', null, 201);
     }
 
-    public function vote($id)
+    public function vote($id = null)
     {
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
-        if (!$tenantId || !AuthService::can('voting.vote')) return $this->failForbidden('Tidak diizinkan');
+        if (!$tenantId || !AuthService::can('voting.vote')) return $this->sendError('Tidak diizinkan', null, 403);
 
         $voting = $this->votingModel->where('karang_taruna_id', $tenantId)
                                     ->where('id', $id)
                                     ->first();
 
-        if (!$voting) return $this->failNotFound('Voting tidak ditemukan');
-        if ($voting['status'] == 'closed') return $this->fail('Voting telah ditutup');
+        if (!$voting) return $this->sendError('Voting tidak ditemukan', null, 404);
+        if ($voting['status'] == 'closed') return $this->sendError('Voting telah ditutup', null, 400);
 
         $hasVoted = $this->voteModel->where('voting_id', $id)->where('user_id', $userId)->first();
-        if ($hasVoted) return $this->fail('Anda sudah memberikan suara');
+        if ($hasVoted) return $this->sendError('Anda sudah memberikan suara', null, 400);
 
-        $optionId = $this->request->getVar('option_id');
-        if (!$optionId) return $this->failValidationErrors('Option ID wajib diisi');
+        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
+        $optionId = $rawInput['option_id'] ?? null;
+        if (!$optionId) return $this->sendError('Validasi gagal', ['option_id' => 'Option ID wajib diisi'], 422);
 
         $option = $this->optionModel->where('voting_id', $id)->where('id', $optionId)->first();
-        if (!$option) return $this->failNotFound('Pilihan tidak valid');
+        if (!$option) return $this->sendError('Pilihan tidak valid', null, 404);
 
         try {
             $this->voteModel->insert([
@@ -162,33 +168,34 @@ class VotingController extends BaseController
             ]);
         } catch (\Exception $e) {
             if (strpos(strtolower($e->getMessage()), 'duplicate') !== false || strpos(strtolower($e->getMessage()), 'unique') !== false) {
-                return $this->fail('Anda sudah memberikan suara');
+                return $this->sendError('Anda sudah memberikan suara', null, 400);
             }
-            return $this->failServerError('Gagal menyimpan suara');
+            return $this->sendError('Gagal menyimpan suara', null, 500);
         }
 
-        return $this->respond(['status' => true, 'message' => 'Berhasil memberikan suara'], 200);
+        return $this->sendSuccess('Berhasil memberikan suara');
     }
 
-    public function changeStatus($id)
+    public function changeStatus($id = null)
     {
         $tenantId = AuthService::getTenantId();
         if (!$tenantId || !AuthService::can('voting.manage')) {
-            return $this->failForbidden('Akses ditolak');
+            return $this->sendError('Akses ditolak', null, 403);
         }
 
         $voting = $this->votingModel->where('karang_taruna_id', $tenantId)
                                     ->where('id', $id)
                                     ->first();
 
-        if (!$voting) return $this->failNotFound('Voting tidak ditemukan');
+        if (!$voting) return $this->sendError('Voting tidak ditemukan', null, 404);
 
-        $status = $this->request->getVar('status');
+        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
+        $status = $rawInput['status'] ?? null;
         if (!in_array($status, ['active', 'closed'])) {
-            return $this->failValidationErrors('Status tidak valid');
+            return $this->sendError('Validasi gagal', ['status' => 'Status tidak valid'], 422);
         }
 
         $this->votingModel->update($id, ['status' => $status]);
-        return $this->respond(['status' => true, 'message' => 'Status voting berhasil diubah']);
+        return $this->sendSuccess('Status voting berhasil diubah');
     }
 }

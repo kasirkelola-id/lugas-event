@@ -3,21 +3,21 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use App\Models\UserModel;
 use App\Models\KarangTarunaModel;
 use App\Models\OrganizationMemberModel;
 use Tests\Support\AuthTrait;
 
-class MembershipApprovalTest extends CIUnitTestCase
+class MembershipApprovalTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = true;
+    
     protected $namespace = 'App';
 
     protected function setUp(): void
@@ -48,7 +48,7 @@ class MembershipApprovalTest extends CIUnitTestCase
 
         foreach ($roles as $role) {
             if ($role === 'superadmin') {
-                $users[$role] = ['id' => 0, 'karang_taruna_id' => $tenantId, 'role_level' => 'superadmin'];
+                $users[$role] = ['id' => null, 'karang_taruna_id' => $tenantId, 'role_level' => 'superadmin'];
                 continue;
             }
 
@@ -105,12 +105,12 @@ class MembershipApprovalTest extends CIUnitTestCase
         foreach ($allowedRoles as $role) {
             $user = $users[$role];
             $token = $this->generateTokenForUser($user);
-            $result = $this->withHeaders([
+            $res = $this->withHeaders([
                 'Authorization' => 'Bearer ' . $token,
                 'X-Karang-Taruna-ID' => $tenantId
             ])->post("api/memberships/{$pendingMember['id']}/approve");
 
-            $result->assertStatus(200);
+            $res->assertStatus(200);
             
             // Verify history was written
             $db = \Config\Database::connect();

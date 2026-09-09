@@ -24,7 +24,7 @@ class DashboardController extends BaseApiController
 
         $now = date('Y-m-d H:i:s');
         $today = date('Y-m-d');
-        
+
         $data = [
             'upcoming_event' => null,
             'latest_announcement' => null,
@@ -61,7 +61,7 @@ class DashboardController extends BaseApiController
                 ->orderBy('waktu_mulai', 'ASC')
                 ->first();
         }
-        
+
         $selectedEvent = $ongoingEvent ?? $upcomingEvent ?? null;
 
         if ($selectedEvent) {
@@ -82,7 +82,7 @@ class DashboardController extends BaseApiController
             ->where('status_aktif', 1)
             ->orderBy('created_at', 'DESC')
             ->first();
-            
+
         if ($latestAnnouncement) {
             $data['latest_announcement'] = [
                 'id' => $latestAnnouncement['id'],
@@ -99,7 +99,7 @@ class DashboardController extends BaseApiController
             ->where('status', 'active')
             ->orderBy('created_at', 'DESC')
             ->first();
-            
+
         if ($activeVoting) {
             $data['active_voting'] = [
                 'id' => $activeVoting['id'],
@@ -118,7 +118,7 @@ class DashboardController extends BaseApiController
             ->where('inventories.karang_taruna_id', $tenantId)
             ->whereIn('inventory_loans.status', ['pending', 'approved'])
             // Status pending(p) lebih dulu daripada approved(a)
-            ->orderBy('inventory_loans.status', 'DESC') 
+            ->orderBy('inventory_loans.status', 'DESC')
             ->orderBy('inventory_loans.created_at', 'DESC')
             ->first();
 
@@ -157,7 +157,7 @@ class DashboardController extends BaseApiController
         // 5. Management Metrics
         // Gunakan RBAC permission untuk melihat metrik
         $canSeeManagement = AuthService::can('inventory.approve') || AuthService::can('members.manage') || AuthService::can('report.view');
-        
+
         if ($canSeeManagement) {
             $pendingLoansCount = $loanModel
                 ->join('inventories', 'inventories.id = inventory_loans.inventory_id')

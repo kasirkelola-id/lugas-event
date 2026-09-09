@@ -3,19 +3,19 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use App\Models\UserModel;
 use Tests\Support\AuthTrait;
 
-class DashboardTest extends CIUnitTestCase
+class DashboardTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = false;
+    
     protected $namespace = 'App';
 
     protected function setUp(): void
@@ -23,6 +23,7 @@ class DashboardTest extends CIUnitTestCase
         parent::setUp();
         // Clear databases
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('inventory_loans')->emptyTable();
         $db->table('inventories')->emptyTable();
         $db->table('events')->emptyTable();
@@ -31,6 +32,7 @@ class DashboardTest extends CIUnitTestCase
         $db->table('users')->emptyTable();
         $db->table('karang_taruna')->emptyTable();
         $db->table('organization_members')->emptyTable();
+        $db->enableForeignKeyChecks();
     }
 
     public function testDashboardTenantIsolationAndRbac()
@@ -38,6 +40,7 @@ class DashboardTest extends CIUnitTestCase
         $tenantA = 1;
         $tenantB = 2;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         
         $db->table('karang_taruna')->insertBatch([
             ['id' => $tenantA, 'nama_organisasi' => 'KT A', 'kode_pin' => '111111', 'status_aktif' => 1, 'created_at' => date('Y-m-d H:i:s')],
@@ -127,6 +130,7 @@ class DashboardTest extends CIUnitTestCase
     {
         $tenantId = 1;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('karang_taruna')->insert(['id' => $tenantId, 'nama_organisasi' => 'KT Test', 'kode_pin' => '111111', 'status_aktif' => 1, 'created_at' => date('Y-m-d H:i:s')]);
         
         $adminId = 100;
@@ -171,6 +175,7 @@ class DashboardTest extends CIUnitTestCase
     {
         $tenantId = 1;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('karang_taruna')->insert(['id' => $tenantId, 'nama_organisasi' => 'KT Test', 'kode_pin' => '111111', 'status_aktif' => 1, 'created_at' => date('Y-m-d H:i:s')]);
         
         $adminId = 100;
@@ -208,6 +213,7 @@ class DashboardTest extends CIUnitTestCase
     {
         $tenantId = 1;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('karang_taruna')->insert(['id' => $tenantId, 'nama_organisasi' => 'KT Test', 'kode_pin' => '111111', 'status_aktif' => 1, 'created_at' => date('Y-m-d H:i:s')]);
         
         $memberId = 100;
@@ -238,6 +244,7 @@ class DashboardTest extends CIUnitTestCase
     {
         $tenantId = 1;
         $db = \Config\Database::connect();
+        $db->disableForeignKeyChecks();
         $db->table('karang_taruna')->insert(['id' => $tenantId, 'nama_organisasi' => 'KT Test', 'kode_pin' => '111111', 'status_aktif' => 1, 'created_at' => date('Y-m-d H:i:s')]);
         
         $memberId = 100;

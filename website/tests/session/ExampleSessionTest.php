@@ -5,7 +5,7 @@ use CodeIgniter\Test\CIUnitTestCase;
 /**
  * @internal
  */
-final class ExampleSessionTest extends CIUnitTestCase
+final class ExampleSessionTest extends \Tests\Support\BaseTest
 {
     public function testSessionSimple(): void
     {

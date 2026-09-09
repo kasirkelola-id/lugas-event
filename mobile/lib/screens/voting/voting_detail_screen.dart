@@ -80,6 +80,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
     if (confirm != true) return;
 
     if (!mounted) return;
+    setState(() => _isSubmitting = true);
     AppDialog.showLoading(context, message: 'Mengirim...');
 
     final result = await VotingService.submitVote(
@@ -87,6 +88,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
       _selectedOptionId!,
     );
     if (!mounted) return;
+    setState(() => _isSubmitting = false);
     Navigator.pop(context); // close loading
 
     if (result['success']) {

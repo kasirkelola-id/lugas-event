@@ -3,19 +3,19 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use Tests\Support\AuthTrait;
 use App\Models\KasModel;
 
-class TenantIsolationTest extends CIUnitTestCase
+class TenantIsolationTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = true;
+    
     protected $namespace = 'App';
 
     protected function setUp(): void

@@ -15,7 +15,7 @@ class InternalApiController extends BaseApiController
         // In production, might want to check against specific private IPs or use a shared secret.
         $clientIp = $this->request->getIPAddress();
         $allowedIps = ['127.0.0.1', '::1'];
-        
+
         // For development/testing flexibility, we can check for an internal secret header if IP isn't loopback
         $internalSecret = $this->request->getHeaderLine('X-Internal-Secret');
         $validSecret = getenv('INTERNAL_API_SECRET') ?: 'default_internal_secret_for_dev';
@@ -27,10 +27,10 @@ class InternalApiController extends BaseApiController
             return $this->sendError('Forbidden: External access denied to internal API', null, 403);
         }
 
-        // At this point, AuthFilter has successfully validated the Bearer token 
+        // At this point, AuthFilter has successfully validated the Bearer token
         // AND resolved the active tenant via X-Karang-Taruna-ID header.
         $user = AuthService::getUser();
-        
+
         if (!$user) {
             return $this->sendError('Unauthenticated', null, 401);
         }
@@ -69,7 +69,7 @@ class InternalApiController extends BaseApiController
 
         $db = \Config\Database::connect();
         $chat = $db->table('chats')->where('id', $chatId)->get()->getRowArray();
-        
+
         if (!$chat) {
             return $this->sendError('Chat not found', null, 404);
         }
@@ -77,7 +77,7 @@ class InternalApiController extends BaseApiController
         $tenantId = (int)$chat['karang_taruna_id'];
         $senderId = (string)$chat['sender_id'];
         $type = $chat['type']; // 'private' or 'group'
-        
+
         $sender = $db->table('users')->where('id', $senderId)->get()->getRowArray();
         $senderName = $sender ? $sender['nama_lengkap'] : 'User';
 
@@ -101,7 +101,7 @@ class InternalApiController extends BaseApiController
                     $memberIds = array_column($members, 'user_id');
                     // Exclude sender
                     $memberIds = array_filter($memberIds, fn($id) => (string)$id !== $senderId);
-                    
+
                     if (!empty($memberIds)) {
                         $devices = $db->table('user_devices')->whereIn('user_id', $memberIds)->get()->getResultArray();
                         $tokens = array_values(array_unique(array_filter(array_column($devices, 'fcm_token'))));

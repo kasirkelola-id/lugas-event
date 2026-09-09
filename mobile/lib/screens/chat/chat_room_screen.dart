@@ -280,11 +280,18 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       context: context,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           elevation: 0,
           backgroundColor: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.only(top: 16, bottom: 24, left: 24, right: 24),
+            padding: const EdgeInsets.only(
+              top: 16,
+              bottom: 24,
+              left: 24,
+              right: 24,
+            ),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
@@ -311,7 +318,11 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           color: Colors.grey.shade100,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.close, size: 20, color: Colors.black54),
+                        child: const Icon(
+                          Icons.close,
+                          size: 20,
+                          color: Colors.black54,
+                        ),
                       ),
                     ),
                   ],
@@ -321,7 +332,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
-                      colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.5)],
+                      colors: [
+                        AppTheme.primary,
+                        AppTheme.primary.withOpacity(0.5),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -332,9 +346,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     child: CircleAvatar(
                       radius: 42,
                       backgroundColor: Colors.grey.shade100,
-                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                      backgroundImage: photoUrl != null
+                          ? NetworkImage(photoUrl)
+                          : null,
                       child: photoUrl == null
-                          ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                          ? const Icon(
+                              Icons.person,
+                              size: 40,
+                              color: Colors.grey,
+                            )
                           : null,
                     ),
                   ),
@@ -342,12 +362,18 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 const SizedBox(height: 16),
                 Text(
                   name,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -634,7 +660,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                     children: [
                                       if (!isMe && widget.type == 'group') ...[
                                         if (isSameSenderAsPrevious)
-                                          const SizedBox(width: 32) // Same width as radius 16
+                                          const SizedBox(
+                                            width: 32,
+                                          ) // Same width as radius 16
                                         else
                                           GestureDetector(
                                             onTap: () => _showUserDetails(
@@ -695,14 +723,28 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                   ? AppTheme.primary
                                                   : Colors.white,
                                               borderRadius: BorderRadius.only(
-                                                topLeft: const Radius.circular(18),
-                                                topRight: const Radius.circular(18),
-                                                bottomLeft: Radius.circular(isMe || isSameSenderAsPrevious ? 18 : 0),
-                                                bottomRight: Radius.circular(!isMe || isSameSenderAsPrevious ? 18 : 0),
+                                                topLeft: const Radius.circular(
+                                                  18,
+                                                ),
+                                                topRight: const Radius.circular(
+                                                  18,
+                                                ),
+                                                bottomLeft: Radius.circular(
+                                                  isMe || isSameSenderAsPrevious
+                                                      ? 18
+                                                      : 0,
+                                                ),
+                                                bottomRight: Radius.circular(
+                                                  !isMe ||
+                                                          isSameSenderAsPrevious
+                                                      ? 18
+                                                      : 0,
+                                                ),
                                               ),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withOpacity(0.06),
+                                                  color: Colors.black
+                                                      .withOpacity(0.06),
                                                   spreadRadius: 0,
                                                   blurRadius: 6,
                                                   offset: const Offset(0, 2),
@@ -758,7 +800,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                         chat.message,
                                                         style: TextStyle(
                                                           fontSize: 15,
-                                                          color: isMe ? Colors.white : Colors.black87,
+                                                          color: isMe
+                                                              ? Colors.white
+                                                              : Colors.black87,
                                                         ),
                                                       ),
                                                     ],
@@ -773,7 +817,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                         time,
                                                         style: TextStyle(
                                                           fontSize: 10,
-                                                          color: isMe ? Colors.white70 : Colors.grey[600],
+                                                          color: isMe
+                                                              ? Colors.white70
+                                                              : Colors
+                                                                    .grey[600],
                                                         ),
                                                       ),
                                                       if (isMe) ...[
@@ -837,7 +884,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       children: [
                         Expanded(
                           child: Container(
-
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(30),

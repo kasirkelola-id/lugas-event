@@ -3,20 +3,20 @@
 namespace Tests\Api;
 
 use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
 use Tests\Support\AuthTrait;
 use App\Models\InventoryModel;
 use App\Models\InventoryLoanModel;
 
-class InventoryIntegrityTest extends CIUnitTestCase
+class InventoryIntegrityTest extends \Tests\Support\BaseTest
 {
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
     use FeatureTestTrait;
     use AuthTrait;
 
     protected $migrate = true;
-    protected $migrateOnce = true;
+    
     protected $namespace = 'App';
 
     protected function tearDown(): void
@@ -238,7 +238,7 @@ class InventoryIntegrityTest extends CIUnitTestCase
 
             $res->assertStatus(400);
             $json = json_decode($res->getJSON(), true);
-            $this->assertArrayHasKey('quantity', $json['messages']);
+            $this->assertArrayHasKey('quantity', $json['errors']);
         }
     }
 }

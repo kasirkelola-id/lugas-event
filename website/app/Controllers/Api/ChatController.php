@@ -45,7 +45,7 @@ class ChatController extends BaseApiController
         }
 
         $roomModel = new ChatRoomModel();
-        
+
         $roomId = $roomModel->insert([
             'karang_taruna_id' => $tenantId,
             'name' => $name,
@@ -56,7 +56,7 @@ class ChatController extends BaseApiController
 
         if (is_array($memberIds) && count($memberIds) > 0) {
             $memberModel = new ChatRoomMemberModel();
-            
+
             // Add creator implicitly
             if (!in_array($userId, $memberIds)) {
                 $memberIds[] = $userId;
@@ -112,7 +112,7 @@ class ChatController extends BaseApiController
         // Validate if user has access to this room
         $roomModel = new ChatRoomModel();
         $room = $roomModel->find($roomId);
-        
+
         if (!$room || $room['karang_taruna_id'] != $tenantId) {
             return $this->sendError('Grup tidak ditemukan', null, 404);
         }
@@ -128,9 +128,9 @@ class ChatController extends BaseApiController
         $chatModel = new ChatModel();
         $limit = $this->request->getVar('limit') ?? 50;
         $beforeId = $this->request->getVar('before_id');
-        
+
         $chats = $chatModel->getRoomChats($roomId, $limit, $beforeId);
-        
+
         // Reverse array because it was fetched DESC and client expects ASC
         $chats = array_reverse($chats);
 
@@ -151,19 +151,19 @@ class ChatController extends BaseApiController
             return $this->sendError('Unauthenticated', null, 401);
         }
 
-        $userModel = new UserModel();
-        $receiver = $userModel->find($receiverId);
-        
-        if (!$receiver || $receiver['karang_taruna_id'] != $tenantId) {
+        $memberModel = new \App\Models\OrganizationMemberModel();
+        $receiverMembership = $memberModel->where('user_id', $receiverId)->where('karang_taruna_id', $tenantId)->where('status_aktif', 1)->first();
+
+        if (!$receiverMembership) {
             return $this->sendError('Pengguna tidak ditemukan atau di luar Karang Taruna Anda', null, 404);
         }
 
         $chatModel = new ChatModel();
         $limit = $this->request->getVar('limit') ?? 50;
         $beforeId = $this->request->getVar('before_id');
-        
+
         $chats = $chatModel->getPrivateChats($tenantId, $userId, $receiverId, $limit, $beforeId);
-        
+
         // Reverse array because it was fetched DESC and client expects ASC
         $chats = array_reverse($chats);
 
@@ -216,7 +216,7 @@ class ChatController extends BaseApiController
         }
 
         $chatModel = new ChatModel();
-        
+
         $data = [
             'karang_taruna_id' => $tenantId,
             'sender_id' => $userId,
@@ -236,10 +236,9 @@ class ChatController extends BaseApiController
             // TODO: Trigger Notification to all members
             $this->sendGroupNotification($roomId, $user['nama_lengkap'], $message, $data);
         } else {
-            // Validate receiver
-            $userModel = new UserModel();
-            $receiver = $userModel->where('karang_taruna_id', $tenantId)->find($receiverId);
-            if (!$receiver) {
+            $memberModel = new \App\Models\OrganizationMemberModel();
+            $receiverMembership = $memberModel->where('user_id', $receiverId)->where('karang_taruna_id', $tenantId)->where('status_aktif', 1)->first();
+            if (!$receiverMembership) {
                 return $this->sendError('Pengguna tidak ditemukan', null, 404);
             }
             $data['receiver_id'] = $receiverId;
@@ -263,11 +262,11 @@ class ChatController extends BaseApiController
         if (!$room) return;
 
         $db = \Config\Database::connect();
-        
+
         if ($room['type'] === 'default') {
             // Get all user IDs in this karang_taruna
-            $users = $db->table('users')->where('karang_taruna_id', $room['karang_taruna_id'])->get()->getResultArray();
-            $userIds = array_column($users, 'id');
+            $members = $db->table('organization_members')->where('karang_taruna_id', $room['karang_taruna_id'])->where('status_aktif', 1)->get()->getResultArray();
+            $userIds = array_column($members, 'user_id');
         } else {
             // Get from chat_room_members
             $members = $db->table('chat_room_members')->where('chat_room_id', $roomId)->get()->getResultArray();
@@ -290,7 +289,7 @@ class ChatController extends BaseApiController
         $db = \Config\Database::connect();
         $devices = $db->table('user_devices')->where('user_id', $receiverId)->get()->getResultArray();
         $tokens = array_filter(array_column($devices, 'fcm_token'));
-        
+
         if (!empty($tokens)) {
             $title = "Pesan dari " . $senderName;
             \App\Services\NotificationService::sendPushNotification($tokens, $title, $message, ['type' => 'private_chat', 'sender_id' => (string)$chatData['sender_id']]);

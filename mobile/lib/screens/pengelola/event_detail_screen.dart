@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
@@ -7,7 +7,7 @@ import '../../services/auth_service.dart';
 import 'package:mobile/screens/auth/login_screen.dart';
 import 'edit_event_screen.dart';
 import 'attendance_list_screen.dart';
-import 'bluetooth_printer_dialog.dart';
+
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import 'package:mobile/screens/widgets/common/app_dialog.dart';
 
@@ -597,97 +597,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildQrSection() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: AppTheme.radiusLarge,
-        boxShadow: AppTheme.shadowSoft,
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'QR Code Absensi',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _event!.isActive
-                ? 'Peserta dapat memindai QR ini untuk absensi'
-                : 'Acara sudah selesai',
-            style: TextStyle(
-              color: _event!.isActive ? AppTheme.textSecondary : AppTheme.error,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 24),
-          if (_event!.kodeQr.isEmpty)
-            const Text(
-              'QR Code tidak tersedia.',
-              style: TextStyle(color: AppTheme.error),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: AppTheme.radiusMedium,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: QrImageView(
-                data: _event!.kodeQr,
-                version: QrVersions.auto,
-                size: 200.0,
-                backgroundColor: Colors.white,
-              ),
-            ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppTheme.background,
-              borderRadius: AppTheme.radiusMedium,
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.qr_code,
-                  size: 20,
-                  color: AppTheme.textSecondary,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _event!.kodeQr,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                    color: AppTheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -6,7 +6,7 @@ use CodeIgniter\Test\CIUnitTestCase;
 use App\Services\AuthService;
 use CodeIgniter\Exceptions\PageNotFoundException;
 
-class AuthServiceRbacTest extends CIUnitTestCase
+class AuthServiceRbacTest extends \Tests\Support\BaseTest
 {
     protected function setUp(): void
     {

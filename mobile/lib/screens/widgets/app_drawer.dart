@@ -3,7 +3,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import 'package:mobile/screens/auth/login_screen.dart';
-
+import '../auth/tenant_selector_screen.dart';
 import '../pengelola/pengelola_home_screen.dart';
 import '../pengelola/pengelola_acara_screen.dart';
 import '../pengelola/pengelola_riwayat_screen.dart';
@@ -21,7 +21,7 @@ import '../admin/admin_acara_screen.dart';
 import '../admin/admin_peserta_screen.dart';
 import '../admin/admin_laporan_screen.dart';
 import '../admin/admin_pengumuman_screen.dart';
-import '../admin/admin_printer_screen.dart';
+
 import '../admin/admin_pengaturan_screen.dart';
 import '../admin/admin_profil_screen.dart';
 import '../kas/kas_screen.dart';
@@ -61,6 +61,45 @@ class AppDrawer extends StatelessWidget {
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
+  }
+
+  void _switchTenant(BuildContext context) async {
+    Navigator.pop(context); // close drawer
+    AppDialog.showLoading(context, message: 'Memuat organisasi...');
+
+    final result = await AuthService.getMemberships();
+
+    if (!context.mounted) return;
+    Navigator.pop(context); // pop loading dialog
+
+    if (result['success']) {
+      final memberships = result['data'] as List<dynamic>;
+      if (memberships.length > 1) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TenantSelectorScreen(
+              user: user,
+              initialMemberships: memberships,
+            ),
+          ),
+        );
+      } else {
+        AppDialog.showResult(
+          context: context,
+          title: 'Tidak Bisa Ganti',
+          content: 'Anda hanya terdaftar di satu Karang Taruna.',
+          type: DialogType.info,
+        );
+      }
+    } else {
+      AppDialog.showResult(
+        context: context,
+        title: 'Gagal',
+        content: result['message'] ?? 'Gagal memuat organisasi',
+        type: DialogType.error,
+      );
+    }
   }
 
   void _navigate(BuildContext context, Widget screen, {bool replace = true}) {
@@ -114,6 +153,32 @@ class AppDrawer extends StatelessWidget {
             color: AppTheme.surface,
             child: Column(
               children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: AppTheme.radiusSmall,
+                    ),
+                    child: const Icon(
+                      Icons.swap_horiz,
+                      color: AppTheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: const Text(
+                    'Ganti Organisasi',
+                    style: TextStyle(
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onTap: () => _switchTenant(context),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: AppTheme.radiusSmall,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
@@ -546,7 +611,11 @@ class AppDrawer extends StatelessWidget {
         dense: true,
         visualDensity: const VisualDensity(vertical: -2),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-        leading: Icon(icon, color: AppTheme.primary.withValues(alpha: 0.8), size: 22),
+        leading: Icon(
+          icon,
+          color: AppTheme.primary.withValues(alpha: 0.8),
+          size: 22,
+        ),
         title: Text(
           title,
           style: const TextStyle(

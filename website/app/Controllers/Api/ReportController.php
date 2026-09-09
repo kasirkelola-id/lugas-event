@@ -20,7 +20,7 @@ class ReportController extends BaseApiController
 
         $eventModel = new EventModel();
         $builder = $eventModel->builder();
-        
+
         // Admin and Pengelola can view report for their events
         $builder->where('karang_taruna_id', $tenantId);
 
@@ -48,8 +48,8 @@ class ReportController extends BaseApiController
             $totalHadir = $absensiModel->whereIn('event_id', $eventIds)->countAllResults();
         }
 
-        // Since attendance is open to all members, "peserta terdaftar", "belum hadir", and 
-        // "persentase" relative to event_participants are no longer logically sound. 
+        // Since attendance is open to all members, "peserta terdaftar", "belum hadir", and
+        // "persentase" relative to event_participants are no longer logically sound.
         // Default to 0 to prevent misleading metrics.
         $totalPeserta = 0;
         $totalBelumHadir = 0;

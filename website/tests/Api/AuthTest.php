@@ -7,11 +7,9 @@ use CodeIgniter\Test\FeatureTestTrait;
 use App\Models\UserModel;
 use App\Models\OrganizationMemberModel;
 use App\Models\UserTokenModel;
-use CodeIgniter\Test\DatabaseTestTrait;
-
-class AuthTest extends CIUnitTestCase
+class AuthTest extends \Tests\Support\BaseTest
 {
-    use FeatureTestTrait, DatabaseTestTrait;
+    use FeatureTestTrait;
 
     protected $migrate = true;
     protected $migrateOnce = true;

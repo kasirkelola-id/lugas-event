@@ -32,7 +32,7 @@ class UserController extends BaseApiController
         if ($excludeMemberId) {
             $builder->where('id !=', $excludeMemberId);
         }
-        
+
         return $builder->countAllResults() === 0;
     }
 
@@ -43,12 +43,12 @@ class UserController extends BaseApiController
         }
 
         $tenantId = AuthService::getTenantId();
-        
+
         $page = (int)($this->request->getVar('page') ?? 1);
         $limit = (int)($this->request->getVar('limit') ?? 100);
         if ($limit > 100) $limit = 100;
         $offset = ($page - 1) * $limit;
-        
+
         $search = $this->request->getVar('search');
         $status = $this->request->getVar('status');
         $roleFilter = $this->request->getVar('role');
@@ -60,7 +60,7 @@ class UserController extends BaseApiController
                       ->where('organization_members.karang_taruna_id', $tenantId)
                       ->orderBy('organization_members.status_aktif', 'DESC')
                       ->orderBy('users.nama_lengkap', 'ASC');
-        
+
         if (!AuthService::can('members.manage')) {
             $builder->where('organization_members.role_level', 'anggota');
         }
@@ -139,10 +139,10 @@ class UserController extends BaseApiController
             $roleLabel = ucwords(str_replace('_', ' ', $rawInput['role_level']));
             return $this->sendError('Validasi gagal', ['role_level' => "Jabatan {$roleLabel} sudah diisi oleh pengguna aktif lain. Hanya boleh 1 orang."], 400);
         }
-        
+
         $userModel = new UserModel();
         $memberModel = new \App\Models\OrganizationMemberModel();
-        
+
         // Check if username already exists IN THIS TENANT
         $existingMember = $memberModel->where('username', $rawInput['username'])
                                       ->where('karang_taruna_id', $tenantId)
@@ -179,7 +179,7 @@ class UserController extends BaseApiController
             'updated_at' => date('Y-m-d H:i:s'),
         ];
         $memberModel->insert($memberData);
-        
+
         $db->transComplete();
 
         if ($db->transStatus() === false) {
@@ -200,17 +200,17 @@ class UserController extends BaseApiController
 
         $tenantId = AuthService::getTenantId();
         $memberModel = new \App\Models\OrganizationMemberModel();
-        
+
         $membership = $memberModel->where('user_id', $id)
                                   ->where('karang_taruna_id', $tenantId)
                                   ->first();
-                                  
+
         if (!$membership) {
             return $this->sendError('Bukan anggota Karang Taruna ini.', null, 403);
         }
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
-        
+
         if (isset($rawInput['username'])) {
             // Check if new username conflicts with another member in this tenant
             $existingMember = $memberModel->where('username', $rawInput['username'])
@@ -299,7 +299,7 @@ class UserController extends BaseApiController
         if (!$membership) {
             return $this->sendError('Membership tidak ditemukan', null, 404);
         }
-        
+
         $currentUserRole = AuthService::getRole();
         if ($currentUserRole !== 'ketua' && in_array($newRole, ['ketua', 'wakil_ketua', 'sekretaris', 'wakil_sekretaris', 'bendahara', 'wakil_bendahara', 'pengelola'])) {
             return $this->sendError('Forbidden: Anda tidak memiliki akses untuk memberikan role ini', null, 403);
@@ -329,7 +329,7 @@ class UserController extends BaseApiController
         }
 
         $tenantId = AuthService::getTenantId();
-        
+
         $userModel = new UserModel();
         $user = $userModel->find($id);
 
@@ -340,11 +340,11 @@ class UserController extends BaseApiController
         // Fetch membership
         $memberModel = new \App\Models\OrganizationMemberModel();
         $membership = $memberModel->where('user_id', $user['id'])->where('karang_taruna_id', $tenantId)->first();
-        
+
         if (!$membership) {
             return $this->sendError('Pengguna tidak ditemukan', null, 404);
         }
-        
+
         if ((int)$membership['status_aktif'] !== 1) {
             return $this->sendError('Pengguna tidak aktif di Karang Taruna ini', null, 403);
         }
@@ -356,7 +356,7 @@ class UserController extends BaseApiController
 
         $settingModel = new \App\Models\SettingModel();
         $tempPassSetting = $settingModel->where('karang_taruna_id', 0)->where('setting_key', 'temporary_reset_password')->first();
-        
+
         if (!$tempPassSetting || empty(trim($tempPassSetting['setting_value']))) {
             return $this->sendError('Sistem error', ['message' => 'Password sementara global belum dikonfigurasi oleh Superadmin.'], 500);
         }
@@ -380,7 +380,7 @@ class UserController extends BaseApiController
 
         $tenantId = AuthService::getTenantId();
         $memberModel = new \App\Models\OrganizationMemberModel();
-        
+
         $totalKetua = $memberModel->where('karang_taruna_id', $tenantId)->where('role_level', 'ketua')->countAllResults();
         $totalPengelola = $memberModel->where('karang_taruna_id', $tenantId)->where('role_level', 'pengelola')->countAllResults();
         $totalAnggota = $memberModel->where('karang_taruna_id', $tenantId)->where('role_level', 'anggota')->countAllResults();

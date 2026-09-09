@@ -136,7 +136,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             description: 'Bertanggung jawab mengelola acara masing-masing.',
             capabilities: [
               'Membuat acara baru.',
-              'Mengedit, mencetak QR, dan menutup acara miliknya.',
+              'Mengedit dan menutup acara miliknya.',
               'Melihat daftar hadir peserta dari acara miliknya.',
               'Melihat laporan dan histori acara miliknya.',
               'Tidak dapat melihat atau mengelola acara pengelola lain.',
@@ -153,7 +153,7 @@ class _AdminRoleScreenState extends State<AdminRoleScreen> {
             description: 'Pengguna reguler yang mengikuti acara.',
             capabilities: [
               'Melihat daftar acara aktif.',
-              'Melakukan scan QR untuk presensi (di masa depan).',
+              'Melakukan absensi lokasi (Geofence).',
               'Melihat riwayat kehadiran pribadinya.',
               'Tidak memiliki akses ke dashboard pengelolaan atau admin.',
             ],

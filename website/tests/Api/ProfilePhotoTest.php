@@ -4,19 +4,19 @@ namespace Tests\Api {
 
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
-use CodeIgniter\Test\DatabaseTestTrait;
 use Tests\Support\AuthTrait;
 use App\Models\UserModel;
 
-class ProfilePhotoTest extends CIUnitTestCase
+class ProfilePhotoTest extends \Tests\Support\BaseTest
 {
     use FeatureTestTrait;
     use AuthTrait;
-    use DatabaseTestTrait;
+    protected $migrateOnce = true;
+    protected $refresh = false;
 
     protected $migrate = true;
-    protected $migrateOnce = false;
-    protected $refresh = true;
+    
+    
     protected $namespace = null;
 
     private $user;

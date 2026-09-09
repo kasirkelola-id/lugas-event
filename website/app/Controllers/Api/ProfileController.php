@@ -16,7 +16,7 @@ class ProfileController extends BaseApiController
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
         $validationData = [];
-        
+
         // Only allow these fields to be updated
         if (isset($rawInput['nama_lengkap'])) $validationData['nama_lengkap'] = $rawInput['nama_lengkap'];
         if (isset($rawInput['nama_panggilan'])) $validationData['nama_panggilan'] = $rawInput['nama_panggilan'];
@@ -35,7 +35,7 @@ class ProfileController extends BaseApiController
             $rules['username'] = "required|max_length[100]";
         }
         if (isset($validationData['rt'])) $rules['rt'] = 'required|in_list[1,2,3,4]';
-        
+
         if (!$this->validateData($validationData, $rules)) {
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
@@ -43,26 +43,26 @@ class ProfileController extends BaseApiController
         if (isset($validationData['username'])) {
             $tenantId = AuthService::getTenantId();
             $memberModel = new \App\Models\OrganizationMemberModel();
-            
+
             // Validate unique inside tenant namespace
             $existing = $memberModel->where('username', $validationData['username'])
                                     ->where('karang_taruna_id', $tenantId)
                                     ->where('user_id !=', $userId)
                                     ->first();
-            
+
             if ($existing) {
                 return $this->sendError('Validasi gagal', ['username' => 'Username ini sudah digunakan di Karang Taruna Anda.'], 409);
             }
-            
+
             // Get current membership to update
             $membership = $memberModel->where('user_id', $userId)
                                       ->where('karang_taruna_id', $tenantId)
                                       ->first();
-                                      
+
             if ($membership) {
                 $memberModel->update($membership['id'], ['username' => $validationData['username']]);
             }
-            
+
             // Remove username from array so it doesn't update the global users table
             unset($validationData['username']);
         }
@@ -115,18 +115,18 @@ class ProfileController extends BaseApiController
         }
 
         $file = $this->request->getFile('photo');
-        
+
         // Handle Delete Photo
         if (strtolower($this->request->getMethod()) === 'delete') {
             $userModel = new UserModel();
             $user = $userModel->find($userId);
-            
+
             // Delete old photo safely ONLY if DB update is successful
             $oldPath = $user['profile_photo'] ?? null;
             if ($userModel->update($userId, ['profile_photo' => null])) {
                 $this->safeDeleteOldPhoto($oldPath);
             }
-            
+
             return $this->sendSuccess('Foto profil berhasil dihapus', null);
         }
 
@@ -150,7 +150,7 @@ class ProfileController extends BaseApiController
 
         $newName = $file->getRandomName();
         $uploadDir = FCPATH . 'uploads/users/profile/';
-        
+
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
@@ -161,7 +161,7 @@ class ProfileController extends BaseApiController
                 ->withFile($file->getTempName())
                 ->fit(512, 512, 'center')
                 ->save($uploadDir . $newName, 85);
-                
+
             $photoPath = 'uploads/users/profile/' . $newName;
         } catch (\Exception $e) {
             log_message('error', 'Profile photo processing failed: ' . $e->getMessage());
@@ -172,7 +172,7 @@ class ProfileController extends BaseApiController
         $userModel = new UserModel();
         $user = $userModel->find($userId);
         $oldPath = $user['profile_photo'] ?? null;
-        
+
         // Update DB first
         if ($userModel->update($userId, ['profile_photo' => $photoPath])) {
             // DB success, delete old photo safely
@@ -194,11 +194,11 @@ class ProfileController extends BaseApiController
     private function safeDeleteOldPhoto(?string $path)
     {
         if (empty($path)) return;
-        
+
         // Ensure it's in the managed uploads directory and doesn't have directory traversal
         if (strpos($path, 'uploads/users/profile/') !== 0) return;
         if (strpos($path, '..') !== false) return;
-        
+
         $fullPath = FCPATH . $path;
         if (file_exists($fullPath)) {
             @unlink($fullPath);

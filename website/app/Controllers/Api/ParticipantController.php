@@ -16,7 +16,7 @@ class ParticipantController extends BaseApiController
         $tenantId = AuthService::getTenantId();
         $role = AuthService::getRole();
         $userId = AuthService::getGlobalUserId();
-        
+
         $eventModel = new EventModel();
         $event = $eventModel->where('karang_taruna_id', $tenantId)->find($eventId);
         if (!$event) {
@@ -72,7 +72,7 @@ class ParticipantController extends BaseApiController
         ];
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
-        
+
         if (!isset($rawInput['user_ids']) || !is_array($rawInput['user_ids'])) {
              return $this->sendError('Validasi gagal', ['user_ids' => 'Daftar user_id harus berupa array'], 422);
         }
@@ -120,7 +120,7 @@ class ParticipantController extends BaseApiController
         }
 
         $participantModel->delete($exists['id']);
-        
+
         return $this->sendSuccess('Peserta berhasil dihapus');
     }
 }

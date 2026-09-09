@@ -61,8 +61,11 @@ class KasController extends BaseApiController
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
 
+        $tenantId = AuthService::getTenantId();
+        $userId = AuthService::getGlobalUserId();
+
         $settingModel = new \App\Models\SettingModel();
-        $limitSetting = $settingModel->find('kas_backdate_limit');
+        $limitSetting = $settingModel->where('karang_taruna_id', $tenantId)->where('setting_key', 'kas_backdate_limit')->first();
         $limitDays = $limitSetting ? (int)$limitSetting['setting_value'] : 30;
 
         $inputDate = new \DateTime($rawInput['tanggal']);
@@ -75,9 +78,6 @@ class KasController extends BaseApiController
             }
         }
 
-        $tenantId = AuthService::getTenantId();
-        $userId = AuthService::getGlobalUserId();
-        
         $data = [
             'karang_taruna_id' => $tenantId,
             'jenis'       => $rawInput['jenis'],

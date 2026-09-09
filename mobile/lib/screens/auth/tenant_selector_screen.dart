@@ -51,7 +51,7 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
 
       if (response.statusCode == 200 && data['status'] == true) {
         setState(() {
-          _memberships = data['data'];
+          _memberships = data['data'] ?? [];
           _isLoading = false;
         });
       } else {
@@ -96,7 +96,12 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
         MaterialPageRoute(builder: (_) => const PengelolaHomeScreen()),
         (route) => false,
       );
-    } else if (updatedUser.roleLevel == 'admin') {
+    } else if (updatedUser.roleLevel == 'admin' ||
+        updatedUser.roleLevel == 'ketua' ||
+        updatedUser.roleLevel == 'superadmin' ||
+        updatedUser.roleLevel == 'wakil_ketua' ||
+        updatedUser.roleLevel == 'sekretaris' ||
+        updatedUser.roleLevel == 'bendahara') {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const AdminHomeScreen()),

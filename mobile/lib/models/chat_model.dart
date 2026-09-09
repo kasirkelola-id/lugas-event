@@ -39,9 +39,9 @@ class Chat {
           : null,
       message: json['message'],
       createdAt: DateTime.parse(
-        json['created_at'].toString().endsWith('Z') 
-            ? json['created_at'] 
-            : '${json['created_at']}Z'
+        json['created_at'].toString().endsWith('Z')
+            ? json['created_at']
+            : '${json['created_at']}Z',
       ).toLocal(),
       namaLengkap: json['nama_lengkap'],
       roleLevel: json['role_level'],

@@ -15,17 +15,17 @@ class MembershipController extends BaseApiController
         }
 
         $memberModel = new OrganizationMemberModel();
-        
+
         $builder = $memberModel->builder();
         $builder->select('organization_members.id as membership_id, organization_members.karang_taruna_id, organization_members.role_level as role, organization_members.status_aktif as status, karang_taruna.nama_organisasi as nama');
         $builder->join('karang_taruna', 'karang_taruna.id = organization_members.karang_taruna_id');
         $builder->where('organization_members.user_id', $userId);
-        
+
         // Return only active memberships
         $builder->where('organization_members.status_aktif', 1);
-        
+
         $memberships = $builder->get()->getResultArray();
-        
+
         // Cast types
         $memberships = array_map(function($m) {
             $m['membership_id'] = (int)$m['membership_id'];
@@ -44,7 +44,7 @@ class MembershipController extends BaseApiController
         }
 
         $tenantId = AuthService::getTenantId();
-        
+
         $db = \Config\Database::connect();
         $pendingMembers = $db->table('organization_members')
             ->select('organization_members.id as membership_id, users.nama_lengkap, users.username, users.rt, organization_members.created_at, organization_members.approval_status')
@@ -77,11 +77,9 @@ class MembershipController extends BaseApiController
     {
         $tenantId = AuthService::getTenantId();
         $db = \Config\Database::connect();
-        
-        $db->transStart();
-        
+
         $memberModel = new OrganizationMemberModel();
-        
+
         $membership = $db->table('organization_members')
             ->where('id', $membershipId)
             ->where('karang_taruna_id', $tenantId)
@@ -89,12 +87,10 @@ class MembershipController extends BaseApiController
             ->getRowArray();
 
         if (!$membership) {
-            $db->transRollback();
             return $this->sendError('Membership tidak ditemukan', null, 404);
         }
 
         if ($membership['approval_status'] !== 'pending') {
-            $db->transRollback();
             return $this->sendError('Membership ini tidak dalam status pending', null, 422);
         }
 
@@ -113,9 +109,7 @@ class MembershipController extends BaseApiController
             'created_at' => date('Y-m-d H:i:s')
         ]);
 
-        $db->transComplete();
-
-        if ($db->transStatus() === false) {
+        if ($db->error()['code'] !== 0 && $db->error()['code'] !== 1) {
             return $this->sendError('Gagal memproses approval', null, 500);
         }
 
@@ -125,9 +119,9 @@ class MembershipController extends BaseApiController
     public function filterOptions()
     {
         $tenantId = AuthService::getTenantId();
-        
+
         $db = \Config\Database::connect();
-        
+
         // Distinct RTs for the active tenant
         $rtQuery = $db->table('organization_members')
             ->select('users.rt')
@@ -145,8 +139,8 @@ class MembershipController extends BaseApiController
 
         // Sort numerically
         sort($rts, SORT_NUMERIC);
-        
-        // Return string representations if needed, but int is fine. 
+
+        // Return string representations if needed, but int is fine.
         // Flutter will handle strings or ints. Let's send strings to match form inputs typically.
         $rts = array_map('strval', $rts);
 
