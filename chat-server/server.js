@@ -7,6 +7,7 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -294,6 +295,41 @@ io.on('connection', (socket) => {
     onlineUsers.delete(socket.id);
     rateLimits.delete(socket.id);
   });
+
+  socket.on('join_wheel', async (data) => {
+    if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
+    
+    const sessionId = data.session_id;
+    if (!sessionId) return;
+    
+    // Since session IDs are unique globally and we validate tenant id in PHP API,
+    // we can just use wheel_session_${sessionId}.
+    const roomName = `wheel_session_${socket.karangTarunaId}_${sessionId}`;
+    socket.join(roomName);
+    socket.emit('wheel_joined', { session_id: sessionId });
+    console.log(`User ${socket.userId} joined wheel session ${sessionId}`);
+  });
+});
+
+app.post('/internal/wheel-event', (req, res) => {
+  const secret = req.headers['x-internal-secret'];
+  const validSecret = process.env.INTERNAL_API_SECRET || 'default_internal_secret_for_dev';
+  
+  if (secret !== validSecret) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const { session_id, karang_taruna_id, event, payload } = req.body;
+  
+  if (!session_id || !karang_taruna_id || !event) {
+    return res.status(400).json({ error: 'Missing parameters' });
+  }
+
+  const roomName = `wheel_session_${karang_taruna_id}_${session_id}`;
+  io.to(roomName).emit(event, payload);
+  console.log(`Broadcasted wheel event ${event} to ${roomName}`);
+  
+  res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3000;

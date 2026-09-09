@@ -83,6 +83,13 @@ $routes->group('api', function ($routes) {
     $routes->post('votings/(:num)/vote', 'Api\VotingController::vote/$1', ['filter' => 'auth']);
     $routes->patch('votings/(:num)/status', 'Api\VotingController::changeStatus/$1', ['filter' => 'auth']);
 
+    // Wheels (Undian)
+    $routes->get('wheels', 'Api\WheelController::index', ['filter' => 'auth']);
+    $routes->post('wheels', 'Api\WheelController::create', ['filter' => 'auth']);
+    $routes->get('wheels/(:num)', 'Api\WheelController::show/$1', ['filter' => 'auth']);
+    $routes->post('wheels/(:num)/spin', 'Api\WheelController::spin/$1', ['filter' => 'auth']);
+    $routes->patch('wheels/(:num)/status', 'Api\WheelController::close/$1', ['filter' => 'auth']);
+
     // Inventories
     $routes->get('inventories', 'Api\InventoryController::index', ['filter' => 'auth']);
     $routes->post('inventories', 'Api\InventoryController::create', ['filter' => 'auth']);
@@ -106,6 +113,7 @@ $routes->group('api', function ($routes) {
     // Internal API
     $routes->post('internal/socket-auth', 'Api\InternalApiController::socketAuth', ['filter' => 'auth']);
     $routes->post('internal/chat-notification', 'Api\InternalApiController::chatNotification');
+    $routes->post('internal/wheel-event', 'Api\InternalApiController::wheelEvent');
 });
 
 /** @var RouteCollection $routes */

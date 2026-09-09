@@ -14,6 +14,8 @@ class ChatService {
   ChatService._internal();
 
   IO.Socket? _socket;
+  IO.Socket? get socket => _socket;
+
   Function(Chat)? onMessageReceived;
   Function()? onAuthSuccess;
 

@@ -32,6 +32,7 @@ import '../anggota/attendance_history_screen.dart';
 import '../anggota/anggota_profil_screen.dart';
 import '../chat/chat_list_screen.dart';
 import '../voting/voting_list_screen.dart';
+import '../undian/wheel_list_screen.dart';
 import '../inventory/inventory_main_screen.dart';
 import 'common/app_dialog.dart';
 
@@ -370,6 +371,13 @@ class AppDrawer extends StatelessWidget {
       ),
       _buildItem(
         context,
+        Icons.casino_outlined,
+        'Undian',
+        const WheelListScreen(),
+        replace: false,
+      ),
+      _buildItem(
+        context,
         Icons.inventory_2_outlined,
         'Inventaris',
         const InventoryMainScreen(),
@@ -460,6 +468,12 @@ class AppDrawer extends StatelessWidget {
       ),
       _buildItem(
         context,
+        Icons.casino_outlined,
+        'Undian',
+        const WheelListScreen(),
+      ),
+      _buildItem(
+        context,
         Icons.inventory_2_outlined,
         'Inventaris',
         const InventoryMainScreen(),
@@ -547,6 +561,13 @@ class AppDrawer extends StatelessWidget {
         Icons.how_to_vote_outlined,
         'Voting & Pemilu',
         const VotingListScreen(),
+        replace: false,
+      ),
+      _buildItem(
+        context,
+        Icons.casino_outlined,
+        'Undian',
+        const WheelListScreen(),
         replace: false,
       ),
       _buildItem(

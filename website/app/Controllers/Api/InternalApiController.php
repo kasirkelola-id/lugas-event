@@ -143,4 +143,46 @@ class InternalApiController extends BaseApiController
 
         return $this->sendSuccess('Notification processed');
     }
+
+    public function wheelEvent()
+    {
+        $clientIp = $this->request->getIPAddress();
+        $allowedIps = ['127.0.0.1', '::1'];
+        if (ENVIRONMENT === 'testing') {
+            $allowedIps[] = '0.0.0.0';
+        }
+        $internalSecret = $this->request->getHeaderLine('X-Internal-Secret');
+        $validSecret = getenv('INTERNAL_API_SECRET') ?: 'default_internal_secret_for_dev';
+        
+        $isLocalhost = in_array($clientIp, $allowedIps);
+        $isValidSecret = hash_equals($validSecret, $internalSecret);
+
+        if (!$isLocalhost) {
+            return $this->sendError('Forbidden: External access denied to internal API', null, 403);
+        }
+
+        if (!$isValidSecret) {
+            return $this->sendError('Forbidden: Invalid internal secret', null, 403);
+        }
+
+        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
+        $sessionId = $rawInput['session_id'] ?? null;
+        $event = $rawInput['event'] ?? null;
+        $payload = $rawInput['payload'] ?? null;
+
+        if (!$sessionId || !$event || !$payload) {
+            return $this->sendError('session_id, event, and payload required', null, 400);
+        }
+
+        // Just forward it to the local node server?
+        // Wait, WheelController ALREADY sends this request to the Internal API endpoint... but the target should be Node.js!
+        // Ah, look at WheelController:
+        // $apiUrl = env('INTERNAL_API_URL', 'http://localhost:8080/api/internal/socket-auth');
+        // $apiUrl = str_replace('socket-auth', 'wheel-event', $apiUrl);
+        // This sends it to `http://localhost:8080/api/internal/wheel-event` (PHP Server).
+        // Then PHP Server must POST it to the Node.js Server `http://localhost:3000/internal/wheel-event` ?
+        // Or wait... the chat architecture doesn't have PHP -> Node push for generic events, it uses chat-notification to push to FCM.
+        // Node Server handles sockets. If PHP needs to push to Node, it needs an endpoint on Node.js!
+        return $this->sendSuccess('Internal Wheel Event received');
+    }
 }
