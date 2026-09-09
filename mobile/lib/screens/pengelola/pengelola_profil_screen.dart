@@ -211,10 +211,11 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                           ),
                           items: List.generate(20, (index) {
                             final rtVal = index + 1;
-                            final rtStr = rtVal.toString().padLeft(2, '0');
                             return DropdownMenuItem(
                               value: rtVal,
-                              child: Text('RT '),
+                              child: Text(
+                                'RT ${rtVal.toString().padLeft(2, '0')}',
+                              ),
                             );
                           }),
                           onChanged: (val) {

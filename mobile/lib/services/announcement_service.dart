@@ -55,20 +55,13 @@ class AnnouncementService {
       final result = await _handleResponse(response);
 
       if (result['success']) {
-        print(
-          '[DEBUG] API response announcements diterima. Memulai parsing...',
-        );
         try {
           final List<dynamic> list = result['data'];
           final announcements = list
               .map((e) => AnnouncementModel.fromJson(e))
               .toList();
-          print('[DEBUG] Parsing announcements berhasil.');
           return {'success': true, 'data': announcements};
-        } catch (e, stackTrace) {
-          print('[DEBUG] Parsing announcements GAGAL!');
-          print('Exception: $e');
-          print('StackTrace: $stackTrace');
+        } catch (e) {
           return {
             'success': false,
             'message':

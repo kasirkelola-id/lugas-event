@@ -4,10 +4,8 @@ import '../models/chat_model.dart';
 import '../models/chat_room_model.dart';
 import '../core/network/api_client.dart';
 import '../storage/auth_storage.dart';
-import '../services/auth_service.dart';
 
 import '../core/config/api_config.dart';
-import '../models/user_model.dart';
 import 'package:flutter/foundation.dart';
 
 class ChatService {

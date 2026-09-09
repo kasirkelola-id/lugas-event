@@ -108,7 +108,6 @@ class CustomButton extends StatelessWidget {
         );
         break;
       case ButtonType.primary:
-      default:
         button = ElevatedButton(
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(padding: padding),

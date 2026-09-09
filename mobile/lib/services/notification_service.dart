@@ -1,5 +1,4 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import '../storage/auth_storage.dart';
@@ -153,8 +152,6 @@ class NotificationService {
     if (context == null) return;
 
     if (type == 'private_chat' || type == 'group_chat') {
-      String? roomIdStr = data['room_id'];
-      String? senderId = data['sender_id'];
       // For real app, navigate to ChatRoomScreen using roomId
       // Navigator.push(context, MaterialPageRoute(builder: (_) => ChatRoomScreen(roomId: int.parse(roomIdStr!))));
     } else if (type == 'announcement') {

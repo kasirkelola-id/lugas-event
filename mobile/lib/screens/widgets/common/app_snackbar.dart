@@ -29,7 +29,6 @@ class AppSnackBar {
         icon = Icons.error_outline;
         break;
       case SnackBarType.info:
-      default:
         backgroundColor = AppTheme.primary;
         icon = Icons.info_outline;
         break;
