@@ -20,22 +20,11 @@ class PengelolaPenggunaScreen extends StatefulWidget {
 
 class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   UserModel? _currentUser;
-  List<UserModel> _users = [];
-  List<UserModel> _filteredUsers = [];
   List<String> _rtOptions = [];
 
-  bool _isLoading = true;
-  bool _isLoadingMore = false;
-  bool _hasMoreData = true;
-  String? _errorMessage;
-
   String _searchQuery = '';
-  String _roleFilter = 'Semua'; // Backend filter
-  String? _rtFilter; // Local filter for now
-
+  String? _rtFilter;
   Timer? _debounce;
-  int _currentPage = 1;
-  final int _limit = 20; // Lower limit to trigger infinite scroll
 
   @override
   void initState() {
@@ -63,22 +52,263 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
         _currentUser = userResult['user'];
       });
     }
+  }
 
-    await _loadData();
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _searchQuery = query;
+      });
+    });
+  }
+
+  void _onRtFilterChanged(String? rt) {
+    setState(() {
+      _rtFilter = rt;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: null,
+        drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
+        backgroundColor: AppTheme.background,
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                title: const Text(
+                  'Kelola Anggota',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                backgroundColor: AppTheme.primary,
+                iconTheme: const IconThemeData(color: Colors.white),
+                pinned: true,
+                floating: true,
+                elevation: 0,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.primary,
+                        AppTheme.primary.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                ),
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(180),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Floating Search Bar
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.search, color: Colors.grey),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                decoration: const InputDecoration(
+                                  hintText: 'Cari nama atau username...',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onChanged: _onSearchChanged,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // RT Filter Horizontal Scroll
+                      if (_rtOptions.isNotEmpty)
+                        SizedBox(
+                          height: 40,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            children:
+                                [null, ..._rtOptions].map((rt) {
+                                  final isSelected = _rtFilter == rt;
+                                  final label =
+                                      rt == null ? 'Semua RT' : 'RT 0$rt';
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: ChoiceChip(
+                                      label: Text(
+                                        label,
+                                        style: TextStyle(
+                                          color:
+                                              isSelected
+                                                  ? AppTheme.primary
+                                                  : Colors.white,
+                                          fontWeight:
+                                              isSelected
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                        ),
+                                      ),
+                                      selected: isSelected,
+                                      selectedColor: Colors.white,
+                                      backgroundColor: Colors.white.withOpacity(
+                                        0.2,
+                                      ),
+                                      showCheckmark: false,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        side: BorderSide(
+                                          color:
+                                              isSelected
+                                                  ? Colors.white
+                                                  : Colors.transparent,
+                                        ),
+                                      ),
+                                      onSelected:
+                                          (_) => _onRtFilterChanged(
+                                            rt?.toString(),
+                                          ),
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      const SizedBox(height: 10),
+
+                      // Tab Bar
+                      TabBar(
+                        indicatorColor: Colors.white,
+                        indicatorWeight: 3,
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.white.withOpacity(0.6),
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        tabs: const [
+                          Tab(text: 'Aktif'),
+                          Tab(text: 'Nonaktif'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            children: [
+              _UserListTab(
+                isActiveTab: true,
+                searchQuery: _searchQuery,
+                rtFilter: _rtFilter,
+                currentUser: _currentUser,
+              ),
+              _UserListTab(
+                isActiveTab: false,
+                searchQuery: _searchQuery,
+                rtFilter: _rtFilter,
+                currentUser: _currentUser,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UserListTab extends StatefulWidget {
+  final bool isActiveTab;
+  final String searchQuery;
+  final String? rtFilter;
+  final UserModel? currentUser;
+
+  const _UserListTab({
+    required this.isActiveTab,
+    required this.searchQuery,
+    this.rtFilter,
+    required this.currentUser,
+  });
+
+  @override
+  State<_UserListTab> createState() => _UserListTabState();
+}
+
+class _UserListTabState extends State<_UserListTab>
+    with AutomaticKeepAliveClientMixin {
+  List<UserModel> _users = [];
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMoreData = true;
+  String? _errorMessage;
+
+  int _currentPage = 1;
+  final int _limit = 20;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  @override
+  void didUpdateWidget(covariant _UserListTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchQuery != widget.searchQuery ||
+        oldWidget.rtFilter != widget.rtFilter) {
+      _loadData();
+    }
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     _currentPage = 1;
     _hasMoreData = true;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _users.clear();
     });
     await _fetchUsers(isLoadMore: false);
   }
 
   Future<void> _loadMoreData() async {
-    if (_isLoadingMore || !_hasMoreData) return;
+    if (_isLoadingMore || !_hasMoreData || _isLoading) return;
     setState(() {
       _isLoadingMore = true;
     });
@@ -87,19 +317,29 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
   }
 
   Future<void> _fetchUsers({required bool isLoadMore}) async {
+    final statusQuery = widget.isActiveTab ? 'aktif' : 'nonaktif';
     final usersResult = await UserService.getUsers(
       page: _currentPage,
       limit: _limit,
-      search: _searchQuery,
-      role: _roleFilter,
-      status: '', // Not filtering by status via API to split into tabs locally
+      search: widget.searchQuery,
+      status: statusQuery,
+      role: 'Semua',
     );
 
     if (!mounted) return;
 
     if (usersResult['success']) {
-      final fetchedUsers = usersResult['users'] as List<UserModel>;
-      if (fetchedUsers.length < _limit) {
+      List<UserModel> fetchedUsers = usersResult['users'] as List<UserModel>;
+
+      // Apply RT filter locally if set (since API might not support RT filtering directly)
+      if (widget.rtFilter != null) {
+        fetchedUsers =
+            fetchedUsers
+                .where((u) => u.rt.toString() == widget.rtFilter)
+                .toList();
+      }
+
+      if ((usersResult['users'] as List).length < _limit) {
         _hasMoreData = false;
       }
 
@@ -109,49 +349,24 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
         } else {
           _users = fetchedUsers;
         }
-        _applyLocalFilters();
         _isLoading = false;
         _isLoadingMore = false;
       });
     } else {
       if (!isLoadMore) {
-        _handleError(usersResult['message'] ?? 'Data gagal dimuat.');
+        setState(() {
+          _isLoading = false;
+          _errorMessage = usersResult['message'] ?? 'Data gagal dimuat.';
+        });
       } else {
         setState(() => _isLoadingMore = false);
-        _showSnackbar('Gagal memuat lebih banyak data', isError: true);
+        FeedbackDialogs.showSnackbar(
+          context,
+          'Gagal memuat lebih banyak data',
+          isError: true,
+        );
       }
     }
-  }
-
-  void _applyLocalFilters() {
-    if (_rtFilter != null) {
-      _filteredUsers = _users.where((u) => u.rt.toString() == _rtFilter).toList();
-    } else {
-      _filteredUsers = List.from(_users);
-    }
-  }
-
-  void _onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      _searchQuery = query;
-      _loadData(); // Re-fetch from server with new search
-    });
-  }
-
-  void _onRtFilterChanged(String? rt) {
-    setState(() {
-      _rtFilter = rt;
-      _applyLocalFilters();
-    });
-  }
-
-  void _handleError(String message) {
-    setState(() {
-      _isLoading = false;
-      _errorMessage = message;
-    });
-    _showSnackbar(message, isError: true);
   }
 
   void _showSnackbar(String message, {bool isError = false}) {
@@ -166,163 +381,27 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
     );
   }
 
-  List<int> get _availableRts {
-    final rts = _users.map((u) => u.rt).toSet().toList();
-    rts.sort();
-    return rts;
-  }
-
-  List<UserModel> _getUsersByStatus(bool isActive) {
-    return _filteredUsers.where((u) => (u.statusAktif == 1) == isActive).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: null,
-        drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
-        backgroundColor: AppTheme.background,
-        body: NotificationListener<ScrollNotification>(
-          onNotification: (ScrollNotification scrollInfo) {
-            if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
-              if (!_isLoading && !_isLoadingMore && _hasMoreData) {
-                _loadMoreData();
-              }
-            }
-            return false;
-          },
-          child: RefreshIndicator(
-            onRefresh: _loadData,
-            color: AppTheme.primary,
-            child: NestedScrollView(
-              headerSliverBuilder: (context, innerBoxIsScrolled) {
-                return [
-                  SliverAppBar(
-                    title: const Text('Kelola Anggota', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    backgroundColor: AppTheme.primary,
-                    iconTheme: const IconThemeData(color: Colors.white),
-                    pinned: true,
-                    floating: true,
-                    elevation: 0,
-                    flexibleSpace: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
-                        ),
-                      ),
-                    ),
-                    bottom: PreferredSize(
-                      preferredSize: const Size.fromHeight(180),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Floating Search Bar
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.search, color: Colors.grey),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextField(
-                                    decoration: const InputDecoration(
-                                      hintText: 'Cari nama atau username...',
-                                      border: InputBorder.none,
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(vertical: 12),
-                                    ),
-                                    onChanged: _onSearchChanged,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          // RT Filter Horizontal Scroll
-                          SizedBox(
-                            height: 40,
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              children: [null, ..._availableRts].map((rt) {
-                                final isSelected = _rtFilter == rt?.toString();
-                                final label = rt == null ? 'Semua RT' : 'RT 0$rt';
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8.0),
-                                  child: ChoiceChip(
-                                    label: Text(
-                                      label,
-                                      style: TextStyle(
-                                        color: isSelected ? AppTheme.primary : Colors.white,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      ),
-                                    ),
-                                    selected: isSelected,
-                                    selectedColor: Colors.white,
-                                    backgroundColor: Colors.white.withOpacity(0.2),
-                                    showCheckmark: false,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                      side: BorderSide(
-                                        color: isSelected ? Colors.white : Colors.transparent,
-                                      ),
-                                    ),
-                                    onSelected: (_) => _onRtFilterChanged(rt?.toString()),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          
-                          // Tab Bar
-                          TabBar(
-                            indicatorColor: Colors.white,
-                            indicatorWeight: 3,
-                            labelColor: Colors.white,
-                            unselectedLabelColor: Colors.white.withOpacity(0.6),
-                            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                            tabs: const [
-                              Tab(text: 'Aktif'),
-                              Tab(text: 'Nonaktif'),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ];
-              },
-              body: TabBarView(
-                children: [
-                  _buildUserList(true),
-                  _buildUserList(false),
-                ],
-              ),
-            ),
-          ),
-        ),
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification scrollInfo) {
+        if (scrollInfo.metrics.pixels >=
+            scrollInfo.metrics.maxScrollExtent - 200) {
+          _loadMoreData();
+        }
+        return false;
+      },
+      child: RefreshIndicator(
+        onRefresh: _loadData,
+        color: AppTheme.primary,
+        child: _buildList(),
       ),
     );
   }
 
-  Widget _buildUserList(bool isActive) {
+  Widget _buildList() {
     if (_isLoading && _users.isEmpty) {
       return const Center(
         child: CustomLoadingIndicator(color: AppTheme.primary),
@@ -336,29 +415,40 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
             const SizedBox(height: 16),
-            Text(_errorMessage!, style: const TextStyle(color: AppTheme.error)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadData,
-              child: const Text('Coba Lagi'),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(color: AppTheme.error),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
           ],
         ),
       );
     }
 
-    final targetList = _getUsersByStatus(isActive);
-
-    if (targetList.isEmpty) {
+    if (_users.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: ListView(
+          shrinkWrap: true,
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            Icon(Icons.search_off_outlined, size: 80, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            Text(
-              'Tidak ada pengguna ${isActive ? "aktif" : "nonaktif"}.',
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 16),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.search_off_outlined,
+                  size: 80,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tidak ada pengguna ${widget.isActiveTab ? "aktif" : "nonaktif"}.',
+                  style: const TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -367,16 +457,17 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
 
     return ListView.builder(
       padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 80),
-      itemCount: targetList.length + (_isLoadingMore ? 1 : 0),
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: _users.length + (_isLoadingMore ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == targetList.length) {
+        if (index == _users.length) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 20),
             child: CustomLoadingIndicator(color: AppTheme.primary),
           );
         }
 
-        final user = targetList[index];
+        final user = _users[index];
         return FadeInSlide(
           delay: 0.1 * (index % 10),
           child: _buildUserCard(user),
@@ -387,7 +478,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
 
   Widget _buildUserCard(UserModel user) {
     final isActive = user.statusAktif == 1;
-    final isMe = _currentUser?.id == user.id;
+    final isMe = widget.currentUser?.id == user.id;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -417,16 +508,18 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isActive
-                    ? AppTheme.primary.withOpacity(0.3)
-                    : Colors.grey.shade300,
+                color:
+                    isActive
+                        ? AppTheme.primary.withOpacity(0.3)
+                        : Colors.grey.shade300,
                 width: 2,
               ),
             ),
             child: CircleAvatar(
-              backgroundColor: isActive
-                  ? AppTheme.primary.withOpacity(0.1)
-                  : Colors.grey.shade100,
+              backgroundColor:
+                  isActive
+                      ? AppTheme.primary.withOpacity(0.1)
+                      : Colors.grey.shade100,
               radius: 22,
               child: Text(
                 user.namaPanggilan.isNotEmpty
@@ -481,9 +574,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
             child: Text(
               '${user.username} • RT 0${user.rt} • ${user.roleLevel.toUpperCase()}',
               style: TextStyle(
-                color: isActive
-                    ? AppTheme.textSecondary
-                    : Colors.grey.shade400,
+                color: isActive ? AppTheme.textSecondary : Colors.grey.shade400,
                 fontSize: 13,
               ),
             ),
@@ -499,7 +590,7 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  if (_currentUser?.roleLevel == 'ketua' && !isMe)
+                  if (widget.currentUser?.roleLevel == 'ketua' && !isMe)
                     _buildActionButton(
                       Icons.manage_accounts,
                       'Ubah Role',
@@ -508,14 +599,14 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                         _showChangeRoleDialog(user);
                       },
                     ),
-                  if (_currentUser?.roleLevel == 'ketua' && !isMe)
+                  if (widget.currentUser?.roleLevel == 'ketua' && !isMe)
                     _buildActionButton(
                       Icons.lock_reset,
                       'Reset Pass',
                       Colors.purple,
                       () => _resetPassword(user),
                     ),
-                  if (_currentUser?.roleLevel == 'ketua' && !isMe)
+                  if (widget.currentUser?.roleLevel == 'ketua' && !isMe)
                     _buildActionButton(
                       isActive ? Icons.person_off : Icons.person_add,
                       isActive ? 'Nonaktifkan' : 'Aktifkan',
@@ -533,11 +624,14 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                         );
                       },
                     ),
-                  if (_currentUser?.roleLevel != 'ketua' || isMe)
+                  if (widget.currentUser?.roleLevel != 'ketua' || isMe)
                     const Text(
                       'Tidak ada aksi lanjutan tersedia.',
-                      style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
-                    )
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -567,7 +661,10 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
         _showSnackbar(result['message'] ?? 'Aksi berhasil dilakukan');
         _loadData(); // Re-fetch to apply status changes immediately
       } else {
-        _handleError(result['message']);
+        setState(() {
+          _isLoading = false;
+        });
+        _showSnackbar(result['message'] ?? 'Aksi gagal.', isError: true);
       }
     }
   }
@@ -624,7 +721,8 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
         );
         setState(() => _isLoading = false);
       } else {
-        _handleError(result['message']);
+        setState(() => _isLoading = false);
+        _showSnackbar(result['message'] ?? 'Gagal reset.', isError: true);
       }
     }
   }
@@ -671,91 +769,102 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-            insetPadding: const EdgeInsets.all(20),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Ubah Role',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                  ),
-                  const SizedBox(height: 16),
-                  SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: roles.map((role) {
-                        return RadioListTile<String>(
-                          title: Text(
-                            role.toUpperCase(),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          value: role,
-                          groupValue: selectedRole,
-                          contentPadding: EdgeInsets.zero,
-                          activeColor: AppTheme.primary,
-                          onChanged: (val) {
-                            if (val != null) {
-                              setDialogState(() => selectedRole = val);
-                            }
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setDialogState) {
+              return Dialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppTheme.radiusLarge,
+                ),
+                insetPadding: const EdgeInsets.all(20),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          'Batal',
-                          style: TextStyle(color: AppTheme.textSecondary),
+                      const Text(
+                        'Ubah Role',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: AppTheme.radiusMedium,
+                      const SizedBox(height: 16),
+                      SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children:
+                              roles.map((role) {
+                                return RadioListTile<String>(
+                                  title: Text(
+                                    role.toUpperCase(),
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  value: role,
+                                  groupValue: selectedRole,
+                                  contentPadding: EdgeInsets.zero,
+                                  activeColor: AppTheme.primary,
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setDialogState(() => selectedRole = val);
+                                    }
+                                  },
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              'Batal',
+                              style: TextStyle(color: AppTheme.textSecondary),
+                            ),
                           ),
-                        ),
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          setState(() => _isLoading = true);
-                          final result = await UserService.changeRole(
-                            user.id,
-                            selectedRole,
-                          );
-                          if (result['success']) {
-                            _showSnackbar('Role berhasil diubah');
-                            _loadData();
-                          } else {
-                            _handleError(result['message']);
-                          }
-                        },
-                        child: const Text(
-                          'Simpan',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: AppTheme.radiusMedium,
+                              ),
+                            ),
+                            onPressed: () async {
+                              Navigator.pop(context);
+                              setState(() => _isLoading = true);
+                              final result = await UserService.changeRole(
+                                user.id,
+                                selectedRole,
+                              );
+                              if (result['success']) {
+                                _showSnackbar('Role berhasil diubah');
+                                _loadData();
+                              } else {
+                                setState(() => _isLoading = false);
+                                _showSnackbar(
+                                  result['message'] ?? 'Gagal ubah role',
+                                  isError: true,
+                                );
+                              }
+                            },
+                            child: const Text(
+                              'Simpan',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+                ),
+              );
+            },
+          ),
     );
   }
 }

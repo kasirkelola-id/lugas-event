@@ -112,18 +112,20 @@ class _KasScreenState extends State<KasScreen> {
         ['admin', 'ketua', 'bendahara'].contains(widget.user!.roleLevel);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Keuangan Kas'),
-        backgroundColor: AppTheme.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
       drawer: widget.user != null ? AppDrawer(user: widget.user!) : null,
       backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
         color: AppTheme.primary,
-        child: _buildBody(canManage),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            _buildSliverAppBar(),
+            SliverToBoxAdapter(
+              child: _buildBody(canManage),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: canManage
           ? FloatingActionButton.extended(
@@ -151,200 +153,224 @@ class _KasScreenState extends State<KasScreen> {
     );
   }
 
-  Widget _buildBody(bool canManage) {
-    if (_isLoading && _transaksi.isEmpty) {
-      return const Center(
-        child: CustomLoadingIndicator(color: AppTheme.primary),
-      );
-    }
-
-    if (_errorMessage != null && _transaksi.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppTheme.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: AppTheme.error,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _errorMessage!,
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 24),
-            CustomButton(
-              text: 'Coba Lagi',
-              onPressed: _loadData,
-              isFullWidth: false,
-              icon: Icons.refresh,
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildSaldoCard(),
-        const SizedBox(height: 24),
-        const Text(
-          'Riwayat Transaksi',
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 280,
+      pinned: true,
+      backgroundColor: AppTheme.primary,
+      iconTheme: const IconThemeData(color: Colors.white),
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.only(left: 50, bottom: 16),
+        title: const Text(
+          'Keuangan Kas',
           style: TextStyle(
-            fontSize: 18,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
+            fontSize: 16,
           ),
         ),
-        const SizedBox(height: 12),
-        if (_transaksi.isEmpty)
-          const EmptyStateWidget(
-            icon: Icons.account_balance_wallet_outlined,
-            title: 'Belum Ada Transaksi',
-            subtitle: 'Daftar transaksi kas Anda akan muncul di sini.',
-          )
-        else
-          ...List.generate(_transaksi.length, (index) {
-            final t = _transaksi[index];
-            return FadeInSlide(
-              delay: 0.1 * index,
-              child: _buildTransaksiCard(t, canManage),
-            );
-          }),
-        const SizedBox(height: 80), // space for FAB
-      ],
-    );
-  }
-
-  Widget _buildSaldoCard() {
-    return FadeInSlide(
-      delay: 0,
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppTheme.primary, AppTheme.secondary],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primary.withValues(alpha: 0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total Saldo Kas',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                Icon(
-                  Icons.account_balance_wallet,
-                  color: Colors.white.withValues(alpha: 0.5),
-                ),
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppTheme.primary,
+                AppTheme.primary.withOpacity(0.8),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              _formatCurrency(_saldo),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -1,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Pemasukan Bulan Ini',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                        'Total Saldo Kas',
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.arrow_downward,
-                            color: Colors.greenAccent,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _formatCurrency(_pemasukanBulanIni),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      Icon(
+                        Icons.account_balance_wallet,
+                        color: Colors.white.withOpacity(0.5),
+                        size: 28,
                       ),
                     ],
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text(
-                        'Pengeluaran Bulan Ini',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.arrow_upward,
-                            color: Colors.redAccent,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _formatCurrency(_pengeluaranBulanIni),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                  const SizedBox(height: 8),
+                  Text(
+                    _formatCurrency(_saldo),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 34,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Pemasukan Bln Ini',
+                              style: TextStyle(color: Colors.white70, fontSize: 11),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.arrow_downward,
+                                  color: Colors.greenAccent,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatCurrency(_pemasukanBulanIni),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text(
+                              'Pengeluaran Bln Ini',
+                              style: TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.arrow_upward,
+                                  color: Colors.redAccent,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatCurrency(_pengeluaranBulanIni),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBody(bool canManage) {
+    if (_isLoading && _transaksi.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 100),
+        child: Center(
+          child: CustomLoadingIndicator(color: AppTheme.primary),
+        ),
+      );
+    }
+
+    if (_errorMessage != null && _transaksi.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 100),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.error.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: AppTheme.error,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 24),
+              CustomButton(
+                text: 'Coba Lagi',
+                onPressed: _loadData,
+                isFullWidth: false,
+                icon: Icons.refresh,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Riwayat Transaksi',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_transaksi.isEmpty)
+            const EmptyStateWidget(
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'Belum Ada Transaksi',
+              subtitle: 'Daftar transaksi kas Anda akan muncul di sini.',
+            )
+          else
+            ...List.generate(_transaksi.length, (index) {
+              final t = _transaksi[index];
+              return FadeInSlide(
+                delay: 0.1 * index,
+                child: _buildTransaksiCard(t, canManage),
+              );
+            }),
+          const SizedBox(height: 80), // space for FAB
+        ],
       ),
     );
   }
@@ -352,81 +378,123 @@ class _KasScreenState extends State<KasScreen> {
   Widget _buildTransaksiCard(KasModel t, bool canManage) {
     final bool isPemasukan = t.isPemasukan;
     final color = isPemasukan ? AppTheme.success : AppTheme.error;
-    final icon = isPemasukan ? Icons.arrow_downward : Icons.arrow_upward;
-    final sign = isPemasukan ? '+' : '-';
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      shadowColor: Colors.black12,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: AppTheme.shadowSoft,
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: ClipRRect(
+        borderRadius: AppTheme.radiusLarge,
+        child: Container(
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            border: Border(
+              left: BorderSide(color: color, width: 4),
+            ),
           ),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(
-          t.keterangan,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6.0),
-          child: Row(
-            children: [
-              Icon(
-                Icons.calendar_today,
-                size: 12,
-                color: AppTheme.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(t.tanggal, style: const TextStyle(fontSize: 12)),
-            ],
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               children: [
-                Text(
-                  '$sign${_formatCurrency(t.nominal)}',
-                  style: TextStyle(
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isPemasukan ? Icons.arrow_downward : Icons.arrow_upward,
                     color: color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
                   ),
                 ),
-                if (t.pembuat != null)
-                  Text(
-                    t.pembuat!,
-                    style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        t.keterangan,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: AppTheme.textPrimary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today,
+                            size: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            DateFormat('dd MMM yyyy').format(t.tanggal),
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (t.namaPencatat != null) ...[
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.person_outline,
+                              size: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                t.namaPencatat!,
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${isPemasukan ? '+' : '-'}${_formatCurrency(t.jumlah)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (canManage)
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppTheme.error,
+                          size: 20,
+                        ),
+                        onPressed: () => _deleteTransaksi(t.id),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                  ],
+                ),
               ],
             ),
-            if (canManage) ...[
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: AppTheme.error,
-                  size: 22,
-                ),
-                onPressed: () => _deleteTransaksi(t.id),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
