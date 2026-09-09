@@ -112,17 +112,13 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       // If single membership, just use the tenant we logged into, it's already saved by PinScreen/login
-      if (user.roleLevel == 'pengelola') {
+      final pengelolaRoles = ['pengelola', 'ketua', 'sekretaris', 'bendahara'];
+      if (pengelolaRoles.contains(user.roleLevel)) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const PengelolaHomeScreen()),
         );
-      } else if (user.roleLevel == 'admin' ||
-          user.roleLevel == 'ketua' ||
-          user.roleLevel == 'superadmin' ||
-          user.roleLevel == 'wakil_ketua' ||
-          user.roleLevel == 'sekretaris' ||
-          user.roleLevel == 'bendahara') {
+      } else if (user.roleLevel == 'admin' || user.roleLevel == 'superadmin') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const AdminHomeScreen()),

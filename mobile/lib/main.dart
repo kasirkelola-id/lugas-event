@@ -162,9 +162,11 @@ class _InitialScreenState extends State<InitialScreen> {
       }
 
       Widget targetScreen = const AnggotaHomeScreen();
-      if (user.roleLevel == 'pengelola') {
+      final pengelolaRoles = ['pengelola', 'ketua', 'sekretaris', 'bendahara'];
+
+      if (pengelolaRoles.contains(user.roleLevel)) {
         targetScreen = const PengelolaHomeScreen();
-      } else if (user.roleLevel == 'admin') {
+      } else if (user.roleLevel == 'admin' || user.roleLevel == 'superadmin') {
         targetScreen = const AdminHomeScreen();
       }
 

@@ -169,63 +169,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
   }
 
   String _formatRole(String role) {
-    if (role == 'wakil_ketua') return 'Wakil Ketua';
     return role.substring(0, 1).toUpperCase() + role.substring(1);
-  }
-
-  Widget _buildHeaderContent() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 20),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: Colors.white24,
-            child: Text(
-              _user!.namaPanggilan.isNotEmpty
-                  ? _user!.namaPanggilan.substring(0, 1).toUpperCase()
-                  : 'U',
-              style: const TextStyle(
-                fontSize: 28,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Halo, ${_user!.namaPanggilan} 👋',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _formatRole(_user!.roleLevel),
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildKasInfo() {
@@ -388,6 +332,61 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderContent() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 20),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: Colors.white24,
+            child: Text(
+              _user!.namaPanggilan.isNotEmpty
+                  ? _user!.namaPanggilan.substring(0, 1).toUpperCase()
+                  : 'U',
+              style: const TextStyle(
+                fontSize: 28,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Halo, ${_user!.namaPanggilan} 👋',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _formatRole(_user!.roleLevel),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

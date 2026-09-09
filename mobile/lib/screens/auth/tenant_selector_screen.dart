@@ -95,18 +95,16 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
     ChatService().closeConnection();
     ChatService().initWebSocket();
 
-    if (updatedUser.roleLevel == 'pengelola') {
+    final pengelolaRoles = ['pengelola', 'ketua', 'sekretaris', 'bendahara'];
+
+    if (pengelolaRoles.contains(updatedUser.roleLevel)) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const PengelolaHomeScreen()),
         (route) => false,
       );
     } else if (updatedUser.roleLevel == 'admin' ||
-        updatedUser.roleLevel == 'ketua' ||
-        updatedUser.roleLevel == 'superadmin' ||
-        updatedUser.roleLevel == 'wakil_ketua' ||
-        updatedUser.roleLevel == 'sekretaris' ||
-        updatedUser.roleLevel == 'bendahara') {
+        updatedUser.roleLevel == 'superadmin') {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const AdminHomeScreen()),

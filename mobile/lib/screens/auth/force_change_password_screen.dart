@@ -85,12 +85,19 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
         if (!mounted) return;
 
         // Navigate to the dashboard according to the role
-        if (user.roleLevel == 'pengelola') {
+        final pengelolaRoles = [
+          'pengelola',
+          'ketua',
+          'sekretaris',
+          'bendahara',
+        ];
+        if (pengelolaRoles.contains(user.roleLevel)) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const PengelolaHomeScreen()),
           );
-        } else if (user.roleLevel == 'admin') {
+        } else if (user.roleLevel == 'admin' ||
+            user.roleLevel == 'superadmin') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const AdminHomeScreen()),

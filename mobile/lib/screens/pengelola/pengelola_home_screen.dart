@@ -154,8 +154,14 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeaderContent(),
-                FadeInSlide(delay: 0.1, child: _buildKasInfo()),
-                FadeInSlide(delay: 0.2, child: _buildManagementMetrics()),
+                if (_user!.roleLevel == 'bendahara' ||
+                    _user!.roleLevel == 'ketua' ||
+                    _user!.roleLevel == 'pengelola')
+                  FadeInSlide(delay: 0.1, child: _buildKasInfo()),
+                if (_user!.roleLevel == 'sekretaris' ||
+                    _user!.roleLevel == 'ketua' ||
+                    _user!.roleLevel == 'pengelola')
+                  FadeInSlide(delay: 0.2, child: _buildManagementMetrics()),
                 FadeInSlide(delay: 0.3, child: _buildUpcomingEvent()),
                 FadeInSlide(delay: 0.4, child: _buildLatestAnnouncement()),
                 FadeInSlide(delay: 0.5, child: _buildActiveVoting()),
@@ -169,7 +175,6 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
   }
 
   String _formatRole(String role) {
-    if (role == 'wakil_ketua') return 'Wakil Ketua';
     return role.substring(0, 1).toUpperCase() + role.substring(1);
   }
 
