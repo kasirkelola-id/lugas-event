@@ -1,33 +1,34 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/common/custom_button.dart';
-import '../widgets/common/custom_text_field.dart';
-import '../widgets/common/empty_state.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:mobile/screens/widgets/common/app_dialog.dart';
+import '../widgets/animations/fade_in_slide.dart';
+import '../widgets/common/custom_button.dart';
+import '../widgets/common/custom_text_field.dart';
 
 class AdminPenggunaScreen extends StatefulWidget {
   const AdminPenggunaScreen({super.key});
 
   @override
-  State<AdminPenggunaScreen> createState() => _AdminPenggunaScreenState();
+  State<AdminPenggunaScreen> createState() =>
+      _AdminPenggunaScreenState();
 }
 
 class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   UserModel? _currentUser;
-  List<UserModel> _users = [];
-  List<UserModel> _filteredUsers = [];
-
-  bool _isLoading = true;
-  String? _errorMessage;
+  List<String> _rtOptions = [];
 
   String _searchQuery = '';
-  String _roleFilter = 'Semua';
-  int? _rtFilter;
+  String? _rtFilter;
+  Timer? _debounce;
+  
+  int _refreshCounter = 0;
 
   final _formKey = GlobalKey<FormState>();
   final _namaLengkapController = TextEditingController();
@@ -41,11 +42,12 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
+    _initLoad();
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _namaLengkapController.dispose();
     _namaPanggilanController.dispose();
     _usernameController.dispose();
@@ -55,66 +57,41 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
+  void _triggerRefresh() {
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      _refreshCounter++;
     });
+  }
+
+  Future<void> _initLoad() async {
+    final optionsResult = await UserService.getFilterOptions();
+    if (optionsResult['success'] && mounted) {
+      setState(() {
+        _rtOptions = List<String>.from(optionsResult['data']['rt'] ?? []);
+      });
+    }
 
     final userResult = await AuthService.getMe();
-    if (!userResult['success']) {
-      if (mounted) _handleError(userResult['message']);
-      return;
-    }
-
-    final usersResult = await UserService.getUsers();
-    if (!mounted) return;
-
-    if (usersResult['success']) {
+    if (userResult['success'] && mounted) {
       setState(() {
         _currentUser = userResult['user'];
-        _users = usersResult['users'] as List<UserModel>;
-        _applyFilters();
-        _isLoading = false;
       });
-    } else {
-      _handleError(usersResult['message'] ?? 'Data pengguna gagal dimuat.');
     }
   }
 
-  void _applyFilters() {
-    setState(() {
-      _filteredUsers = _users.where((user) {
-        final matchesSearch =
-            user.namaLengkap.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            ) ||
-            user.username.toLowerCase().contains(_searchQuery.toLowerCase());
-        final matchesRole =
-            _roleFilter == 'Semua' ||
-            (_roleFilter == 'Admin' && user.roleLevel == 'admin') ||
-            (_roleFilter == 'Ketua' && user.roleLevel == 'ketua') ||
-            (_roleFilter == 'Sekretaris' && user.roleLevel == 'sekretaris') ||
-            (_roleFilter == 'Bendahara' && user.roleLevel == 'bendahara') ||
-            (_roleFilter == 'Pengelola' && user.roleLevel == 'pengelola') ||
-            (_roleFilter == 'Anggota' && user.roleLevel == 'anggota');
-        final matchesRt = _rtFilter == null || user.rt == _rtFilter;
-        return matchesSearch && matchesRole && matchesRt;
-      }).toList();
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _searchQuery = query;
+      });
     });
   }
 
-  void _handleError(String message) {
+  void _onRtFilterChanged(String? rt) {
     setState(() {
-      _isLoading = false;
-      _errorMessage = message;
+      _rtFilter = rt;
     });
-    _showSnackbar(message, isError: true);
-  }
-
-  void _showSnackbar(String message, {bool isError = false}) {
-    if (!mounted) return;
-    FeedbackDialogs.showSnackbar(context, message, isError: isError);
   }
 
   Future<void> _showUserForm({UserModel? user}) async {
@@ -291,18 +268,20 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                                   if (result['success']) {
                                     if (context.mounted) {
                                       Navigator.pop(context);
-                                      _showSnackbar(
+                                      FeedbackDialogs.showSnackbar(
+                                        context,
                                         isEditing
                                             ? 'Pengguna berhasil diupdate'
                                             : 'Pengguna berhasil dibuat',
                                       );
-                                      _loadData();
+                                      _triggerRefresh();
                                     }
                                   } else {
                                     setStateDialog(
                                       () => isLoadingSubmit = false,
                                     );
-                                    _showSnackbar(
+                                    FeedbackDialogs.showSnackbar(
+                                      context,
                                       result['message'],
                                       isError: true,
                                     );
@@ -326,17 +305,606 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: null,
+        drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
+        backgroundColor: AppTheme.background,
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                title: const Text(
+                  'Kelola Pengguna Admin',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                backgroundColor: AppTheme.primary,
+                iconTheme: const IconThemeData(color: Colors.white),
+                pinned: true,
+                floating: true,
+                elevation: 0,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.primary,
+                        AppTheme.primary.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                ),
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(180),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Floating Search Bar
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.search, color: Colors.grey),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                decoration: const InputDecoration(
+                                  hintText: 'Cari nama atau username...',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                ),
+                                onChanged: _onSearchChanged,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // RT Filter Horizontal Scroll
+                      if (_rtOptions.isNotEmpty)
+                        SizedBox(
+                          height: 40,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            children:
+                                [null, ..._rtOptions].map((rt) {
+                                  final isSelected = _rtFilter == rt;
+                                  final label =
+                                      rt == null ? 'Semua RT' : 'RT 0$rt';
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: ChoiceChip(
+                                      label: Text(
+                                        label,
+                                        style: TextStyle(
+                                          color:
+                                              isSelected
+                                                  ? AppTheme.primary
+                                                  : Colors.white,
+                                          fontWeight:
+                                              isSelected
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
+                                        ),
+                                      ),
+                                      selected: isSelected,
+                                      selectedColor: Colors.white,
+                                      backgroundColor: Colors.white.withOpacity(
+                                        0.2,
+                                      ),
+                                      showCheckmark: false,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                        side: BorderSide(
+                                          color:
+                                              isSelected
+                                                  ? Colors.white
+                                                  : Colors.transparent,
+                                        ),
+                                      ),
+                                      onSelected:
+                                          (_) => _onRtFilterChanged(
+                                            rt?.toString(),
+                                          ),
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      const SizedBox(height: 10),
+
+                      // Tab Bar
+                      TabBar(
+                        indicatorColor: Colors.white,
+                        indicatorWeight: 3,
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.white.withOpacity(0.6),
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        tabs: const [
+                          Tab(text: 'Aktif'),
+                          Tab(text: 'Nonaktif'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            key: ValueKey(_refreshCounter),
+            children: [
+              _UserListTab(
+                isActiveTab: true,
+                searchQuery: _searchQuery,
+                rtFilter: _rtFilter,
+                currentUser: _currentUser,
+                onEditUser: (user) => _showUserForm(user: user),
+              ),
+              _UserListTab(
+                isActiveTab: false,
+                searchQuery: _searchQuery,
+                rtFilter: _rtFilter,
+                currentUser: _currentUser,
+                onEditUser: (user) => _showUserForm(user: user),
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _showUserForm(),
+          backgroundColor: AppTheme.primary,
+          icon: const Icon(Icons.person_add_outlined, color: Colors.white),
+          label: const Text('Tambah', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+        ),
+      ),
+    );
+  }
+}
+
+class _UserListTab extends StatefulWidget {
+  final bool isActiveTab;
+  final String searchQuery;
+  final String? rtFilter;
+  final UserModel? currentUser;
+  final Function(UserModel) onEditUser;
+
+  const _UserListTab({
+    required this.isActiveTab,
+    required this.searchQuery,
+    this.rtFilter,
+    required this.currentUser,
+    required this.onEditUser,
+  });
+
+  @override
+  State<_UserListTab> createState() => _UserListTabState();
+}
+
+class _UserListTabState extends State<_UserListTab>
+    with AutomaticKeepAliveClientMixin {
+  List<UserModel> _users = [];
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMoreData = true;
+  String? _errorMessage;
+
+  int _currentPage = 1;
+  final int _limit = 20;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  @override
+  void didUpdateWidget(covariant _UserListTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchQuery != widget.searchQuery ||
+        oldWidget.rtFilter != widget.rtFilter) {
+      _loadData();
+    }
+  }
+
+  Future<void> _loadData() async {
+    if (!mounted) return;
+    _currentPage = 1;
+    _hasMoreData = true;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _users.clear();
+    });
+    await _fetchUsers(isLoadMore: false);
+  }
+
+  Future<void> _loadMoreData() async {
+    if (_isLoadingMore || !_hasMoreData || _isLoading) return;
+    setState(() {
+      _isLoadingMore = true;
+    });
+    _currentPage++;
+    await _fetchUsers(isLoadMore: true);
+  }
+
+  Future<void> _fetchUsers({required bool isLoadMore}) async {
+    final statusQuery = widget.isActiveTab ? 'aktif' : 'nonaktif';
+    final usersResult = await UserService.getUsers(
+      page: _currentPage,
+      limit: _limit,
+      search: widget.searchQuery,
+      status: statusQuery,
+      role: 'Semua',
+    );
+
+    if (!mounted) return;
+
+    if (usersResult['success']) {
+      List<UserModel> fetchedUsers = usersResult['users'] as List<UserModel>;
+
+      if (widget.rtFilter != null) {
+        fetchedUsers =
+            fetchedUsers
+                .where((u) => u.rt.toString() == widget.rtFilter)
+                .toList();
+      }
+
+      if ((usersResult['users'] as List).length < _limit) {
+        _hasMoreData = false;
+      }
+
+      setState(() {
+        if (isLoadMore) {
+          _users.addAll(fetchedUsers);
+        } else {
+          _users = fetchedUsers;
+        }
+        _isLoading = false;
+        _isLoadingMore = false;
+      });
+    } else {
+      if (!isLoadMore) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = usersResult['message'] ?? 'Data gagal dimuat.';
+        });
+      } else {
+        setState(() => _isLoadingMore = false);
+        FeedbackDialogs.showSnackbar(
+          context,
+          'Gagal memuat lebih banyak data',
+          isError: true,
+        );
+      }
+    }
+  }
+
+  void _showSnackbar(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppTheme.error : AppTheme.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification scrollInfo) {
+        if (scrollInfo.metrics.pixels >=
+            scrollInfo.metrics.maxScrollExtent - 200) {
+          _loadMoreData();
+        }
+        return false;
+      },
+      child: RefreshIndicator(
+        onRefresh: _loadData,
+        color: AppTheme.primary,
+        child: _buildList(),
+      ),
+    );
+  }
+
+  Widget _buildList() {
+    if (_isLoading && _users.isEmpty) {
+      return const Center(
+        child: CustomLoadingIndicator(color: AppTheme.primary),
+      );
+    }
+
+    if (_errorMessage != null && _users.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage!,
+              style: const TextStyle(color: AppTheme.error),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadData, child: const Text('Coba Lagi')),
+          ],
+        ),
+      );
+    }
+
+    if (_users.isEmpty) {
+      return Center(
+        child: ListView(
+          shrinkWrap: true,
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.search_off_outlined,
+                  size: 80,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Tidak ada pengguna ${widget.isActiveTab ? "aktif" : "nonaktif"}.',
+                  style: const TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 80),
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: _users.length + (_isLoadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == _users.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: CustomLoadingIndicator(color: AppTheme.primary),
+          );
+        }
+
+        final user = _users[index];
+        return FadeInSlide(
+          delay: 0.1 * (index % 10),
+          child: _buildUserCard(user),
+        );
+      },
+    );
+  }
+
+  Widget _buildUserCard(UserModel user) {
+    final isActive = user.statusAktif == 1;
+    final isMe = widget.currentUser?.id == user.id;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          collapsedBackgroundColor: Colors.transparent,
+          backgroundColor: Colors.transparent,
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+          leading: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color:
+                    isActive
+                        ? AppTheme.primary.withOpacity(0.3)
+                        : Colors.grey.shade300,
+                width: 2,
+              ),
+            ),
+            child: CircleAvatar(
+              backgroundColor:
+                  isActive
+                      ? AppTheme.primary.withOpacity(0.1)
+                      : Colors.grey.shade100,
+              radius: 22,
+              child: Text(
+                user.namaPanggilan.isNotEmpty
+                    ? user.namaPanggilan.substring(0, 1).toUpperCase()
+                    : '?',
+                style: TextStyle(
+                  color: isActive ? AppTheme.primary : Colors.grey.shade500,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${user.namaLengkap} ${isMe ? '(Anda)' : ''}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isActive ? AppTheme.textPrimary : Colors.grey,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (!isActive) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.error.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'NONAKTIF',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: Text(
+              '${user.username} • RT 0${user.rt} • ${user.roleLevel.toUpperCase()}',
+              style: TextStyle(
+                color: isActive ? AppTheme.textSecondary : Colors.grey.shade400,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          childrenPadding: const EdgeInsets.all(0),
+          children: [
+            Container(
+              color: Colors.grey.shade50,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 20,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  if (widget.currentUser?.roleLevel == 'admin')
+                    _buildActionButton(
+                      Icons.edit_outlined,
+                      'Edit',
+                      AppTheme.info,
+                      () => widget.onEditUser(user),
+                    ),
+                  if (widget.currentUser?.roleLevel == 'ketua' || widget.currentUser?.roleLevel == 'admin')
+                    _buildActionButton(
+                      Icons.manage_accounts,
+                      'Ubah Role',
+                      AppTheme.primary,
+                      () {
+                        _showChangeRoleDialog(user);
+                      },
+                    ),
+                  if (widget.currentUser?.roleLevel == 'ketua' || widget.currentUser?.roleLevel == 'admin')
+                    _buildActionButton(
+                      Icons.lock_reset,
+                      'Reset Pass',
+                      Colors.purple,
+                      () => _resetPassword(user),
+                    ),
+                  if (widget.currentUser?.roleLevel == 'ketua' || widget.currentUser?.roleLevel == 'admin')
+                    _buildActionButton(
+                      isActive ? Icons.person_off : Icons.person_add,
+                      isActive ? 'Nonaktifkan' : 'Aktifkan',
+                      isActive ? AppTheme.error : AppTheme.success,
+                      () {
+                        _confirmAction(
+                          isActive
+                              ? 'Nonaktifkan Pengguna'
+                              : 'Aktifkan Pengguna',
+                          isActive
+                              ? 'Pengguna ini tidak akan bisa login lagi.'
+                              : 'Pengguna akan kembali bisa login.',
+                          () => UserService.toggleStatus(user.id),
+                          isDestructive: isActive,
+                        );
+                      },
+                    ),
+                  if ((widget.currentUser?.roleLevel != 'ketua' && widget.currentUser?.roleLevel != 'admin') || isMe)
+                    const Text(
+                      'Tidak ada aksi lanjutan tersedia.',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _confirmAction(
     String title,
     String content,
     Future<Map<String, dynamic>> Function() action, {
     bool isDestructive = false,
   }) async {
-    final confirm = await FeedbackDialogs.showConfirmation(
+    final confirm = await AppDialog.showConfirmation(
       context: context,
       title: title,
       content: content,
-      isDestructive: isDestructive,
+      type: isDestructive ? DialogType.error : DialogType.warning,
     );
 
     if (confirm == true) {
@@ -344,99 +912,14 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
       final result = await action();
       if (result['success']) {
         _showSnackbar(result['message'] ?? 'Aksi berhasil dilakukan');
-        _loadData();
+        _loadData(); 
       } else {
-        _handleError(result['message']);
+        setState(() {
+          _isLoading = false;
+        });
+        _showSnackbar(result['message'] ?? 'Aksi gagal.', isError: true);
       }
     }
-  }
-
-  void _showRoleDialog(UserModel user) {
-    String selectedRole = user.roleLevel;
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-        insetPadding: const EdgeInsets.all(20),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Ubah Role',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-              ),
-              const SizedBox(height: 24),
-              DropdownButtonFormField<String>(
-                initialValue: selectedRole,
-                decoration: InputDecoration(
-                  labelText: 'Pilih Role Baru',
-                  border: OutlineInputBorder(
-                    borderRadius: AppTheme.radiusMedium,
-                  ),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  DropdownMenuItem(value: 'ketua', child: Text('Ketua')),
-                  DropdownMenuItem(
-                    value: 'sekretaris',
-                    child: Text('Sekretaris'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'bendahara',
-                    child: Text('Bendahara'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'pengelola',
-                    child: Text('Pengelola'),
-                  ),
-                  DropdownMenuItem(value: 'anggota', child: Text('Anggota')),
-                ],
-                onChanged: (val) {
-                  if (val != null) selectedRole = val;
-                },
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Batal',
-                      style: TextStyle(color: AppTheme.textSecondary),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      if (selectedRole != user.roleLevel) {
-                        _confirmAction(
-                          'Ubah Role',
-                          'Anda yakin ingin mengubah role ${user.namaLengkap} menjadi $selectedRole?',
-                          () => UserService.changeRole(user.id, selectedRole),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppTheme.radiusMedium,
-                      ),
-                    ),
-                    child: const Text('Simpan'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   void _resetPassword(UserModel user) async {
@@ -455,405 +938,46 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
       if (result['success']) {
         if (!mounted) return;
         final tempPass = result['temporary_password'] ?? '-';
-        await showDialog(
+        await AppDialog.showResult(
           context: context,
-          builder: (context) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
-            insetPadding: const EdgeInsets.all(20),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.check_circle_outline,
-                    color: AppTheme.success,
-                    size: 64,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Password Berhasil Direset',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.success,
-                      fontSize: 20,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Silakan berikan password sementara ini kepada ${user.namaLengkap}:',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      borderRadius: AppTheme.radiusMedium,
-                      border: Border.all(color: AppTheme.primary),
-                    ),
-                    child: Center(
-                      child: SelectableText(
-                        tempPass,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primary,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  CustomButton(
-                    text: 'Tutup',
-                    onPressed: () => Navigator.pop(context),
-                    isFullWidth: true,
-                  ),
-                ],
+          title: 'Password Direset',
+          type: DialogType.success,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Silakan berikan password sementara ini kepada ${user.namaLengkap}:',
+                textAlign: TextAlign.center,
               ),
-            ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: AppTheme.radiusMedium,
+                  border: Border.all(color: AppTheme.primary),
+                ),
+                child: Center(
+                  child: SelectableText(
+                    tempPass,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         );
-        _loadData();
+        setState(() => _isLoading = false);
       } else {
-        _handleError(result['message']);
+        setState(() => _isLoading = false);
+        _showSnackbar(result['message'] ?? 'Gagal reset.', isError: true);
       }
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kelola Pengguna'),
-        backgroundColor: AppTheme.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
-      drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
-      backgroundColor: AppTheme.background,
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        color: AppTheme.primary,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Cari nama atau username...',
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: AppTheme.textSecondary,
-                      ),
-                      filled: true,
-                      fillColor: AppTheme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: AppTheme.radiusLarge,
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: AppTheme.radiusLarge,
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: AppTheme.radiusLarge,
-                        borderSide: const BorderSide(color: AppTheme.primary),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                    onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val;
-                        _applyFilters();
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [null, ..._availableRts].map((rt) {
-                        final isSelected = _rtFilter == rt;
-                        final label = rt == null ? 'Semua RT' : 'RT 0$rt';
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: FilterChip(
-                            label: Text(label),
-                            selected: isSelected,
-                            selectedColor: AppTheme.info.withValues(
-                              alpha: 0.15,
-                            ),
-                            checkmarkColor: AppTheme.info,
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? AppTheme.info
-                                  : AppTheme.textSecondary,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                            backgroundColor: AppTheme.surface,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppTheme.radiusLarge,
-                              side: BorderSide(
-                                color: isSelected
-                                    ? AppTheme.info.withValues(alpha: 0.5)
-                                    : Colors.grey.shade300,
-                              ),
-                            ),
-                            onSelected: (selected) {
-                              setState(() {
-                                _rtFilter = rt;
-                                _applyFilters();
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(child: _buildBody()),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showUserForm(),
-        backgroundColor: AppTheme.primary,
-        icon: const Icon(Icons.person_add_outlined, color: Colors.white),
-        label: const Text(
-          'Tambah',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
-  }
-
-  List<int> get _availableRts {
-    final rts = _users.map((u) => u.rt).toSet().toList();
-    rts.sort();
-    return rts;
-  }
-
-  Widget _buildBody() {
-    if (_isLoading && _users.isEmpty) {
-      return const Center(
-        child: CustomLoadingIndicator(color: AppTheme.primary),
-      );
-    }
-
-    if (_errorMessage != null && _users.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppTheme.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: AppTheme.error,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _errorMessage!,
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 24),
-            CustomButton(
-              text: 'Coba Lagi',
-              onPressed: _loadData,
-              isFullWidth: false,
-              icon: Icons.refresh,
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_filteredUsers.isEmpty) {
-      return const EmptyStateWidget(
-        icon: Icons.search_off_outlined,
-        title: 'Pengguna Tidak Ditemukan',
-        subtitle: 'Tidak ada pengguna yang sesuai dengan kriteria.',
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 80),
-      physics: const AlwaysScrollableScrollPhysics(),
-      itemCount: _filteredUsers.length,
-      itemBuilder: (context, index) {
-        final user = _filteredUsers[index];
-        final isActive = user.statusAktif == 1;
-        final isMe = _currentUser?.id == user.id;
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: AppTheme.radiusLarge,
-            boxShadow: AppTheme.shadowSoft,
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              collapsedBackgroundColor: Colors.transparent,
-              backgroundColor: Colors.transparent,
-              tilePadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              leading: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isActive
-                        ? AppTheme.primary.withValues(alpha: 0.3)
-                        : Colors.grey.shade300,
-                    width: 2,
-                  ),
-                ),
-                child: CircleAvatar(
-                  backgroundColor: isActive
-                      ? AppTheme.primary.withValues(alpha: 0.1)
-                      : Colors.grey.shade100,
-                  radius: 22,
-                  child: Text(
-                    user.namaPanggilan.isNotEmpty
-                        ? user.namaPanggilan.substring(0, 1).toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      color: isActive ? AppTheme.primary : Colors.grey.shade500,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ),
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${user.namaLengkap} ${isMe ? '(Anda)' : ''}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isActive ? AppTheme.textPrimary : Colors.grey,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (!isActive) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.error.withValues(alpha: 0.1),
-                        borderRadius: AppTheme.radiusSmall,
-                      ),
-                      child: const Text(
-                        'NONAKTIF',
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.error,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  '${user.username} • RT 0${user.rt} • ${user.roleLevel.toUpperCase()}',
-                  style: TextStyle(
-                    color: isActive
-                        ? AppTheme.textSecondary
-                        : Colors.grey.shade400,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-              childrenPadding: const EdgeInsets.all(0),
-              children: [
-                Container(
-                  color: Colors.grey.shade50,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildActionButton(
-                        Icons.edit_outlined,
-                        'Edit',
-                        AppTheme.info,
-                        () => _showUserForm(user: user),
-                      ),
-                      _buildActionButton(
-                        Icons.manage_accounts_outlined,
-                        'Role',
-                        AppTheme.warning,
-                        () => _showRoleDialog(user),
-                      ),
-                      _buildActionButton(
-                        Icons.lock_reset,
-                        'Reset',
-                        Colors.purple,
-                        () => _resetPassword(user),
-                      ),
-                      _buildActionButton(
-                        isActive ? Icons.block : Icons.check_circle_outline,
-                        isActive ? 'Nonaktifkan' : 'Aktifkan',
-                        isActive ? AppTheme.error : AppTheme.success,
-                        () {
-                          _confirmAction(
-                            isActive
-                                ? 'Nonaktifkan Pengguna'
-                                : 'Aktifkan Pengguna',
-                            'Anda yakin ingin ${isActive ? 'menonaktifkan' : 'mengaktifkan'} ${user.namaLengkap}?',
-                            () => UserService.toggleStatus(user.id),
-                            isDestructive: isActive,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   Widget _buildActionButton(
@@ -866,29 +990,134 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
       onTap: onTap,
       borderRadius: AppTheme.radiusSmall,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: color, size: 24),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               label,
               style: TextStyle(
                 color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showChangeRoleDialog(UserModel user) {
+    String selectedRole = user.roleLevel;
+    final roles = ['admin', 'ketua', 'sekretaris', 'bendahara', 'pengelola', 'anggota'];
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setDialogState) {
+              return Dialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppTheme.radiusLarge,
+                ),
+                insetPadding: const EdgeInsets.all(20),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Ubah Role',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children:
+                              roles.map((role) {
+                                return RadioListTile<String>(
+                                  title: Text(
+                                    role.toUpperCase(),
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                  value: role,
+                                  groupValue: selectedRole,
+                                  contentPadding: EdgeInsets.zero,
+                                  activeColor: AppTheme.primary,
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setDialogState(() => selectedRole = val);
+                                    }
+                                  },
+                                );
+                              }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              'Batal',
+                              style: TextStyle(color: AppTheme.textSecondary),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: AppTheme.radiusMedium,
+                              ),
+                            ),
+                            onPressed: () async {
+                              Navigator.pop(context);
+                              setState(() => _isLoading = true);
+                              final result = await UserService.changeRole(
+                                user.id,
+                                selectedRole,
+                              );
+                              if (result['success']) {
+                                _showSnackbar('Role berhasil diubah');
+                                _loadData();
+                              } else {
+                                setState(() => _isLoading = false);
+                                _showSnackbar(
+                                  result['message'] ?? 'Gagal ubah role',
+                                  isError: true,
+                                );
+                              }
+                            },
+                            child: const Text(
+                              'Simpan',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
     );
   }
 }
