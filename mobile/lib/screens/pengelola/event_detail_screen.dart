@@ -168,6 +168,51 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     }
   }
 
+  void _reopenEvent() async {
+    final confirm = await AppDialog.showConfirmation(
+      context: context,
+      title: 'Buka Kembali Acara?',
+      content:
+          'Ini akan membatalkan penutupan manual. Aturan waktu absensi (30 menit) akan kembali berlaku.',
+      type: DialogType.info,
+    );
+
+    if (confirm != true) return;
+
+    if (!mounted) return;
+    AppDialog.showLoading(context, message: 'Membuka kembali...');
+
+    final result = await EventService.reopenEvent(widget.eventId);
+    if (!mounted) return;
+    Navigator.pop(context); // close loading
+
+    if (result['success']) {
+      await AppDialog.showResult(
+        context: context,
+        title: 'Berhasil',
+        content: 'Acara berhasil dibuka kembali.',
+        type: DialogType.success,
+      );
+      _loadEvent(); // Refresh data
+    } else {
+      if (result['statusCode'] == 401) {
+        await AuthService.logout();
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      } else {
+        await AppDialog.showResult(
+          context: context,
+          title: 'Gagal',
+          content: result['message'] ?? 'Terjadi kesalahan.',
+          type: DialogType.error,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -529,7 +574,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
           ],
         ),
-        if (_event!.isActive) ...[
+        if (_event!.attendanceState == 'open' ||
+            _event!.attendanceState == 'not_open') ...[
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -546,7 +592,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     )
                   : const Icon(Icons.close, color: AppTheme.error),
               label: Text(
-                _isLoading ? 'Menutup...' : 'Tutup Acara',
+                _isLoading ? 'Menutup...' : 'Tutup Absensi',
                 style: const TextStyle(
                   color: AppTheme.error,
                   fontWeight: FontWeight.w600,
@@ -556,6 +602,42 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 side: BorderSide(color: AppTheme.error.withValues(alpha: 0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: AppTheme.error.withValues(alpha: 0.05),
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppTheme.radiusMedium,
+                ),
+              ),
+            ),
+          ),
+        ],
+        if (_event!.attendanceState == 'closed_manually') ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isLoading ? null : _reopenEvent,
+              icon: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CustomLoadingIndicator(
+                        size: 24,
+                        color: AppTheme.primary,
+                      ),
+                    )
+                  : const Icon(Icons.refresh, color: AppTheme.primary),
+              label: Text(
+                _isLoading ? 'Memproses...' : 'Buka Kembali',
+                style: const TextStyle(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                  color: AppTheme.primary.withValues(alpha: 0.5),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.05),
                 shape: RoundedRectangleBorder(
                   borderRadius: AppTheme.radiusMedium,
                 ),
@@ -602,15 +684,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   }
 
   Widget _buildAttendanceCTA() {
-    if (_event!.statusKegiatan == 'akan_datang') {
+    if (_event!.attendanceState == 'not_open') {
       return _buildCTABtn('Absensi Belum Dibuka', AppTheme.info, null);
-    } else if (_event!.statusKegiatan == 'selesai') {
+    } else if (_event!.attendanceState == 'closed_time' ||
+        _event!.attendanceState == 'closed_manually') {
       if (_event!.userAttendanceStatus == 'sudah_absen') {
         return _buildCTABtn('Sudah Absen', AppTheme.success, null);
       }
       return _buildCTABtn('Absensi Ditutup', AppTheme.textSecondary, null);
     } else {
-      // berlangsung
+      // open
       if (_event!.userAttendanceStatus == 'sudah_absen') {
         return _buildCTABtn('Sudah Absen', AppTheme.success, null);
       }

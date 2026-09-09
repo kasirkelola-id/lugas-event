@@ -36,30 +36,32 @@ class DashboardController extends BaseApiController
 
         // 1. Upcoming Event
         $eventModel = new EventModel();
-        // Cek event yang sedang berlangsung, prioritas utama
-        $ongoingEvent = $eventModel
+        
+        $todayEvents = $eventModel
             ->where('karang_taruna_id', $tenantId)
             ->whereIn('status_aktif', [1, '1', 'aktif', 'Aktif'])
-            ->where('tanggal_acara', $today)
-            ->where('waktu_mulai <=', date('H:i:s'))
-            ->where('waktu_selesai >=', date('H:i:s'))
-            ->first();
+            ->where('tanggal_acara >=', $today)
+            ->orderBy('tanggal_acara', 'ASC')
+            ->orderBy('waktu_mulai', 'ASC')
+            ->findAll();
 
-        if (!$ongoingEvent) {
-            // Jika tidak ada yang berlangsung, cari yang akan datang terdekat
-            $upcomingEvent = $eventModel
-                ->where('karang_taruna_id', $tenantId)
-                ->whereIn('status_aktif', [1, '1', 'aktif', 'Aktif'])
-                ->groupStart()
-                    ->where('tanggal_acara >', $today)
-                    ->orGroupStart()
-                        ->where('tanggal_acara', $today)
-                        ->where('waktu_mulai >', date('H:i:s'))
-                    ->groupEnd()
-                ->groupEnd()
-                ->orderBy('tanggal_acara', 'ASC')
-                ->orderBy('waktu_mulai', 'ASC')
-                ->first();
+        $ongoingEvent = null;
+        $upcomingEvent = null;
+
+        $nowTime = time();
+
+        foreach ($todayEvents as $evt) {
+            $startStr = $evt['tanggal_acara'] . ' ' . ($evt['waktu_mulai'] ?: '00:00:00');
+            $endStr = $evt['tanggal_acara'] . ' ' . ($evt['waktu_selesai'] ?: '23:59:59');
+            $startTime = strtotime($startStr) - (30 * 60);
+            $endTime = strtotime($endStr) + (30 * 60);
+
+            if ($nowTime >= $startTime && $nowTime <= $endTime) {
+                $ongoingEvent = $evt;
+                break; // Found an ongoing one
+            } elseif ($nowTime < $startTime && !$upcomingEvent) {
+                $upcomingEvent = $evt;
+            }
         }
 
         $selectedEvent = $ongoingEvent ?? $upcomingEvent ?? null;

@@ -7,6 +7,7 @@ class EventModel {
   final String kodeQr;
   final int statusAktif;
   final String? statusKegiatan;
+  final String? attendanceState;
   final String? userAttendanceStatus;
   final int dibuatOleh;
   final int? jumlahHadir;
@@ -25,6 +26,7 @@ class EventModel {
     required this.kodeQr,
     required this.statusAktif,
     this.statusKegiatan,
+    this.attendanceState,
     this.userAttendanceStatus,
     required this.dibuatOleh,
     this.jumlahHadir,
@@ -55,6 +57,7 @@ class EventModel {
                 : int.tryParse(json['status_aktif'].toString()) ?? 0)
           : 0,
       statusKegiatan: json['status_kegiatan'],
+      attendanceState: json['attendance_state'],
       userAttendanceStatus: json['user_attendance_status'],
       dibuatOleh: json['dibuat_oleh'] != null
           ? (json['dibuat_oleh'] is int

@@ -143,4 +143,13 @@ class EventService {
       return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
     }
   }
+
+  static Future<Map<String, dynamic>> reopenEvent(int id) async {
+    try {
+      final response = await ApiClient.patch('/events/$id/reopen', {});
+      return _handleResponse(response);
+    } catch (e) {
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+    }
+  }
 }

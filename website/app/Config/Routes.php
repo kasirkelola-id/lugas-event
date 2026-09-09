@@ -38,6 +38,7 @@ $routes->group('api', function ($routes) {
     $routes->get('events/(:num)', 'Api\EventController::show/$1', ['filter' => 'auth']);
     $routes->put('events/(:num)', 'Api\EventController::update/$1', ['filter' => 'auth']);
     $routes->patch('events/(:num)/status', 'Api\EventController::close/$1', ['filter' => 'auth']);
+    $routes->patch('events/(:num)/reopen', 'Api\EventController::reopen/$1', ['filter' => 'auth']);
     
     // Participants
     $routes->get('events/(:num)/participants', 'Api\ParticipantController::getByEvent/$1', ['filter' => 'auth']);

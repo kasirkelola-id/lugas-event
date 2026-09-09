@@ -25,6 +25,27 @@ class EventController extends BaseApiController
         return false;
     }
 
+    private function getAttendanceState($event)
+    {
+        if ($event['status_aktif'] === 'selesai') {
+            return 'closed_manually';
+        }
+        
+        $nowTime = time();
+        $startStr = $event['tanggal_acara'] . ' ' . ($event['waktu_mulai'] ?: '00:00:00');
+        $endStr = $event['tanggal_acara'] . ' ' . ($event['waktu_selesai'] ?: '23:59:59');
+        $startTime = strtotime($startStr) - (30 * 60);
+        $endTime = strtotime($endStr) + (30 * 60);
+        
+        if ($nowTime < $startTime) {
+            return 'not_open';
+        } elseif ($nowTime > $endTime) {
+            return 'closed_time';
+        } else {
+            return 'open';
+        }
+    }
+
     public function index()
     {
         $tenantId = AuthService::getTenantId();
@@ -81,6 +102,7 @@ class EventController extends BaseApiController
                 'dibuat_oleh' => (int)$event['dibuat_oleh'],
                 'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
                 'status_kegiatan' => $statusKegiatan,
+                'attendance_state' => $this->getAttendanceState($event),
                 'jumlah_hadir' => (new \App\Models\AbsensiModel())->where('event_id', $event['id'])->countAllResults(),
                 'require_gps' => (int)$event['require_gps'],
                 'latitude' => $event['latitude'] ? (float)$event['latitude'] : null,
@@ -138,6 +160,7 @@ class EventController extends BaseApiController
             'kode_qr' => $event['kode_qr'],
             'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
             'status_kegiatan' => $statusKegiatan,
+            'attendance_state' => $this->getAttendanceState($event),
             'dibuat_oleh' => (int)$event['dibuat_oleh'],
             'jumlah_hadir' => (new \App\Models\AbsensiModel())->where('event_id', $id)->countAllResults(),
             'require_gps' => (int)$event['require_gps'],
@@ -174,10 +197,16 @@ class EventController extends BaseApiController
         
         $namaAcara = $rawInput['nama_acara'] ?? $this->request->getVar('nama_acara');
         $tanggalAcara = $rawInput['tanggal_acara'] ?? $this->request->getVar('tanggal_acara');
-        $waktuMulai = $rawInput['waktu_mulai'] ?? null;
-        $waktuSelesai = $rawInput['waktu_selesai'] ?? null;
+        $waktuMulai = $rawInput['waktu_mulai'] ?? $this->request->getVar('waktu_mulai');
+        $waktuSelesai = $rawInput['waktu_selesai'] ?? $this->request->getVar('waktu_selesai');
         $requireGps = isset($rawInput['require_gps']) ? (int)$rawInput['require_gps'] : 0;
         
+        if (!empty($waktuMulai) && !empty($waktuSelesai)) {
+            if (strtotime($waktuMulai) >= strtotime($waktuSelesai)) {
+                return $this->sendError('Validasi gagal', ['waktu_mulai' => 'Waktu mulai harus lebih awal dari waktu selesai.'], 422);
+            }
+        }
+
         if ($requireGps === 1) {
             if (!isset($rawInput['latitude']) || !isset($rawInput['longitude']) || !isset($rawInput['radius'])) {
                 return $this->sendError('Validasi gagal', ['gps' => 'Koordinat dan radius wajib diisi jika fitur GPS diaktifkan.'], 422);
@@ -274,6 +303,16 @@ class EventController extends BaseApiController
             }
         }
 
+        if (isset($validationData['waktu_mulai']) || isset($validationData['waktu_selesai'])) {
+            $wMulai = $validationData['waktu_mulai'] ?? $event['waktu_mulai'];
+            $wSelesai = $validationData['waktu_selesai'] ?? $event['waktu_selesai'];
+            if (!empty($wMulai) && !empty($wSelesai)) {
+                if (strtotime($wMulai) >= strtotime($wSelesai)) {
+                    return $this->sendError('Validasi gagal', ['waktu_mulai' => 'Waktu mulai harus lebih awal dari waktu selesai.'], 422);
+                }
+            }
+        }
+
         if (empty($validationData)) {
             return $this->sendError('Tidak ada data yang diubah', null, 422);
         }
@@ -336,5 +375,32 @@ class EventController extends BaseApiController
         $eventModel->update($id, ['status_aktif' => 'selesai']);
 
         return $this->sendSuccess('Event berhasil ditutup');
+    }
+
+    public function reopen($id)
+    {
+        if (!AuthService::can('event.manage')) {
+            return $this->sendError('Forbidden', null, 403);
+        }
+
+        if (!$this->checkEventOwnership($id)) {
+            return $this->sendError('Forbidden: Anda bukan pengelola acara ini', null, 403);
+        }
+
+        $tenantId = AuthService::getTenantId();
+        $eventModel = new EventModel();
+        $event = $eventModel->where('karang_taruna_id', $tenantId)->find($id);
+
+        if (!$event) {
+            return $this->sendError('Event tidak ditemukan', null, 404);
+        }
+
+        if ($event['status_aktif'] !== 'selesai') {
+            return $this->sendError('Event tidak dalam kondisi tertutup manual', null, 422);
+        }
+
+        $eventModel->update($id, ['status_aktif' => 'aktif']);
+
+        return $this->sendSuccess('Event berhasil dibuka kembali');
     }
 }
