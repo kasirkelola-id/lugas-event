@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'chat_room_screen.dart';
 import 'create_group_screen.dart';
-import '../../storage/auth_storage.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import '../../services/chat_service.dart';
@@ -84,52 +84,87 @@ class _ChatListScreenState extends State<ChatListScreen>
         _currentUser?.roleLevel == 'ketua' ||
         _currentUser?.roleLevel == 'superadmin';
 
-    return Scaffold(
-      drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
-      appBar: AppBar(
-        title: const Text(
-          'Forum Diskusi',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        backgroundColor: AppTheme.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: Colors.white70,
-          indicator: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: Colors.white,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
+        backgroundColor: AppTheme.background,
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                title: const Text(
+                  'Forum Diskusi',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                backgroundColor: AppTheme.primary,
+                iconTheme: const IconThemeData(color: Colors.white),
+                pinned: true,
+                floating: true,
+                elevation: 0,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.primary,
+                        AppTheme.primary.withOpacity(0.8),
+                      ],
+                    ),
+                  ),
+                ),
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(60),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      indicatorColor: Colors.white,
+                      indicatorWeight: 3,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white.withOpacity(0.6),
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                      tabs: const [
+                        Tab(text: 'Grup'),
+                        Tab(text: 'Pesan Pribadi'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            controller: _tabController,
+            children: [_buildGroupList(), _buildPrivateList()],
           ),
-          indicatorPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          tabs: const [
-            Tab(text: 'Grup'),
-            Tab(text: 'Pesan Pribadi'),
-          ],
         ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-        ),
+        floatingActionButton: (_tabController.index == 0 && canCreateGroup)
+            ? FloatingActionButton.extended(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
+                  );
+                  if (result == true) {
+                    _fetchRooms();
+                  }
+                },
+                backgroundColor: AppTheme.primary,
+                icon: const Icon(Icons.group_add, color: Colors.white),
+                label: const Text('Buat Grup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              )
+            : null,
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [_buildGroupList(), _buildPrivateList()],
-      ),
-      floatingActionButton: (_tabController.index == 0 && canCreateGroup)
-          ? FloatingActionButton(
-              onPressed: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
-                );
-                if (result == true) {
-                  _fetchRooms();
-                }
-              },
-              backgroundColor: AppTheme.primary,
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
     );
   }
 

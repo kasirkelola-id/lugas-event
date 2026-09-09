@@ -7,7 +7,7 @@ import '../../services/chat_service.dart';
 import '../../core/theme/app_theme.dart';
 import 'group_info_screen.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/intl.dart';
+
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_snackbar.dart';
 
@@ -632,9 +632,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                         : MainAxisAlignment.start,
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      if (!isMe) ...[
+                                      if (!isMe && widget.type == 'group') ...[
                                         if (isSameSenderAsPrevious)
-                                          const SizedBox(width: 32)
+                                          const SizedBox(width: 32) // Same width as radius 16
                                         else
                                           GestureDetector(
                                             onTap: () => _showUserDetails(
@@ -689,29 +689,27 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                                   ).size.width *
                                                   0.70,
                                             ),
+
                                             decoration: BoxDecoration(
                                               color: isMe
                                                   ? AppTheme.primary
                                                   : Colors.white,
                                               borderRadius: BorderRadius.only(
-                                                topLeft: const Radius.circular(16),
-                                                topRight: const Radius.circular(16),
-                                                bottomLeft: Radius.circular(
-                                                  isMe || isSameSenderAsPrevious ? 16 : 4,
-                                                ),
-                                                bottomRight: Radius.circular(
-                                                  !isMe || isSameSenderAsPrevious ? 16 : 4,
-                                                ),
+                                                topLeft: const Radius.circular(18),
+                                                topRight: const Radius.circular(18),
+                                                bottomLeft: Radius.circular(isMe || isSameSenderAsPrevious ? 18 : 0),
+                                                bottomRight: Radius.circular(!isMe || isSameSenderAsPrevious ? 18 : 0),
                                               ),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withOpacity(0.04),
+                                                  color: Colors.black.withOpacity(0.06),
                                                   spreadRadius: 0,
-                                                  blurRadius: 4,
+                                                  blurRadius: 6,
                                                   offset: const Offset(0, 2),
                                                 ),
                                               ],
                                             ),
+
                                             child: Stack(
                                               children: [
                                                 Padding(
@@ -839,18 +837,20 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       children: [
                         Expanded(
                           child: Container(
+
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.08),
+                                  color: Colors.black.withOpacity(0.1),
                                   spreadRadius: 0,
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
+
                             child: Row(
                               children: [
                                 Expanded(
