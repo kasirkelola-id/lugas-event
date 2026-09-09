@@ -8,7 +8,9 @@ use App\Models\VotingModel;
 use App\Models\InventoryLoanModel;
 use App\Models\InventoryModel;
 use App\Models\OrganizationMemberModel;
+use App\Models\ParticipantModel;
 use App\Services\AuthService;
+use App\Services\SettingService;
 
 class DashboardController extends BaseApiController
 {
@@ -49,12 +51,15 @@ class DashboardController extends BaseApiController
         $upcomingEvent = null;
 
         $nowTime = time();
+        
+        $beforeMinutes = (int)SettingService::getSetting($tenantId, 'attendance_before_minutes', 30);
+        $afterMinutes = (int)SettingService::getSetting($tenantId, 'attendance_after_minutes', 30);
 
         foreach ($todayEvents as $evt) {
             $startStr = $evt['tanggal_acara'] . ' ' . ($evt['waktu_mulai'] ?: '00:00:00');
             $endStr = $evt['tanggal_acara'] . ' ' . ($evt['waktu_selesai'] ?: '23:59:59');
-            $startTime = strtotime($startStr) - (30 * 60);
-            $endTime = strtotime($endStr) + (30 * 60);
+            $startTime = strtotime($startStr) - ($beforeMinutes * 60);
+            $endTime = strtotime($endStr) + ($afterMinutes * 60);
 
             if ($nowTime >= $startTime && $nowTime <= $endTime) {
                 $ongoingEvent = $evt;

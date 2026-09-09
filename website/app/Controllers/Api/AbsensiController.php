@@ -6,6 +6,7 @@ use App\Models\AbsensiModel;
 use App\Models\EventModel;
 use App\Models\UserModel;
 use App\Services\AuthService;
+use App\Services\SettingService;
 
 class AbsensiController extends BaseApiController
 {
@@ -80,11 +81,14 @@ class AbsensiController extends BaseApiController
             $nowStr = date('H:i:s');
             $startStr = $event['waktu_mulai'];
             $endStr = $event['waktu_selesai'];
+            
+            $beforeMinutes = (int)SettingService::getSetting($tenantId, 'attendance_before_minutes', 30);
+            $afterMinutes = (int)SettingService::getSetting($tenantId, 'attendance_after_minutes', 30);
 
-            // Allow 30 mins early
-            $startTime = strtotime($startStr) - (30 * 60);
-            // Allow 30 mins late
-            $endTime = strtotime($endStr) + (30 * 60);
+            // Allow X mins early
+            $startTime = strtotime($startStr) - ($beforeMinutes * 60);
+            // Allow Y mins late
+            $endTime = strtotime($endStr) + ($afterMinutes * 60);
             $nowTime = strtotime($nowStr);
 
             if ($nowTime < $startTime) {

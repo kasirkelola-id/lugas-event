@@ -256,4 +256,66 @@ class AbsensiTest extends \Tests\Support\BaseTest
         $this->assertFalse($json['status']);
         $this->assertStringContainsString('sudah', $json['message']);
     }
+
+    public function testTenantSettingsIsolation()
+    {
+        // Clear static cache in Testing environment
+        \App\Services\SettingService::clearCache();
+
+        // Add custom settings for Tenant 1
+        $this->db->table('settings')->insert([
+            'karang_taruna_id' => 1,
+            'setting_key' => 'attendance_before_minutes',
+            'setting_value' => '15'
+        ]);
+        $this->db->table('settings')->insert([
+            'karang_taruna_id' => 1,
+            'setting_key' => 'attendance_after_minutes',
+            'setting_value' => '0'
+        ]);
+
+        $token = $this->anggotaToken;
+
+        // Tenant 1 test: should reject 20 mins early (setting is 15)
+        $this->db->table('events')->insert([
+            'id' => 8,
+            'karang_taruna_id' => 1,
+            'nama_acara' => 'Event Before Isolation T1',
+            'tanggal_acara' => date('Y-m-d'),
+            'waktu_mulai' => date('H:i:s', strtotime('+20 minutes')),
+            'waktu_selesai' => date('H:i:s', strtotime('+2 hours')),
+            'status_aktif' => 'aktif',
+            'require_gps' => 0,
+            'dibuat_oleh' => $this->ketuaUser['id'],
+            'kode_qr' => 'TESTQR8'
+        ]);
+
+        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+                         ->withBodyFormat('json')
+                         ->post('api/absensi/checkin', [
+                             'event_id' => 8
+                         ]);
+        $response->assertStatus(422);
+
+        // Tenant 1 test: should reject 10 mins late (setting is 0)
+        $this->db->table('events')->insert([
+            'id' => 9,
+            'karang_taruna_id' => 1,
+            'nama_acara' => 'Event After Isolation T1',
+            'tanggal_acara' => date('Y-m-d'),
+            'waktu_mulai' => date('H:i:s', strtotime('-2 hours')),
+            'waktu_selesai' => date('H:i:s', strtotime('-10 minutes')),
+            'status_aktif' => 'aktif',
+            'require_gps' => 0,
+            'dibuat_oleh' => $this->ketuaUser['id'],
+            'kode_qr' => 'TESTQR9'
+        ]);
+
+        $response2 = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
+                         ->withBodyFormat('json')
+                         ->post('api/absensi/checkin', [
+                             'event_id' => 9
+                         ]);
+        $response2->assertStatus(422);
+    }
 }

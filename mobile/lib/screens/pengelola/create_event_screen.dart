@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/event_service.dart';
+import '../../services/setting_service.dart';
 import '../../services/auth_service.dart';
 import 'package:mobile/screens/auth/login_screen.dart';
 import 'package:intl/intl.dart';
@@ -21,12 +22,41 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final _namaController = TextEditingController();
   final _tanggalController = TextEditingController();
-  bool _isLoading = false;
+  bool _isLoading = true;
 
   bool _requireGps = false;
   LatLng? _selectedLocation;
   double _radius = 50.0;
   final MapController _mapController = MapController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDefaultRadius();
+  }
+
+  Future<void> _fetchDefaultRadius() async {
+    final result = await SettingService.getSettings();
+    if (!mounted) return;
+
+    if (result['success']) {
+      final data = result['data'] as Map<String, dynamic>;
+      if (data.containsKey('default_geofence_radius')) {
+        final radStr = data['default_geofence_radius']?.toString();
+        if (radStr != null) {
+          final parsed = double.tryParse(radStr);
+          if (parsed != null) {
+            setState(() {
+              _radius = parsed;
+            });
+          }
+        }
+      }
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   void _pilihTanggal() async {
     final picked = await showDatePicker(

@@ -3,7 +3,9 @@
 namespace App\Controllers\Api;
 
 use App\Models\EventModel;
+use App\Models\ParticipantModel;
 use App\Services\AuthService;
+use App\Services\SettingService;
 
 class EventController extends BaseApiController
 {
@@ -31,11 +33,15 @@ class EventController extends BaseApiController
             return 'closed_manually';
         }
         
+        $tenantId = $event['karang_taruna_id'];
+        $beforeMinutes = (int)SettingService::getSetting($tenantId, 'attendance_before_minutes', 30);
+        $afterMinutes = (int)SettingService::getSetting($tenantId, 'attendance_after_minutes', 30);
+
         $nowTime = time();
         $startStr = $event['tanggal_acara'] . ' ' . ($event['waktu_mulai'] ?: '00:00:00');
         $endStr = $event['tanggal_acara'] . ' ' . ($event['waktu_selesai'] ?: '23:59:59');
-        $startTime = strtotime($startStr) - (30 * 60);
-        $endTime = strtotime($endStr) + (30 * 60);
+        $startTime = strtotime($startStr) - ($beforeMinutes * 60);
+        $endTime = strtotime($endStr) + ($afterMinutes * 60);
         
         if ($nowTime < $startTime) {
             return 'not_open';

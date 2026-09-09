@@ -129,6 +129,93 @@ class TenantIsolationTest extends \Tests\Support\BaseTest
         $userModel = new \App\Models\UserModel();
         $dbMemberB = $userModel->find($memberB['id']);
         $this->assertEquals(1, $dbMemberB['status_aktif']);
+    }
 
+    public function testSettingCacheIsolation()
+    {
+        if ($this->db->DBDriver === 'SQLite3') {
+            $this->db->query("DROP TABLE IF EXISTS settings");
+            $this->db->query("CREATE TABLE settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                karang_taruna_id INT,
+                setting_key VARCHAR(100),
+                setting_value TEXT,
+                description VARCHAR(255),
+                created_at DATETIME,
+                updated_at DATETIME,
+                UNIQUE(setting_key, karang_taruna_id)
+            )");
+        }
+
+        $tenantA = 201;
+        $tenantB = 202;
+
+        // Ensure clean slate
+        \App\Services\SettingService::clearCache();
+
+        $this->db->table('settings')->insert([
+            'karang_taruna_id' => $tenantA,
+            'setting_key' => 'attendance_before_minutes',
+            'setting_value' => '15'
+        ]);
+
+        $this->db->table('settings')->insert([
+            'karang_taruna_id' => $tenantB,
+            'setting_key' => 'attendance_before_minutes',
+            'setting_value' => '60'
+        ]);
+
+        $valA = \App\Services\SettingService::getSetting($tenantA, 'attendance_before_minutes');
+        $valB = \App\Services\SettingService::getSetting($tenantB, 'attendance_before_minutes');
+        $valA_again = \App\Services\SettingService::getSetting($tenantA, 'attendance_before_minutes');
+
+        $this->assertEquals('15', $valA);
+        $this->assertEquals('60', $valB);
+        $this->assertEquals('15', $valA_again);
+    }
+
+    public function testSettingsReadIsolation()
+    {
+        if ($this->db->DBDriver === 'SQLite3') {
+            $this->db->query("DROP TABLE IF EXISTS settings");
+            $this->db->query("CREATE TABLE settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                karang_taruna_id INT,
+                setting_key VARCHAR(100),
+                setting_value TEXT,
+                description VARCHAR(255),
+                created_at DATETIME,
+                updated_at DATETIME,
+                UNIQUE(setting_key, karang_taruna_id)
+            )");
+        }
+
+        $tenantA = 201;
+        $tenantB = 202;
+
+        $ketuaA = $this->createTestUser($tenantA, 'ketua', 'ketuaSetA');
+        $tokenA = $this->generateTokenForUser($ketuaA);
+
+        $this->db->table('settings')->insert([
+            'karang_taruna_id' => $tenantA,
+            'setting_key' => 'dummy_key',
+            'setting_value' => 'Value A'
+        ]);
+
+        $this->db->table('settings')->insert([
+            'karang_taruna_id' => $tenantB,
+            'setting_key' => 'dummy_key',
+            'setting_value' => 'Value B'
+        ]);
+
+        // Tenant A reading settings
+        $req = $this->withHeaders($this->getAuthHeaders($tokenA))->get('api/settings');
+        $req->assertStatus(200);
+        
+        $json = json_decode($req->getJSON(), true);
+        $this->assertTrue($json['status']);
+        $this->assertArrayHasKey('dummy_key', $json['data']);
+        $this->assertEquals('Value A', $json['data']['dummy_key']);
+        $this->assertNotEquals('Value B', $json['data']['dummy_key']);
     }
 }
