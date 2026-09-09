@@ -3,7 +3,7 @@ class KasModel {
   final String jenis;
   final int nominal;
   final String keterangan;
-  final String tanggal;
+  final DateTime tanggal;
   final int dibuatOleh;
   final String? pembuat;
   final String createdAt;
@@ -20,6 +20,8 @@ class KasModel {
   });
 
   bool get isPemasukan => jenis == 'pemasukan';
+  int get jumlah => nominal;
+  String? get namaPencatat => pembuat;
 
   factory KasModel.fromJson(Map<String, dynamic> json) {
     return KasModel(
@@ -35,7 +37,9 @@ class KasModel {
                 : int.tryParse(json['nominal'].toString()) ?? 0)
           : 0,
       keterangan: json['keterangan'] ?? '',
-      tanggal: json['tanggal'] ?? '',
+      tanggal: json['tanggal'] != null
+          ? (DateTime.tryParse(json['tanggal'].toString()) ?? DateTime.now())
+          : DateTime.now(),
       dibuatOleh: json['dibuat_oleh'] != null
           ? (json['dibuat_oleh'] is int
                 ? json['dibuat_oleh']

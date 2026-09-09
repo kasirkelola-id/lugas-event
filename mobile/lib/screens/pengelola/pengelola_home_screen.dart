@@ -12,6 +12,7 @@ import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/common/app_error_state.dart';
 
 class PengelolaHomeScreen extends StatefulWidget {
   const PengelolaHomeScreen({super.key});
@@ -119,23 +120,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
     }
     if (_isError || _user == null || _summary == null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 64, color: AppTheme.error),
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage,
-              style: const TextStyle(color: AppTheme.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            CustomButton(
-              text: 'Coba Lagi',
-              onPressed: _loadData,
-              isFullWidth: false,
-            ),
-          ],
-        ),
+        child: AppErrorState(message: _errorMessage, onRetry: _loadData),
       );
     }
 
