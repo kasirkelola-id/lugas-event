@@ -13,18 +13,24 @@ class InternalApiController extends BaseApiController
     {
         // IP Restriction: Ensure this is only called internally (e.g. from localhost where Node.js is)
         // In production, might want to check against specific private IPs or use a shared secret.
+        // Explicit strict internal protection
         $clientIp = $this->request->getIPAddress();
         $allowedIps = ['127.0.0.1', '::1'];
-
-        // For development/testing flexibility, we can check for an internal secret header if IP isn't loopback
+        if (ENVIRONMENT === 'testing') {
+            $allowedIps[] = '0.0.0.0';
+        }
         $internalSecret = $this->request->getHeaderLine('X-Internal-Secret');
         $validSecret = getenv('INTERNAL_API_SECRET') ?: 'default_internal_secret_for_dev';
 
-        // Timing-safe comparison for the secret
+        $isLocalhost = in_array($clientIp, $allowedIps);
         $isValidSecret = hash_equals($validSecret, $internalSecret);
 
-        if (!in_array($clientIp, $allowedIps) && !$isValidSecret) {
+        if (!$isLocalhost) {
             return $this->sendError('Forbidden: External access denied to internal API', null, 403);
+        }
+
+        if (!$isValidSecret) {
+            return $this->sendError('Forbidden: Invalid internal secret', null, 403);
         }
 
         // At this point, AuthFilter has successfully validated the Bearer token
@@ -53,12 +59,21 @@ class InternalApiController extends BaseApiController
     {
         $clientIp = $this->request->getIPAddress();
         $allowedIps = ['127.0.0.1', '::1'];
+        if (ENVIRONMENT === 'testing') {
+            $allowedIps[] = '0.0.0.0';
+        }
         $internalSecret = $this->request->getHeaderLine('X-Internal-Secret');
         $validSecret = getenv('INTERNAL_API_SECRET') ?: 'default_internal_secret_for_dev';
+        
+        $isLocalhost = in_array($clientIp, $allowedIps);
         $isValidSecret = hash_equals($validSecret, $internalSecret);
 
-        if (!in_array($clientIp, $allowedIps) && !$isValidSecret) {
-            return $this->sendError('Forbidden', null, 403);
+        if (!$isLocalhost) {
+            return $this->sendError('Forbidden: External access denied to internal API', null, 403);
+        }
+
+        if (!$isValidSecret) {
+            return $this->sendError('Forbidden: Invalid internal secret', null, 403);
         }
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();

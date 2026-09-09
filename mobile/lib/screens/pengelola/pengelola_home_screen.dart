@@ -13,6 +13,7 @@ import '../widgets/common/custom_button.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_error_state.dart';
+import '../../services/chat_service.dart';
 
 class PengelolaHomeScreen extends StatefulWidget {
   const PengelolaHomeScreen({super.key});
@@ -58,6 +59,9 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
         });
         return;
       }
+
+      // Initialize global socket connection once authenticated
+      ChatService().initWebSocket();
 
       final summaryResult = await DashboardService.getSummary();
       if (!mounted) return;

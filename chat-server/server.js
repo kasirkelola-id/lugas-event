@@ -96,6 +96,10 @@ io.on('connection', (socket) => {
         token: token // Needed for revalidation
       });
       
+      // JOIN GLOBAL TENANT AND USER ROOMS
+      socket.join(`tenant_${user.karang_taruna_id}`);
+      socket.join(`user_${user.user_id}`);
+      
       socket.emit('auth_success', { message: 'Authenticated' });
       console.log(`User ${user.user_id} authenticated via internal API for tenant ${user.karang_taruna_id}`);
     } catch (error) {

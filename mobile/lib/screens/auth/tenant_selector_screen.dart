@@ -9,6 +9,7 @@ import '../anggota/anggota_home_screen.dart';
 import '../admin/admin_home_screen.dart';
 import 'login_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../../services/chat_service.dart';
 
 class TenantSelectorScreen extends StatefulWidget {
   final UserModel user;
@@ -90,6 +91,10 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
 
     if (!mounted) return;
 
+    // Close old socket connection and re-initialize for new tenant
+    ChatService().closeConnection();
+    ChatService().initWebSocket();
+
     if (updatedUser.roleLevel == 'pengelola') {
       Navigator.pushAndRemoveUntil(
         context,
@@ -117,6 +122,7 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
   }
 
   void _logout() async {
+    ChatService().closeConnection();
     await AuthStorage.removeToken();
     await AuthStorage.clearTenant();
     if (!mounted) return;

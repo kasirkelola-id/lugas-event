@@ -453,7 +453,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   @override
   void dispose() {
-    _chatService.closeConnection();
+    // Only remove the UI listener, keep socket alive
+    _chatService.onMessageReceived = null;
     _msgController.dispose();
     _scrollController.dispose();
     super.dispose();

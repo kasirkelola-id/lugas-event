@@ -11,6 +11,10 @@ import '../models/user_model.dart';
 import 'package:flutter/foundation.dart';
 
 class ChatService {
+  static final ChatService _instance = ChatService._internal();
+  factory ChatService() => _instance;
+  ChatService._internal();
+
   IO.Socket? _socket;
   Function(Chat)? onMessageReceived;
   Function()? onAuthSuccess;
@@ -43,6 +47,14 @@ class ChatService {
       // Send authentication payload with opaque bearer token
       _socket!.emit('auth', {'token': token, 'tenant_id': ktId});
     });
+
+    // Prevent duplicate listeners by clearing first
+    _socket!.off('auth_success');
+    _socket!.off('auth_error');
+    _socket!.off('connect_error');
+    _socket!.off('error');
+    _socket!.off('new_message');
+    _socket!.off('disconnect');
 
     _socket!.on('auth_success', (_) {
       debugPrint('Socket.io authenticated successfully');
@@ -142,6 +154,7 @@ class ChatService {
     if (_socket != null) {
       _socket!.disconnect();
       _socket!.dispose();
+      _socket = null;
     }
   }
 

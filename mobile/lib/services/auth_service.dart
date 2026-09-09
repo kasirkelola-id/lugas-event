@@ -3,6 +3,7 @@ import '../core/network/api_client.dart';
 import '../models/user_model.dart';
 import '../storage/auth_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import '../services/chat_service.dart';
 
 class AuthService {
   static Future<Map<String, dynamic>> verifyPin(String pin) async {
@@ -174,6 +175,10 @@ class AuthService {
     } catch (e) {
       // Ignore network errors on logout
     }
+
+    // Close global socket connection on logout
+    ChatService().closeConnection();
+
     await AuthStorage.removeToken();
   }
 
