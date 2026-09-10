@@ -18,6 +18,9 @@ class ChatService {
 
   Function(Chat)? onMessageReceived;
   Function()? onAuthSuccess;
+  
+  bool _isAuthenticated = false;
+  int? _activeRoomId;
 
   // Initialize WebSocket connection
   Future<void> initWebSocket() async {
@@ -58,6 +61,10 @@ class ChatService {
 
     _socket!.on('auth_success', (_) {
       debugPrint('Socket.io authenticated successfully');
+      _isAuthenticated = true;
+      if (_activeRoomId != null) {
+        _socket!.emit('join_room', {'room_id': _activeRoomId});
+      }
       if (onAuthSuccess != null) {
         onAuthSuccess!();
       }
@@ -65,10 +72,12 @@ class ChatService {
 
     _socket!.on('auth_error', (data) {
       debugPrint('Socket.io auth error: ${data['message']}');
+      _isAuthenticated = false;
     });
 
     _socket!.onConnectError((data) {
       debugPrint('Socket.io connect error: $data');
+      _isAuthenticated = false;
     });
 
     _socket!.on('error', (data) {
@@ -87,11 +96,15 @@ class ChatService {
       }
     });
 
-    _socket!.onDisconnect((_) => debugPrint('Socket.io disconnected'));
+    _socket!.onDisconnect((_) {
+      debugPrint('Socket.io disconnected');
+      _isAuthenticated = false;
+    });
   }
 
   void joinRoom(int roomId) {
-    if (_socket != null) {
+    _activeRoomId = roomId;
+    if (_socket != null && _socket!.connected && _isAuthenticated) {
       _socket!.emit('join_room', {'room_id': roomId});
     }
   }
@@ -130,7 +143,7 @@ class ChatService {
     int? receiverId,
     int? chatRoomId,
   }) async {
-    if (_socket != null && _socket!.connected) {
+    if (_socket != null && _socket!.connected && _isAuthenticated) {
       _socket!.emit('send_message', {
         'type': type,
         'message': message,
@@ -155,6 +168,8 @@ class ChatService {
       _socket!.disconnect();
       _socket!.dispose();
       _socket = null;
+      _isAuthenticated = false;
+      _activeRoomId = null;
     }
   }
 

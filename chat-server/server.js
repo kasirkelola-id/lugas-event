@@ -1,4 +1,13 @@
 require('dotenv').config();
+
+const requiredEnvs = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'INTERNAL_API_SECRET', 'INTERNAL_API_URL'];
+for (const env of requiredEnvs) {
+  if (!process.env[env]) {
+    console.error(`FATAL ERROR: Environment variable ${env} is missing.`);
+    process.exit(1);
+  }
+}
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -20,10 +29,10 @@ const io = new Server(server, {
 
 // MySQL Connection Pool
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'lugasku',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
@@ -58,8 +67,8 @@ io.on('connection', (socket) => {
 
     try {
       // Call Internal API
-      const apiUrl = process.env.INTERNAL_API_URL || 'http://localhost:8080/api/internal/socket-auth';
-      const secret = process.env.INTERNAL_API_SECRET || 'default_internal_secret_for_dev';
+      const apiUrl = process.env.INTERNAL_API_URL;
+      const secret = process.env.INTERNAL_API_SECRET;
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -174,8 +183,8 @@ io.on('connection', (socket) => {
     const userInfo = onlineUsers.get(socket.id);
     if (userInfo && (now - userInfo.authTime > 60000)) {
       try {
-        const apiUrl = process.env.INTERNAL_API_URL || 'http://localhost:8080/api/internal/socket-auth';
-        const secret = process.env.INTERNAL_API_SECRET || 'default_internal_secret_for_dev';
+        const apiUrl = process.env.INTERNAL_API_URL;
+        const secret = process.env.INTERNAL_API_SECRET;
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
@@ -291,6 +300,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+    clearTimeout(authTimeout);
     console.log(`User disconnected: ${socket.id}`);
     onlineUsers.delete(socket.id);
     rateLimits.delete(socket.id);
@@ -313,7 +323,7 @@ io.on('connection', (socket) => {
 
 app.post('/internal/wheel-event', (req, res) => {
   const secret = req.headers['x-internal-secret'];
-  const validSecret = process.env.INTERNAL_API_SECRET || 'default_internal_secret_for_dev';
+  const validSecret = process.env.INTERNAL_API_SECRET;
   
   if (secret !== validSecret) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -333,13 +343,17 @@ app.post('/internal/wheel-event', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Node.js Socket.io Server running on port ${PORT}`);
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`Socket.IO Server running on port ${PORT}`);
+  });
+}
+
+module.exports = { server, io, pool };
 
 function _triggerChatNotification(chatId) {
-  const apiUrl = (process.env.INTERNAL_API_URL || 'http://localhost:8080/api/internal/socket-auth').replace('socket-auth', 'chat-notification');
-  const secret = process.env.INTERNAL_API_SECRET || 'default_internal_secret_for_dev';
+  const apiUrl = process.env.INTERNAL_API_URL.replace('socket-auth', 'chat-notification');
+  const secret = process.env.INTERNAL_API_SECRET;
   
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3000); // 3-second timeout

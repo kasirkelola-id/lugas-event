@@ -103,13 +103,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       _scrollToBottom(force: true);
     }
 
-    // Init websocket
-    _chatService.onAuthSuccess = () {
-      if (widget.type == 'group' && widget.roomId != null) {
-        _chatService.joinRoom(widget.roomId!);
-      }
-    };
     await _chatService.initWebSocket();
+    if (widget.type == 'group' && widget.roomId != null) {
+      _chatService.joinRoom(widget.roomId!);
+    }
     _chatService.onMessageReceived = (Chat chat) {
       if (!mounted) return;
       if (_renderedChatIds.contains(chat.id)) return; // Deduplicate

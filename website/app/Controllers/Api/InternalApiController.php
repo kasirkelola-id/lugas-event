@@ -108,7 +108,7 @@ class InternalApiController extends BaseApiController
             $roomId = $chat['chat_room_id'];
             $room = $db->table('chat_rooms')->where('id', $roomId)->get()->getRowArray();
             if ($room) {
-                if ($room['type'] === 'umum') {
+                if ($room['type'] === 'default') {
                     $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, [$senderId]);
                 } else {
                     // Custom room
