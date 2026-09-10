@@ -10,10 +10,7 @@ import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
-import '../../services/wheel_service.dart';
-import '../../models/wheel_model.dart';
-import '../undian/wheel_session_screen.dart';
-import 'package:mobile/screens/widgets/common/wheel_banner.dart';
+import '../widgets/common/community_activity_section.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -154,12 +151,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         children: [
           _buildHeaderSection(),
           const SizedBox(height: 16),
-          _buildWheelBanner(),
+          CommunityActivitySection(
+            communityActivity: _summary?['community_activity'],
+          ),
           _buildKasInfo(),
           _buildManagementMetrics(),
           _buildUpcomingEvent(),
-          _buildLatestAnnouncement(),
-          _buildActiveVoting(),
           const SizedBox(height: 40),
         ],
       ),
@@ -225,12 +222,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Widget _buildWheelBanner() {
-    return WheelBanner(
-      key: ValueKey(_lastRefreshTime),
-      currentUserId: int.parse(_user!.id.toString()),
-    );
-  }
+  // wheel banner removed
 
   Widget _buildKasInfo() {
     if (_summary == null) return const SizedBox();
@@ -502,45 +494,5 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Widget _buildLatestAnnouncement() {
-    if (_summary!.latestAnnouncement == null) return const SizedBox();
-    final ann = _summary!.latestAnnouncement!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-        child: ListTile(
-          leading: const Icon(Icons.campaign, color: AppTheme.warning),
-          title: Text(
-            ann.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(
-            ann.preview,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildActiveVoting() {
-    if (_summary!.activeVoting == null) return const SizedBox();
-    final vote = _summary!.activeVoting!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-        child: ListTile(
-          leading: const Icon(Icons.how_to_vote, color: AppTheme.primary),
-          title: Text(
-            vote.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: const Text('Voting Aktif'),
-        ),
-      ),
-    );
-  }
 }

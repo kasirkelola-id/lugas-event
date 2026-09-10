@@ -20,6 +20,8 @@ class _CreateWheelScreenState extends State<CreateWheelScreen> {
   String _sourceType = 'members'; // 'members' or 'custom'
   int _spinDuration = 10;
   bool _removeWinner = false;
+  int _dashboardDurationMinutes = 60; // 1 jam default
+  final _customDurationController = TextEditingController();
 
   void _submit() async {
     final title = _titleController.text.trim();
@@ -54,12 +56,21 @@ class _CreateWheelScreenState extends State<CreateWheelScreen> {
 
     AppDialog.showLoading(context, message: 'Menyimpan...');
 
+    int finalMinutes = _dashboardDurationMinutes;
+    if (finalMinutes == -1) {
+      final customHours = int.tryParse(_customDurationController.text) ?? 1;
+      finalMinutes = customHours * 60;
+    }
+    final untilDate = DateTime.now().add(Duration(minutes: finalMinutes));
+    final dashboardUntil = "${untilDate.year.toString().padLeft(4, '0')}-${untilDate.month.toString().padLeft(2, '0')}-${untilDate.day.toString().padLeft(2, '0')} ${untilDate.hour.toString().padLeft(2, '0')}:${untilDate.minute.toString().padLeft(2, '0')}:${untilDate.second.toString().padLeft(2, '0')}";
+
     final result = await WheelService.createSession(
       title: title,
       sourceType: _sourceType,
       spinDurationSeconds: _spinDuration,
       removeWinnerAfterSpin: _removeWinner,
       items: items,
+      dashboardUntil: dashboardUntil,
     );
 
     if (!mounted) return;
@@ -81,6 +92,7 @@ class _CreateWheelScreenState extends State<CreateWheelScreen> {
   void dispose() {
     _titleController.dispose();
     _itemsController.dispose();
+    _customDurationController.dispose();
     super.dispose();
   }
 
@@ -216,6 +228,37 @@ class _CreateWheelScreenState extends State<CreateWheelScreen> {
                     activeColor: AppTheme.primary,
                     onChanged: (val) => setState(() => _removeWinner = val),
                   ),
+                  const Divider(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Tampilkan di Dashboard selama'),
+                      DropdownButton<int>(
+                        value: _dashboardDurationMinutes,
+                        items: const [
+                          DropdownMenuItem(value: 30, child: Text('30 Menit')),
+                          DropdownMenuItem(value: 60, child: Text('1 Jam')),
+                          DropdownMenuItem(value: 180, child: Text('3 Jam')),
+                          DropdownMenuItem(value: -1, child: Text('Custom (Jam)')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _dashboardDurationMinutes = val);
+                        },
+                      ),
+                    ],
+                  ),
+                  if (_dashboardDurationMinutes == -1) ...[
+                    const SizedBox(height: 8),
+                    CustomTextField(
+                      controller: _customDurationController,
+                      label: 'Jumlah Jam',
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Wajib diisi';
+                        return null;
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),

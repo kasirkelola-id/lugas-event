@@ -84,6 +84,11 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     String targetRole = announcement?.targetRole ?? 'semua';
     bool statusAktif = announcement?.statusAktif == 1;
     if (announcement == null) statusAktif = true;
+    
+    // Add dashboard_until state
+    int selectedDays = 3; // Default 3 days
+    final customDaysController = TextEditingController();
+    
     bool isLoadingSubmit = false;
 
     await showDialog(
@@ -157,6 +162,50 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
+                        if (announcement == null) ...[
+                          DropdownButtonFormField<int>(
+                            value: selectedDays,
+                            decoration: InputDecoration(
+                              labelText: 'Tampilkan di Dashboard selama',
+                              border: OutlineInputBorder(
+                                borderRadius: AppTheme.radiusMedium,
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 1, child: Text('1 Hari')),
+                              DropdownMenuItem(value: 3, child: Text('3 Hari')),
+                              DropdownMenuItem(value: 7, child: Text('7 Hari')),
+                              DropdownMenuItem(value: -1, child: Text('Custom (Hari)')),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) setStateDialog(() => selectedDays = val);
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          if (selectedDays == -1) ...[
+                            CustomTextField(
+                              controller: customDaysController,
+                              label: 'Jumlah Hari',
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) return 'Wajib diisi';
+                                final parsed = int.tryParse(value);
+                                if (parsed == null || parsed <= 0) return 'Masukkan angka yang valid';
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          const Text(
+                            'Setelah waktu ini, pengumuman tetap tersimpan tetapi tidak lagi tampil di Dashboard.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         SwitchListTile(
                           title: const Text(
                             'Status Aktif',
@@ -191,12 +240,21 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                                 if (formKey.currentState!.validate()) {
                                   setStateDialog(() => isLoadingSubmit = true);
 
-                                  final data = {
-                                    'judul': judulController.text,
-                                    'isi': isiController.text,
-                                    'target_role': targetRole,
-                                    'status_aktif': statusAktif ? 1 : 0,
-                                  };
+                                    final data = {
+                                      'judul': judulController.text,
+                                      'isi': isiController.text,
+                                      'target_role': targetRole,
+                                      'status_aktif': statusAktif ? 1 : 0,
+                                    };
+                                    
+                                      int finalDays = selectedDays;
+                                      if (finalDays == -1) {
+                                        finalDays = int.parse(customDaysController.text);
+                                      }
+                                      final untilDate = DateTime.now().add(Duration(days: finalDays));
+                                      // Format to YYYY-MM-DD HH:mm:ss for backend
+                                      data['dashboard_until'] = "${untilDate.year.toString().padLeft(4, '0')}-${untilDate.month.toString().padLeft(2, '0')}-${untilDate.day.toString().padLeft(2, '0')} ${untilDate.hour.toString().padLeft(2, '0')}:${untilDate.minute.toString().padLeft(2, '0')}:${untilDate.second.toString().padLeft(2, '0')}";
+                                    }
 
                                   Map<String, dynamic> result;
                                   if (announcement == null) {

@@ -26,6 +26,7 @@ class WheelService {
     required int spinDurationSeconds,
     required bool removeWinnerAfterSpin,
     required List<dynamic> items,
+    String? dashboardUntil,
   }) async {
     try {
       final response = await ApiClient.post('/wheels', {
@@ -34,6 +35,7 @@ class WheelService {
         'spin_duration_seconds': spinDurationSeconds,
         'remove_winner_after_spin': removeWinnerAfterSpin ? 1 : 0,
         'items': items,
+        if (dashboardUntil != null) 'dashboard_until': dashboardUntil,
       });
       if (response.statusCode == 200 || response.statusCode == 201) {
         final body = json.decode(response.body);

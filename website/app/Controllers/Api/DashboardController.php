@@ -82,27 +82,38 @@ class DashboardController extends BaseApiController
             ];
         }
 
-        // 2. Latest Announcement
+        // 2 & 3 & 4. Community Activity (Announcement, Voting, Wheel)
+        $data['community_activity'] = [
+            'announcement' => ['item' => null, 'additional_count' => 0],
+            'voting' => ['item' => null, 'additional_count' => 0],
+            'wheel' => ['item' => null, 'additional_count' => 0],
+        ];
+        
+        $nowStr = date('Y-m-d H:i:s');
+
+        // Announcement
         $pengumumanModel = new PengumumanModel();
-        $latestAnnouncement = $pengumumanModel
+        $announcementBuilder = $pengumumanModel
             ->where('karang_taruna_id', $tenantId)
             ->where('status_aktif', 1)
-            ->orderBy('created_at', 'DESC')
-            ->first();
+            ->where('dashboard_until >', $nowStr);
+            
+        $totalAnnouncements = $announcementBuilder->countAllResults(false);
 
-        if ($latestAnnouncement) {
-            $data['latest_announcement'] = [
-                'id' => $latestAnnouncement['id'],
-                'title' => $latestAnnouncement['judul'],
-                'preview' => substr($latestAnnouncement['isi'], 0, 100),
-                'date' => $latestAnnouncement['created_at']
+        if ($totalAnnouncements > 0) {
+            $latest = $announcementBuilder->orderBy('created_at', 'DESC')->first();
+            $data['community_activity']['announcement']['item'] = [
+                'id' => $latest['id'],
+                'title' => $latest['judul'],
+                'preview' => substr($latest['isi'], 0, 100),
+                'dashboard_until' => $latest['dashboard_until']
             ];
+            $data['community_activity']['announcement']['additional_count'] = $totalAnnouncements - 1;
         }
 
-        // 3. Active Voting
+        // Voting
         $votingModel = new VotingModel();
-        $nowStr = date('Y-m-d H:i:s');
-        $activeVoting = $votingModel
+        $votingBuilder = $votingModel
             ->where('karang_taruna_id', $tenantId)
             ->where('status !=', 'closed')
             ->groupStart()
@@ -112,16 +123,52 @@ class DashboardController extends BaseApiController
             ->groupStart()
                 ->where('waktu_selesai >', $nowStr)
                 ->orWhere('waktu_selesai IS NULL')
-            ->groupEnd()
-            ->orderBy('created_at', 'DESC')
-            ->first();
-
-        if ($activeVoting) {
-            $data['active_voting'] = [
-                'id' => $activeVoting['id'],
-                'title' => $activeVoting['title'],
-                'status' => 'active'
+            ->groupEnd();
+            
+        $totalVotings = $votingBuilder->countAllResults(false);
+        
+        if ($totalVotings > 0) {
+            $latestVoting = $votingBuilder->orderBy('created_at', 'DESC')->first();
+            $data['community_activity']['voting']['item'] = [
+                'id' => $latestVoting['id'],
+                'title' => $latestVoting['title'],
+                'status' => 'active',
+                'waktu_selesai' => $latestVoting['waktu_selesai']
             ];
+            $data['community_activity']['voting']['additional_count'] = $totalVotings - 1;
+        }
+
+        // Wheel
+        $wheelModel = new \App\Models\WheelSessionModel();
+        $wheelBuilder = $wheelModel
+            ->where('karang_taruna_id', $tenantId)
+            ->where('status !=', 'closed')
+            ->where('dashboard_until >', $nowStr);
+            
+        $totalWheels = $wheelBuilder->countAllResults(false);
+
+        if ($totalWheels > 0) {
+            $latestWheel = $wheelBuilder->orderBy('created_at', 'DESC')->first();
+            
+            // Minimal query to check if it's spinning or result available
+            $db = \Config\Database::connect();
+            $spinCount = $db->table('wheel_results')->where('session_id', $latestWheel['id'])->countAllResults();
+            
+            $wheelStatus = 'active';
+            // Determine compact state based on some simple rules if needed. 
+            // The prompt says: Prefer backend mengembalikan compact wheel state. 
+            // We can check if there's any result to say "Pemenang baru saja dipilih" but since realtime handles spins, we can just say active.
+            if ($spinCount > 0) {
+                $wheelStatus = 'result_available';
+            }
+            
+            $data['community_activity']['wheel']['item'] = [
+                'id' => $latestWheel['id'],
+                'title' => $latestWheel['title'],
+                'status' => $wheelStatus,
+                'dashboard_until' => $latestWheel['dashboard_until']
+            ];
+            $data['community_activity']['wheel']['additional_count'] = $totalWheels - 1;
         }
 
         // 4. My Active Loan

@@ -14,7 +14,7 @@ import '../widgets/animations/fade_in_slide.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_error_state.dart';
 import '../../services/chat_service.dart';
-import 'package:mobile/screens/widgets/common/wheel_banner.dart';
+import '../widgets/common/community_activity_section.dart';
 
 class AnggotaHomeScreen extends StatefulWidget {
   const AnggotaHomeScreen({super.key});
@@ -157,15 +157,15 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeaderContent(),
-                WheelBanner(
-                  key: ValueKey(_lastRefreshTime),
-                  currentUserId: int.parse(_user!.id.toString()),
+                FadeInSlide(
+                  delay: 0.1,
+                  child: CommunityActivitySection(
+                    communityActivity: _summary?['community_activity'],
+                  ),
                 ),
                 FadeInSlide(delay: 0.1, child: _buildKasInfo()),
                 FadeInSlide(delay: 0.2, child: _buildUpcomingEvent()),
-                FadeInSlide(delay: 0.3, child: _buildLatestAnnouncement()),
-                FadeInSlide(delay: 0.4, child: _buildActiveVoting()),
-                FadeInSlide(delay: 0.5, child: _buildMyActiveLoan()),
+                FadeInSlide(delay: 0.3, child: _buildMyActiveLoan()),
                 const SizedBox(height: 40),
               ],
             ),
@@ -448,51 +448,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
     );
   }
 
-  Widget _buildLatestAnnouncement() {
-    if (_summary!.latestAnnouncement == null) return const SizedBox();
-    final ann = _summary!.latestAnnouncement!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-        child: ListTile(
-          leading: const Icon(Icons.campaign, color: AppTheme.warning),
-          title: Text(
-            ann.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(
-            ann.preview,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const UserPengumumanScreen()),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildActiveVoting() {
-    if (_summary!.activeVoting == null) return const SizedBox();
-    final vote = _summary!.activeVoting!;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
-        child: ListTile(
-          leading: const Icon(Icons.how_to_vote, color: AppTheme.primary),
-          title: Text(
-            vote.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: const Text('Voting Aktif'),
-        ),
-      ),
-    );
-  }
 
   Widget _buildMyActiveLoan() {
     if (_summary!.myActiveLoan == null) return const SizedBox();

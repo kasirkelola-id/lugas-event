@@ -71,8 +71,8 @@ class DashboardTest extends \Tests\Support\BaseTest
 
         // Announcement
         $db->table('pengumuman')->insertBatch([
-            ['karang_taruna_id' => $tenantA, 'judul' => 'Pengumuman A', 'isi' => 'Isi', 'status_aktif' => 1, 'dibuat_oleh' => $adminIdA],
-            ['karang_taruna_id' => $tenantB, 'judul' => 'Pengumuman B', 'isi' => 'Isi', 'status_aktif' => 1, 'dibuat_oleh' => $adminIdB],
+            ['karang_taruna_id' => $tenantA, 'judul' => 'Pengumuman A', 'isi' => 'Isi', 'status_aktif' => 1, 'dibuat_oleh' => $adminIdA, 'dashboard_until' => date('Y-m-d H:i:s', strtotime('+3 days'))],
+            ['karang_taruna_id' => $tenantB, 'judul' => 'Pengumuman B', 'isi' => 'Isi', 'status_aktif' => 1, 'dibuat_oleh' => $adminIdB, 'dashboard_until' => date('Y-m-d H:i:s', strtotime('+3 days'))],
         ]);
 
         // Voting
@@ -103,10 +103,10 @@ class DashboardTest extends \Tests\Support\BaseTest
         // Ordinary member tidak menerima `management_metrics`
         $this->assertNull($responseBody['data']['management']);
         
-        // Tenant isolation: should see Event A, Pengumuman A, Voting A, Loan A
+        $this->assertNotNull($responseBody['data']['upcoming_event'], json_encode($responseBody));
         $this->assertEquals('Event A', $responseBody['data']['upcoming_event']['title']);
-        $this->assertEquals('Pengumuman A', $responseBody['data']['latest_announcement']['title']);
-        $this->assertEquals('Voting A', $responseBody['data']['active_voting']['title']);
+        $this->assertEquals('Pengumuman A', $responseBody['data']['community_activity']['announcement']['item']['title']);
+        $this->assertEquals('Voting A', $responseBody['data']['community_activity']['voting']['item']['title']);
         $this->assertEquals('Item A', $responseBody['data']['my_active_loan']['inventory_name']);
 
         // TEST 2: Tenant Isolation & RBAC for Admin A
@@ -171,7 +171,7 @@ class DashboardTest extends \Tests\Support\BaseTest
         $this->assertEquals('Event Sedang Berlangsung', $body2['data']['upcoming_event']['title']);
     }
 
-    public function testDashboardAnnouncementAndVotingSelection()
+    public function testDashboardCommunityActivitySelection()
     {
         $tenantId = 1;
         $db = \Config\Database::connect();
@@ -182,11 +182,11 @@ class DashboardTest extends \Tests\Support\BaseTest
         $db->table('users')->insert(['id' => $adminId, 'username' => 'admin', 'password' => password_hash('123', PASSWORD_BCRYPT), 'nama_lengkap' => 'Admin', 'role_level' => 'admin', 'karang_taruna_id' => $tenantId]);
         $db->table('organization_members')->insert(['user_id' => $adminId, 'karang_taruna_id' => $tenantId, 'role_level' => 'admin', 'status_aktif' => 1, 'username' => 'admin']);
 
-        // Announcements: A lama aktif, B terbaru nonaktif, C terbaru aktif
+        // Announcements: A lama expired, B terbaru nonaktif, C terbaru aktif & belum expired
         $db->table('pengumuman')->insertBatch([
-            ['id' => 1, 'karang_taruna_id' => $tenantId, 'judul' => 'Pengumuman A', 'isi' => 'A', 'status_aktif' => 1, 'dibuat_oleh' => $adminId, 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))],
-            ['id' => 2, 'karang_taruna_id' => $tenantId, 'judul' => 'Pengumuman B', 'isi' => 'B', 'status_aktif' => 0, 'dibuat_oleh' => $adminId, 'created_at' => date('Y-m-d H:i:s', strtotime('-1 days'))],
-            ['id' => 3, 'karang_taruna_id' => $tenantId, 'judul' => 'Pengumuman C', 'isi' => 'C', 'status_aktif' => 1, 'dibuat_oleh' => $adminId, 'created_at' => date('Y-m-d H:i:s')],
+            ['id' => 1, 'karang_taruna_id' => $tenantId, 'judul' => 'Pengumuman A', 'isi' => 'A', 'status_aktif' => 1, 'dibuat_oleh' => $adminId, 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days')), 'dashboard_until' => date('Y-m-d H:i:s', strtotime('-1 days'))],
+            ['id' => 2, 'karang_taruna_id' => $tenantId, 'judul' => 'Pengumuman B', 'isi' => 'B', 'status_aktif' => 0, 'dibuat_oleh' => $adminId, 'created_at' => date('Y-m-d H:i:s', strtotime('-1 days')), 'dashboard_until' => date('Y-m-d H:i:s', strtotime('+3 days'))],
+            ['id' => 3, 'karang_taruna_id' => $tenantId, 'judul' => 'Pengumuman C', 'isi' => 'C', 'status_aktif' => 1, 'dibuat_oleh' => $adminId, 'created_at' => date('Y-m-d H:i:s'), 'dashboard_until' => date('Y-m-d H:i:s', strtotime('+3 days'))],
         ]);
 
         // Votings: A completed, B draft, C active
@@ -196,17 +196,26 @@ class DashboardTest extends \Tests\Support\BaseTest
             ['id' => 3, 'karang_taruna_id' => $tenantId, 'title' => 'Voting C', 'description' => 'C', 'status' => 'active', 'created_by' => $adminId, 'created_at' => date('Y-m-d H:i:s')],
         ]);
 
+        // Wheel: A expired, B active
+        $db->table('wheel_sessions')->insertBatch([
+            ['id' => 1, 'karang_taruna_id' => $tenantId, 'title' => 'Undian A', 'status' => 'active', 'created_by_user_id' => $adminId, 'dashboard_until' => date('Y-m-d H:i:s', strtotime('-1 days')), 'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))],
+            ['id' => 2, 'karang_taruna_id' => $tenantId, 'title' => 'Undian B', 'status' => 'active', 'created_by_user_id' => $adminId, 'dashboard_until' => date('Y-m-d H:i:s', strtotime('+1 days')), 'created_at' => date('Y-m-d H:i:s')],
+        ]);
+
         $adminUser = (new UserModel())->find($adminId);
         $adminToken = $this->generateTokenForUser($adminUser);
         
         $result = $this->withHeaders(['Authorization' => 'Bearer ' . $adminToken, 'X-Tenant-ID' => $tenantId])->get("api/dashboard");
         $body = json_decode($result->getJSON(), true);
 
-        // Announcement Selection: should be C
-        $this->assertEquals('Pengumuman C', $body['data']['latest_announcement']['title']);
+        // Announcement Selection: should be C (A is expired, B is inactive)
+        $this->assertEquals('Pengumuman C', $body['data']['community_activity']['announcement']['item']['title']);
 
         // Voting Selection: should be C
-        $this->assertEquals('Voting C', $body['data']['active_voting']['title']);
+        $this->assertEquals('Voting C', $body['data']['community_activity']['voting']['item']['title']);
+
+        // Wheel Selection: should be B
+        $this->assertEquals('Undian B', $body['data']['community_activity']['wheel']['item']['title']);
     }
 
     public function testDashboardLoanSelection()
@@ -259,8 +268,9 @@ class DashboardTest extends \Tests\Support\BaseTest
         $body = json_decode($result->getJSON(), true);
 
         $this->assertNull($body['data']['upcoming_event']);
-        $this->assertNull($body['data']['latest_announcement']);
-        $this->assertNull($body['data']['active_voting']);
+        $this->assertNull($body['data']['community_activity']['announcement']['item']);
+        $this->assertNull($body['data']['community_activity']['voting']['item']);
+        $this->assertNull($body['data']['community_activity']['wheel']['item']);
         $this->assertNull($body['data']['my_active_loan']);
         $this->assertNull($body['data']['management']);
     }

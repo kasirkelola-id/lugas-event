@@ -75,7 +75,7 @@ class WheelController extends ResourceController
             $db->transStart();
         }
 
-        $sessionId = $this->sessionModel->insert([
+        $data = [
             'karang_taruna_id'         => $tenantId,
             'created_by_user_id'       => $userId,
             'title'                    => $title,
@@ -83,7 +83,16 @@ class WheelController extends ResourceController
             'spin_duration_seconds'    => $duration,
             'remove_winner_after_spin' => $removeWinner,
             'status'                   => 'active',
-        ]);
+        ];
+
+        if (!empty($this->request->getVar('dashboard_until'))) {
+            $data['dashboard_until'] = $this->request->getVar('dashboard_until');
+        } else {
+            // Default 1 hour if not provided
+            $data['dashboard_until'] = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        }
+
+        $sessionId = $this->sessionModel->insert($data);
 
         if ($sourceType === 'custom') {
             $insertItems = [];

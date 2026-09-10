@@ -85,6 +85,13 @@ class AnnouncementController extends BaseApiController
             'status_aktif' => isset($rawInput['status_aktif']) ? (int)$rawInput['status_aktif'] : 1,
             'dibuat_oleh' => $userId
         ];
+        
+        if (!empty($rawInput['dashboard_until'])) {
+            $data['dashboard_until'] = $rawInput['dashboard_until'];
+        } else {
+            // Default 3 days if not provided (fallback or client doesn't send it)
+            $data['dashboard_until'] = date('Y-m-d H:i:s', strtotime('+3 days'));
+        }
 
         $id = $model->insert($data);
         $data['id'] = $id;
@@ -144,6 +151,10 @@ class AnnouncementController extends BaseApiController
             'isi' => trim($rawInput['isi']),
             'target_role' => $rawInput['target_role']
         ];
+        
+        if (isset($rawInput['dashboard_until'])) {
+            $data['dashboard_until'] = $rawInput['dashboard_until'];
+        }
         
         if (isset($rawInput['status_aktif'])) {
             $data['status_aktif'] = (int)$rawInput['status_aktif'];
