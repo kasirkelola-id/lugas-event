@@ -10,6 +10,10 @@ import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../../services/wheel_service.dart';
+import '../../models/wheel_model.dart';
+import '../undian/wheel_session_screen.dart';
+import 'package:mobile/screens/widgets/common/wheel_banner.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -21,6 +25,7 @@ class AdminHomeScreen extends StatefulWidget {
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   UserModel? _user;
   DashboardSummary? _summary;
+  DateTime _lastRefreshTime = DateTime.now();
 
   bool _isLoading = true;
   bool _isError = false;
@@ -71,6 +76,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       setState(() {
         _user = userResult['user'] as UserModel;
         _summary = summaryResult['summary'] as DashboardSummary;
+        _lastRefreshTime = DateTime.now();
         _isLoading = false;
       });
     } catch (e) {
@@ -148,6 +154,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         children: [
           _buildHeaderSection(),
           const SizedBox(height: 16),
+          _buildWheelBanner(),
           _buildKasInfo(),
           _buildManagementMetrics(),
           _buildUpcomingEvent(),
@@ -215,6 +222,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildWheelBanner() {
+    return WheelBanner(
+      key: ValueKey(_lastRefreshTime),
+      currentUserId: int.parse(_user!.id.toString()),
     );
   }
 

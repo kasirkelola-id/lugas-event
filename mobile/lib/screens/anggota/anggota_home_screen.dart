@@ -14,6 +14,7 @@ import '../widgets/animations/fade_in_slide.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_error_state.dart';
 import '../../services/chat_service.dart';
+import 'package:mobile/screens/widgets/common/wheel_banner.dart';
 
 class AnggotaHomeScreen extends StatefulWidget {
   const AnggotaHomeScreen({super.key});
@@ -25,6 +26,7 @@ class AnggotaHomeScreen extends StatefulWidget {
 class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
   UserModel? _user;
   DashboardSummary? _summary;
+  DateTime _lastRefreshTime = DateTime.now();
 
   bool _isLoading = true;
   bool _isError = false;
@@ -78,6 +80,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
       setState(() {
         _user = userResult['user'] as UserModel;
         _summary = summaryResult['summary'] as DashboardSummary;
+        _lastRefreshTime = DateTime.now();
         _isLoading = false;
       });
     } catch (e) {
@@ -154,6 +157,10 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildHeaderContent(),
+                WheelBanner(
+                  key: ValueKey(_lastRefreshTime),
+                  currentUserId: int.parse(_user!.id.toString()),
+                ),
                 FadeInSlide(delay: 0.1, child: _buildKasInfo()),
                 FadeInSlide(delay: 0.2, child: _buildUpcomingEvent()),
                 FadeInSlide(delay: 0.3, child: _buildLatestAnnouncement()),
