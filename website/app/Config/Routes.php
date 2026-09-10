@@ -89,6 +89,7 @@ $routes->group('api', function ($routes) {
     $routes->get('wheels/(:num)', 'Api\WheelController::show/$1', ['filter' => 'auth']);
     $routes->post('wheels/(:num)/spin', 'Api\WheelController::spin/$1', ['filter' => 'auth']);
     $routes->patch('wheels/(:num)/status', 'Api\WheelController::close/$1', ['filter' => 'auth']);
+    $routes->post('wheels/(:num)/duplicate', 'Api\WheelController::duplicate/$1', ['filter' => 'auth']);
 
     // Inventories
     $routes->get('inventories', 'Api\InventoryController::index', ['filter' => 'auth']);

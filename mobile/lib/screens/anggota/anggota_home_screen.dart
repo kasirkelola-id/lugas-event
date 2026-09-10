@@ -217,9 +217,9 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text(
-                          'Kas Terkini',
-                          style: TextStyle(
+                        Text(
+                          'Kas ${_getMonthYearName()}',
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.textSecondary,
@@ -234,13 +234,25 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Rp ${_summary!.kasBalance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    color: AppTheme.textPrimary,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Total Saldo Kas',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      'Rp ${_summary!.kasBalance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 const Divider(height: 1, color: Colors.black12),
@@ -275,7 +287,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Rp ${_summary!.kasPemasukan.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                                  'Rp ${_summary!.pemasukanBulanIni.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -319,7 +331,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Rp ${_summary!.kasPengeluaran.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                                  'Rp ${_summary!.pengeluaranBulanIni.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -335,12 +347,50 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Saldo Bersih Bulan Ini',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Rp ${(_summary!.pemasukanBulanIni - _summary!.pengeluaranBulanIni).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: (_summary!.pemasukanBulanIni - _summary!.pengeluaranBulanIni) >= 0 ? AppTheme.success : AppTheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  String _getMonthYearName() {
+    final now = DateTime.now();
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${months[now.month - 1]} ${now.year}';
   }
 
   Widget _buildHeaderContent() {
@@ -426,7 +476,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                event.date,
+                _formatDate(event.date),
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 12),
@@ -465,5 +515,18 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
         ),
       ),
     );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final dt = DateTime.parse(dateStr);
+      final months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      ];
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    } catch (e) {
+      return dateStr;
+    }
   }
 }

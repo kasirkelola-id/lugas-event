@@ -101,7 +101,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
     );
     final usernameController = TextEditingController(text: _user!.username);
     final whatsappController = TextEditingController(text: _user!.noWhatsapp);
-    int selectedRt = _user!.rt;
+    final rtController = TextEditingController(text: _user!.rt.toString().padLeft(2, '0'));
     bool isLoadingSubmit = false;
 
     await showDialog(
@@ -129,99 +129,117 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          alignment: Alignment.centerLeft,
-                          child: const Text(
-                            'Identitas Global',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primary,
+                        Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppTheme.radiusLarge,
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Identitas Global',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: namaLengkapController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Nama Lengkap',
+                                    border: OutlineInputBorder(
+                                      borderRadius: AppTheme.radiusMedium,
+                                    ),
+                                  ),
+                                  validator: (value) => value == null || value.isEmpty
+                                      ? 'Wajib diisi'
+                                      : null,
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: namaPanggilanController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Nama Panggilan',
+                                    border: OutlineInputBorder(
+                                      borderRadius: AppTheme.radiusMedium,
+                                    ),
+                                  ),
+                                  validator: (value) => value == null || value.isEmpty
+                                      ? 'Wajib diisi'
+                                      : null,
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: whatsappController,
+                                  decoration: InputDecoration(
+                                    labelText: 'No. WhatsApp',
+                                    border: OutlineInputBorder(
+                                      borderRadius: AppTheme.radiusMedium,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                        TextFormField(
-                          controller: namaLengkapController,
-                          decoration: InputDecoration(
-                            labelText: 'Nama Lengkap',
-                            border: OutlineInputBorder(
-                              borderRadius: AppTheme.radiusMedium,
-                            ),
-                          ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Wajib diisi'
-                              : null,
                         ),
                         const SizedBox(height: 16),
-                        TextFormField(
-                          controller: namaPanggilanController,
-                          decoration: InputDecoration(
-                            labelText: 'Nama Panggilan',
-                            border: OutlineInputBorder(
-                              borderRadius: AppTheme.radiusMedium,
+                        Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppTheme.radiusLarge,
+                            side: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Identitas Tenant (Keanggotaan)',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: usernameController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Username (Spesifik Karang Taruna Ini)',
+                                    border: OutlineInputBorder(
+                                      borderRadius: AppTheme.radiusMedium,
+                                    ),
+                                  ),
+                                  validator: (value) => value == null || value.isEmpty
+                                      ? 'Wajib diisi'
+                                      : null,
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: rtController,
+                                  decoration: InputDecoration(
+                                    labelText: 'RT (Rukun Tetangga)',
+                                    hintText: 'Contoh: 01, 02',
+                                    border: OutlineInputBorder(
+                                      borderRadius: AppTheme.radiusMedium,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) return 'Wajib diisi';
+                                    final rtVal = int.tryParse(value);
+                                    if (rtVal == null || rtVal <= 0) return 'Format RT tidak valid';
+                                    return null;
+                                  },
+                                ),
+                              ],
                             ),
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Wajib diisi'
-                              : null,
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: whatsappController,
-                          decoration: InputDecoration(
-                            labelText: 'No. WhatsApp',
-                            border: OutlineInputBorder(
-                              borderRadius: AppTheme.radiusMedium,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Divider(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          alignment: Alignment.centerLeft,
-                          child: const Text(
-                            'Identitas Tenant (Keanggotaan)',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                        TextFormField(
-                          controller: usernameController,
-                          decoration: InputDecoration(
-                            labelText: 'Username (Spesifik Karang Taruna Ini)',
-                            border: OutlineInputBorder(
-                              borderRadius: AppTheme.radiusMedium,
-                            ),
-                          ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Wajib diisi'
-                              : null,
-                        ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<int>(
-                          value: selectedRt,
-                          decoration: InputDecoration(
-                            labelText: 'RT (Rukun Tetangga)',
-                            border: OutlineInputBorder(
-                              borderRadius: AppTheme.radiusMedium,
-                            ),
-                          ),
-                          items: List.generate(20, (index) {
-                            final rtVal = index + 1;
-                            return DropdownMenuItem(
-                              value: rtVal,
-                              child: Text(
-                                'RT ${rtVal.toString().padLeft(2, '0')}',
-                              ),
-                            );
-                          }),
-                          onChanged: (val) {
-                            if (val != null)
-                              setStateDialog(() => selectedRt = val);
-                          },
                         ),
                         const SizedBox(height: 24),
                         Row(
@@ -254,7 +272,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                                           'username': usernameController.text,
                                           'no_whatsapp':
                                               whatsappController.text,
-                                          'rt': selectedRt,
+                                          'rt': int.tryParse(rtController.text) ?? _user!.rt,
                                         };
 
                                         final result =

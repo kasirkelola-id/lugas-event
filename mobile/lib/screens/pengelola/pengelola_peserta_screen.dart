@@ -22,11 +22,18 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
   bool _isLoading = true;
   String _searchQuery = '';
   String? _errorMessage;
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -128,46 +135,35 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                     preferredSize: const Size.fromHeight(130),
                     child: Column(
                       children: [
-                        // Floating Search Bar
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
+                        // Search Bar
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Cari acara...',
+                              prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear, color: AppTheme.textSecondary),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() => _searchQuery = '');
+                                      },
+                                    )
+                                  : null,
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: AppTheme.radiusLarge,
+                                borderSide: BorderSide.none,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.search, color: Colors.grey),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: TextField(
-                                  decoration: const InputDecoration(
-                                    hintText: 'Cari acara...',
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                  onChanged: (value) =>
-                                      setState(() => _searchQuery = value),
-                                ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
                               ),
-                            ],
+                            ),
+                            onChanged: (value) => setState(() => _searchQuery = value),
                           ),
                         ),
                         // Tab Bar

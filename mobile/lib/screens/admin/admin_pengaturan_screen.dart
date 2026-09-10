@@ -164,6 +164,22 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
                     },
                   ),
                   const SizedBox(height: 32),
+                  const Text(
+                    'Acara & Absensi',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Atur radius absensi default untuk semua acara yang membutuhkan GPS.',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _defaultRadiusController,

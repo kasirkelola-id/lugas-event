@@ -6,9 +6,11 @@ import '../../models/user_model.dart';
 import '../../models/announcement_model.dart';
 import '../widgets/app_drawer.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'pengumuman_detail_screen.dart';
 
 class UserPengumumanScreen extends StatefulWidget {
-  const UserPengumumanScreen({super.key});
+  final bool fromDrawer;
+  const UserPengumumanScreen({super.key, this.fromDrawer = false});
 
   @override
   State<UserPengumumanScreen> createState() => _UserPengumumanScreenState();
@@ -77,7 +79,7 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      drawer: _user != null ? AppDrawer(user: _user!) : null,
+      drawer: (widget.fromDrawer && _user != null) ? AppDrawer(user: _user!) : null,
       backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
@@ -201,122 +203,104 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                     boxShadow: AppTheme.shadowSoft,
                     border: Border.all(color: Colors.grey.shade200),
                   ),
-                  child: Theme(
-                    data: Theme.of(
-                      context,
-                    ).copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      tilePadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      childrenPadding: const EdgeInsets.only(
-                        left: 20,
-                        right: 20,
-                        bottom: 20,
-                      ),
-                      title: Text(
-                        a.judul,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primary,
+                  child: InkWell(
+                    borderRadius: AppTheme.radiusLarge,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PengumumanDetailScreen(announcement: a),
                         ),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          a.isi,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      leading: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.campaign_outlined,
-                          color: AppTheme.primary,
-                          size: 24,
-                        ),
-                      ),
-                      children: [
-                        const Divider(height: 1, color: Colors.black12),
-                        const SizedBox(height: 16),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            a.isi,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.textSecondary,
-                              height: 1.5,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.person_outline,
-                                  size: 14,
-                                  color: Colors.grey.shade500,
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withOpacity(0.1),
+                                  shape: BoxShape.circle,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Oleh: ${a.pembuat}',
+                                child: const Icon(
+                                  Icons.campaign,
+                                  color: AppTheme.primary,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      a.judul,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      a.isi,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppTheme.textSecondary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    a.pembuat,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: a.targetRole == 'semua'
+                                      ? Colors.blue.shade50
+                                      : Colors.orange.shade50,
+                                  borderRadius: AppTheme.radiusSmall,
+                                ),
+                                child: Text(
+                                  a.targetRole == 'semua' ? 'UNTUK SEMUA' : 'TERBATAS',
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
+                                    fontSize: 10,
+                                    color: a.targetRole == 'semua'
+                                        ? Colors.blue.shade700
+                                        : Colors.orange.shade700,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                              ],
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
                               ),
-                              decoration: BoxDecoration(
-                                color: a.targetRole == 'semua'
-                                    ? Colors.blue.shade50
-                                    : Colors.orange.shade50,
-                                borderRadius: AppTheme.radiusSmall,
-                                border: Border.all(
-                                  color: a.targetRole == 'semua'
-                                      ? Colors.blue.shade200
-                                      : Colors.orange.shade200,
-                                ),
-                              ),
-                              child: Text(
-                                a.targetRole == 'semua'
-                                    ? 'UNTUK SEMUA'
-                                    : (a.targetRole == 'pengelola'
-                                          ? 'UNTUK PENGELOLA'
-                                          : 'UNTUK ANGGOTA'),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: a.targetRole == 'semua'
-                                      ? Colors.blue.shade700
-                                      : Colors.orange.shade700,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

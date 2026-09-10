@@ -18,11 +18,17 @@ class KasController extends BaseApiController
         }
 
         $kasModel = new KasModel();
-        
+
         $builder = $kasModel->builder();
         $builder->select('kas.*, users.nama_lengkap as pembuat');
         $builder->join('users', 'users.id = kas.dibuat_oleh', 'left');
         $builder->where('kas.karang_taruna_id', $tenantId);
+
+        $month = $this->request->getVar('month');
+        if (!empty($month) && preg_match('/^\d{4}-\d{2}$/', $month)) {
+            $builder->like('kas.tanggal', $month, 'after');
+        }
+
         $builder->orderBy('kas.tanggal', 'DESC');
         $builder->orderBy('kas.created_at', 'DESC');
         $transaksi = $builder->get()->getResultArray();
@@ -70,7 +76,7 @@ class KasController extends BaseApiController
 
         $inputDate = new \DateTime($rawInput['tanggal']);
         $today = new \DateTime(date('Y-m-d'));
-        
+
         if ($inputDate < $today) {
             $diff = $today->diff($inputDate);
             if ($diff->days > $limitDays) {
@@ -131,7 +137,7 @@ class KasController extends BaseApiController
                                        ->get()
                                        ->getRow()
                                        ->nominal ?? 0;
-                                       
+
         $thisMonthPengeluaran = $kasModel->where('karang_taruna_id', $tenantId)
                                          ->where('jenis', 'pengeluaran')
                                          ->like('tanggal', $currentMonth, 'after')

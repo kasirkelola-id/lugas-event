@@ -24,11 +24,18 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
   String _searchQuery = '';
   String _sortBy = 'Tanggal Acara (Terdekat)';
   String? _errorMessage;
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -136,91 +143,86 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                     preferredSize: const Size.fromHeight(130),
                     child: Column(
                       children: [
-                        // Floating Search Bar
-                        Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
+                        // Search Bar
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                           child: Row(
                             children: [
-                              const Icon(Icons.search, color: Colors.grey),
-                              const SizedBox(width: 8),
                               Expanded(
                                 child: TextField(
-                                  decoration: const InputDecoration(
+                                  controller: _searchController,
+                                  decoration: InputDecoration(
                                     hintText: 'Cari acara...',
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      vertical: 12,
+                                    prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                                    suffixIcon: _searchQuery.isNotEmpty
+                                        ? IconButton(
+                                            icon: const Icon(Icons.clear, color: AppTheme.textSecondary),
+                                            onPressed: () {
+                                              _searchController.clear();
+                                              setState(() => _searchQuery = '');
+                                            },
+                                          )
+                                        : null,
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: AppTheme.radiusLarge,
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
                                     ),
                                   ),
-                                  onChanged: (value) =>
-                                      setState(() => _searchQuery = value),
+                                  onChanged: (value) => setState(() => _searchQuery = value),
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               Container(
-                                height: 24,
-                                width: 1,
-                                color: Colors.grey.shade300,
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: AppTheme.radiusLarge,
                                 ),
-                              ),
-                              DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _sortBy,
-                                  icon: const Icon(
-                                    Icons.tune,
-                                    color: AppTheme.primary,
-                                    size: 20,
-                                  ),
-                                  alignment: AlignmentDirectional.centerEnd,
-                                  onChanged: (String? newValue) {
-                                    if (newValue != null) {
-                                      setState(() => _sortBy = newValue);
-                                    }
-                                  },
-                                  items:
-                                      <String>[
-                                        'Tanggal Acara (Terdekat)',
-                                        'Tanggal Dibuat',
-                                        'Nama Acara',
-                                      ].map<DropdownMenuItem<String>>((
-                                        String value,
-                                      ) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(
-                                            value == 'Tanggal Acara (Terdekat)'
-                                                ? 'Terdekat'
-                                                : value == 'Tanggal Dibuat'
-                                                ? 'Terbaru'
-                                                : 'Nama',
-                                            style: const TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppTheme.primary,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _sortBy,
+                                    icon: const Icon(
+                                      Icons.tune,
+                                      color: AppTheme.primary,
+                                      size: 20,
+                                    ),
+                                    alignment: AlignmentDirectional.centerEnd,
+                                    onChanged: (String? newValue) {
+                                      if (newValue != null) {
+                                        setState(() => _sortBy = newValue);
+                                      }
+                                    },
+                                    items:
+                                        <String>[
+                                          'Tanggal Acara (Terdekat)',
+                                          'Tanggal Dibuat',
+                                          'Nama Acara',
+                                        ].map<DropdownMenuItem<String>>((
+                                          String value,
+                                        ) {
+                                          return DropdownMenuItem<String>(
+                                            value: value,
+                                            child: Text(
+                                              value == 'Tanggal Acara (Terdekat)'
+                                                  ? 'Terdekat'
+                                                  : value == 'Tanggal Dibuat'
+                                                  ? 'Terbaru'
+                                                  : 'Nama',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppTheme.primary,
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      }).toList(),
+                                          );
+                                        }).toList(),
+                                  ),
                                 ),
                               ),
                             ],
@@ -470,6 +472,16 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                       ),
                     ],
                   ),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 12),
                     child: Divider(height: 1, color: Colors.black12),

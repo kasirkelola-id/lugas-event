@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_dialog.dart';
 import '../widgets/common/app_error_state.dart';
+import 'create_wheel_screen.dart';
 
 class WheelSessionScreen extends StatefulWidget {
   final int sessionId;
@@ -269,8 +270,8 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
         Expanded(
           flex: 3,
           child: Center(
-            child: activeItems.length < 2
-                ? const Text('Kandidat tidak cukup untuk diputar')
+            child: activeItems.isEmpty
+                ? const Text('Kandidat sudah habis')
                 : Padding(
                     padding: const EdgeInsets.all(32.0),
                     child: Stack(
@@ -310,7 +311,7 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
           ),
         ),
 
-        if (isActive && isHost && activeItems.length >= 2)
+        if (isActive && isHost && activeItems.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: ElevatedButton(
@@ -326,9 +327,38 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
                 ),
               ),
               onPressed: _isSpinning ? null : _spinWheel,
-              child: const Text(
-                'PUTAR SEKARANG',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              child: Text(
+                activeItems.length == 1 ? 'PILIH OTOMATIS' : 'PUTAR SEKARANG',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+
+        if (!isActive && isHost)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.primary, width: 2),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateWheelScreen()),
+                );
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text(
+                'BUAT UNDIAN LAGI',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ),

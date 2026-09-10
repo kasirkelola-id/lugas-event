@@ -8,7 +8,7 @@ import '../pengelola/pengelola_home_screen.dart';
 import '../pengelola/pengelola_acara_screen.dart';
 import '../pengelola/pengelola_riwayat_screen.dart';
 import '../pengelola/pengelola_peserta_screen.dart';
-import '../pengelola/pengelola_laporan_screen.dart';
+
 import '../pengelola/pengelola_profil_screen.dart';
 import '../pengelola/pengelola_pengguna_screen.dart';
 import '../pengelola/pengelola_approval_screen.dart';
@@ -19,7 +19,7 @@ import '../admin/admin_pengguna_screen.dart';
 import '../admin/admin_role_screen.dart';
 import '../admin/admin_acara_screen.dart';
 import '../admin/admin_peserta_screen.dart';
-import '../admin/admin_laporan_screen.dart';
+
 import '../admin/admin_pengumuman_screen.dart';
 
 import '../admin/admin_pengaturan_screen.dart';
@@ -304,13 +304,13 @@ class AppDrawer extends StatelessWidget {
         context,
         Icons.how_to_vote_outlined,
         'Voting & Pemilu',
-        const VotingListScreen(),
+        const VotingListScreen(fromDrawer: true),
       ),
       _buildItem(
         context,
         Icons.casino_outlined,
         'Undian',
-        const WheelListScreen(),
+        const WheelListScreen(fromDrawer: true),
       ),
       _buildItem(
         context,
@@ -327,20 +327,12 @@ class AppDrawer extends StatelessWidget {
         KasScreen(user: user),
       ),
 
-      _buildSectionLabel('Analisis'),
-      _buildItem(
-        context,
-        Icons.insert_chart_outlined,
-        'Laporan',
-        const PengelolaLaporanScreen(),
-      ),
-
       _buildSectionLabel('Lainnya'),
       _buildItem(
         context,
         Icons.campaign_outlined,
         'Pengumuman',
-        const UserPengumumanScreen(),
+        const UserPengumumanScreen(fromDrawer: true),
       ),
       _buildItem(
         context,
@@ -399,13 +391,13 @@ class AppDrawer extends StatelessWidget {
         context,
         Icons.how_to_vote_outlined,
         'Voting & Pemilu',
-        const VotingListScreen(),
+        const VotingListScreen(fromDrawer: true),
       ),
       _buildItem(
         context,
         Icons.casino_outlined,
         'Undian',
-        const WheelListScreen(),
+        const WheelListScreen(fromDrawer: true),
       ),
       _buildItem(
         context,
@@ -426,14 +418,14 @@ class AppDrawer extends StatelessWidget {
           context,
           Icons.campaign_outlined,
           'Kelola Pengumuman',
-          const AdminPengumumanScreen(),
+          const AdminPengumumanScreen(fromDrawer: true),
         ),
       ] else ...[
         _buildItem(
           context,
           Icons.campaign_outlined,
           'Pengumuman',
-          const UserPengumumanScreen(),
+          const UserPengumumanScreen(fromDrawer: true),
         ),
       ],
 
@@ -495,27 +487,19 @@ class AppDrawer extends StatelessWidget {
         context,
         Icons.how_to_vote_outlined,
         'Voting & Pemilu',
-        const VotingListScreen(),
+        const VotingListScreen(fromDrawer: true),
       ),
       _buildItem(
         context,
         Icons.casino_outlined,
         'Undian',
-        const WheelListScreen(),
+        const WheelListScreen(fromDrawer: true),
       ),
       _buildItem(
         context,
         Icons.inventory_2_outlined,
         'Inventaris',
         const InventoryMainScreen(),
-      ),
-
-      _buildSectionLabel('Analisis'),
-      _buildItem(
-        context,
-        Icons.insert_chart_outlined,
-        'Laporan',
-        const AdminLaporanScreen(),
       ),
 
       _buildSectionLabel('Keuangan'),
@@ -531,7 +515,7 @@ class AppDrawer extends StatelessWidget {
         context,
         Icons.campaign_outlined,
         'Pengumuman',
-        const AdminPengumumanScreen(),
+        const AdminPengumumanScreen(fromDrawer: true),
       ),
 
       _buildItem(

@@ -10,9 +10,11 @@ import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/empty_state.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../shared/pengumuman_detail_screen.dart';
 
 class AdminPengumumanScreen extends StatefulWidget {
-  const AdminPengumumanScreen({super.key});
+  final bool fromDrawer;
+  const AdminPengumumanScreen({super.key, this.fromDrawer = false});
 
   @override
   State<AdminPengumumanScreen> createState() => _AdminPengumumanScreenState();
@@ -135,7 +137,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                         ),
                         const SizedBox(height: 16),
                         DropdownButtonFormField<String>(
-                          initialValue: targetRole,
+                          value: targetRole,
                           decoration: InputDecoration(
                             labelText: 'Target Pengguna',
                             border: OutlineInputBorder(
@@ -360,7 +362,7 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      drawer: _user != null ? AppDrawer(user: _user!) : null,
+      drawer: (widget.fromDrawer && _user != null) ? AppDrawer(user: _user!) : null,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showFormDialog(),
         backgroundColor: AppTheme.primary,
@@ -547,72 +549,59 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                         ],
                       ),
                     ),
-                    Theme(
-                      data: Theme.of(
-                        context,
-                      ).copyWith(dividerColor: Colors.transparent),
-                      child: ExpansionTile(
-                        tilePadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 8,
-                        ),
-                        childrenPadding: const EdgeInsets.only(
-                          left: 20,
-                          right: 20,
-                          bottom: 20,
-                        ),
-                        title: Text(
-                          a.judul,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PengumumanDetailScreen(announcement: a),
                           ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            a.isi,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                        children: [
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              a.isi,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              a.judul,
                               style: const TextStyle(
-                                fontSize: 14,
-                                color: AppTheme.textSecondary,
-                                height: 1.5,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.person_outline,
-                                size: 14,
-                                color: Colors.grey.shade500,
+                            const SizedBox(height: 8),
+                            Text(
+                              a.isi,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Dibuat oleh: ${a.pembuat}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w500,
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person_outline,
+                                  size: 14,
+                                  color: Colors.grey.shade500,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Dibuat oleh: ${a.pembuat}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const Divider(height: 1, color: Colors.black12),

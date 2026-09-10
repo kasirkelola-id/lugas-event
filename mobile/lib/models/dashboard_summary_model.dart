@@ -6,8 +6,9 @@ class DashboardSummary {
   final Map<String, dynamic>? communityActivity;
   final ManagementMetrics? management;
   final int kasBalance;
-  final int kasPemasukan;
-  final int kasPengeluaran;
+  final int pemasukanBulanIni;
+  final int pengeluaranBulanIni;
+  final int netBulanIni;
 
   DashboardSummary({
     this.upcomingEvent,
@@ -17,8 +18,9 @@ class DashboardSummary {
     this.communityActivity,
     this.management,
     this.kasBalance = 0,
-    this.kasPemasukan = 0,
-    this.kasPengeluaran = 0,
+    this.pemasukanBulanIni = 0,
+    this.pengeluaranBulanIni = 0,
+    this.netBulanIni = 0,
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
@@ -44,11 +46,14 @@ class DashboardSummary {
       kasBalance: json['kas_balance'] != null
           ? int.tryParse(json['kas_balance'].toString()) ?? 0
           : 0,
-      kasPemasukan: json['kas_pemasukan'] != null
-          ? int.tryParse(json['kas_pemasukan'].toString()) ?? 0
+      pemasukanBulanIni: json['kas_pemasukan_bulan_ini'] != null
+          ? int.tryParse(json['kas_pemasukan_bulan_ini'].toString()) ?? 0
           : 0,
-      kasPengeluaran: json['kas_pengeluaran'] != null
-          ? int.tryParse(json['kas_pengeluaran'].toString()) ?? 0
+      pengeluaranBulanIni: json['kas_pengeluaran_bulan_ini'] != null
+          ? int.tryParse(json['kas_pengeluaran_bulan_ini'].toString()) ?? 0
+          : 0,
+      netBulanIni: json['kas_net_bulan_ini'] != null
+          ? int.tryParse(json['kas_net_bulan_ini'].toString()) ?? 0
           : 0,
     );
   }

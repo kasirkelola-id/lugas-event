@@ -115,10 +115,10 @@ class WheelController extends ResourceController
         } else {
             // mode members
             // Items are actually array of organization_members ids or user_ids?
-            // The prompt says MVP supports selecting active members. 
+            // The prompt says MVP supports selecting active members.
             // We expect an array of user_id in $items, or if empty, all active members.
             $memberModel = new OrganizationMemberModel();
-            
+
             $builder = $memberModel->builder()
                 ->select('organization_members.user_id, users.nama_lengkap')
                 ->join('users', 'users.id = organization_members.user_id')
@@ -130,7 +130,7 @@ class WheelController extends ResourceController
             }
 
             $activeMembers = $builder->get()->getResultArray();
-            
+
             if (count($activeMembers) < 2) {
                 $db->transRollback();
                 return $this->failValidationErrors('Minimal 2 kandidat anggota aktif diperlukan');
@@ -167,7 +167,7 @@ class WheelController extends ResourceController
     public function show($id = null)
     {
         $tenantId = AuthService::getTenantId();
-        
+
         $session = $this->sessionModel->find($id);
         if (!$session || $session['karang_taruna_id'] != $tenantId) {
             return $this->failNotFound('Sesi tidak ditemukan');
@@ -202,7 +202,7 @@ class WheelController extends ResourceController
         }
 
         $this->sessionModel->update($id, ['status' => 'closed']);
-        
+
         // Broadcast to socket
         $this->triggerSocketEvent($id, 'wheel_closed', [
             'session_id' => $id
@@ -255,10 +255,9 @@ class WheelController extends ResourceController
                 }
             }
 
-            // Get active items
             $activeItems = $this->itemModel->where('session_id', $id)->where('is_active', 1)->findAll();
-            if (count($activeItems) < 2) {
-                throw new \Exception('Kandidat tidak cukup (minimal 2) untuk diputar', 400);
+            if (count($activeItems) < 1) {
+                throw new \Exception('Kandidat sudah habis', 400);
             }
 
             // Random pick server-side
@@ -283,6 +282,15 @@ class WheelController extends ResourceController
             // Remove winner if ON
             if ($session['remove_winner_after_spin'] == 1) {
                 $this->itemModel->update($winnerItem['id'], ['is_active' => 0]);
+
+                // Auto-finish if 1 or 0 remaining items
+                $remainingItems = $this->itemModel->where('session_id', $id)->where('is_active', 1)->countAllResults();
+                if ($remainingItems <= 1) {
+                    $this->sessionModel->update($id, ['status' => 'closed']);
+                    $this->triggerSocketEvent($id, 'wheel_closed', [
+                        'session_id' => $id
+                    ]);
+                }
             }
 
             if (ENVIRONMENT !== 'testing' && $db->transStatus() === false) {
@@ -318,6 +326,64 @@ class WheelController extends ResourceController
             if ($code == 400) return $this->failValidationErrors($msg);
             return $this->failServerError($msg);
         }
+    }
+
+    public function duplicate($id = null)
+    {
+        $tenantId = AuthService::getTenantId();
+        $userId   = AuthService::getGlobalUserId();
+
+        if (!$tenantId || !$userId) {
+            return $this->failUnauthorized('Unauthorized');
+        }
+
+        $session = $this->sessionModel->find($id);
+        if (!$session || $session['karang_taruna_id'] != $tenantId) {
+            return $this->failNotFound('Sesi tidak ditemukan');
+        }
+
+        $db = \Config\Database::connect();
+        if (ENVIRONMENT !== 'testing') {
+            $db->transStart();
+        }
+
+        $newSessionData = [
+            'karang_taruna_id'         => $tenantId,
+            'created_by_user_id'       => $userId, // Current creator
+            'title'                    => $session['title'] . ' (Copy)',
+            'source_type'              => $session['source_type'],
+            'spin_duration_seconds'    => $session['spin_duration_seconds'],
+            'remove_winner_after_spin' => $session['remove_winner_after_spin'],
+            'status'                   => 'active',
+            'dashboard_until'          => date('Y-m-d H:i:s', strtotime('+1 hour')),
+        ];
+
+        $newSessionId = $this->sessionModel->insert($newSessionData);
+
+        $oldItems = $this->itemModel->where('session_id', $id)->findAll();
+        $insertItems = [];
+        foreach ($oldItems as $item) {
+            $insertItems[] = [
+                'session_id'     => $newSessionId,
+                'member_user_id' => $item['member_user_id'],
+                'label_snapshot' => $item['label_snapshot'],
+                'is_active'      => 1 // Reset to active for all items in the new session
+            ];
+        }
+
+        if (!empty($insertItems)) {
+            $this->itemModel->insertBatch($insertItems);
+        }
+
+        if (ENVIRONMENT !== 'testing') {
+            $db->transComplete();
+        }
+
+        return $this->respondCreated([
+            'success' => true,
+            'message' => 'Sesi undian berhasil diduplikasi',
+            'session_id' => $newSessionId
+        ]);
     }
 
     private function triggerSocketEvent($sessionId, $event, $payload, $tenantId = null)

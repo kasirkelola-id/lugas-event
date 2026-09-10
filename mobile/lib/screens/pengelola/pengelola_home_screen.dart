@@ -278,9 +278,9 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text(
-                          'Kas Terkini',
-                          style: TextStyle(
+                        Text(
+                          'Kas ${_getMonthYearName()}',
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: AppTheme.textSecondary,
@@ -295,13 +295,25 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Rp ${_summary!.kasBalance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    color: AppTheme.textPrimary,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Total Saldo Kas',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      'Rp ${_summary!.kasBalance.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 const Divider(height: 1, color: Colors.black12),
@@ -336,7 +348,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Rp ${_summary!.kasPemasukan.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                                  'Rp ${_summary!.pemasukanBulanIni.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -380,7 +392,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                                   ),
                                 ),
                                 Text(
-                                  'Rp ${_summary!.kasPengeluaran.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                                  'Rp ${_summary!.pengeluaranBulanIni.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -395,6 +407,35 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Saldo Bersih Bulan Ini',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Rp ${(_summary!.pemasukanBulanIni - _summary!.pengeluaranBulanIni).toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: (_summary!.pemasukanBulanIni - _summary!.pengeluaranBulanIni) >= 0 ? AppTheme.success : AppTheme.error,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -453,35 +494,47 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
   }
 
   Widget _buildMetricCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: AppTheme.radiusMedium,
-        boxShadow: AppTheme.shadowSoft,
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
+  }
+
+  String _getMonthYearName() {
+    final now = DateTime.now();
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return '${months[now.month - 1]} ${now.year}';
   }
 
   Widget _buildUpcomingEvent() {
@@ -512,7 +565,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                event.date,
+                _formatDate(event.date),
                 style: const TextStyle(color: Colors.white),
               ),
             ],
@@ -520,5 +573,18 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
         ),
       ),
     );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final dt = DateTime.parse(dateStr);
+      final months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      ];
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    } catch (e) {
+      return dateStr;
+    }
   }
 }

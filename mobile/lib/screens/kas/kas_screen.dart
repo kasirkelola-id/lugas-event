@@ -22,6 +22,7 @@ class KasScreen extends StatefulWidget {
 }
 
 class _KasScreenState extends State<KasScreen> {
+  DateTime _selectedMonth = DateTime.now();
   int _saldo = 0;
   int _pemasukanBulanIni = 0;
   int _pengeluaranBulanIni = 0;
@@ -41,8 +42,10 @@ class _KasScreenState extends State<KasScreen> {
       _errorMessage = null;
     });
 
+    final String monthStr = DateFormat('yyyy-MM').format(_selectedMonth);
+
     final results = await Future.wait([
-      KasService.getKasData(),
+      KasService.getKasData(month: monthStr),
       KasService.getSummary(),
     ]);
 
@@ -348,13 +351,53 @@ class _KasScreenState extends State<KasScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Riwayat Transaksi',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Riwayat Transaksi',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left, color: AppTheme.primary),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      setState(() {
+                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+                      });
+                      _loadData();
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    DateFormat('MMM yyyy', 'id_ID').format(_selectedMonth),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right, color: AppTheme.primary),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      setState(() {
+                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+                      });
+                      _loadData();
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           if (_transaksi.isEmpty)

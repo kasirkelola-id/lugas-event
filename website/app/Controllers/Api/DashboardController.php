@@ -38,7 +38,7 @@ class DashboardController extends BaseApiController
 
         // 1. Upcoming Event
         $eventModel = new EventModel();
-        
+
         $todayEvents = $eventModel
             ->where('karang_taruna_id', $tenantId)
             ->whereIn('status_aktif', [1, '1', 'aktif', 'Aktif'])
@@ -51,7 +51,7 @@ class DashboardController extends BaseApiController
         $upcomingEvent = null;
 
         $nowTime = time();
-        
+
         $beforeMinutes = (int)SettingService::getSetting($tenantId, 'attendance_before_minutes', 30);
         $afterMinutes = (int)SettingService::getSetting($tenantId, 'attendance_after_minutes', 30);
 
@@ -88,7 +88,7 @@ class DashboardController extends BaseApiController
             'voting' => ['item' => null, 'additional_count' => 0],
             'wheel' => ['item' => null, 'additional_count' => 0],
         ];
-        
+
         $nowStr = date('Y-m-d H:i:s');
 
         // Announcement
@@ -97,7 +97,7 @@ class DashboardController extends BaseApiController
             ->where('karang_taruna_id', $tenantId)
             ->where('status_aktif', 1)
             ->where('dashboard_until >', $nowStr);
-            
+
         $totalAnnouncements = $announcementBuilder->countAllResults(false);
 
         if ($totalAnnouncements > 0) {
@@ -124,9 +124,9 @@ class DashboardController extends BaseApiController
                 ->where('waktu_selesai >', $nowStr)
                 ->orWhere('waktu_selesai IS NULL')
             ->groupEnd();
-            
+
         $totalVotings = $votingBuilder->countAllResults(false);
-        
+
         if ($totalVotings > 0) {
             $latestVoting = $votingBuilder->orderBy('created_at', 'DESC')->first();
             $data['community_activity']['voting']['item'] = [
@@ -144,24 +144,24 @@ class DashboardController extends BaseApiController
             ->where('karang_taruna_id', $tenantId)
             ->where('status !=', 'closed')
             ->where('dashboard_until >', $nowStr);
-            
+
         $totalWheels = $wheelBuilder->countAllResults(false);
 
         if ($totalWheels > 0) {
             $latestWheel = $wheelBuilder->orderBy('created_at', 'DESC')->first();
-            
+
             // Minimal query to check if it's spinning or result available
             $db = \Config\Database::connect();
             $spinCount = $db->table('wheel_results')->where('session_id', $latestWheel['id'])->countAllResults();
-            
+
             $wheelStatus = 'active';
-            // Determine compact state based on some simple rules if needed. 
-            // The prompt says: Prefer backend mengembalikan compact wheel state. 
+            // Determine compact state based on some simple rules if needed.
+            // The prompt says: Prefer backend mengembalikan compact wheel state.
             // We can check if there's any result to say "Pemenang baru saja dipilih" but since realtime handles spins, we can just say active.
             if ($spinCount > 0) {
                 $wheelStatus = 'result_available';
             }
-            
+
             $data['community_activity']['wheel']['item'] = [
                 'id' => $latestWheel['id'],
                 'title' => $latestWheel['title'],
@@ -198,10 +198,9 @@ class DashboardController extends BaseApiController
 
         // 4.5. Kas Balance
         $kasModel = new \App\Models\KasModel();
-        $data['kas_balance'] = (int) $kasModel->getTotalSaldo($tenantId);
 
         $currentMonth = date('Y-m');
-        $data['kas_pemasukan'] = (int) $kasModel->where('karang_taruna_id', $tenantId)
+        $data['kas_pemasukan_bulan_ini'] = (int) $kasModel->where('karang_taruna_id', $tenantId)
                                                 ->where('jenis', 'pemasukan')
                                                 ->like('tanggal', $currentMonth, 'after')
                                                 ->selectSum('nominal')
@@ -209,13 +208,16 @@ class DashboardController extends BaseApiController
                                                 ->getRow()
                                                 ->nominal ?? 0;
 
-        $data['kas_pengeluaran'] = (int) $kasModel->where('karang_taruna_id', $tenantId)
+        $data['kas_pengeluaran_bulan_ini'] = (int) $kasModel->where('karang_taruna_id', $tenantId)
                                                   ->where('jenis', 'pengeluaran')
                                                   ->like('tanggal', $currentMonth, 'after')
                                                   ->selectSum('nominal')
                                                   ->get()
                                                   ->getRow()
                                                   ->nominal ?? 0;
+
+        $data['kas_net_bulan_ini'] = $data['kas_pemasukan_bulan_ini'] - $data['kas_pengeluaran_bulan_ini'];
+        $data['kas_balance'] = $kasModel->getTotalSaldo($tenantId);
 
         // 5. Management Metrics
         // Gunakan RBAC permission untuk melihat metrik

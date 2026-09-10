@@ -45,9 +45,10 @@ class KasService {
     }
   }
 
-  static Future<Map<String, dynamic>> getKasData() async {
+  static Future<Map<String, dynamic>> getKasData({String? month}) async {
     try {
-      final response = await ApiClient.get('/kas');
+      final url = month != null ? '/kas?month=$month' : '/kas';
+      final response = await ApiClient.get(url);
       final result = await _handleResponse(response);
       if (result['success']) {
         try {
