@@ -5,7 +5,7 @@ import '../../services/event_service.dart';
 import '../../models/user_model.dart';
 import '../../models/event_model.dart';
 import '../widgets/app_drawer.dart';
-import 'attendance_list_screen.dart';
+import '../pengelola/attendance_list_screen.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/animations/fade_in_slide.dart';
 
@@ -126,7 +126,7 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                         end: Alignment.bottomRight,
                         colors: [
                           AppTheme.primary,
-                          AppTheme.primary.withOpacity(0.8),
+                          AppTheme.primary.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -137,15 +137,24 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                       children: [
                         // Search Bar
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
                           child: TextField(
                             controller: _searchController,
                             decoration: InputDecoration(
                               hintText: 'Cari acara...',
-                              prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: AppTheme.textSecondary,
+                              ),
                               suffixIcon: _searchQuery.isNotEmpty
                                   ? IconButton(
-                                      icon: const Icon(Icons.clear, color: AppTheme.textSecondary),
+                                      icon: const Icon(
+                                        Icons.clear,
+                                        color: AppTheme.textSecondary,
+                                      ),
                                       onPressed: () {
                                         _searchController.clear();
                                         setState(() => _searchQuery = '');
@@ -163,7 +172,8 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                                 vertical: 14,
                               ),
                             ),
-                            onChanged: (value) => setState(() => _searchQuery = value),
+                            onChanged: (value) =>
+                                setState(() => _searchQuery = value),
                           ),
                         ),
                         // Tab Bar
@@ -171,7 +181,9 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                           indicatorColor: Colors.white,
                           indicatorWeight: 3,
                           labelColor: Colors.white,
-                          unselectedLabelColor: Colors.white.withOpacity(0.6),
+                          unselectedLabelColor: Colors.white.withValues(
+                            alpha: 0.6,
+                          ),
                           labelStyle: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -275,7 +287,7 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
         borderRadius: AppTheme.radiusLarge,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -303,7 +315,7 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.people_alt, color: statusColor),
@@ -333,7 +345,7 @@ class _AdminPesertaScreenState extends State<AdminPesertaScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              event.tanggalAcara,
+                              event.tanggalAcara.split(' ').first,
                               style: const TextStyle(
                                 color: AppTheme.textSecondary,
                                 fontSize: 13,

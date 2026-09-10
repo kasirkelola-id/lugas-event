@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../services/event_service.dart';
-import '../../services/setting_service.dart';
 import '../../services/auth_service.dart';
 import 'package:mobile/screens/auth/login_screen.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../shared/map_picker_screen.dart';
-import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
@@ -22,22 +19,16 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   final _formKey = GlobalKey<FormState>();
   final _namaController = TextEditingController();
   final _tanggalController = TextEditingController();
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   bool _requireGps = false;
   LatLng? _selectedLocation;
-  double _radius = 50.0;
-  final MapController _mapController = MapController();
 
   @override
-  void initState() {
-    super.initState();
-    _fetchDefaultRadius();
-  }
-
-    setState(() {
-      _isLoading = false;
-    });
+  void dispose() {
+    _namaController.dispose();
+    _tanggalController.dispose();
+    super.dispose();
   }
 
   void _pilihTanggal() async {
@@ -143,7 +134,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 'Anggota hanya bisa absen di sekitar lokasi acara',
               ),
               value: _requireGps,
-              activeColor: AppTheme.primary,
+              activeThumbColor: AppTheme.primary,
               onChanged: _isLoading
                   ? null
                   : (val) {
@@ -235,7 +226,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 16),
-
+            ],
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,

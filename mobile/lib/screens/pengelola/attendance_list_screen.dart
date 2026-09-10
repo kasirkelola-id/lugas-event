@@ -21,7 +21,6 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   String? _errorMessage;
   String _searchQuery = '';
   String? _rtFilter;
-  String? _statusFilter;
   final _searchController = TextEditingController();
 
   List<int> get _availableRts {
@@ -36,8 +35,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
           _searchQuery.isEmpty ||
           a.namaLengkap.toLowerCase().contains(_searchQuery.toLowerCase());
       bool matchesRt = _rtFilter == null || a.userRt.toString() == _rtFilter;
-      bool matchesStatus = _statusFilter == null || a.statusKehadiran.toLowerCase() == _statusFilter!.toLowerCase();
-      return matchesSearch && matchesRt && matchesStatus;
+      return matchesSearch && matchesRt;
     }).toList();
   }
 
@@ -143,7 +141,10 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
             prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: const Icon(Icons.clear, color: AppTheme.textSecondary),
+                    icon: const Icon(
+                      Icons.clear,
+                      color: AppTheme.textSecondary,
+                    ),
                     onPressed: () {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
@@ -195,43 +196,6 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                   onSelected: (selected) {
                     setState(() {
                       _rtFilter = rt?.toString();
-                    });
-                  },
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [null, 'Hadir', 'Izin', 'Alfa'].map((status) {
-              final isSelected = _statusFilter == status;
-              final label = status == null ? 'Semua Status' : status;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: FilterChip(
-                  label: Text(label),
-                  selected: isSelected,
-                  selectedColor: AppTheme.warning.withValues(alpha: 0.15),
-                  checkmarkColor: AppTheme.warning,
-                  labelStyle: TextStyle(
-                    color: isSelected ? AppTheme.warning : AppTheme.textSecondary,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                  backgroundColor: AppTheme.surface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.radiusLarge,
-                    side: BorderSide(
-                      color: isSelected
-                          ? AppTheme.warning.withValues(alpha: 0.5)
-                          : Colors.grey.shade300,
-                    ),
-                  ),
-                  onSelected: (selected) {
-                    setState(() {
-                      _statusFilter = status;
                     });
                   },
                 ),

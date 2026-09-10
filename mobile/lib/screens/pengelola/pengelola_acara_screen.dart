@@ -134,7 +134,7 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                         end: Alignment.bottomRight,
                         colors: [
                           AppTheme.primary,
-                          AppTheme.primary.withOpacity(0.8),
+                          AppTheme.primary.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -145,7 +145,10 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                       children: [
                         // Search Bar
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
                           child: Row(
                             children: [
                               Expanded(
@@ -153,10 +156,16 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                                   controller: _searchController,
                                   decoration: InputDecoration(
                                     hintText: 'Cari acara...',
-                                    prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
+                                    prefixIcon: const Icon(
+                                      Icons.search,
+                                      color: AppTheme.textSecondary,
+                                    ),
                                     suffixIcon: _searchQuery.isNotEmpty
                                         ? IconButton(
-                                            icon: const Icon(Icons.clear, color: AppTheme.textSecondary),
+                                            icon: const Icon(
+                                              Icons.clear,
+                                              color: AppTheme.textSecondary,
+                                            ),
                                             onPressed: () {
                                               _searchController.clear();
                                               setState(() => _searchQuery = '');
@@ -174,7 +183,8 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                                       vertical: 14,
                                     ),
                                   ),
-                                  onChanged: (value) => setState(() => _searchQuery = value),
+                                  onChanged: (value) =>
+                                      setState(() => _searchQuery = value),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -183,7 +193,10 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                                   color: Colors.white,
                                   borderRadius: AppTheme.radiusLarge,
                                 ),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
                                     value: _sortBy,
@@ -209,7 +222,8 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                                           return DropdownMenuItem<String>(
                                             value: value,
                                             child: Text(
-                                              value == 'Tanggal Acara (Terdekat)'
+                                              value ==
+                                                      'Tanggal Acara (Terdekat)'
                                                   ? 'Terdekat'
                                                   : value == 'Tanggal Dibuat'
                                                   ? 'Terbaru'
@@ -233,7 +247,9 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                           indicatorColor: Colors.white,
                           indicatorWeight: 3,
                           labelColor: Colors.white,
-                          unselectedLabelColor: Colors.white.withOpacity(0.6),
+                          unselectedLabelColor: Colors.white.withValues(
+                            alpha: 0.6,
+                          ),
                           labelStyle: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -364,7 +380,7 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
         borderRadius: AppTheme.radiusLarge,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -415,7 +431,7 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
+                          color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -461,7 +477,7 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            event.tanggalAcara,
+                            event.tanggalAcara.split(' ').first,
                             style: const TextStyle(
                               color: AppTheme.textPrimary,
                               fontWeight: FontWeight.w600,
@@ -472,6 +488,41 @@ class _PengelolaAcaraScreenState extends State<PengelolaAcaraScreen> {
                       ),
                     ],
                   ),
+                  if (event.latitude != null && event.longitude != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.location_on_outlined,
+                            size: 20,
+                            color: AppTheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Lokasi',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Lat: ${event.latitude!.toStringAsFixed(4)}, Lng: ${event.longitude!.toStringAsFixed(4)}',
+                                style: const TextStyle(
+                                  color: AppTheme.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
