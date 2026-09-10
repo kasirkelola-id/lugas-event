@@ -69,36 +69,9 @@ class AbsensiController extends BaseApiController
 
         // --- Time Window Enforcement ---
         $today = date('Y-m-d');
-        if ($event['tanggal_acara'] !== $today) {
-            if ($today < $event['tanggal_acara']) {
-                return $this->sendError('Belum Waktunya', ['time' => 'Acara ini dijadwalkan pada ' . $event['tanggal_acara'] . '. Absensi belum dibuka.'], 422);
-            } else {
-                return $this->sendError('Waktu Habis', ['time' => 'Acara ini sudah selesai pada ' . $event['tanggal_acara'] . '.'], 422);
-            }
+        if ($today < $event['tanggal_acara']) {
+            return $this->sendError('Belum Waktunya', ['time' => 'Acara ini dijadwalkan pada ' . $event['tanggal_acara'] . '. Absensi belum dibuka.'], 422);
         }
-
-        if (!empty($event['waktu_mulai']) && !empty($event['waktu_selesai'])) {
-            $nowStr = date('H:i:s');
-            $startStr = $event['waktu_mulai'];
-            $endStr = $event['waktu_selesai'];
-            
-            $beforeMinutes = (int)SettingService::getSetting($tenantId, 'attendance_before_minutes', 30);
-            $afterMinutes = (int)SettingService::getSetting($tenantId, 'attendance_after_minutes', 30);
-
-            // Allow X mins early
-            $startTime = strtotime($startStr) - ($beforeMinutes * 60);
-            // Allow Y mins late
-            $endTime = strtotime($endStr) + ($afterMinutes * 60);
-            $nowTime = strtotime($nowStr);
-
-            if ($nowTime < $startTime) {
-                return $this->sendError('Belum Waktunya', ['time' => 'Absensi belum dibuka. Silakan kembali nanti.'], 422);
-            }
-            if ($nowTime > $endTime) {
-                return $this->sendError('Waktu Habis', ['time' => 'Absensi sudah ditutup.'], 422);
-            }
-        }
-        // --------------------------------
 
         $userLat = $rawInput['user_lat'] ?? null;
         $userLng = $rawInput['user_lng'] ?? null;
@@ -106,15 +79,16 @@ class AbsensiController extends BaseApiController
         
         $distance = null;
         if (isset($event['require_gps']) && (int)$event['require_gps'] === 1) {
-            if ($event['latitude'] === null || $event['longitude'] === null || $event['radius'] === null) {
+            $tenantRadius = (int)\App\Services\SettingService::getSetting($tenantId, 'default_geofence_radius', 50);
+            if ($event['latitude'] === null || $event['longitude'] === null) {
                 return $this->sendError('Konfigurasi Gagal', ['gps' => 'Lokasi acara belum diatur oleh admin. Tidak dapat melakukan absensi berbasisi GPS.'], 422);
             }
             if ($userLat === null || $userLng === null) {
                 return $this->sendError('Akses Lokasi Diperlukan', ['gps' => 'Koordinat GPS Anda diperlukan untuk melakukan absensi pada acara ini.'], 422);
             }
             $distance = $this->calculateDistance($event['latitude'], $event['longitude'], $userLat, $userLng);
-            if ($distance > $event['radius']) {
-                return $this->sendError('Lokasi Di Luar Jangkauan', ['gps' => 'Anda berada di luar area yang diizinkan untuk absensi ini. Jarak Anda: ' . round($distance) . 'm. Radius maksimal: ' . $event['radius'] . 'm.'], 422);
+            if ($distance > $tenantRadius) {
+                return $this->sendError('Lokasi Di Luar Jangkauan', ['gps' => 'Anda berada di luar area yang diizinkan untuk absensi ini. Jarak Anda: ' . round($distance) . 'm. Radius maksimal: ' . $tenantRadius . 'm.'], 422);
             }
         }
 
@@ -185,15 +159,16 @@ class AbsensiController extends BaseApiController
         $userLng = $rawInput['user_lng'] ?? null;
         
         if (isset($event['require_gps']) && (int)$event['require_gps'] === 1) {
-            if ($event['latitude'] === null || $event['longitude'] === null || $event['radius'] === null) {
+            $tenantRadius = (int)\App\Services\SettingService::getSetting($tenantId, 'default_geofence_radius', 50);
+            if ($event['latitude'] === null || $event['longitude'] === null) {
                 return $this->sendError('Konfigurasi Gagal', ['gps' => 'Lokasi acara belum diatur oleh admin.'], 422);
             }
             if ($userLat === null || $userLng === null) {
                 return $this->sendError('Akses Lokasi Diperlukan', ['gps' => 'Koordinat GPS Anda diperlukan untuk melakukan check-out.'], 422);
             }
             $distance = $this->calculateDistance($event['latitude'], $event['longitude'], $userLat, $userLng);
-            if ($distance > $event['radius']) {
-                return $this->sendError('Lokasi Di Luar Jangkauan', ['gps' => 'Anda berada di luar area yang diizinkan untuk check-out ini. Jarak Anda: ' . round($distance) . 'm. Radius maksimal: ' . $event['radius'] . 'm.'], 422);
+            if ($distance > $tenantRadius) {
+                return $this->sendError('Lokasi Di Luar Jangkauan', ['gps' => 'Anda berada di luar area yang diizinkan untuk check-out ini. Jarak Anda: ' . round($distance) . 'm. Radius maksimal: ' . $tenantRadius . 'm.'], 422);
             }
         }
 

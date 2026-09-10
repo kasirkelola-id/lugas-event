@@ -100,9 +100,8 @@ class EventUxTest extends \Tests\Support\BaseTest
             'X-Tenant-ID' => $tenantId
         ])->withBodyFormat('json')->put("api/events/$eventId", [
             'require_gps' => 1,
-            'latitude' => -6.2,
+            'latitude' => -6.3, // changed
             'longitude' => 106.8,
-            'radius' => 100 // changed
         ]);
 
         $responseBody = json_decode($updateResult->getJSON(), true);
@@ -121,14 +120,13 @@ class EventUxTest extends \Tests\Support\BaseTest
             'Authorization' => 'Bearer ' . $token,
             'X-Tenant-ID' => $tenantId
         ])->withBodyFormat('json')->put("api/events/$eventId", [
-            'nama_acara' => 'Acara Baru',
-            'require_gps' => 1,
-            'latitude' => -6.2,
-            'longitude' => 106.8,
-            'radius' => 50 // unchanged
+            'nama_acara' => 'Acara Baru'
         ]);
         
         $responseBody2 = json_decode($updateResult2->getJSON(), true);
+        if ($updateResult2->getJSON() !== false && json_decode($updateResult2->getJSON(), true)['status'] === false) {
+             var_dump($responseBody2);
+        }
         
         // Wait, if it succeeds, status code should be 200
         $updateResult2->assertStatus(200);

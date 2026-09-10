@@ -33,19 +33,10 @@ class EventController extends BaseApiController
             return 'closed_manually';
         }
         
-        $tenantId = $event['karang_taruna_id'];
-        $beforeMinutes = (int)SettingService::getSetting($tenantId, 'attendance_before_minutes', 30);
-        $afterMinutes = (int)SettingService::getSetting($tenantId, 'attendance_after_minutes', 30);
-
-        $nowTime = time();
-        $startStr = $event['tanggal_acara'] . ' ' . ($event['waktu_mulai'] ?: '00:00:00');
-        $endStr = $event['tanggal_acara'] . ' ' . ($event['waktu_selesai'] ?: '23:59:59');
-        $startTime = strtotime($startStr) - ($beforeMinutes * 60);
-        $endTime = strtotime($endStr) + ($afterMinutes * 60);
-        
-        if ($nowTime < $startTime) {
+        $today = date('Y-m-d');
+        if ($today < $event['tanggal_acara']) {
             return 'not_open';
-        } elseif ($nowTime > $endTime) {
+        } elseif ($today > $event['tanggal_acara']) {
             return 'closed_time';
         } else {
             return 'open';
@@ -88,12 +79,10 @@ class EventController extends BaseApiController
             if ($event['status_aktif'] === 'selesai') {
                 $statusKegiatan = 'selesai';
             } else {
-                $now = date('Y-m-d H:i:s');
-                $start = $event['tanggal_acara'] . ' ' . ($event['waktu_mulai'] ?: '00:00:00');
-                $end = $event['tanggal_acara'] . ' ' . ($event['waktu_selesai'] ?: '23:59:59');
-                if ($now > $end) {
+                $today = date('Y-m-d');
+                if ($today > $event['tanggal_acara']) {
                     $statusKegiatan = 'selesai';
-                } elseif ($now >= $start && $now <= $end) {
+                } elseif ($today === $event['tanggal_acara']) {
                     $statusKegiatan = 'berlangsung';
                 }
             }
@@ -143,12 +132,10 @@ class EventController extends BaseApiController
         if ($event['status_aktif'] === 'selesai') {
             $statusKegiatan = 'selesai';
         } else {
-            $now = date('Y-m-d H:i:s');
-            $start = $event['tanggal_acara'] . ' ' . ($event['waktu_mulai'] ?: '00:00:00');
-            $end = $event['tanggal_acara'] . ' ' . ($event['waktu_selesai'] ?: '23:59:59');
-            if ($now > $end) {
+            $today = date('Y-m-d');
+            if ($today > $event['tanggal_acara']) {
                 $statusKegiatan = 'selesai';
-            } elseif ($now >= $start && $now <= $end) {
+            } elseif ($today === $event['tanggal_acara']) {
                 $statusKegiatan = 'berlangsung';
             }
         }
@@ -203,19 +190,13 @@ class EventController extends BaseApiController
         
         $namaAcara = $rawInput['nama_acara'] ?? $this->request->getVar('nama_acara');
         $tanggalAcara = $rawInput['tanggal_acara'] ?? $this->request->getVar('tanggal_acara');
-        $waktuMulai = $rawInput['waktu_mulai'] ?? $this->request->getVar('waktu_mulai');
-        $waktuSelesai = $rawInput['waktu_selesai'] ?? $this->request->getVar('waktu_selesai');
+        $waktuMulai = '00:00:00';
+        $waktuSelesai = '23:59:59';
         $requireGps = isset($rawInput['require_gps']) ? (int)$rawInput['require_gps'] : 0;
-        
-        if (!empty($waktuMulai) && !empty($waktuSelesai)) {
-            if (strtotime($waktuMulai) >= strtotime($waktuSelesai)) {
-                return $this->sendError('Validasi gagal', ['waktu_mulai' => 'Waktu mulai harus lebih awal dari waktu selesai.'], 422);
-            }
-        }
 
         if ($requireGps === 1) {
-            if (!isset($rawInput['latitude']) || !isset($rawInput['longitude']) || !isset($rawInput['radius'])) {
-                return $this->sendError('Validasi gagal', ['gps' => 'Koordinat dan radius wajib diisi jika fitur GPS diaktifkan.'], 422);
+            if (!isset($rawInput['latitude']) || !isset($rawInput['longitude'])) {
+                return $this->sendError('Validasi gagal', ['gps' => 'Koordinat wajib diisi jika fitur GPS diaktifkan.'], 422);
             }
         }
 
@@ -239,7 +220,7 @@ class EventController extends BaseApiController
             'require_gps'   => $requireGps,
             'latitude'      => $requireGps === 1 ? $rawInput['latitude'] : null,
             'longitude'     => $requireGps === 1 ? $rawInput['longitude'] : null,
-            'radius'        => $requireGps === 1 ? $rawInput['radius'] : null,
+            'radius'        => $requireGps === 1 ? (int)\App\Services\SettingService::getSetting($tenantId, 'default_geofence_radius', 50) : null,
         ];
 
         $eventModel->insert($eventData);
@@ -297,10 +278,10 @@ class EventController extends BaseApiController
             if ($validationData['require_gps'] === 1) {
                 $validationData['latitude'] = $rawInput['latitude'] ?? $event['latitude'];
                 $validationData['longitude'] = $rawInput['longitude'] ?? $event['longitude'];
-                $validationData['radius'] = $rawInput['radius'] ?? $event['radius'];
+                $validationData['radius'] = (int)\App\Services\SettingService::getSetting($tenantId, 'default_geofence_radius', 50);
                 
-                if (empty($validationData['latitude']) || empty($validationData['longitude']) || empty($validationData['radius'])) {
-                    return $this->sendError('Validasi gagal', ['gps' => 'Koordinat dan radius wajib diisi jika fitur GPS diaktifkan.'], 422);
+                if (empty($validationData['latitude']) || empty($validationData['longitude'])) {
+                    return $this->sendError('Validasi gagal', ['gps' => 'Koordinat wajib diisi jika fitur GPS diaktifkan.'], 422);
                 }
             } else {
                 $validationData['latitude'] = null;
@@ -309,14 +290,9 @@ class EventController extends BaseApiController
             }
         }
 
-        if (isset($validationData['waktu_mulai']) || isset($validationData['waktu_selesai'])) {
-            $wMulai = $validationData['waktu_mulai'] ?? $event['waktu_mulai'];
-            $wSelesai = $validationData['waktu_selesai'] ?? $event['waktu_selesai'];
-            if (!empty($wMulai) && !empty($wSelesai)) {
-                if (strtotime($wMulai) >= strtotime($wSelesai)) {
-                    return $this->sendError('Validasi gagal', ['waktu_mulai' => 'Waktu mulai harus lebih awal dari waktu selesai.'], 422);
-                }
-            }
+        if (isset($validationData['tanggal_acara'])) {
+            $validationData['waktu_mulai'] = '00:00:00';
+            $validationData['waktu_selesai'] = '23:59:59';
         }
 
         if (empty($validationData)) {

@@ -145,23 +145,4 @@ class EventLifecycleTest extends \Tests\Support\BaseTest
         $response->assertStatus(403);
     }
 
-    public function testCreateEventTimeValidation()
-    {
-        $token = $this->ketuaToken;
-        
-        $response = $this->withHeaders(['Authorization' => 'Bearer ' . $token])
-                         ->withBodyFormat('json')
-                         ->post('api/events', [
-                             'nama_acara' => 'Event Time Invalid',
-                             'tanggal_acara' => date('Y-m-d'),
-                             'waktu_mulai' => '10:00:00',
-                             'waktu_selesai' => '09:00:00', // End before start
-                             'require_gps' => 0
-                         ]);
-
-        $response->assertStatus(422);
-        $json = json_decode($response->getJSON(), true);
-        $this->assertFalse($json['status']);
-        $this->assertArrayHasKey('waktu_mulai', $json['errors'] ?? $json['data']);
-    }
 }

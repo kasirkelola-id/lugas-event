@@ -24,9 +24,12 @@ class VotingController extends BaseApiController
 
     private function getDynamicStatus($voting) {
         if ($voting['status'] === 'closed') return 'ended';
-        $now = date('Y-m-d H:i:s');
-        if ($now < $voting['waktu_mulai']) return 'scheduled';
-        if ($now >= $voting['waktu_selesai']) return 'ended';
+        $nowDate = date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime($voting['waktu_mulai']));
+        $endDate = date('Y-m-d', strtotime($voting['waktu_selesai']));
+        
+        if ($nowDate < $startDate) return 'scheduled';
+        if ($nowDate > $endDate) return 'ended';
         return 'active';
     }
 
@@ -109,16 +112,26 @@ class VotingController extends BaseApiController
         $rules = [
             'title'   => 'required|min_length[3]',
             'options' => 'required',
-            'waktu_mulai'   => 'required|valid_date[Y-m-d H:i:s]',
-            'waktu_selesai' => 'required|valid_date[Y-m-d H:i:s]',
+            'waktu_mulai'   => 'required',
+            'waktu_selesai' => 'required',
         ];
 
         if (!$this->validateData($rawInput, $rules)) {
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
+
+        $startTs = strtotime($rawInput['waktu_mulai']);
+        $endTs = strtotime($rawInput['waktu_selesai']);
+
+        if (!$startTs || !$endTs) {
+            return $this->sendError('Validasi gagal', ['waktu' => 'Format tanggal tidak valid'], 422);
+        }
         
-        if (strtotime($rawInput['waktu_mulai']) >= strtotime($rawInput['waktu_selesai'])) {
-             return $this->sendError('Validasi gagal', ['waktu_selesai' => 'Waktu selesai harus setelah waktu mulai'], 422);
+        $startDate = date('Y-m-d', $startTs);
+        $endDate = date('Y-m-d', $endTs);
+
+        if ($startDate > $endDate) {
+             return $this->sendError('Validasi gagal', ['waktu_selesai' => 'Tanggal selesai harus setelah atau sama dengan tanggal mulai'], 422);
         }
 
         $options = $rawInput['options'] ?? null;
@@ -133,8 +146,8 @@ class VotingController extends BaseApiController
             'karang_taruna_id' => $tenantId,
             'title'            => $rawInput['title'],
             'description'      => $rawInput['description'] ?? null,
-            'waktu_mulai'      => $rawInput['waktu_mulai'],
-            'waktu_selesai'    => $rawInput['waktu_selesai'],
+            'waktu_mulai'      => $startDate . ' 00:00:00',
+            'waktu_selesai'    => $endDate . ' 23:59:59',
             'status'           => 'active',
             'created_by'       => $userId
         ];

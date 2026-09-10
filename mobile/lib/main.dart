@@ -61,10 +61,18 @@ class _InitialScreenState extends State<InitialScreen> {
     if (!mounted) return;
 
     if (!hasToken) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const PinScreen()),
-      );
+      final tenant = await AuthStorage.getTenant();
+      if (tenant != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const PinScreen()),
+        );
+      }
       return;
     }
 
@@ -145,7 +153,7 @@ class _InitialScreenState extends State<InitialScreen> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const PinScreen()),
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
         ScaffoldMessenger.of(
           context,

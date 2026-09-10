@@ -236,6 +236,28 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
               ),
               const SizedBox(height: 16),
             ],
+            Row(
+              children: [
+                const Icon(Icons.event, size: 16, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  _voting!.waktuMulai != null
+                      ? 'Mulai: ${_voting!.waktuMulai!.day}/${_voting!.waktuMulai!.month}/${_voting!.waktuMulai!.year}'
+                      : 'Mulai: -',
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                ),
+                const SizedBox(width: 16),
+                const Icon(Icons.event_busy, size: 16, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  _voting!.waktuSelesai != null
+                      ? 'Selesai: ${_voting!.waktuSelesai!.day}/${_voting!.waktuSelesai!.month}/${_voting!.waktuSelesai!.year}'
+                      : 'Selesai: -',
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 8),
 

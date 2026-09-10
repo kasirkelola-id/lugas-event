@@ -73,7 +73,11 @@ class UserController extends BaseApiController
         }
 
         if ($status !== null && $status !== '') {
-            $builder->where('organization_members.status_aktif', (int)$status);
+            $statusVal = $status;
+            if ($status === 'aktif') $statusVal = 1;
+            elseif ($status === 'nonaktif') $statusVal = 0;
+            else $statusVal = (int)$status;
+            $builder->where('organization_members.status_aktif', $statusVal);
         }
 
         if (!empty($roleFilter) && $roleFilter !== 'Semua') {

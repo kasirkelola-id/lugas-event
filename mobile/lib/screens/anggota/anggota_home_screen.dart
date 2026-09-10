@@ -426,7 +426,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${event.date} - ${event.time}',
+                event.date,
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 12),

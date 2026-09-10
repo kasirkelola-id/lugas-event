@@ -87,7 +87,6 @@ class EventService {
     bool requireGps = false,
     double? latitude,
     double? longitude,
-    int? radius,
   }) async {
     try {
       final response = await ApiClient.post('/events', {
@@ -96,7 +95,6 @@ class EventService {
         'require_gps': requireGps ? 1 : 0,
         if (requireGps && latitude != null) 'latitude': latitude,
         if (requireGps && longitude != null) 'longitude': longitude,
-        if (requireGps && radius != null) 'radius': radius,
       });
       return _handleResponse(response);
     } catch (e) {
@@ -111,7 +109,6 @@ class EventService {
     bool requireGps = false,
     double? latitude,
     double? longitude,
-    int? radius,
   }) async {
     try {
       final response = await ApiClient.put('/events/$id', {
@@ -120,7 +117,6 @@ class EventService {
         'require_gps': requireGps ? 1 : 0,
         if (requireGps && latitude != null) 'latitude': latitude,
         if (requireGps && longitude != null) 'longitude': longitude,
-        if (requireGps && radius != null) 'radius': radius,
       });
       return _handleResponse(response);
     } catch (e) {

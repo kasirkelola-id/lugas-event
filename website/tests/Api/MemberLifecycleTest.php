@@ -196,4 +196,71 @@ class MemberLifecycleTest extends \Tests\Support\BaseTest
         $resStatus = $this->withHeaders($headersA)->patch("api/users/$memberBId/status");
         $resStatus->assertStatus(404);
     }
+
+    public function testListUsersStatusFilter()
+    {
+        $ketua = $this->setupTenantUser('ketua', 700);
+        $token = $this->generateTokenForUser($ketua);
+        $headers = ['Authorization' => 'Bearer ' . $token, 'X-Karang-Taruna-ID' => '700'];
+
+        $budiId = $this->setupTenantUser('anggota', 700, 'budi')['id'];
+        $jokoId = $this->setupTenantUser('anggota', 700, 'joko')['id'];
+
+        // Deactivate joko
+        $memberModel = new OrganizationMemberModel();
+        $mJoko = $memberModel->where('user_id', $jokoId)->where('karang_taruna_id', 700)->first();
+        $memberModel->update($mJoko['id'], ['status_aktif' => 0]);
+
+        // Get aktif
+        $resAktif = $this->withHeaders($headers)->get('api/users?status=aktif');
+        $resAktif->assertStatus(200);
+        $resAktif->assertSee('budi');
+        $resAktif->assertDontSee('joko');
+
+        // Get nonaktif
+        $resNonaktif = $this->withHeaders($headers)->get('api/users?status=nonaktif');
+        $resNonaktif->assertStatus(200);
+        $resNonaktif->assertSee('joko');
+    }
+
+    public function testGetUsersList()
+    {
+        $db = \Config\Database::connect();
+        $db->table('karang_taruna')->ignore(true)->insert(['id' => 500, 'nama_organisasi' => "Tenant 500", 'kode_pin' => '123', 'status_aktif' => 1]);
+        $db->table('karang_taruna')->ignore(true)->insert(['id' => 501, 'nama_organisasi' => "Tenant 501", 'kode_pin' => '123', 'status_aktif' => 1]);
+
+        $ketua = $this->setupTenantUser('ketua', 500, 'ketua_500');
+        $anggota = $this->setupTenantUser('anggota', 500, 'anggota_500');
+        $inactiveAnggota = $this->setupTenantUser('anggota', 500, 'inactive_500');
+        
+        $memberModel = new OrganizationMemberModel();
+        $memberModel->where('user_id', $inactiveAnggota['id'])->where('karang_taruna_id', 500)->set(['status_aktif' => 0])->update();
+
+        // user in different tenant
+        $this->setupTenantUser('anggota', 501, 'anggota_501');
+
+        $token = $this->generateTokenForUser($ketua);
+        $headers = ['Authorization' => 'Bearer ' . $token, 'X-Karang-Taruna-ID' => '500'];
+
+        // Get all users
+        $res = $this->withHeaders($headers)->get("api/users");
+        $res->assertStatus(200);
+        $data = json_decode($res->getJSON(), true);
+
+        // Should return 3 users (1 ketua, 1 aktif, 1 non-aktif)
+        $this->assertCount(3, $data['users']);
+        
+        // Get active users
+        $resActive = $this->withHeaders($headers)->get("api/users?status=aktif");
+        $resActive->assertStatus(200);
+        $dataActive = json_decode($resActive->getJSON(), true);
+        
+        // Should return 2 active users (ketua and anggota)
+        $this->assertCount(2, $dataActive['users']);
+        $usernames = array_column($dataActive['users'], 'username');
+        $this->assertContains('ketua_500', $usernames);
+        $this->assertContains('anggota_500', $usernames);
+        $this->assertNotContains('anggota_501', $usernames);
+        $this->assertNotContains('inactive_500', $usernames);
+    }
 }

@@ -18,8 +18,6 @@ class AdminPengaturanScreen extends StatefulWidget {
 class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
   final _formKey = GlobalKey<FormState>();
   final _kasBackdateController = TextEditingController();
-  final _attendanceBeforeController = TextEditingController();
-  final _attendanceAfterController = TextEditingController();
   final _defaultRadiusController = TextEditingController();
 
   bool _isLoading = true;
@@ -47,10 +45,6 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
       setState(() {
         _kasBackdateController.text =
             data['kas_backdate_limit']?.toString() ?? '30';
-        _attendanceBeforeController.text =
-            data['attendance_before_minutes']?.toString() ?? '30';
-        _attendanceAfterController.text =
-            data['attendance_after_minutes']?.toString() ?? '30';
         _defaultRadiusController.text =
             data['default_geofence_radius']?.toString() ?? '50';
         _isLoading = false;
@@ -72,8 +66,6 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
 
     final result = await SettingService.updateSettings({
       'kas_backdate_limit': _kasBackdateController.text,
-      'attendance_before_minutes': _attendanceBeforeController.text,
-      'attendance_after_minutes': _attendanceAfterController.text,
       'default_geofence_radius': _defaultRadiusController.text,
     });
 
@@ -172,60 +164,6 @@ class _AdminPengaturanScreenState extends State<AdminPengaturanScreen> {
                     },
                   ),
                   const SizedBox(height: 32),
-                  const Text(
-                    'Absensi & Lokasi',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Absensi dapat dilakukan mulai beberapa menit sebelum acara, dan sesudah acara.',
-                    style: TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _attendanceBeforeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Buka absensi sebelum acara (menit)',
-                      border: OutlineInputBorder(),
-                      suffixText: 'Menit',
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Wajib diisi';
-                      final val = int.tryParse(value);
-                      if (val == null || val < 0 || val > 240) {
-                        return 'Harus antara 0 dan 240';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _attendanceAfterController,
-                    decoration: const InputDecoration(
-                      labelText: 'Tutup absensi setelah acara (menit)',
-                      border: OutlineInputBorder(),
-                      suffixText: 'Menit',
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'Wajib diisi';
-                      final val = int.tryParse(value);
-                      if (val == null || val < 0 || val > 240) {
-                        return 'Harus antara 0 dan 240';
-                      }
-                      return null;
-                    },
-                  ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _defaultRadiusController,

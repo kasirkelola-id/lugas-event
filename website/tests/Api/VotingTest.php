@@ -50,8 +50,8 @@ class VotingTest extends \Tests\Support\BaseTest
         // Invalid: start >= end
         $payload = [
             'title' => 'Pemilihan Invalid',
-            'waktu_mulai' => date('Y-m-d H:i:s', strtotime('+2 days')),
-            'waktu_selesai' => date('Y-m-d H:i:s', strtotime('+1 day')),
+            'waktu_mulai' => date('Y-m-d', strtotime('+2 days')),
+            'waktu_selesai' => date('Y-m-d', strtotime('+1 day')),
             'options' => ['A', 'B']
         ];
 
@@ -76,8 +76,8 @@ class VotingTest extends \Tests\Support\BaseTest
         // Create Scheduled Voting
         $payloadScheduled = [
             'title' => 'Pemilihan Nanti',
-            'waktu_mulai' => date('Y-m-d H:i:s', strtotime('+1 hour')),
-            'waktu_selesai' => date('Y-m-d H:i:s', strtotime('+2 hours')),
+            'waktu_mulai' => date('Y-m-d', strtotime('+1 day')),
+            'waktu_selesai' => date('Y-m-d', strtotime('+2 days')),
             'options' => ['Opsi 1', 'Opsi 2']
         ];
         $req = $this->withHeaders($this->getAuthHeaders($token))->withBodyFormat('json')->post('api/votings', $payloadScheduled);
@@ -99,8 +99,8 @@ class VotingTest extends \Tests\Support\BaseTest
         // Create Active Voting
         $payloadActive = [
             'title' => 'Pemilihan Sekarang',
-            'waktu_mulai' => date('Y-m-d H:i:s', strtotime('-1 hour')),
-            'waktu_selesai' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+            'waktu_mulai' => date('Y-m-d', strtotime('-1 day')),
+            'waktu_selesai' => date('Y-m-d', strtotime('+1 day')),
             'options' => ['Opsi A', 'Opsi B']
         ];
         $req = $this->withHeaders($this->getAuthHeaders($token))->withBodyFormat('json')->post('api/votings', $payloadActive);
@@ -125,8 +125,8 @@ class VotingTest extends \Tests\Support\BaseTest
         // Create Ended Voting
         $payloadEnded = [
             'title' => 'Pemilihan Kemarin',
-            'waktu_mulai' => date('Y-m-d H:i:s', strtotime('-2 hours')),
-            'waktu_selesai' => date('Y-m-d H:i:s', strtotime('-1 hour')),
+            'waktu_mulai' => date('Y-m-d', strtotime('-2 days')),
+            'waktu_selesai' => date('Y-m-d', strtotime('-1 day')),
             'options' => ['X', 'Y']
         ];
         $req = $this->withHeaders($this->getAuthHeaders($token))->withBodyFormat('json')->post('api/votings', $payloadEnded);
@@ -156,8 +156,8 @@ class VotingTest extends \Tests\Support\BaseTest
 
         $reqA = $this->withHeaders($this->getAuthHeaders($tokenA))->withBodyFormat('json')->post('api/votings', [
             'title' => 'Pemilihan A',
-            'waktu_mulai' => date('Y-m-d H:i:s', strtotime('-1 hour')),
-            'waktu_selesai' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+            'waktu_mulai' => date('Y-m-d', strtotime('-1 day')),
+            'waktu_selesai' => date('Y-m-d', strtotime('+1 day')),
             'options' => ['A1', 'A2']
         ]);
         $reqA->assertStatus(201);
@@ -168,8 +168,8 @@ class VotingTest extends \Tests\Support\BaseTest
         // Voting Tenant B
         $reqB = $this->withHeaders($this->getAuthHeaders($tokenB))->withBodyFormat('json')->post('api/votings', [
             'title' => 'Pemilihan B',
-            'waktu_mulai' => date('Y-m-d H:i:s', strtotime('-1 hour')),
-            'waktu_selesai' => date('Y-m-d H:i:s', strtotime('+1 hour')),
+            'waktu_mulai' => date('Y-m-d', strtotime('-1 day')),
+            'waktu_selesai' => date('Y-m-d', strtotime('+1 day')),
             'options' => ['B1', 'B2']
         ]);
         $reqB->assertStatus(201);

@@ -475,15 +475,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _showUserForm(),
-          backgroundColor: AppTheme.primary,
-          icon: const Icon(Icons.person_add_outlined, color: Colors.white),
-          label: const Text(
-            'Tambah',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-          ),
-        ),
       ),
     );
   }

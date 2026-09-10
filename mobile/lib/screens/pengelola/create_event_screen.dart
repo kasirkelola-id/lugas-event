@@ -35,24 +35,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
     _fetchDefaultRadius();
   }
 
-  Future<void> _fetchDefaultRadius() async {
-    final result = await SettingService.getSettings();
-    if (!mounted) return;
-
-    if (result['success']) {
-      final data = result['data'] as Map<String, dynamic>;
-      if (data.containsKey('default_geofence_radius')) {
-        final radStr = data['default_geofence_radius']?.toString();
-        if (radStr != null) {
-          final parsed = double.tryParse(radStr);
-          if (parsed != null) {
-            setState(() {
-              _radius = parsed;
-            });
-          }
-        }
-      }
-    }
     setState(() {
       _isLoading = false;
     });
@@ -95,7 +77,6 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
       requireGps: _requireGps,
       latitude: _selectedLocation?.latitude,
       longitude: _selectedLocation?.longitude,
-      radius: _radius.toInt(),
     );
 
     setState(() {
@@ -254,36 +235,7 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Text(
-                    'Radius (meter):',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Expanded(
-                    child: Slider(
-                      value: _radius,
-                      min: 10,
-                      max: 1000,
-                      divisions: 99,
-                      label: '${_radius.toInt()} m',
-                      activeColor: AppTheme.primary,
-                      onChanged: _isLoading
-                          ? null
-                          : (val) {
-                              setState(() {
-                                _radius = val;
-                              });
-                            },
-                    ),
-                  ),
-                  Text(
-                    '${_radius.toInt()} m',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ],
+
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,

@@ -122,7 +122,6 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
   void _logout() async {
     ChatService().closeConnection();
     await AuthStorage.removeToken();
-    await AuthStorage.clearTenant();
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,

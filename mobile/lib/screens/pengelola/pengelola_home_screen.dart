@@ -512,7 +512,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${event.date} - ${event.time}',
+                event.date,
                 style: const TextStyle(color: Colors.white),
               ),
             ],

@@ -125,3 +125,5 @@ _modules/*
 /results/
 /phpunit.xml
 app/Config/firebase-service-account.json
+
+database.db

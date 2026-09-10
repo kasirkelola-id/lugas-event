@@ -15,10 +15,8 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
   final TextEditingController _descController = TextEditingController();
 
   final TextEditingController _tanggalMulaiController = TextEditingController();
-  final TextEditingController _jamMulaiController = TextEditingController();
   final TextEditingController _tanggalSelesaiController =
       TextEditingController();
-  final TextEditingController _jamSelesaiController = TextEditingController();
 
   final List<TextEditingController> _optionControllers = [
     TextEditingController(),
@@ -61,18 +59,7 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
     }
   }
 
-  Future<void> _pilihJam(TextEditingController controller) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        controller.text =
-            "${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}:00";
-      });
-    }
-  }
+
 
   Future<void> _submit() async {
     final title = _titleController.text.trim();
@@ -84,19 +71,15 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
     }
 
     if (_tanggalMulaiController.text.isEmpty ||
-        _jamMulaiController.text.isEmpty ||
-        _tanggalSelesaiController.text.isEmpty ||
-        _jamSelesaiController.text.isEmpty) {
+        _tanggalSelesaiController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Waktu mulai dan selesai wajib diisi')),
       );
       return;
     }
 
-    final waktuMulaiStr =
-        '${_tanggalMulaiController.text} ${_jamMulaiController.text}';
-    final waktuSelesaiStr =
-        '${_tanggalSelesaiController.text} ${_jamSelesaiController.text}';
+    final waktuMulaiStr = _tanggalMulaiController.text;
+    final waktuSelesaiStr = _tanggalSelesaiController.text;
 
     try {
       final start = DateTime.parse(waktuMulaiStr);
@@ -162,9 +145,7 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
     _titleController.dispose();
     _descController.dispose();
     _tanggalMulaiController.dispose();
-    _jamMulaiController.dispose();
     _tanggalSelesaiController.dispose();
-    _jamSelesaiController.dispose();
     for (var c in _optionControllers) {
       c.dispose();
     }
@@ -222,23 +203,7 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
                     onTap: () => _pilihTanggal(_tanggalMulaiController),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: _jamMulaiController,
-                    readOnly: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Jam Mulai',
-                      border: OutlineInputBorder(),
-                    ),
-                    onTap: () => _pilihJam(_jamMulaiController),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
+                const SizedBox(width: 12),
                 Expanded(
                   child: TextFormField(
                     controller: _tanggalSelesaiController,
@@ -248,18 +213,6 @@ class _CreateVotingScreenState extends State<CreateVotingScreen> {
                       border: OutlineInputBorder(),
                     ),
                     onTap: () => _pilihTanggal(_tanggalSelesaiController),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: _jamSelesaiController,
-                    readOnly: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Jam Selesai',
-                      border: OutlineInputBorder(),
-                    ),
-                    onTap: () => _pilihJam(_jamSelesaiController),
                   ),
                 ),
               ],
