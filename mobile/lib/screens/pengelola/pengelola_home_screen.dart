@@ -50,14 +50,14 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
       if (!mounted) return;
 
       if (!userResult['success']) {
-        if (userResult['message'].toString().toLowerCase().contains('sesi')) {
+        if (userResult['message']?.toString().toLowerCase().contains('sesi') ?? false) {
           _logout();
           return;
         }
         setState(() {
           _isLoading = false;
           _isError = true;
-          _errorMessage = userResult['message'];
+          _errorMessage = userResult['message']?.toString() ?? 'Gagal memuat profil.';
         });
         return;
       }
@@ -72,7 +72,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
         setState(() {
           _isLoading = false;
           _isError = true;
-          _errorMessage = summaryResult['message'];
+          _errorMessage = summaryResult['message']?.toString() ?? 'Gagal memuat dashboard.';
         });
         return;
       }

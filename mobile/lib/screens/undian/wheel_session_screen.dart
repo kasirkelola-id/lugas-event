@@ -30,7 +30,6 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
   late Animation<double> _spinAnimation;
   double _currentAngle = 0;
   bool _isSpinning = false;
-  WheelItemModel? _currentWinner;
 
   @override
   void initState() {
@@ -98,12 +97,12 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
     // We want the wheel to rotate such that: final_angle + targetCenterAngle = 0 (modulo 2PI)
     // To spin multiple times, we add 2PI * multiple spins
     final spins = durationSeconds; // roughly 1 spin per second
+
     final totalRotation =
         (math.pi * 2 * spins) + (math.pi * 2 - targetCenterAngle);
 
     setState(() {
       _isSpinning = true;
-      _currentWinner = null;
     });
 
     _spinController.duration = Duration(seconds: durationSeconds);
@@ -127,7 +126,6 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
         setState(() {
           _isSpinning = false;
           _currentAngle = _currentAngle % (math.pi * 2);
-          _currentWinner = activeItems[winnerIndex];
         });
         _showWinnerDialog(activeItems[winnerIndex]);
         _loadData(); // reload to get new results list and updated items (if removed)

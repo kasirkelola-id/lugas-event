@@ -4,6 +4,9 @@ import '../../models/wheel_model.dart';
 import '../../services/wheel_service.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_error_state.dart';
+import '../../models/user_model.dart';
+import '../../services/auth_service.dart';
+import '../widgets/app_drawer.dart';
 import 'create_wheel_screen.dart';
 import 'wheel_session_screen.dart';
 
@@ -19,6 +22,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
   bool _isLoading = true;
   bool _isError = false;
   String _errorMessage = '';
+  UserModel? _currentUser;
 
   @override
   void initState() {
@@ -34,7 +38,13 @@ class _WheelListScreenState extends State<WheelListScreen> {
     });
 
     final result = await WheelService.getSessions();
+    final userResult = await AuthService.getMe();
+
     if (!mounted) return;
+
+    if (userResult['success']) {
+      _currentUser = userResult['user'];
+    }
 
     if (result['success']) {
       setState(() {
@@ -53,6 +63,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: const Text('Daftar Undian'),

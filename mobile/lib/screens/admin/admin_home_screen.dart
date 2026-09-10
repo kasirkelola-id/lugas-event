@@ -46,14 +46,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       if (!mounted) return;
 
       if (!userResult['success']) {
-        if (userResult['message'].toString().toLowerCase().contains('sesi')) {
+        if (userResult['message']?.toString().toLowerCase().contains('sesi') ?? false) {
           _logout();
           return;
         }
         setState(() {
           _isLoading = false;
           _isError = true;
-          _errorMessage = userResult['message'];
+          _errorMessage = userResult['message']?.toString() ?? 'Gagal memuat profil.';
         });
         return;
       }
@@ -65,7 +65,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         setState(() {
           _isLoading = false;
           _isError = true;
-          _errorMessage = summaryResult['message'];
+          _errorMessage = summaryResult['message']?.toString() ?? 'Gagal memuat dashboard.';
         });
         return;
       }

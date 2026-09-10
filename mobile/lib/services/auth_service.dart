@@ -107,7 +107,18 @@ class AuthService {
           'statusCode': 401,
         };
       }
-      final data = jsonDecode(response.body);
+      
+      Map<String, dynamic> data;
+      try {
+        data = jsonDecode(response.body);
+      } catch (_) {
+        return {
+          'success': false,
+          'message': 'Gagal memproses respon dari server.',
+          'statusCode': response.statusCode,
+        };
+      }
+      
       if (response.statusCode == 403) {
         return {
           'success': false,
@@ -127,7 +138,7 @@ class AuthService {
         'statusCode': response.statusCode,
       };
     } catch (e) {
-      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan: $e'};
     }
   }
 
