@@ -160,7 +160,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                 FadeInSlide(
                   delay: 0.1,
                   child: CommunityActivitySection(
-                    communityActivity: _summary?['community_activity'],
+                    communityActivity: _summary?.communityActivity,
                   ),
                 ),
                 if (_user!.roleLevel == 'bendahara' ||
@@ -521,6 +521,4 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
       ),
     );
   }
-
-
 }

@@ -84,11 +84,11 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
     String targetRole = announcement?.targetRole ?? 'semua';
     bool statusAktif = announcement?.statusAktif == 1;
     if (announcement == null) statusAktif = true;
-    
+
     // Add dashboard_until state
     int selectedDays = 3; // Default 3 days
     final customDaysController = TextEditingController();
-    
+
     bool isLoadingSubmit = false;
 
     await showDialog(
@@ -175,10 +175,14 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                               DropdownMenuItem(value: 1, child: Text('1 Hari')),
                               DropdownMenuItem(value: 3, child: Text('3 Hari')),
                               DropdownMenuItem(value: 7, child: Text('7 Hari')),
-                              DropdownMenuItem(value: -1, child: Text('Custom (Hari)')),
+                              DropdownMenuItem(
+                                value: -1,
+                                child: Text('Custom (Hari)'),
+                              ),
                             ],
                             onChanged: (val) {
-                              if (val != null) setStateDialog(() => selectedDays = val);
+                              if (val != null)
+                                setStateDialog(() => selectedDays = val);
                             },
                           ),
                           const SizedBox(height: 8),
@@ -188,9 +192,11 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                               label: 'Jumlah Hari',
                               keyboardType: TextInputType.number,
                               validator: (value) {
-                                if (value == null || value.isEmpty) return 'Wajib diisi';
+                                if (value == null || value.isEmpty)
+                                  return 'Wajib diisi';
                                 final parsed = int.tryParse(value);
-                                if (parsed == null || parsed <= 0) return 'Masukkan angka yang valid';
+                                if (parsed == null || parsed <= 0)
+                                  return 'Masukkan angka yang valid';
                                 return null;
                               },
                             ),
@@ -240,21 +246,27 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                                 if (formKey.currentState!.validate()) {
                                   setStateDialog(() => isLoadingSubmit = true);
 
-                                    final data = {
-                                      'judul': judulController.text,
-                                      'isi': isiController.text,
-                                      'target_role': targetRole,
-                                      'status_aktif': statusAktif ? 1 : 0,
-                                    };
-                                    
-                                      int finalDays = selectedDays;
-                                      if (finalDays == -1) {
-                                        finalDays = int.parse(customDaysController.text);
-                                      }
-                                      final untilDate = DateTime.now().add(Duration(days: finalDays));
-                                      // Format to YYYY-MM-DD HH:mm:ss for backend
-                                      data['dashboard_until'] = "${untilDate.year.toString().padLeft(4, '0')}-${untilDate.month.toString().padLeft(2, '0')}-${untilDate.day.toString().padLeft(2, '0')} ${untilDate.hour.toString().padLeft(2, '0')}:${untilDate.minute.toString().padLeft(2, '0')}:${untilDate.second.toString().padLeft(2, '0')}";
+                                  final data = {
+                                    'judul': judulController.text,
+                                    'isi': isiController.text,
+                                    'target_role': targetRole,
+                                    'status_aktif': statusAktif ? 1 : 0,
+                                  };
+
+                                  if (announcement == null) {
+                                    int finalDays = selectedDays;
+                                    if (finalDays == -1) {
+                                      finalDays = int.parse(
+                                        customDaysController.text,
+                                      );
                                     }
+                                    final untilDate = DateTime.now().add(
+                                      Duration(days: finalDays),
+                                    );
+                                    // Format to YYYY-MM-DD HH:mm:ss for backend
+                                    data['dashboard_until'] =
+                                        "${untilDate.year.toString().padLeft(4, '0')}-${untilDate.month.toString().padLeft(2, '0')}-${untilDate.day.toString().padLeft(2, '0')} ${untilDate.hour.toString().padLeft(2, '0')}:${untilDate.minute.toString().padLeft(2, '0')}:${untilDate.second.toString().padLeft(2, '0')}";
+                                  }
 
                                   Map<String, dynamic> result;
                                   if (announcement == null) {

@@ -152,7 +152,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           _buildHeaderSection(),
           const SizedBox(height: 16),
           CommunityActivitySection(
-            communityActivity: _summary?['community_activity'],
+            communityActivity: _summary?.communityActivity,
           ),
           _buildKasInfo(),
           _buildManagementMetrics(),
@@ -493,6 +493,4 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       ),
     );
   }
-
-
 }

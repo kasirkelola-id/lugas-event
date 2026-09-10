@@ -160,7 +160,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                 FadeInSlide(
                   delay: 0.1,
                   child: CommunityActivitySection(
-                    communityActivity: _summary?['community_activity'],
+                    communityActivity: _summary?.communityActivity,
                   ),
                 ),
                 FadeInSlide(delay: 0.1, child: _buildKasInfo()),
@@ -447,8 +447,6 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
       ),
     );
   }
-
-
 
   Widget _buildMyActiveLoan() {
     if (_summary!.myActiveLoan == null) return const SizedBox();

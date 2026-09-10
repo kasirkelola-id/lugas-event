@@ -3,6 +3,7 @@ class DashboardSummary {
   final LatestAnnouncementSummary? latestAnnouncement;
   final ActiveVotingSummary? activeVoting;
   final MyActiveLoanSummary? myActiveLoan;
+  final Map<String, dynamic>? communityActivity;
   final ManagementMetrics? management;
   final int kasBalance;
   final int kasPemasukan;
@@ -13,6 +14,7 @@ class DashboardSummary {
     this.latestAnnouncement,
     this.activeVoting,
     this.myActiveLoan,
+    this.communityActivity,
     this.management,
     this.kasBalance = 0,
     this.kasPemasukan = 0,
@@ -32,6 +34,9 @@ class DashboardSummary {
           : null,
       myActiveLoan: json['my_active_loan'] != null
           ? MyActiveLoanSummary.fromJson(json['my_active_loan'])
+          : null,
+      communityActivity: json['community_activity'] != null
+          ? Map<String, dynamic>.from(json['community_activity'])
           : null,
       management: json['management'] != null
           ? ManagementMetrics.fromJson(json['management'])
