@@ -24,6 +24,13 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
   String? _errorMessage;
   String _searchQuery = '';
   String? _rtFilter;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   List<int> get _availableRts {
     final rts = _participants.map((p) => p.userRt).toSet().toList();
@@ -184,52 +191,97 @@ class _ParticipantListScreenState extends State<ParticipantListScreen> {
       children: [
         _buildHeader(),
         const SizedBox(height: 24),
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Cari peserta...',
-            prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-            filled: true,
-            fillColor: AppTheme.surface,
-            border: OutlineInputBorder(
-              borderRadius: AppTheme.radiusLarge,
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppTheme.surface
+                : Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.grey.withValues(alpha: 0.2),
+              width: 1,
             ),
           ),
-          onChanged: (val) => setState(() => _searchQuery = val),
+          child: TextField(
+            controller: _searchController,
+            style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Cari nama atau email...',
+              hintStyle: TextStyle(
+                color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+              prefixIcon: const Padding(
+                padding: EdgeInsets.only(left: 12.0, right: 8.0),
+                child: Icon(Icons.search, color: AppTheme.textSecondary, size: 22),
+              ),
+              prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(
+                        Icons.clear,
+                        color: AppTheme.textSecondary,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _searchQuery = '');
+                      },
+                    )
+                  : null,
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 14,
+              ),
+            ),
+            onChanged: (val) => setState(() => _searchQuery = val),
+          ),
         ),
         const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
           child: Row(
             children: [null, ..._availableRts].map((rt) {
               final isSelected = _rtFilter == rt?.toString();
-              final label = rt == null ? 'Semua RT' : 'RT 0$rt';
+              final label = rt == null
+                  ? 'Semua RT'
+                  : 'RT ${rt.toString().padLeft(2, '0')}';
+              
               return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
+                padding: const EdgeInsets.only(right: 10.0),
                 child: FilterChip(
                   label: Text(label),
                   selected: isSelected,
-                  selectedColor: AppTheme.info.withValues(alpha: 0.15),
-                  checkmarkColor: AppTheme.info,
+                  showCheckmark: false,
+                  selectedColor: AppTheme.primary,
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.surface
+                      : Colors.white,
                   labelStyle: TextStyle(
-                    color: isSelected ? AppTheme.info : AppTheme.textSecondary,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
+                    color: isSelected
+                        ? Colors.white
+                        : AppTheme.textPrimary,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   ),
-                  backgroundColor: AppTheme.surface,
                   shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.radiusLarge,
+                    borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
                       color: isSelected
-                          ? AppTheme.info.withValues(alpha: 0.5)
-                          : Colors.grey.shade300,
+                          ? AppTheme.primary
+                          : Colors.grey.withValues(alpha: 0.3),
+                      width: 1,
                     ),
                   ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   onSelected: (selected) {
                     setState(() {
                       _rtFilter = rt?.toString();

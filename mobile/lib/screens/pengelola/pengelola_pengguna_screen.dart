@@ -115,32 +115,59 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                       // Search Bar
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Cari nama atau username...',
-                            prefixIcon: const Icon(Icons.search, color: AppTheme.textSecondary),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear, color: AppTheme.textSecondary),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      _onSearchChanged('');
-                                    },
-                                  )
-                                : null,
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: AppTheme.radiusLarge,
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? AppTheme.surface
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.2),
+                              width: 1,
                             ),
                           ),
-                          onChanged: _onSearchChanged,
+                          child: TextField(
+                            controller: _searchController,
+                            style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+                            decoration: InputDecoration(
+                              hintText: 'Cari nama atau email...',
+                              hintStyle: TextStyle(
+                                color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                                fontSize: 14,
+                              ),
+                              prefixIcon: const Padding(
+                                padding: EdgeInsets.only(left: 12.0, right: 8.0),
+                                child: Icon(Icons.search, color: AppTheme.textSecondary, size: 22),
+                              ),
+                              prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                              suffixIcon: _searchQuery.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(
+                                        Icons.clear,
+                                        color: AppTheme.textSecondary,
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        _onSearchChanged('');
+                                      },
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 14,
+                              ),
+                            ),
+                            onChanged: _onSearchChanged,
+                          ),
                         ),
                       ),
 
@@ -150,30 +177,33 @@ class _PengelolaPenggunaScreenState extends State<PengelolaPenggunaScreen> {
                           height: 40,
                           child: ListView(
                             scrollDirection: Axis.horizontal,
+                            clipBehavior: Clip.none,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             children: [null, ..._rtOptions].map((rt) {
                               final isSelected = _rtFilter == rt;
-                              final label = rt == null ? 'Semua RT' : 'RT 0$rt';
+                              final label = rt == null ? 'Semua RT' : 'RT ${rt.toString().padLeft(2, '0')}';
                               return Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
+                                padding: const EdgeInsets.only(right: 10.0),
                                 child: FilterChip(
                                   label: Text(label),
                                   selected: isSelected,
-                                  selectedColor: Colors.white.withOpacity(0.2),
-                                  checkmarkColor: Colors.white,
+                                  showCheckmark: false,
+                                  selectedColor: Colors.white,
+                                  backgroundColor: Colors.white.withValues(alpha: 0.15),
                                   labelStyle: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.white.withOpacity(0.8),
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                    color: isSelected ? AppTheme.primary : Colors.white,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                                   ),
-                                  backgroundColor: Colors.white.withOpacity(0.1),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: AppTheme.radiusLarge,
+                                    borderRadius: BorderRadius.circular(20),
                                     side: BorderSide(
                                       color: isSelected
                                           ? Colors.white
-                                          : Colors.white.withOpacity(0.3),
+                                          : Colors.white.withValues(alpha: 0.3),
+                                      width: 1,
                                     ),
                                   ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                   onSelected: (_) => _onRtFilterChanged(rt?.toString()),
                                 ),
                               );
