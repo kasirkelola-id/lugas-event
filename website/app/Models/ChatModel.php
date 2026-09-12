@@ -75,6 +75,7 @@ class ChatModel extends Model
                     m.message as last_message, 
                     m.created_at as last_message_time
                 FROM users u
+                JOIN organization_members om ON u.id = om.user_id AND om.karang_taruna_id = ? AND om.status_aktif = 1
                 JOIN (
                     SELECT 
                         CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as contact_id,
@@ -88,7 +89,7 @@ class ChatModel extends Model
                 JOIN chats m ON m.id = last_chat.max_id
                 ORDER BY m.id DESC";
 
-        $query = $db->query($sql, [$userId, $karangTarunaId, $userId, $userId, $userId]);
+        $query = $db->query($sql, [$karangTarunaId, $userId, $karangTarunaId, $userId, $userId, $userId]);
         return $query->getResultArray();
     }
 }

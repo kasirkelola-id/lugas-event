@@ -87,14 +87,14 @@ io.on('connection', (socket) => {
       if (!json.status) throw new Error('Authentication failed');
 
       const user = json.data;
-      
+
       socket.userId = user.user_id;
       socket.karangTarunaId = user.karang_taruna_id;
       socket.roleLevel = user.role_level;
       socket.permissions = user.permissions;
       socket.namaLengkap = user.nama_lengkap;
       socket.profilePhotoUrl = user.profile_photo_url;
-      
+
       // We map socket.id to user info, so one user can have multiple sockets
       onlineUsers.set(socket.id, {
         userId: user.user_id,
@@ -105,11 +105,11 @@ io.on('connection', (socket) => {
         authTime: Date.now(), // For revalidation cache
         token: token // Needed for revalidation
       });
-      
+
       // JOIN GLOBAL TENANT AND USER ROOMS
       socket.join(`tenant_${user.karang_taruna_id}`);
       socket.join(`user_${user.user_id}`);
-      
+
       socket.emit('auth_success', { message: 'Authenticated' });
       console.log(`User ${user.user_id} authenticated via internal API for tenant ${user.karang_taruna_id}`);
     } catch (error) {
@@ -122,7 +122,7 @@ io.on('connection', (socket) => {
   // Handle join room
   socket.on('join_room', async (data) => {
     if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
-    
+
     const roomId = data.room_id;
     if (!roomId) return;
 
@@ -132,9 +132,16 @@ io.on('connection', (socket) => {
         `SELECT * FROM chat_rooms WHERE id = ? AND karang_taruna_id = ?`,
         [roomId, socket.karangTarunaId]
       );
-      
+
       if (rooms.length === 0) return socket.emit('error', { message: 'Room not found' });
       const room = rooms[0];
+
+      // Check active membership globally for this tenant
+      const [activeMembers] = await pool.execute(
+        `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
+        [socket.userId, socket.karangTarunaId]
+      );
+      if (activeMembers.length === 0) return socket.emit('error', { message: 'You are not an active member of this tenant' });
 
       // Validate membership if custom room
       if (room.type === 'custom') {
@@ -196,7 +203,7 @@ io.on('connection', (socket) => {
         if (!response.ok) throw new Error('Revalidation failed');
         const json = await response.json();
         if (!json.status) throw new Error('Revalidation failed');
-        
+
         socket.permissions = json.data.permissions;
         socket.profilePhotoUrl = json.data.profile_photo_url;
         userInfo.permissions = json.data.permissions;
@@ -228,18 +235,46 @@ io.on('connection', (socket) => {
       let chatId;
       if (type === 'group') {
         if (!roomId) return socket.emit('error', { message: 'Room ID required for group chat' });
-        
+
         // Ensure user is in the socket room
         const roomName = `room_${roomId}`;
         if (!socket.rooms.has(roomName)) {
            return socket.emit('error', { message: 'You must join the room first' });
         }
 
+        // H. NODE GROUP SEND MEMBERSHIP VALIDATION
+        const [rooms] = await pool.execute(
+          `SELECT * FROM chat_rooms WHERE id = ? AND karang_taruna_id = ?`,
+          [roomId, socket.karangTarunaId]
+        );
+        if (rooms.length === 0) return socket.emit('error', { message: 'Room not found or belongs to another tenant' });
+
+        // Check active membership globally for this tenant
+        const [activeMembers] = await pool.execute(
+          `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
+          [socket.userId, socket.karangTarunaId]
+        );
+        if (activeMembers.length === 0) return socket.emit('error', { message: 'You are not an active member of this tenant' });
+
+        if (rooms[0].type === 'custom') {
+          const [members] = await pool.execute(
+            `SELECT * FROM chat_room_members WHERE chat_room_id = ? AND user_id = ?`,
+            [roomId, socket.userId]
+          );
+          if (members.length === 0) return socket.emit('error', { message: 'You are not a member of this custom room' });
+        }
+
         const [result] = await pool.execute(
-          `INSERT INTO chats (karang_taruna_id, chat_room_id, type, sender_id, message, created_at) VALUES (?, ?, ?, ?, ?, NOW())`,
+          `INSERT INTO chats (karang_taruna_id, chat_room_id, type, sender_id, message, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())`,
           [socket.karangTarunaId, roomId, type, socket.userId, message]
         );
         chatId = result.insertId;
+
+        const [chatRows] = await pool.execute(`SELECT DATE_FORMAT(created_at, '%Y-%m-%dT%TZ') as created_at_iso FROM chats WHERE id = ?`, [chatId]);
+        let canonicalTimestamp = new Date().toISOString();
+        if (chatRows.length > 0 && chatRows[0].created_at_iso) {
+           canonicalTimestamp = chatRows[0].created_at_iso;
+        }
 
         const chatPayload = {
           id: chatId,
@@ -248,24 +283,46 @@ io.on('connection', (socket) => {
           type: type,
           sender_id: socket.userId,
           message: message,
-          created_at: new Date().toISOString(),
+          created_at: canonicalTimestamp,
           nama_lengkap: socket.namaLengkap,
           role_level: socket.roleLevel,
           sender_photo_url: socket.profilePhotoUrl
         };
 
         io.to(roomName).emit('new_message', chatPayload);
-        
+
         // Fire and forget notification
         _triggerChatNotification(chatId);
       } else if (type === 'private') {
         if (!receiverId) return socket.emit('error', { message: 'Receiver ID required for private chat' });
 
+        // Check active membership for sender globally for this tenant
+        const [activeMembers] = await pool.execute(
+          `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
+          [socket.userId, socket.karangTarunaId]
+        );
+        if (activeMembers.length === 0) return socket.emit('error', { message: 'You are not an active member of this tenant' });
+
+        // D. NODE PRIVATE SEND SECURITY
+        const [receivers] = await pool.execute(
+          `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
+          [receiverId, socket.karangTarunaId]
+        );
+        if (receivers.length === 0) {
+          return socket.emit('error', { message: 'Receiver not found or not active in this tenant' });
+        }
+
         const [result] = await pool.execute(
-          `INSERT INTO chats (karang_taruna_id, type, sender_id, receiver_id, message, created_at) VALUES (?, ?, ?, ?, ?, NOW())`,
+          `INSERT INTO chats (karang_taruna_id, type, sender_id, receiver_id, message, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())`,
           [socket.karangTarunaId, type, socket.userId, receiverId, message]
         );
         chatId = result.insertId;
+
+        const [chatRows] = await pool.execute(`SELECT DATE_FORMAT(created_at, '%Y-%m-%dT%TZ') as created_at_iso FROM chats WHERE id = ?`, [chatId]);
+        let canonicalTimestamp = new Date().toISOString();
+        if (chatRows.length > 0 && chatRows[0].created_at_iso) {
+           canonicalTimestamp = chatRows[0].created_at_iso;
+        }
 
         const chatPayload = {
           id: chatId,
@@ -274,7 +331,7 @@ io.on('connection', (socket) => {
           sender_id: socket.userId,
           receiver_id: receiverId,
           message: message,
-          created_at: new Date().toISOString(),
+          created_at: canonicalTimestamp,
           nama_lengkap: socket.namaLengkap,
           role_level: socket.roleLevel,
           sender_photo_url: socket.profilePhotoUrl
@@ -284,11 +341,11 @@ io.on('connection', (socket) => {
 
         // Emit to receiver's sockets
         for (const [sId, sInfo] of onlineUsers.entries()) {
-          if (sInfo.userId === receiverId && sInfo.karangTarunaId === socket.karangTarunaId) {
+          if (Number(sInfo.userId) === Number(receiverId) && Number(sInfo.karangTarunaId) === Number(socket.karangTarunaId)) {
             io.to(sId).emit('new_message', chatPayload);
           }
         }
-        
+
         // Fire and forget notification
         _triggerChatNotification(chatId);
       }
@@ -308,10 +365,10 @@ io.on('connection', (socket) => {
 
   socket.on('join_wheel', async (data) => {
     if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
-    
+
     const sessionId = data.session_id;
     if (!sessionId) return;
-    
+
     // Since session IDs are unique globally and we validate tenant id in PHP API,
     // we can just use wheel_session_${sessionId}.
     const roomName = `wheel_session_${socket.karangTarunaId}_${sessionId}`;
@@ -324,13 +381,13 @@ io.on('connection', (socket) => {
 app.post('/internal/wheel-event', (req, res) => {
   const secret = req.headers['x-internal-secret'];
   const validSecret = process.env.INTERNAL_API_SECRET;
-  
+
   if (secret !== validSecret) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
   const { session_id, karang_taruna_id, event, payload } = req.body;
-  
+
   if (!session_id || !karang_taruna_id || !event) {
     return res.status(400).json({ error: 'Missing parameters' });
   }
@@ -338,7 +395,7 @@ app.post('/internal/wheel-event', (req, res) => {
   const roomName = `wheel_session_${karang_taruna_id}_${session_id}`;
   io.to(roomName).emit(event, payload);
   console.log(`Broadcasted wheel event ${event} to ${roomName}`);
-  
+
   res.json({ success: true });
 });
 
@@ -354,7 +411,7 @@ module.exports = { server, io, pool };
 function _triggerChatNotification(chatId) {
   const apiUrl = process.env.INTERNAL_API_URL.replace('socket-auth', 'chat-notification');
   const secret = process.env.INTERNAL_API_SECRET;
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3000); // 3-second timeout
 

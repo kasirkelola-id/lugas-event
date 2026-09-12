@@ -38,11 +38,7 @@ class Chat {
           ? int.parse(json['chat_room_id'].toString())
           : null,
       message: json['message'],
-      createdAt: DateTime.parse(
-        json['created_at'].toString().endsWith('Z')
-            ? json['created_at']
-            : '${json['created_at']}Z',
-      ).toLocal(),
+      createdAt: DateTime.parse(json['created_at'].toString()).toLocal(),
       namaLengkap: json['nama_lengkap'],
       roleLevel: json['role_level'],
       senderPhotoUrl: json['sender_photo_url'],

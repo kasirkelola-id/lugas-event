@@ -10,6 +10,12 @@ use App\Services\AuthService;
 
 class ChatController extends BaseApiController
 {
+    private function formatTimestamp($datetime)
+    {
+        if (empty($datetime)) return null;
+        return (new \DateTime($datetime, new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+    }
+
     public function getRooms()
     {
         $tenantId = AuthService::getTenantId();
@@ -46,6 +52,9 @@ class ChatController extends BaseApiController
 
         $roomModel = new ChatRoomModel();
 
+        $db = \Config\Database::connect();
+        $db->transStart();
+
         $roomId = $roomModel->insert([
             'karang_taruna_id' => $tenantId,
             'name' => $name,
@@ -56,6 +65,7 @@ class ChatController extends BaseApiController
 
         if (is_array($memberIds) && count($memberIds) > 0) {
             $memberModel = new ChatRoomMemberModel();
+            $orgMemberModel = new \App\Models\OrganizationMemberModel();
 
             // Add creator implicitly
             if (!in_array($userId, $memberIds)) {
@@ -63,11 +73,28 @@ class ChatController extends BaseApiController
             }
 
             foreach ($memberIds as $mId) {
-                $memberModel->insert([
-                    'chat_room_id' => $roomId,
-                    'user_id' => $mId
-                ]);
+                // Validate that the user is an active member of this tenant
+                $isActive = $orgMemberModel->where('user_id', $mId)
+                                           ->where('karang_taruna_id', $tenantId)
+                                           ->where('status_aktif', 1)
+                                           ->first();
+
+                if ($isActive) {
+                    $memberModel->insert([
+                        'chat_room_id' => $roomId,
+                        'user_id' => $mId
+                    ]);
+                } else {
+                    $db->transRollback();
+                    return $this->sendError('Salah satu anggota tidak valid atau tidak aktif dalam organisasi ini', null, 400);
+                }
             }
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->sendError('Gagal membuat grup', null, 500);
         }
 
         return $this->sendSuccess('Grup berhasil dibuat', ['id' => $roomId]);
@@ -138,6 +165,9 @@ class ChatController extends BaseApiController
         foreach ($chats as &$c) {
             $c['sender_photo_url'] = !empty($c['profile_photo']) ? base_url($c['profile_photo']) : null;
             unset($c['profile_photo']); // Don't expose raw DB path
+            if (isset($c['created_at'])) {
+                $c['created_at'] = $this->formatTimestamp($c['created_at']);
+            }
         }
 
         return $this->sendSuccess('Berhasil mengambil data grup chat', $chats);
@@ -171,6 +201,9 @@ class ChatController extends BaseApiController
         foreach ($chats as &$c) {
             $c['sender_photo_url'] = !empty($c['profile_photo']) ? base_url($c['profile_photo']) : null;
             unset($c['profile_photo']);
+            if (isset($c['created_at'])) {
+                $c['created_at'] = $this->formatTimestamp($c['created_at']);
+            }
         }
 
         return $this->sendSuccess('Berhasil mengambil riwayat private chat', $chats);
@@ -192,6 +225,9 @@ class ChatController extends BaseApiController
             unset($c['contact_photo']);
             // Standardize format to match what app expects for ChatRoom somewhat or unique object
             $c['contact_id'] = (int)$c['contact_id'];
+            if (isset($c['last_message_time'])) {
+                $c['last_message_time'] = $this->formatTimestamp($c['last_message_time']);
+            }
         }
 
         return $this->sendSuccess('Berhasil mengambil daftar kontak pesan pribadi', $contacts);
@@ -217,12 +253,18 @@ class ChatController extends BaseApiController
 
         $chatModel = new ChatModel();
 
+        $orgMemberModel = new \App\Models\OrganizationMemberModel();
+        $senderIsActive = $orgMemberModel->where('karang_taruna_id', $tenantId)->where('user_id', $userId)->where('status_aktif', 1)->first();
+        if (!$senderIsActive) {
+            return $this->sendError('Anda bukan anggota aktif', null, 403);
+        }
+
         $data = [
             'karang_taruna_id' => $tenantId,
             'sender_id' => $userId,
             'message' => $message,
             'type' => $type,
-            'created_at' => date('Y-m-d H:i:s'),
+            'created_at' => gmdate('Y-m-d H:i:s'),
         ];
 
         if ($type === 'group') {
@@ -232,12 +274,20 @@ class ChatController extends BaseApiController
             if (!$room) {
                 return $this->sendError('Grup tidak ditemukan', null, 404);
             }
+
+            if ($room['type'] === 'custom') {
+                $memberModel = new ChatRoomMemberModel();
+                $isMember = $memberModel->where('chat_room_id', $roomId)->where('user_id', $userId)->first();
+                if (!$isMember) {
+                    return $this->sendError('Anda bukan anggota grup ini', null, 403);
+                }
+            }
+
             $data['chat_room_id'] = $roomId;
             // TODO: Trigger Notification to all members
             $this->sendGroupNotification($roomId, $user['nama_lengkap'], $message, $data);
         } else {
-            $memberModel = new \App\Models\OrganizationMemberModel();
-            $receiverMembership = $memberModel->where('user_id', $receiverId)->where('karang_taruna_id', $tenantId)->where('status_aktif', 1)->first();
+            $receiverMembership = $orgMemberModel->where('user_id', $receiverId)->where('karang_taruna_id', $tenantId)->where('status_aktif', 1)->first();
             if (!$receiverMembership) {
                 return $this->sendError('Pengguna tidak ditemukan', null, 404);
             }
@@ -251,6 +301,7 @@ class ChatController extends BaseApiController
         $data['nama_lengkap'] = $user['nama_lengkap'];
         $data['role_level'] = $user['role_level'];
         $data['sender_photo_url'] = !empty($user['profile_photo']) ? base_url($user['profile_photo']) : null;
+        $data['created_at'] = $this->formatTimestamp($data['created_at']);
 
         return $this->sendSuccess('Pesan terkirim', $data);
     }

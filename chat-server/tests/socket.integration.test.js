@@ -14,7 +14,10 @@ jest.mock('mysql2/promise', () => {
   };
 });
 
-global.fetch = jest.fn();
+global.fetch = jest.fn().mockResolvedValue({
+  ok: true,
+  json: async () => ({ status: true })
+});
 
 // Set dummy env vars for test
 process.env.DB_HOST = 'localhost';
@@ -71,11 +74,13 @@ describe('Socket.IO Chat Integration', () => {
 
     pool.execute.mockResolvedValueOnce([
       [{ id: 100, type: 'default', karang_taruna_id: 1 }] // Rooms
+    ]).mockResolvedValueOnce([
+      [{ user_id: 10, status_aktif: 1 }] // Active member check
     ]);
 
     const port = server.address().port;
     clientSocket = ioc(`http://localhost:${port}`);
-    
+
     clientSocket.on('connect', () => {
       clientSocket.emit('auth', { token: 'valid', tenant_id: 1 });
     });
@@ -102,12 +107,14 @@ describe('Socket.IO Chat Integration', () => {
     pool.execute.mockResolvedValueOnce([
       [{ id: 101, type: 'custom', karang_taruna_id: 1 }] // Rooms
     ]).mockResolvedValueOnce([
+      [{ user_id: 11, status_aktif: 1 }] // Active member check
+    ]).mockResolvedValueOnce([
       [] // No members found
     ]);
 
     const port = server.address().port;
     clientSocket = ioc(`http://localhost:${port}`);
-    
+
     clientSocket.on('connect', () => {
       clientSocket.emit('auth', { token: 'valid', tenant_id: 1 });
     });
@@ -127,27 +134,31 @@ describe('Socket.IO Chat Integration', () => {
       ok: true,
       json: async () => ({
         status: true,
-        data: { 
-          user_id: 10, 
-          karang_taruna_id: 1, 
+        data: {
+          user_id: 10,
+          karang_taruna_id: 1,
           role_level: 'anggota',
-          permissions: ['chat.read', 'chat.send'] 
+          permissions: ['chat.read', 'chat.send']
         }
       })
     });
 
-    pool.execute.mockResolvedValueOnce([ { insertId: 500 } ]);
-    
+    pool.execute
+      .mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]) // sender validation
+      .mockResolvedValueOnce([ [{ user_id: 20, status_aktif: 1 }] ]) // receiver validation
+      .mockResolvedValueOnce([ { insertId: 500 } ]) // insert
+      .mockResolvedValueOnce([ [{ created_at_iso: '2026-09-12T10:15:30Z' }] ]); // timestamp
+
     const port = server.address().port;
     clientSocket = ioc(`http://localhost:${port}`);
-    
+
     clientSocket.on('connect', () => {
       clientSocket.emit('auth', { token: 'valid', tenant_id: 1 });
     });
 
     clientSocket.once('auth_success', () => {
       clientSocket.emit('send_message', { type: 'private', receiver_id: 20, message: 'secret' });
-      
+
       setTimeout(() => {
         expect(pool.execute).toHaveBeenCalledWith(
           expect.stringContaining('INSERT INTO chats'),
@@ -170,7 +181,7 @@ describe('Socket.IO Chat Integration', () => {
 
     const port = server.address().port;
     clientSocket = ioc(`http://localhost:${port}`);
-    
+
     clientSocket.on('connect', () => {
       clientSocket.emit('auth', { token: 'valid_token', tenant_id: 2 });
     });
@@ -181,8 +192,171 @@ describe('Socket.IO Chat Integration', () => {
     });
   });
 
-  it('should not broadcast private message to receiver in different tenant', (done) => {
-    expect(true).toBe(true);
-    done();
+  // NEW SECURITY TESTS
+
+  // PRIVATE SEND
+  it('PRIVATE: cross tenant receiver => rejected, insert 0', (done) => {
+    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } }) });
+    pool.execute.mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]); // Sender active
+    pool.execute.mockResolvedValueOnce([ [] ]); // Receiver cross-tenant (empty)
+
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+
+    clientSocket.once('auth_success', () => {
+      clientSocket.emit('send_message', { type: 'private', receiver_id: 99, message: 'secret' });
+    });
+
+    clientSocket.once('error', (data) => {
+      expect(data.message).toBe('Receiver not found or not active in this tenant');
+      expect(pool.execute).not.toHaveBeenCalledWith(expect.stringContaining('INSERT INTO chats'), expect.anything());
+      done();
+    });
+  });
+
+  it('PRIVATE: inactive receiver => rejected, insert 0', (done) => {
+    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } }) });
+    pool.execute.mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]); // Sender active
+    pool.execute.mockResolvedValueOnce([ [] ]); // Receiver inactive (empty)
+
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+
+    clientSocket.once('auth_success', () => {
+      clientSocket.emit('send_message', { type: 'private', receiver_id: 99, message: 'secret' });
+    });
+
+    clientSocket.once('error', (data) => {
+      expect(data.message).toBe('Receiver not found or not active in this tenant');
+      expect(pool.execute).not.toHaveBeenCalledWith(expect.stringContaining('INSERT INTO chats'), expect.anything());
+      done();
+    });
+  });
+
+  it('PRIVATE: nonexistent receiver => rejected, insert 0', (done) => {
+    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } }) });
+    pool.execute.mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]); // Sender active
+    pool.execute.mockResolvedValueOnce([ [] ]); // Receiver nonexistent (empty)
+
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+
+    clientSocket.once('auth_success', () => {
+      clientSocket.emit('send_message', { type: 'private', receiver_id: 999, message: 'secret' });
+    });
+
+    clientSocket.once('error', (data) => {
+      expect(data.message).toBe('Receiver not found or not active in this tenant');
+      expect(pool.execute).not.toHaveBeenCalledWith(expect.stringContaining('INSERT INTO chats'), expect.anything());
+      done();
+    });
+  });
+
+  // GROUP SEND
+  it('GROUP SEND: custom non-member => rejected, insert 0', (done) => {
+    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } }) });
+
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+
+    clientSocket.once('auth_success', () => {
+      // Must join room first for group send
+      pool.execute.mockResolvedValueOnce([ [{ id: 102, type: 'custom', karang_taruna_id: 1 }] ]) // join room query
+                  .mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]) // global active check
+                  .mockResolvedValueOnce([ [{ user_id: 10 }] ]); // custom member check -> allow join
+      clientSocket.emit('join_room', { room_id: 102 });
+    });
+
+    clientSocket.once('room_joined', () => {
+      // Now send message but simulate not being a member during send revalidation
+      pool.execute.mockResolvedValueOnce([ [{ id: 102, type: 'custom', karang_taruna_id: 1 }] ]) // send room query
+                  .mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]) // send global check
+                  .mockResolvedValueOnce([ [] ]); // send custom member check -> REJECT
+      clientSocket.emit('send_message', { type: 'group', chat_room_id: 102, message: 'secret' });
+    });
+
+    clientSocket.on('error', (data) => {
+      if (data.message === 'You are not a member of this custom room') {
+        expect(pool.execute).not.toHaveBeenCalledWith(expect.stringContaining('INSERT INTO chats'), expect.anything());
+        done();
+      }
+    });
+  });
+
+  it('GROUP SEND: revoked member => rejected, insert 0', (done) => {
+    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } }) });
+
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+
+    clientSocket.once('auth_success', () => {
+      pool.execute.mockResolvedValueOnce([ [{ id: 102, type: 'default', karang_taruna_id: 1 }] ]) // join room query
+                  .mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]); // join active check
+      clientSocket.emit('join_room', { room_id: 102 });
+    });
+
+    clientSocket.once('room_joined', () => {
+      // Revoked during send
+      pool.execute.mockResolvedValueOnce([ [{ id: 102, type: 'default', karang_taruna_id: 1 }] ]) // send room query
+                  .mockResolvedValueOnce([ [] ]); // send global check -> REJECT (inactive)
+      clientSocket.emit('send_message', { type: 'group', chat_room_id: 102, message: 'secret' });
+    });
+
+    clientSocket.on('error', (data) => {
+      if (data.message === 'You are not an active member of this tenant') {
+        expect(pool.execute).not.toHaveBeenCalledWith(expect.stringContaining('INSERT INTO chats'), expect.anything());
+        done();
+      }
+    });
+  });
+
+  it('GROUP SEND: other tenant room => rejected, insert 0', (done) => {
+    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } }) });
+
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+
+    clientSocket.once('auth_success', () => {
+      pool.execute.mockResolvedValueOnce([ [{ id: 105, type: 'default', karang_taruna_id: 1 }] ])
+                  .mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]);
+      clientSocket.emit('join_room', { room_id: 105 });
+    });
+
+    clientSocket.once('room_joined', () => {
+      // Simulate room changed tenant or querying wrong tenant
+      pool.execute.mockResolvedValueOnce([ [] ]); // room query returns empty because karang_taruna_id doesn't match
+      clientSocket.emit('send_message', { type: 'group', chat_room_id: 105, message: 'secret' });
+    });
+
+    clientSocket.on('error', (data) => {
+      if (data.message === 'Room not found or belongs to another tenant') {
+        expect(pool.execute).not.toHaveBeenCalledWith(expect.stringContaining('INSERT INTO chats'), expect.anything());
+        done();
+      }
+    });
+  });
+
+  // JOIN
+  it('JOIN: revoked/default-room join rejected', (done) => {
+    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } }) });
+    pool.execute.mockResolvedValueOnce([ [{ id: 100, type: 'default', karang_taruna_id: 1 }] ]) // Rooms
+                .mockResolvedValueOnce([ [] ]); // Revoked (empty active members)
+
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+
+    clientSocket.once('auth_success', () => clientSocket.emit('join_room', { room_id: 100 }));
+
+    clientSocket.once('error', (data) => {
+      expect(data.message).toBe('You are not an active member of this tenant');
+      done();
+    });
   });
 });

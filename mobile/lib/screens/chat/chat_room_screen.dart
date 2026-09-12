@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter/services.dart';
 import '../../models/chat_model.dart';
 import '../../models/user_model.dart';
@@ -45,6 +46,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   bool _hasMore = true;
   bool _showNewMessageIndicator = false;
   bool _isSending = false;
+  StreamSubscription<Chat>? _messageSubscription;
 
   @override
   void initState() {
@@ -107,7 +109,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (widget.type == 'group' && widget.roomId != null) {
       _chatService.joinRoom(widget.roomId!);
     }
-    _chatService.onMessageReceived = (Chat chat) {
+
+    _messageSubscription = _chatService.messageStream.listen((Chat chat) {
       if (!mounted) return;
       if (_renderedChatIds.contains(chat.id)) return; // Deduplicate
 
@@ -119,7 +122,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               chat.receiverId == widget.receiverId)) {
         _addNewMessage(chat);
       }
-    };
+    });
   }
 
   void _addNewMessage(Chat chat) {
@@ -450,8 +453,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   @override
   void dispose() {
-    // Only remove the UI listener, keep socket alive
-    _chatService.onMessageReceived = null;
+    _messageSubscription?.cancel();
     _msgController.dispose();
     _scrollController.dispose();
     super.dispose();

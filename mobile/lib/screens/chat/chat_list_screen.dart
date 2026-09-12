@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import '../../models/chat_model.dart';
 import 'chat_room_screen.dart';
 import 'create_group_screen.dart';
 
@@ -28,6 +30,8 @@ class _ChatListScreenState extends State<ChatListScreen>
   List<Map<String, dynamic>> _privateContacts = [];
   UserModel? _currentUser;
   final ChatService _chatService = ChatService();
+  StreamSubscription<Chat>? _messageSubscription;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -37,6 +41,15 @@ class _ChatListScreenState extends State<ChatListScreen>
       setState(() {});
     });
     _loadData();
+
+    _messageSubscription = _chatService.messageStream.listen((chat) {
+      if (chat.type == 'private') {
+        _refreshTimer?.cancel();
+        _refreshTimer = Timer(const Duration(milliseconds: 500), () {
+          if (mounted) _fetchPrivateContacts();
+        });
+      }
+    });
   }
 
   Future<void> _loadData() async {
@@ -74,6 +87,8 @@ class _ChatListScreenState extends State<ChatListScreen>
 
   @override
   void dispose() {
+    _messageSubscription?.cancel();
+    _refreshTimer?.cancel();
     _tabController.dispose();
     super.dispose();
   }

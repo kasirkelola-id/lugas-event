@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../models/chat_model.dart';
 import '../models/chat_room_model.dart';
@@ -16,11 +17,14 @@ class ChatService {
   IO.Socket? _socket;
   IO.Socket? get socket => _socket;
 
-  Function(Chat)? onMessageReceived;
+  final StreamController<Chat> _messageStreamController = StreamController<Chat>.broadcast();
+  Stream<Chat> get messageStream => _messageStreamController.stream;
+
   Function()? onAuthSuccess;
   
   bool _isAuthenticated = false;
   int? _activeRoomId;
+  final Set<int> _joinedRooms = {};
 
   // Initialize WebSocket connection
   Future<void> initWebSocket() async {
@@ -57,6 +61,7 @@ class ChatService {
     _socket!.off('connect_error');
     _socket!.off('error');
     _socket!.off('new_message');
+    _socket!.off('room_joined');
     _socket!.off('disconnect');
 
     _socket!.on('auth_success', (_) {
@@ -88,17 +93,22 @@ class ChatService {
     _socket!.on('new_message', (data) {
       try {
         final chat = Chat.fromJson(data);
-        if (onMessageReceived != null) {
-          onMessageReceived!(chat);
-        }
+        _messageStreamController.add(chat);
       } catch (e) {
         debugPrint("Error parsing chat: $e");
+      }
+    });
+
+    _socket!.on('room_joined', (data) {
+      if (data['room_id'] != null) {
+        _joinedRooms.add(data['room_id'] as int);
       }
     });
 
     _socket!.onDisconnect((_) {
       debugPrint('Socket.io disconnected');
       _isAuthenticated = false;
+      _joinedRooms.clear();
     });
   }
 
@@ -143,7 +153,16 @@ class ChatService {
     int? receiverId,
     int? chatRoomId,
   }) async {
+    bool canSocketSend = false;
     if (_socket != null && _socket!.connected && _isAuthenticated) {
+       if (type == 'private') {
+           canSocketSend = true;
+       } else if (type == 'group' && chatRoomId != null && _joinedRooms.contains(chatRoomId)) {
+           canSocketSend = true;
+       }
+    }
+
+    if (canSocketSend) {
       _socket!.emit('send_message', {
         'type': type,
         'message': message,
@@ -170,6 +189,7 @@ class ChatService {
       _socket = null;
       _isAuthenticated = false;
       _activeRoomId = null;
+      _joinedRooms.clear();
     }
   }
 
