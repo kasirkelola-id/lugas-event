@@ -448,25 +448,6 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.access_time,
-                          size: 14,
-                          color: AppTheme.textSecondary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${_event!.waktuMulai ?? '??:??'} – ${_event!.waktuSelesai ?? '??:??'}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
                     if (_event!.radius != null) ...[
                       const SizedBox(height: 8),
                       Row(

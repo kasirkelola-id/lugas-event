@@ -372,6 +372,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                             controller: _searchController,
                             style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
                             decoration: InputDecoration(
+                              filled: false,
                               hintText: 'Cari nama atau email...',
                               hintStyle: TextStyle(
                                 color: AppTheme.textSecondary.withValues(alpha: 0.7),
@@ -419,27 +420,29 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                               final label = rt == null ? 'Semua RT' : 'RT ${rt.toString().padLeft(2, '0')}';
                               return Padding(
                                 padding: const EdgeInsets.only(right: 10.0),
-                                child: FilterChip(
-                                  label: Text(label),
-                                  selected: isSelected,
-                                  showCheckmark: false,
-                                  selectedColor: Colors.white,
-                                  backgroundColor: Colors.white.withValues(alpha: 0.15),
-                                  labelStyle: TextStyle(
-                                    color: isSelected ? AppTheme.primary : Colors.white,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                    side: BorderSide(
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.white.withValues(alpha: 0.3),
-                                      width: 1,
+                                child: InkWell(
+                                  onTap: () => _onRtFilterChanged(rt?.toString()),
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? Colors.white : Colors.white.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Colors.white.withOpacity(0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      label,
+                                      style: TextStyle(
+                                        color: isSelected ? AppTheme.primary : Colors.white,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                      ),
                                     ),
                                   ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  onSelected: (_) => _onRtFilterChanged(rt?.toString()),
                                 ),
                               );
                             }).toList(),
