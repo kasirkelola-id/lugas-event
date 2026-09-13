@@ -11,6 +11,7 @@ use App\Models\ChatRoomMemberModel;
 use App\Models\ChatModel;
 use App\Models\UserTokenModel;
 use App\Services\AuthService;
+use App\Services\ChatCleanupService;
 
 class ChatTest extends CIUnitTestCase
 {
@@ -334,5 +335,107 @@ class ChatTest extends CIUnitTestCase
             ->post('api/chats/messages', ['type' => 'group', 'chat_room_id' => 200, 'message' => 'secret']); // Room 200 is T2
         $result->assertStatus(404);
         $this->dontSeeInDatabase('chats', ['sender_id' => 10, 'chat_room_id' => 200]);
+    }
+
+    public function testRetentionBoundaryForPrivateAndGroupHistory()
+    {
+        $db = \Config\Database::connect();
+        $cutoff = '2026-09-12 10:00:00';
+        $model = new class extends ChatModel {
+            public function getRetentionCutoff(?\DateTimeInterface $now = null): string
+            {
+                return '2026-09-12 10:00:00';
+            }
+        };
+
+        foreach ([
+            [1, 'private', null, 10, 11, 'visible-at-cutoff', $cutoff],
+            [2, 'private', null, 10, 11, 'visible-newer', '2026-09-12 10:00:01'],
+            [3, 'private', null, 10, 11, 'expired-private', '2026-09-12 09:59:59'],
+            [4, 'group', 100, 10, null, 'visible-group-at-cutoff', $cutoff],
+            [5, 'group', 100, 10, null, 'visible-group-newer', '2026-09-12 10:00:01'],
+            [6, 'group', 100, 10, null, 'expired-group', '2026-09-12 09:59:59'],
+        ] as [$id, $type, $roomId, $senderId, $receiverId, $message, $createdAt]) {
+            $db->table('chats')->insert([
+                'id' => $id, 'karang_taruna_id' => 1, 'type' => $type, 'chat_room_id' => $roomId,
+                'sender_id' => $senderId, 'receiver_id' => $receiverId, 'message' => $message, 'created_at' => $createdAt,
+            ]);
+        }
+
+        $private = $model->getPrivateChats(1, 10, 11, 50);
+        $group = $model->getRoomChats(100, 50);
+        $this->assertSame([2, 1], array_column($private, 'id'));
+        $this->assertSame([5, 4], array_column($group, 'id'));
+    }
+
+    public function testPrivateContactsAggregateOnlyRetainedMessages()
+    {
+        $db = \Config\Database::connect();
+        // The higher expired ID must not hide the lower, retained message.
+        $db->table('chats')->insert([
+            'id' => 100, 'karang_taruna_id' => 1, 'type' => 'private', 'sender_id' => 10,
+            'receiver_id' => 11, 'message' => 'expired high id', 'created_at' => gmdate('Y-m-d H:i:s', strtotime('-40 days')),
+        ]);
+        $db->table('chats')->insert([
+            'id' => 90, 'karang_taruna_id' => 1, 'type' => 'private', 'sender_id' => 10,
+            'receiver_id' => 11, 'message' => 'retained low id', 'created_at' => gmdate('Y-m-d H:i:s', strtotime('-10 days')),
+        ]);
+
+        $contacts = (new ChatModel())->getPrivateChatContacts(1, 10);
+        $this->assertCount(1, $contacts);
+        $this->assertSame('retained low id', $contacts[0]['last_message']);
+    }
+
+    public function testCleanupDeletesOnlyExpiredChatsAndIsIdempotent()
+    {
+        $db = \Config\Database::connect();
+        $db->table('chat_room_members')->insert(['chat_room_id' => 100, 'user_id' => 10]);
+        foreach ([
+            [1, 'private', null, 10, 11, 'expired private', '2026-09-12 09:59:59'],
+            [2, 'group', 100, 10, null, 'expired group', '2026-09-12 09:59:59'],
+            [3, 'private', null, 10, 11, 'recent private', '2026-09-12 10:00:00'],
+            [4, 'group', 100, 10, null, 'recent group', '2026-09-12 10:00:00'],
+        ] as [$id, $type, $roomId, $senderId, $receiverId, $message, $createdAt]) {
+            $db->table('chats')->insert([
+                'id' => $id, 'karang_taruna_id' => 1, 'type' => $type, 'chat_room_id' => $roomId,
+                'sender_id' => $senderId, 'receiver_id' => $receiverId, 'message' => $message, 'created_at' => $createdAt,
+            ]);
+        }
+
+        $service = new ChatCleanupService($db);
+        $first = $service->deleteExpired('2026-09-12 10:00:00', 2);
+        $second = $service->deleteExpired('2026-09-12 10:00:00', 2);
+
+        $this->assertSame(['deleted' => 2, 'batches' => 1], $first);
+        $this->assertSame(['deleted' => 0, 'batches' => 0], $second);
+        $this->assertSame([3, 4], array_column($db->table('chats')->orderBy('id')->get()->getResultArray(), 'id'));
+        $this->assertNotNull($db->table('chat_rooms')->where('id', 100)->get()->getRowArray());
+        $this->assertNotNull($db->table('chat_room_members')->where(['chat_room_id' => 100, 'user_id' => 10])->get()->getRowArray());
+    }
+
+    public function testPaginationAndMessageValidationAreBounded()
+    {
+        $db = \Config\Database::connect();
+        for ($id = 1; $id <= 101; $id++) {
+            $db->table('chats')->insert([
+                'id' => $id, 'karang_taruna_id' => 1, 'type' => 'private', 'sender_id' => 10,
+                'receiver_id' => 11, 'message' => "message {$id}", 'created_at' => gmdate('Y-m-d H:i:s'),
+            ]);
+        }
+        $token = $this->getAuthHeader(10, 1);
+        $headers = ['Authorization' => 'Bearer ' . $token, 'X-Karang-Taruna-ID' => '1'];
+        $first = $this->withHeaders($headers)->get('api/chats/private/11?limit=1000000');
+        $first->assertStatus(200);
+        $firstData = json_decode($first->getJSON(), true)['data'];
+        $this->assertCount(100, $firstData);
+        $second = $this->withHeaders($headers)->get('api/chats/private/11?before_id=' . $firstData[0]['id']);
+        $second->assertStatus(200);
+        $secondData = json_decode($second->getJSON(), true)['data'];
+        $this->assertCount(1, $secondData);
+        $this->assertSame(1, $secondData[0]['id']);
+        $this->withHeaders($headers)->get('api/chats/private/11?limit=abc')->assertStatus(400);
+        $this->withHeaders($headers)->get('api/chats/private-contacts?offset=-1')->assertStatus(400);
+        $this->withHeaders($headers)->post('api/chats/messages', ['type' => 'private', 'receiver_id' => 10, 'message' => 'self'])->assertStatus(400);
+        $this->withHeaders($headers)->post('api/chats/messages', ['type' => 'private', 'receiver_id' => 11, 'message' => str_repeat('x', 2001)])->assertStatus(400);
     }
 }

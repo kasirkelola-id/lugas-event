@@ -27,14 +27,21 @@ const io = new Server(server, {
   }
 });
 
-// MySQL Connection Pool
+function boundedConnectionLimit(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed)) return 10;
+  return Math.min(Math.max(parsed, 1), 100);
+}
+
+// MySQL Connection Pool. This cap prevents an invalid environment value from
+// exhausting MySQL; deployment must still budget it against max_connections.
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: boundedConnectionLimit(process.env.DB_CONNECTION_LIMIT),
   queueLimit: 0
 });
 
@@ -57,7 +64,8 @@ io.on('connection', (socket) => {
 
   // Authenticate and join room
   socket.on('auth', async (data) => {
-    clearTimeout(authTimeout);
+    if (socket.userId) return socket.emit('auth_error', { message: 'Socket is already authenticated' });
+    if (!data || typeof data !== 'object') return socket.emit('auth_error', { message: 'Missing token or tenant_id' });
     const token = data.token;
     const karangTarunaId = data.tenant_id;
 
@@ -87,6 +95,9 @@ io.on('connection', (socket) => {
       if (!json.status) throw new Error('Authentication failed');
 
       const user = json.data;
+      if (!user || String(user.karang_taruna_id) !== String(karangTarunaId)) {
+        throw new Error('Authentication tenant mismatch');
+      }
 
       socket.userId = user.user_id;
       socket.karangTarunaId = user.karang_taruna_id;
@@ -110,6 +121,7 @@ io.on('connection', (socket) => {
       socket.join(`tenant_${user.karang_taruna_id}`);
       socket.join(`user_${user.user_id}`);
 
+      clearTimeout(authTimeout);
       socket.emit('auth_success', { message: 'Authenticated' });
       console.log(`User ${user.user_id} authenticated via internal API for tenant ${user.karang_taruna_id}`);
     } catch (error) {
@@ -123,7 +135,7 @@ io.on('connection', (socket) => {
   socket.on('join_room', async (data) => {
     if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
 
-    const roomId = data.room_id;
+    const roomId = data && data.room_id;
     if (!roomId) return;
 
     try {
@@ -170,6 +182,7 @@ io.on('connection', (socket) => {
   // Handle incoming messages
   socket.on('send_message', async (data) => {
     if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
+    if (!data || typeof data !== 'object') return socket.emit('error', { message: 'Invalid message payload' });
 
     // Rate Limiting
     const now = Date.now();
@@ -226,9 +239,14 @@ io.on('connection', (socket) => {
     const receiverId = data.receiver_id || null;
     const roomId = data.chat_room_id || null;
 
-    if (typeof message !== 'string' || message.trim().length === 0) return;
-    if (message.length > 2000) {
-       message = message.substring(0, 2000); // Enforce max length
+    if (typeof message !== 'string' || message.trim().length === 0) {
+      return socket.emit('error', { message: 'Message cannot be empty' });
+    }
+    if (Array.from(message).length > 2000) {
+       return socket.emit('error', { message: 'Message exceeds 2000 characters limit' });
+    }
+    if (type !== 'group' && type !== 'private') {
+      return socket.emit('error', { message: 'Invalid message type' });
     }
 
     try {
@@ -296,6 +314,10 @@ io.on('connection', (socket) => {
       } else if (type === 'private') {
         if (!receiverId) return socket.emit('error', { message: 'Receiver ID required for private chat' });
 
+        if (socket.userId.toString() === receiverId.toString()) {
+          return socket.emit('error', { message: 'Cannot send private message to yourself' });
+        }
+
         // Check active membership for sender globally for this tenant
         const [activeMembers] = await pool.execute(
           `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
@@ -337,14 +359,10 @@ io.on('connection', (socket) => {
           sender_photo_url: socket.profilePhotoUrl
         };
 
-        socket.emit('new_message', chatPayload);
-
-        // Emit to receiver's sockets
-        for (const [sId, sInfo] of onlineUsers.entries()) {
-          if (Number(sInfo.userId) === Number(receiverId) && Number(sInfo.karangTarunaId) === Number(socket.karangTarunaId)) {
-            io.to(sId).emit('new_message', chatPayload);
-          }
-        }
+        // Emit to sender's sockets (all devices) and receiver's sockets (all devices)
+        // using the user rooms they joined during auth.
+        io.to(`user_${socket.userId}`).emit('new_message', chatPayload);
+        io.to(`user_${receiverId}`).emit('new_message', chatPayload);
 
         // Fire and forget notification
         _triggerChatNotification(chatId);
@@ -406,7 +424,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, io, pool };
+module.exports = { server, io, pool, boundedConnectionLimit };
 
 function _triggerChatNotification(chatId) {
   const apiUrl = process.env.INTERNAL_API_URL.replace('socket-auth', 'chat-notification');

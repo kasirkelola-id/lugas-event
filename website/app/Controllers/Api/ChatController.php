@@ -10,6 +10,12 @@ use App\Services\AuthService;
 
 class ChatController extends BaseApiController
 {
+    private const DEFAULT_PAGE_SIZE = 50;
+    private const MAX_HISTORY_PAGE_SIZE = 100;
+    private const MAX_CONTACT_PAGE_SIZE = 100;
+    // Product safeguard: this includes the creator, and is enforced before DB work.
+    private const MAX_CUSTOM_ROOM_MEMBERS = 100;
+
     private function formatTimestamp($datetime)
     {
         if (empty($datetime)) return null;
@@ -46,8 +52,28 @@ class ChatController extends BaseApiController
         $name = $this->request->getVar('name');
         $memberIds = $this->request->getVar('members'); // array of user IDs
 
-        if (empty($name)) {
+        if (!is_string($name) || trim($name) === '') {
             return $this->sendError('Nama grup tidak boleh kosong', null, 400);
+        }
+        $name = trim($name);
+        if (mb_strlen($name, 'UTF-8') > 100) {
+            return $this->sendError('Nama grup melebihi batas 100 karakter', null, 400);
+        }
+        if ($memberIds !== null && !is_array($memberIds)) {
+            return $this->sendError('Anggota grup harus berupa daftar', null, 400);
+        }
+        $memberIds = $memberIds ?? [];
+        foreach ($memberIds as $memberId) {
+            if (!is_int($memberId) && !(is_string($memberId) && ctype_digit($memberId))) {
+                return $this->sendError('ID anggota grup tidak valid', null, 400);
+            }
+        }
+        $memberIds = array_values(array_unique(array_map('intval', $memberIds)));
+        if (!in_array($userId, $memberIds, true)) {
+            $memberIds[] = $userId;
+        }
+        if (count($memberIds) > self::MAX_CUSTOM_ROOM_MEMBERS) {
+            return $this->sendError('Jumlah anggota grup melebihi batas ' . self::MAX_CUSTOM_ROOM_MEMBERS, null, 400);
         }
 
         $roomModel = new ChatRoomModel();
@@ -60,17 +86,12 @@ class ChatController extends BaseApiController
             'name' => $name,
             'type' => 'custom',
             'created_by' => $userId,
-            'created_at' => date('Y-m-d H:i:s')
+            'created_at' => gmdate('Y-m-d H:i:s')
         ]);
 
-        if (is_array($memberIds) && count($memberIds) > 0) {
+        if (count($memberIds) > 0) {
             $memberModel = new ChatRoomMemberModel();
             $orgMemberModel = new \App\Models\OrganizationMemberModel();
-
-            // Add creator implicitly
-            if (!in_array($userId, $memberIds)) {
-                $memberIds[] = $userId;
-            }
 
             foreach ($memberIds as $mId) {
                 // Validate that the user is an active member of this tenant
@@ -153,10 +174,10 @@ class ChatController extends BaseApiController
         }
 
         $chatModel = new ChatModel();
-        $limit = $this->request->getVar('limit') ?? 50;
-        $beforeId = $this->request->getVar('before_id');
+        $page = $this->historyPageParameters();
+        if ($page === null) return $this->sendError('Parameter pagination tidak valid', null, 400);
 
-        $chats = $chatModel->getRoomChats($roomId, $limit, $beforeId);
+        $chats = $chatModel->getRoomChats($roomId, $page['limit'], $page['beforeId']);
 
         // Reverse array because it was fetched DESC and client expects ASC
         $chats = array_reverse($chats);
@@ -189,10 +210,10 @@ class ChatController extends BaseApiController
         }
 
         $chatModel = new ChatModel();
-        $limit = $this->request->getVar('limit') ?? 50;
-        $beforeId = $this->request->getVar('before_id');
+        $page = $this->historyPageParameters();
+        if ($page === null) return $this->sendError('Parameter pagination tidak valid', null, 400);
 
-        $chats = $chatModel->getPrivateChats($tenantId, $userId, $receiverId, $limit, $beforeId);
+        $chats = $chatModel->getPrivateChats($tenantId, $userId, $receiverId, $page['limit'], $page['beforeId']);
 
         // Reverse array because it was fetched DESC and client expects ASC
         $chats = array_reverse($chats);
@@ -218,7 +239,11 @@ class ChatController extends BaseApiController
         }
 
         $chatModel = new ChatModel();
-        $contacts = $chatModel->getPrivateChatContacts($tenantId, $userId);
+        $limit = $this->positiveIntegerParameter('limit', self::DEFAULT_PAGE_SIZE, self::MAX_CONTACT_PAGE_SIZE);
+        $offset = $this->nonNegativeIntegerParameter('offset', 0);
+        if ($limit === null || $offset === null) return $this->sendError('Parameter pagination tidak valid', null, 400);
+
+        $contacts = $chatModel->getPrivateChatContacts($tenantId, $userId, $limit, $offset);
 
         foreach ($contacts as &$c) {
             $c['contact_photo_url'] = !empty($c['contact_photo']) ? base_url($c['contact_photo']) : null;
@@ -247,8 +272,20 @@ class ChatController extends BaseApiController
         $receiverId = $this->request->getVar('receiver_id');
         $message = $this->request->getVar('message');
 
-        if (empty($message)) {
+        if (!is_string($message) || trim($message) === '') {
             return $this->sendError('Pesan tidak boleh kosong', null, 400);
+        }
+
+        if (mb_strlen($message, 'UTF-8') > 2000) {
+            return $this->sendError('Pesan melebihi batas 2000 karakter', null, 400);
+        }
+
+        if (!in_array($type, ['group', 'private'], true)) {
+            return $this->sendError('Tipe pesan tidak valid', null, 400);
+        }
+
+        if ($type === 'private' && (string)$userId === (string)$receiverId) {
+            return $this->sendError('Tidak dapat mengirim pesan ke diri sendiri', null, 400);
         }
 
         $chatModel = new ChatModel();
@@ -304,6 +341,33 @@ class ChatController extends BaseApiController
         $data['created_at'] = $this->formatTimestamp($data['created_at']);
 
         return $this->sendSuccess('Pesan terkirim', $data);
+    }
+
+    private function historyPageParameters(): ?array
+    {
+        $limit = $this->positiveIntegerParameter('limit', self::DEFAULT_PAGE_SIZE, self::MAX_HISTORY_PAGE_SIZE);
+        $beforeId = $this->nonNegativeIntegerParameter('before_id', null);
+        if ($limit === null || $beforeId === 0) return null;
+
+        return ['limit' => $limit, 'beforeId' => $beforeId];
+    }
+
+    private function positiveIntegerParameter(string $name, ?int $default, int $maximum): ?int
+    {
+        $value = $this->request->getVar($name);
+        if ($value === null || $value === '') return $default;
+        if (!is_scalar($value) || !ctype_digit((string)$value) || (int)$value < 1) return null;
+
+        return min((int)$value, $maximum);
+    }
+
+    private function nonNegativeIntegerParameter(string $name, ?int $default): ?int
+    {
+        $value = $this->request->getVar($name);
+        if ($value === null || $value === '') return $default;
+        if (!is_scalar($value) || !ctype_digit((string)$value)) return null;
+
+        return (int)$value;
     }
 
     private function sendGroupNotification($roomId, $senderName, $message, $chatData)

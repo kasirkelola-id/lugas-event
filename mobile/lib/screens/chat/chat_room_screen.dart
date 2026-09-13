@@ -5,6 +5,7 @@ import '../../models/chat_model.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/chat_service.dart';
+import '../../utils/chat_id_deduplicator.dart';
 import '../../core/theme/app_theme.dart';
 import 'group_info_screen.dart';
 import 'package:intl/intl.dart';
@@ -38,7 +39,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final ScrollController _scrollController = ScrollController();
 
   List<Chat> _messages = [];
-  final Set<int> _renderedChatIds = {}; // For deduplication
+  final ChatIdDeduplicator _renderedChatIds = ChatIdDeduplicator();
 
   UserModel? _currentUser;
   bool _isLoading = true;
@@ -112,7 +113,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     _messageSubscription = _chatService.messageStream.listen((Chat chat) {
       if (!mounted) return;
-      if (_renderedChatIds.contains(chat.id)) return; // Deduplicate
+      if (_renderedChatIds.contains(chat.id)) return; // Deduplicate by server ID
 
       // Filter message for this room
       if (widget.type == 'group' && chat.chatRoomId == widget.roomId) {

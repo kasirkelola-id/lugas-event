@@ -238,11 +238,14 @@ class ChatService {
   }
 
   // REST API: Get Room Chat History
-  Future<List<Chat>> getRoomChatHistory(int roomId, {int? beforeId}) async {
+  Future<List<Chat>> getRoomChatHistory(int roomId, {int? beforeId, int? limit}) async {
     try {
       String url = '/chats/rooms/$roomId/messages';
-      if (beforeId != null) {
-        url += '?before_id=$beforeId';
+      final query = <String>[];
+      if (beforeId != null) query.add('before_id=$beforeId');
+      if (limit != null) query.add('limit=$limit');
+      if (query.isNotEmpty) {
+        url += '?${query.join('&')}';
       }
       final response = await ApiClient.get(url);
       if (response.statusCode == 200) {
@@ -259,11 +262,15 @@ class ChatService {
   Future<List<Chat>> getPrivateChatHistory(
     int receiverId, {
     int? beforeId,
+    int? limit,
   }) async {
     try {
       String url = '/chats/private/$receiverId';
-      if (beforeId != null) {
-        url += '?before_id=$beforeId';
+      final query = <String>[];
+      if (beforeId != null) query.add('before_id=$beforeId');
+      if (limit != null) query.add('limit=$limit');
+      if (query.isNotEmpty) {
+        url += '?${query.join('&')}';
       }
       final response = await ApiClient.get(url);
       if (response.statusCode == 200) {
@@ -277,9 +284,13 @@ class ChatService {
   }
 
   // REST API: Get Private Chat Contacts
-  Future<List<Map<String, dynamic>>> getPrivateContacts() async {
+  Future<List<Map<String, dynamic>>> getPrivateContacts({int? limit, int offset = 0}) async {
     try {
-      final response = await ApiClient.get('/chats/private-contacts');
+      final query = <String>[];
+      if (limit != null) query.add('limit=$limit');
+      if (offset > 0) query.add('offset=$offset');
+      final suffix = query.isEmpty ? '' : '?${query.join('&')}';
+      final response = await ApiClient.get('/chats/private-contacts$suffix');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == true && data['data'] != null) {

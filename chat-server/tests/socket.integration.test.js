@@ -27,10 +27,11 @@ process.env.DB_NAME = 'test';
 process.env.INTERNAL_API_SECRET = 'secret';
 process.env.INTERNAL_API_URL = 'http://localhost/api';
 
-const { server, io, pool } = require('../server');
+const { server, io, pool, boundedConnectionLimit } = require('../server');
 
 describe('Socket.IO Chat Integration', () => {
   let clientSocket;
+  let extraSockets = [];
 
   beforeAll((done) => {
     server.listen(0, done);
@@ -55,6 +56,10 @@ describe('Socket.IO Chat Integration', () => {
     if (clientSocket && clientSocket.connected) {
       clientSocket.disconnect();
     }
+    for (const socket of extraSockets) {
+      if (socket.connected) socket.disconnect();
+    }
+    extraSockets = [];
   });
 
   it('should authenticate and join default room', (done) => {
@@ -358,5 +363,137 @@ describe('Socket.IO Chat Integration', () => {
       expect(data.message).toBe('You are not an active member of this tenant');
       done();
     });
+  });
+
+  it('USER ROOM: server assigns the authenticated room and ignores arbitrary join_user_room', (done) => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } })
+    });
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+    clientSocket.once('auth_success', () => {
+      expect(io.sockets.adapter.rooms.get('user_10').has(clientSocket.id)).toBe(true);
+      clientSocket.emit('join_user_room', { user_id: 99 });
+      setTimeout(() => {
+        expect(io.sockets.adapter.rooms.has('user_99')).toBe(false);
+        done();
+      }, 25);
+    });
+  });
+
+  it('PRIVATE: rejects 2001 Unicode code points before any database insert', (done) => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } })
+    });
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+    clientSocket.once('auth_success', () => {
+      clientSocket.emit('send_message', { type: 'private', receiver_id: 11, message: '🙂'.repeat(2001) });
+    });
+    clientSocket.once('error', (data) => {
+      expect(data.message).toBe('Message exceeds 2000 characters limit');
+      expect(pool.execute).not.toHaveBeenCalledWith(expect.stringContaining('INSERT INTO chats'), expect.anything());
+      done();
+    });
+  });
+
+  it('RATE LIMIT: sixth message in one second is rejected and only five insert attempts occur', (done) => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } })
+    });
+    let insertId = 1000;
+    pool.execute.mockImplementation((sql) => {
+      if (sql.includes('organization_members')) return Promise.resolve([[{ user_id: 10, status_aktif: 1 }]]);
+      if (sql.includes('INSERT INTO chats')) return Promise.resolve([{ insertId: insertId++ }]);
+      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[{ created_at_iso: '2026-09-12T10:15:30Z' }]]);
+      return Promise.resolve([[]]);
+    });
+    const port = server.address().port;
+    clientSocket = ioc(`http://localhost:${port}`);
+    clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
+    clientSocket.once('auth_success', () => {
+      for (let i = 0; i < 6; i++) clientSocket.emit('send_message', { type: 'private', receiver_id: 11, message: `m${i}` });
+    });
+    clientSocket.once('error', (data) => {
+      expect(data.message).toBe('RATE_LIMITED');
+      setTimeout(() => {
+        expect(pool.execute.mock.calls.filter(([sql]) => sql.includes('INSERT INTO chats'))).toHaveLength(5);
+        done();
+      }, 25);
+    });
+  });
+
+  it('bounds DB_CONNECTION_LIMIT to a safe 1..100 range with a default of 10', () => {
+    expect(boundedConnectionLimit(undefined)).toBe(10);
+    expect(boundedConnectionLimit('0')).toBe(1);
+    expect(boundedConnectionLimit('999')).toBe(100);
+    expect(boundedConnectionLimit('25')).toBe(25);
+  });
+
+  it('PRIVATE MATRIX: A1/A2 and B1/B2 receive exactly one; unrelated and cross-tenant sockets receive zero', async () => {
+    const identities = {
+      A1: { user_id: 10, karang_taruna_id: 1 },
+      A2: { user_id: 10, karang_taruna_id: 1 },
+      B1: { user_id: 20, karang_taruna_id: 1 },
+      B2: { user_id: 20, karang_taruna_id: 1 },
+      C1: { user_id: 21, karang_taruna_id: 1 },
+      D1: { user_id: 30, karang_taruna_id: 2 },
+    };
+    global.fetch.mockImplementation(async (_url, options) => {
+      const token = options.headers.Authorization.replace('Bearer ', '');
+      const identity = identities[token];
+      return { ok: Boolean(identity), json: async () => ({
+        status: Boolean(identity),
+        data: identity && { ...identity, permissions: ['chat.send', 'chat.read'] },
+      }) };
+    });
+    let insertCount = 0;
+    pool.execute.mockImplementation((sql, params) => {
+      if (sql.includes('organization_members')) {
+        // Receiver 30 belongs to tenant 2, so A -> D is rejected.
+        return Promise.resolve([[params[0] === 30 ? [] : { user_id: params[0], status_aktif: 1 }].flat()]);
+      }
+      if (sql.includes('INSERT INTO chats')) {
+        insertCount++;
+        return Promise.resolve([{ insertId: 500 }]);
+      }
+      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[{ created_at_iso: '2026-09-12T10:15:30Z' }]]);
+      return Promise.resolve([[]]);
+    });
+    const port = server.address().port;
+    const connect = (token, tenant) => new Promise((resolve, reject) => {
+      const socket = ioc(`http://localhost:${port}`);
+      extraSockets.push(socket);
+      socket.once('connect', () => socket.emit('auth', { token, tenant_id: tenant }));
+      socket.once('auth_success', () => resolve(socket));
+      socket.once('auth_error', reject);
+    });
+    const [a1, a2, b1, b2, c1, d1] = await Promise.all([
+      connect('A1', 1), connect('A2', 1), connect('B1', 1), connect('B2', 1), connect('C1', 1), connect('D1', 2),
+    ]);
+    const received = new Map([[a1, 0], [a2, 0], [b1, 0], [b2, 0], [c1, 0], [d1, 0]]);
+    for (const socket of received.keys()) socket.on('new_message', () => received.set(socket, received.get(socket) + 1));
+
+    a1.emit('send_message', { type: 'private', receiver_id: 20, message: 'one' });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(insertCount).toBe(1);
+    expect(received.get(a1)).toBe(1);
+    expect(received.get(a2)).toBe(1);
+    expect(received.get(b1)).toBe(1);
+    expect(received.get(b2)).toBe(1);
+    expect(received.get(c1)).toBe(0);
+    expect(received.get(d1)).toBe(0);
+
+    const rejection = new Promise((resolve) => a1.once('error', resolve));
+    a1.emit('send_message', { type: 'private', receiver_id: 30, message: 'cross tenant' });
+    await rejection;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    expect(insertCount).toBe(1);
+    expect(received.get(d1)).toBe(0);
   });
 });
