@@ -12,6 +12,7 @@ import '../../models/chat_room_model.dart';
 import '../../models/user_model.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/app_drawer.dart';
+import 'chat_pagination_controller.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({Key? key}) : super(key: key);
@@ -25,13 +26,15 @@ class _ChatListScreenState extends State<ChatListScreen>
   late TabController _tabController;
 
   bool _isLoadingRooms = true;
-  bool _isLoadingPrivate = true;
   List<ChatRoom> _rooms = [];
-  List<Map<String, dynamic>> _privateContacts = [];
   UserModel? _currentUser;
   final ChatService _chatService = ChatService();
   StreamSubscription<Chat>? _messageSubscription;
   Timer? _refreshTimer;
+
+  // Pagination Controller for Private Contacts
+  final ChatPaginationController _paginationController = ChatPaginationController();
+  final ScrollController _privateScrollController = ScrollController();
 
   @override
   void initState() {
@@ -40,13 +43,21 @@ class _ChatListScreenState extends State<ChatListScreen>
     _tabController.addListener(() {
       setState(() {});
     });
+
+    _privateScrollController.addListener(() {
+      if (_privateScrollController.position.pixels >=
+          _privateScrollController.position.maxScrollExtent - 200) {
+        _loadMorePrivateContacts();
+      }
+    });
+
     _loadData();
 
     _messageSubscription = _chatService.messageStream.listen((chat) {
       if (chat.type == 'private') {
         _refreshTimer?.cancel();
         _refreshTimer = Timer(const Duration(milliseconds: 500), () {
-          if (mounted) _fetchPrivateContacts();
+          if (mounted) _refreshPrivateContacts();
         });
       }
     });
@@ -55,14 +66,14 @@ class _ChatListScreenState extends State<ChatListScreen>
   Future<void> _loadData() async {
     setState(() {
       _isLoadingRooms = true;
-      _isLoadingPrivate = true;
+      _paginationController.isLoadingPrivate = true;
     });
     final userResult = await AuthService.getMe();
     if (userResult['success']) {
       _currentUser = userResult['user'];
     }
     await _fetchRooms();
-    await _fetchPrivateContacts();
+    await _refreshPrivateContacts();
   }
 
   Future<void> _fetchRooms() async {
@@ -75,14 +86,39 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
   }
 
-  Future<void> _fetchPrivateContacts() async {
-    final contacts = await _chatService.getPrivateContacts();
-    if (mounted) {
-      setState(() {
-        _privateContacts = contacts;
-        _isLoadingPrivate = false;
-      });
-    }
+  Future<void> _refreshPrivateContacts() async {
+    final contacts = await _chatService.getPrivateContacts(
+      limit: _paginationController.contactsPageSize,
+      offset: 0
+    );
+    if (!mounted) return;
+
+    setState(() {
+      _paginationController.handleRefresh(contacts);
+
+      // Phase 5: STRATEGY B - on realtime RESET, return private contact list to top
+      if (_privateScrollController.hasClients) {
+        _privateScrollController.jumpTo(0);
+      }
+    });
+  }
+
+  Future<void> _loadMorePrivateContacts() async {
+    if (!_paginationController.canLoadMore()) return;
+
+    setState(() {
+      _paginationController.startLoadMore();
+    });
+
+    final contacts = await _chatService.getPrivateContacts(
+        limit: _paginationController.contactsPageSize,
+        offset: _paginationController.contactsOffset);
+
+    if (!mounted) return;
+
+    setState(() {
+      _paginationController.handleLoadMore(contacts);
+    });
   }
 
   @override
@@ -90,6 +126,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     _messageSubscription?.cancel();
     _refreshTimer?.cancel();
     _tabController.dispose();
+    _privateScrollController.dispose();
     super.dispose();
   }
 
@@ -296,11 +333,11 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   Widget _buildPrivateList() {
-    if (_isLoadingPrivate) {
+    if (_paginationController.isLoadingPrivate) {
       return const Center(child: CustomLoadingIndicator());
     }
 
-    if (_privateContacts.isEmpty) {
+    if (_paginationController.privateContacts.isEmpty) {
       return const Center(
         child: Text(
           "Belum ada pesan pribadi.",
@@ -310,17 +347,34 @@ class _ChatListScreenState extends State<ChatListScreen>
     }
 
     return RefreshIndicator(
-      onRefresh: _fetchPrivateContacts,
+      onRefresh: _refreshPrivateContacts,
       child: ListView.builder(
+        controller: _privateScrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(
           top: 16,
           bottom: 80,
           left: 16,
           right: 16,
         ),
-        itemCount: _privateContacts.length,
+        itemCount: _paginationController.privateContacts.length + (_paginationController.hasMoreContacts ? 1 : 0),
         itemBuilder: (context, index) {
-          final contact = _privateContacts[index];
+          if (index == _paginationController.privateContacts.length) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: _paginationController.isLoadingMoreContacts
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            );
+          }
+
+          final contact = _paginationController.privateContacts[index];
           final photoUrl = contact['contact_photo_url'];
 
           return FadeInSlide(
@@ -384,7 +438,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                       ),
                     ),
                   );
-                  _fetchPrivateContacts(); // refresh if new message
+                  _refreshPrivateContacts(); // refresh if new message
                 },
               ),
             ),
