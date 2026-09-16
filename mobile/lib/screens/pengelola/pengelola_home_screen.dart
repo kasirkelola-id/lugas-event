@@ -15,7 +15,7 @@ import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_error_state.dart';
 import '../../services/chat_service.dart';
 import '../widgets/common/community_activity_section.dart';
-import '../widgets/app_update_banner.dart';
+import '../../widgets/app_update_banner.dart';
 
 class PengelolaHomeScreen extends StatefulWidget {
   const PengelolaHomeScreen({super.key});
@@ -51,14 +51,16 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
       if (!mounted) return;
 
       if (!userResult['success']) {
-        if (userResult['message']?.toString().toLowerCase().contains('sesi') ?? false) {
+        if (userResult['message']?.toString().toLowerCase().contains('sesi') ??
+            false) {
           _logout();
           return;
         }
         setState(() {
           _isLoading = false;
           _isError = true;
-          _errorMessage = userResult['message']?.toString() ?? 'Gagal memuat profil.';
+          _errorMessage =
+              userResult['message']?.toString() ?? 'Gagal memuat profil.';
         });
         return;
       }
@@ -73,7 +75,8 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
         setState(() {
           _isLoading = false;
           _isError = true;
-          _errorMessage = summaryResult['message']?.toString() ?? 'Gagal memuat dashboard.';
+          _errorMessage =
+              summaryResult['message']?.toString() ?? 'Gagal memuat dashboard.';
         });
         return;
       }
@@ -433,7 +436,12 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: (_summary!.pemasukanBulanIni - _summary!.pengeluaranBulanIni) >= 0 ? AppTheme.success : AppTheme.error,
+                          color:
+                              (_summary!.pemasukanBulanIni -
+                                      _summary!.pengeluaranBulanIni) >=
+                                  0
+                              ? AppTheme.success
+                              : AppTheme.error,
                         ),
                       ),
                     ],
@@ -496,7 +504,11 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
   }
 
   Widget _buildMetricCard(
-      String title, String value, IconData icon, Color color) {
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -533,8 +545,18 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
   String _getMonthYearName() {
     final now = DateTime.now();
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return '${months[now.month - 1]} ${now.year}';
   }
@@ -581,8 +603,18 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
     try {
       final dt = DateTime.parse(dateStr);
       final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-        'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Mei',
+        'Jun',
+        'Jul',
+        'Agu',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Des',
       ];
       return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
     } catch (e) {
