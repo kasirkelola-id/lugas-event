@@ -9,8 +9,10 @@ import '../anggota/attendance_geofence_screen.dart';
 import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import '../widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/community_activity_section.dart';
+import '../widgets/app_update_banner.dart';
+import '../../services/app_update_service.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -32,6 +34,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   void initState() {
     super.initState();
     _loadData();
+    _checkAppUpdate();
+  }
+
+  void _checkAppUpdate() async {
+    await AppUpdateService().checkForUpdates();
+    if (mounted && AppUpdateService().isUpdateAvailable) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadData() async {
@@ -149,6 +159,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const AppUpdateBanner(),
           _buildHeaderSection(),
           const SizedBox(height: 16),
           CommunityActivitySection(

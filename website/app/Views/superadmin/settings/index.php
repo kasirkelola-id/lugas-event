@@ -108,11 +108,9 @@
     </div>
 
     <div class="container mb-5">
-
-
         <div class="row g-4">
             <div class="col-md-8 col-lg-6">
-                <div class="card stat-card">
+                <div class="card stat-card mb-4">
                     <h5 class="fw-bold mb-4">Pengaturan Akun</h5>
                     <form action="/superadmin/settings" method="post">
                         <?= csrf_field() ?>
@@ -121,7 +119,7 @@
                             <div class="input-group">
                                 <input type="password" id="temp_password" name="temporary_reset_password" class="form-control" 
                                        value="<?= esc($settings['temporary_reset_password'] ?? '') ?>" 
-                                       placeholder="Contoh: kartarjosjis" required minlength="8">
+                                       placeholder="Contoh: kartarjosjis" minlength="8">
                                 <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                     <i class="bi bi-eye"></i>
                                 </button>
@@ -131,7 +129,52 @@
                                 Pengguna yang login dengan password ini akan dipaksa mengganti passwordnya.
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Simpan Pengaturan</button>
+                        <button type="submit" class="btn btn-primary w-100">Simpan Pengaturan Akun</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-8 col-lg-6">
+                <div class="card stat-card mb-4">
+                    <h5 class="fw-bold mb-4">Android App Update</h5>
+                    <form action="/superadmin/settings" method="post">
+                        <?= csrf_field() ?>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Versi Terbaru</label>
+                            <input type="text" name="android_version_name" class="form-control" 
+                                   value="<?= esc($settings['android_version_name'] ?? '1.0.0') ?>" 
+                                   placeholder="Contoh: 1.3.0">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Version Code</label>
+                            <input type="number" name="android_version_code" class="form-control" 
+                                   value="<?= esc($settings['android_version_code'] ?? '1') ?>" 
+                                   min="1" placeholder="Contoh: 13">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Link Download APK</label>
+                            <input type="url" name="android_download_url" class="form-control" 
+                                   value="<?= esc($settings['android_download_url'] ?? '') ?>" 
+                                   placeholder="Contoh: https://drive.google.com/...">
+                            <div class="form-text text-info">
+                                <i class="bi bi-info-circle me-1"></i>Link ini akan dibuka oleh aplikasi Android ketika pengguna menekan Download Update.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Catatan Update</label>
+                            <textarea name="android_release_notes" class="form-control" rows="3" placeholder="Opsional: Penjelasan singkat fitur baru..."><?= esc($settings['android_release_notes'] ?? '') ?></textarea>
+                        </div>
+
+                        <div class="mb-4 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="updateSwitch" name="android_update_enabled" value="true" <?= (isset($settings['android_update_enabled']) && $settings['android_update_enabled'] === 'true') ? 'checked' : '' ?>>
+                            <label class="form-check-label fw-bold text-muted small text-uppercase ms-2" for="updateSwitch">Update Aktif</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Simpan App Update</button>
                     </form>
                 </div>
             </div>

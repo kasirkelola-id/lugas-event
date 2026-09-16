@@ -115,6 +115,9 @@ $routes->group('api', function ($routes) {
     $routes->post('internal/socket-auth', 'Api\InternalApiController::socketAuth', ['filter' => 'auth']);
     $routes->post('internal/chat-notification', 'Api\InternalApiController::chatNotification');
     $routes->post('internal/wheel-event', 'Api\InternalApiController::wheelEvent');
+
+    // Public App Version API
+    $routes->get('app-version', 'Api\AppVersionController::index');
 });
 
 /** @var RouteCollection $routes */

@@ -13,7 +13,8 @@ import 'force_change_password_screen.dart';
 import 'register_screen.dart';
 import 'pin_screen.dart';
 import 'tenant_selector_screen.dart';
-
+import '../../services/app_update_service.dart';
+import '../widgets/app_update_banner.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -35,6 +36,14 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _loadTenant();
+    _checkAppUpdate();
+  }
+
+  void _checkAppUpdate() async {
+    await AppUpdateService().checkForUpdates();
+    if (mounted && AppUpdateService().isUpdateAvailable) {
+      setState(() {});
+    }
   }
 
   void _loadTenant() async {
@@ -152,8 +161,12 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const AppUpdateBanner(),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Card(
               elevation: 0,
@@ -322,7 +335,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-          ),
+            ),
+          ],
         ),
       ),
     );

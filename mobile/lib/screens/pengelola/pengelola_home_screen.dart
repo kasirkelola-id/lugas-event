@@ -15,6 +15,7 @@ import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_error_state.dart';
 import '../../services/chat_service.dart';
 import '../widgets/common/community_activity_section.dart';
+import '../widgets/app_update_banner.dart';
 
 class PengelolaHomeScreen extends StatefulWidget {
   const PengelolaHomeScreen({super.key});
@@ -156,6 +157,7 @@ class _PengelolaHomeScreenState extends State<PengelolaHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const AppUpdateBanner(),
                 _buildHeaderContent(),
                 FadeInSlide(
                   delay: 0.1,
