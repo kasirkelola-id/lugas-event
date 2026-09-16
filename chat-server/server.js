@@ -2,8 +2,9 @@ require('dotenv').config();
 
 const requiredEnvs = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'INTERNAL_API_SECRET', 'INTERNAL_API_URL'];
 for (const env of requiredEnvs) {
-  if (!process.env[env]) {
-    console.error(`FATAL ERROR: Environment variable ${env} is missing.`);
+  const isMissing = env === 'DB_PASSWORD' ? process.env[env] === undefined : !process.env[env];
+  if (isMissing) {
+    console.error(`FATAL ERROR: Environment variable ${env} is missing or empty.`);
     process.exit(1);
   }
 }

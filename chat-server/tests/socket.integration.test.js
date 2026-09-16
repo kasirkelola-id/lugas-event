@@ -496,4 +496,123 @@ describe('Socket.IO Chat Integration', () => {
     expect(insertCount).toBe(1);
     expect(received.get(d1)).toBe(0);
   });
+
+  it('RECONNECT PROOF: receives exactly 1 event after disconnect and reconnect', async () => {
+    const identities = {
+      A1: { user_id: 10, karang_taruna_id: 1 },
+      B1: { user_id: 20, karang_taruna_id: 1 },
+    };
+    global.fetch.mockImplementation(async (_url, options) => {
+      const token = options.headers.Authorization.replace('Bearer ', '');
+      const identity = identities[token];
+      return { ok: Boolean(identity), json: async () => ({
+        status: Boolean(identity),
+        data: identity && { ...identity, permissions: ['chat.send', 'chat.read'] },
+      }) };
+    });
+    pool.execute.mockImplementation((sql, params) => {
+      if (sql.includes('organization_members')) return Promise.resolve([[{ user_id: params[0], status_aktif: 1 }]]);
+      if (sql.includes('INSERT INTO chats')) return Promise.resolve([{ insertId: 600 }]);
+      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[{ created_at_iso: '2026-09-12T10:15:30Z' }]]);
+      return Promise.resolve([[]]);
+    });
+    const port = server.address().port;
+    const connect = (token, tenant) => new Promise((resolve, reject) => {
+      const socket = ioc(`http://localhost:${port}`);
+      extraSockets.push(socket);
+      socket.once('connect', () => socket.emit('auth', { token, tenant_id: tenant }));
+      socket.once('auth_success', () => resolve(socket));
+      socket.once('auth_error', reject);
+    });
+    
+    let a1 = await connect('A1', 1);
+    let b1 = await connect('B1', 1);
+
+    let b1Events = 0;
+    b1.on('new_message', () => b1Events++);
+
+    // disconnect and reconnect
+    b1.disconnect();
+    await new Promise(r => setTimeout(r, 20));
+    b1.connect();
+    await new Promise(resolve => b1.once('connect', resolve));
+    b1.emit('auth', { token: 'B1', tenant_id: 1 });
+    await new Promise(resolve => b1.once('auth_success', resolve));
+
+    a1.emit('send_message', { type: 'private', receiver_id: 20, message: 'Reconnected' });
+    await new Promise(r => setTimeout(r, 100));
+
+    expect(b1Events).toBe(1);
+
+    // Repeat 3 times
+    for (let i = 0; i < 3; i++) {
+      b1.disconnect();
+      await new Promise(r => setTimeout(r, 10));
+      b1.connect();
+      await new Promise(resolve => b1.once('connect', resolve));
+      b1.emit('auth', { token: 'B1', tenant_id: 1 });
+      await new Promise(resolve => b1.once('auth_success', resolve));
+    }
+
+    a1.emit('send_message', { type: 'private', receiver_id: 20, message: 'Reconnected 3x' });
+    await new Promise(r => setTimeout(r, 100));
+
+    expect(b1Events).toBe(2);
+  });
+
+  it('GROUP DEVICE PROOF: group message goes to all devices of all members', async () => {
+    const identities = {
+      A1: { user_id: 10, karang_taruna_id: 1 },
+      B1: { user_id: 20, karang_taruna_id: 1 },
+      B2: { user_id: 20, karang_taruna_id: 1 },
+      C1: { user_id: 30, karang_taruna_id: 1 },
+      D1: { user_id: 99, karang_taruna_id: 99 },
+    };
+    global.fetch.mockImplementation(async (_url, options) => {
+      const token = options.headers.Authorization.replace('Bearer ', '');
+      const identity = identities[token];
+      return { ok: Boolean(identity), json: async () => ({
+        status: Boolean(identity),
+        data: identity && { ...identity, permissions: ['chat.send', 'chat.read'], default_room: 'room_' + identity.karang_taruna_id },
+      }) };
+    });
+    pool.execute.mockImplementation((sql, params) => {
+      if (sql.includes('organization_members')) return Promise.resolve([[{ user_id: params[0], status_aktif: 1 }]]);
+      if (sql.includes('chat_rooms')) {
+        if (params && params[1] !== 1) return Promise.resolve([[]]);
+        return Promise.resolve([[{ id: 1, type: 'default', karang_taruna_id: 1 }]]);
+      }
+      if (sql.includes('INSERT INTO chats')) return Promise.resolve([{ insertId: 700 }]);
+      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[{ created_at_iso: '2026-09-12T10:15:30Z' }]]);
+      return Promise.resolve([[]]);
+    });
+    const port = server.address().port;
+    const connect = (token, tenant) => new Promise((resolve, reject) => {
+      const socket = ioc(`http://localhost:${port}`);
+      extraSockets.push(socket);
+      socket.once('connect', () => socket.emit('auth', { token, tenant_id: tenant }));
+      socket.once('auth_success', () => resolve(socket));
+      socket.once('auth_error', reject);
+    });
+    
+    const [a1, b1, b2, c1, d1] = await Promise.all([
+      connect('A1', 1), connect('B1', 1), connect('B2', 1), connect('C1', 1), connect('D1', 99)
+    ]);
+
+    const received = new Map([[a1, 0], [b1, 0], [b2, 0], [c1, 0], [d1, 0]]);
+    for (const socket of received.keys()) {
+      socket.on('new_message', () => received.set(socket, received.get(socket) + 1));
+      socket.emit('join_room', { room_id: 1 });
+    }
+    await new Promise(r => setTimeout(r, 50));
+
+    a1.emit('send_message', { type: 'group', chat_room_id: 1, message: 'Hello Group' });
+    await new Promise(r => setTimeout(r, 100));
+
+    expect(received.get(a1)).toBe(1);
+    expect(received.get(b1)).toBe(1);
+    expect(received.get(b2)).toBe(1);
+    expect(received.get(c1)).toBe(1);
+    expect(received.get(d1)).toBe(0);
+  });
 });
