@@ -54,13 +54,26 @@ class EventController extends BaseApiController
         $builder = $eventModel->builder();
         $builder->where('karang_taruna_id', $tenantId);
 
-        if (!AuthService::can('event.manage')) {
+        $attendanceOnly = $this->request->getGet('attendance_only');
+
+        if (!AuthService::can('event.manage') || $attendanceOnly == '1') {
             // Anggota can only see active events (if they need to list them)
             $builder->groupStart()
                     ->where('status_aktif', 1)
                     ->orWhere('status_aktif', '1')
                     ->orWhere('LOWER(status_aktif)', 'aktif')
                     ->groupEnd();
+        }
+
+        if ($attendanceOnly == '1') {
+            $userId = (int)AuthService::getGlobalUserId();
+            $builder->where("NOT EXISTS (
+                SELECT 1
+                FROM absensi
+                WHERE absensi.event_id = events.id
+                  AND absensi.user_id = $userId
+                  AND absensi.waktu_checkout IS NOT NULL
+            )", null, false);
         }
         // Admin and Pengelola sees all, so no filter needed
 

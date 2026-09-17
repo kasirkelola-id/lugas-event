@@ -113,7 +113,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
   }
 
   Future<void> _fetchData() async {
-    final eventResult = await EventService.getEvents();
+    final eventResult = await EventService.getEvents(attendanceOnly: true);
     final statusResult = await AttendanceService.getStatus();
 
     if (eventResult['success'] && statusResult['success']) {

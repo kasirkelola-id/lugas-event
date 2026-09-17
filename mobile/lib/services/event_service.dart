@@ -45,9 +45,10 @@ class EventService {
     }
   }
 
-  static Future<Map<String, dynamic>> getEvents() async {
+  static Future<Map<String, dynamic>> getEvents({bool attendanceOnly = false}) async {
     try {
-      final response = await ApiClient.get('/events');
+      final endpoint = attendanceOnly ? '/events?attendance_only=1' : '/events';
+      final response = await ApiClient.get(endpoint);
       final result = await _handleResponse(response);
       if (result['success']) {
         try {
