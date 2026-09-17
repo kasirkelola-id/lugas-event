@@ -72,19 +72,34 @@ class _AnggotaProfilScreenState extends State<AnggotaProfilScreen> {
         _isUploadingImage = true;
       });
 
-      final result = await ProfileService.updateProfilePhoto(
-        File(pickedFile.path),
-      );
+      try {
+        final result = await ProfileService.updateProfilePhoto(
+          File(pickedFile.path),
+        );
 
-      setState(() {
-        _isUploadingImage = false;
-      });
+        setState(() {
+          _isUploadingImage = false;
+        });
 
-      if (result['success']) {
-        _showSnackbar('Foto profil berhasil diunggah');
-        _loadUser(); // reload the user info to get the new photo url
-      } else {
-        _showSnackbar(result['message'], isError: true);
+        if (result['success']) {
+          _showSnackbar('Foto profil berhasil diunggah');
+          _loadUser(); // reload the user info to get the new photo url
+        } else {
+          _showSnackbar(result['message'], isError: true);
+        }
+      } catch (e) {
+        setState(() {
+          _isUploadingImage = false;
+        });
+        _showSnackbar('Terjadi kesalahan saat mengunggah', isError: true);
+      } finally {
+        // Cleanup temporary file
+        try {
+          final tempFile = File(pickedFile.path);
+          if (await tempFile.exists()) {
+            await tempFile.delete();
+          }
+        } catch (_) {}
       }
     }
   }
@@ -101,7 +116,9 @@ class _AnggotaProfilScreenState extends State<AnggotaProfilScreen> {
     );
     final usernameController = TextEditingController(text: _user!.username);
     final whatsappController = TextEditingController(text: _user!.noWhatsapp);
-    final rtController = TextEditingController(text: _user!.rt.toString().padLeft(2, '0'));
+    final rtController = TextEditingController(
+      text: _user!.rt.toString().padLeft(2, '0'),
+    );
     bool isLoadingSubmit = false;
 
     await showDialog(
@@ -156,7 +173,8 @@ class _AnggotaProfilScreenState extends State<AnggotaProfilScreen> {
                                       borderRadius: AppTheme.radiusMedium,
                                     ),
                                   ),
-                                  validator: (value) => value == null || value.isEmpty
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
                                       ? 'Wajib diisi'
                                       : null,
                                 ),
@@ -169,7 +187,8 @@ class _AnggotaProfilScreenState extends State<AnggotaProfilScreen> {
                                       borderRadius: AppTheme.radiusMedium,
                                     ),
                                   ),
-                                  validator: (value) => value == null || value.isEmpty
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
                                       ? 'Wajib diisi'
                                       : null,
                                 ),
@@ -210,12 +229,14 @@ class _AnggotaProfilScreenState extends State<AnggotaProfilScreen> {
                                 TextFormField(
                                   controller: usernameController,
                                   decoration: InputDecoration(
-                                    labelText: 'Username (Spesifik Karang Taruna Ini)',
+                                    labelText:
+                                        'Username (Spesifik Karang Taruna Ini)',
                                     border: OutlineInputBorder(
                                       borderRadius: AppTheme.radiusMedium,
                                     ),
                                   ),
-                                  validator: (value) => value == null || value.isEmpty
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
                                       ? 'Wajib diisi'
                                       : null,
                                 ),
@@ -231,9 +252,11 @@ class _AnggotaProfilScreenState extends State<AnggotaProfilScreen> {
                                   ),
                                   keyboardType: TextInputType.number,
                                   validator: (value) {
-                                    if (value == null || value.isEmpty) return 'Wajib diisi';
+                                    if (value == null || value.isEmpty)
+                                      return 'Wajib diisi';
                                     final rtVal = int.tryParse(value);
-                                    if (rtVal == null || rtVal <= 0) return 'Format RT tidak valid';
+                                    if (rtVal == null || rtVal <= 0)
+                                      return 'Format RT tidak valid';
                                     return null;
                                   },
                                 ),
@@ -272,7 +295,9 @@ class _AnggotaProfilScreenState extends State<AnggotaProfilScreen> {
                                           'username': usernameController.text,
                                           'no_whatsapp':
                                               whatsappController.text,
-                                          'rt': int.tryParse(rtController.text) ?? _user!.rt,
+                                          'rt':
+                                              int.tryParse(rtController.text) ??
+                                              _user!.rt,
                                         };
 
                                         final result =

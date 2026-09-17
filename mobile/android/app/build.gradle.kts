@@ -29,6 +29,22 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Restrict to ARM64 for release to reduce APK size without affecting x86_64 debug emulators
+        if (gradle.startParameter.taskNames.any { it.contains("Release") }) {
+            ndk {
+                abiFilters.clear()
+                abiFilters.add("arm64-v8a")
+            }
+        }
+    }
+
+    packagingOptions {
+        if (gradle.startParameter.taskNames.any { it.contains("Release") }) {
+            exclude("lib/armeabi-v7a/**")
+            exclude("lib/x86_64/**")
+            exclude("lib/x86/**")
+        }
     }
 
     buildTypes {

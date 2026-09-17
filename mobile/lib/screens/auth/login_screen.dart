@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     shape: BoxShape.circle,
                                     image: DecorationImage(
                                       image: AssetImage(
-                                        'assets/logo/default_tenant_logo.png',
+                                        'assets/logo/app_logo.png',
                                       ),
                                       fit: BoxFit.cover,
                                     ),
