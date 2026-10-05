@@ -24,6 +24,7 @@ class ChatController extends BaseApiController
 
     public function getRooms()
     {
+        if (!AuthService::can('chat.read')) return $this->sendError('Forbidden', null, 403);
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
         if (!$tenantId) {
@@ -154,6 +155,7 @@ class ChatController extends BaseApiController
 
     public function getRoomChats($roomId)
     {
+        if (!AuthService::can('chat.read')) return $this->sendError('Forbidden', null, 403);
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
         if (!$tenantId) {
@@ -199,6 +201,7 @@ class ChatController extends BaseApiController
 
     public function getPrivateChats($receiverId)
     {
+        if (!AuthService::can('chat.read')) return $this->sendError('Forbidden', null, 403);
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
         if (!$tenantId) {
@@ -235,6 +238,7 @@ class ChatController extends BaseApiController
 
     public function getPrivateContacts()
     {
+        if (!AuthService::can('chat.read')) return $this->sendError('Forbidden', null, 403);
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
         if (!$tenantId) {
@@ -263,6 +267,7 @@ class ChatController extends BaseApiController
 
     public function sendMessage()
     {
+        if (!AuthService::can('chat.send')) return $this->sendError('Forbidden', null, 403);
         $tenantId = AuthService::getTenantId();
         $userId = AuthService::getGlobalUserId();
         $user = AuthService::getUser();

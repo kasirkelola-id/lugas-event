@@ -98,6 +98,12 @@ class DashboardController extends BaseApiController
             ->where('status_aktif', 1)
             ->where('dashboard_until >', $nowStr);
 
+        if (!AuthService::can('announcement.view')) {
+            $announcementBuilder->where('id', 0);
+        } else {
+            $announcementBuilder->groupStart()->where('target_role', 'semua')->orWhere('target_role', $role)->groupEnd();
+        }
+
         $totalAnnouncements = $announcementBuilder->countAllResults(false);
 
         if ($totalAnnouncements > 0) {
