@@ -8,6 +8,18 @@ void main() {
   });
 
   group('AuthStorage Tenant Tests', () {
+    test('bearer save never writes a plaintext preference', () async {
+      await AuthStorage.saveToken('synthetic-token');
+      expect(await AuthStorage.getToken(), 'synthetic-token');
+      expect((await SharedPreferences.getInstance()).getString('auth_token'), isNull);
+    });
+
+    test('legacy token migrates once and plaintext is removed', () async {
+      SharedPreferences.setMockInitialValues({'auth_token': 'synthetic-legacy'});
+      expect(await AuthStorage.getToken(), 'synthetic-legacy');
+      expect((await SharedPreferences.getInstance()).getString('auth_token'), isNull);
+      expect(await AuthStorage.getToken(), 'synthetic-legacy');
+    });
     test('saveTenant and getTenant work correctly', () async {
       // Act
       await AuthStorage.saveTenant(123, 'KT Mawar');

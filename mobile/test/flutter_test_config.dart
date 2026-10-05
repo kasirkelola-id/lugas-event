@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'support/network_guard.dart';
 
@@ -9,6 +10,7 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   // Initialize first: Flutter's permissive HTTP-400 mock must not replace our
   // stricter boundary. Tests run in runner-owned zones, so install globally.
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUp(() => FlutterSecureStorage.setMockInitialValues({}));
   final guard = TestNetworkGuard(
     onViolation: (error, stack) {
       // Report into the test runner immediately, even when ApiClient catches the
