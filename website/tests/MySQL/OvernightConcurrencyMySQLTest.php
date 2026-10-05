@@ -204,4 +204,40 @@ final class OvernightConcurrencyMySQLTest extends CIUnitTestCase
         $this->assertSame(1, $db->table('chats')->countAllResults());
         $this->saveEvidence('maintenance', $result);
     }
+
+    public function test_announcement_author_schema_preserves_user_rows_and_outbox_on_reapplication(): void
+    {
+        $db = $this->mysqlDb;
+        $db->table('superadmins')->insert(['id' => 777, 'username' => 'synthetic-restore-author', 'nama_lengkap' => 'Synthetic Browser Author', 'password' => '']);
+        $this->assertTrue($db->table('pengumuman')->insert(['dibuat_oleh' => 1, 'karang_taruna_id' => 101, 'judul' => 'Synthetic legacy', 'isi' => 'Synthetic']));
+        // Synthesize the old author definition only inside this freshly owned
+        // fixture, retaining the seeded user author and existing outbox trigger.
+        $db->query('ALTER TABLE pengumuman DROP FOREIGN KEY pengumuman_superadmin_author_fk,
+            DROP COLUMN dibuat_oleh_superadmin, MODIFY dibuat_oleh INT UNSIGNED NOT NULL');
+        $db->resetDataCache();
+        $legacy = $db->table('pengumuman')->orderBy('id')->get()->getResultArray();
+        require_once APPPATH . 'Database/Migrations/2026-10-06-000007_AddSuperadminAnnouncementAuthor.php';
+        $migration = new \App\Database\Migrations\AddSuperadminAnnouncementAuthor(\Config\Database::forge($db));
+        $migration->up();
+        $expected = array_map(static fn($row) => $row + ['dibuat_oleh_superadmin' => null], $legacy);
+        $this->assertSame($expected, $db->table('pengumuman')->orderBy('id')->get()->getResultArray());
+        $this->assertSame(1, $db->table('notification_jobs')->where('kind', 'announcement')->countAllResults());
+        $this->assertTrue($db->table('pengumuman')->insert(['dibuat_oleh' => null, 'dibuat_oleh_superadmin' => 777,
+            'karang_taruna_id' => 101, 'judul' => 'Synthetic browser', 'isi' => 'Synthetic']));
+        $before = $db->table('pengumuman')->orderBy('id')->get()->getResultArray();
+        $ddl = $db->query('SHOW CREATE TABLE pengumuman')->getRowArray();
+        $migration->up();
+        $this->assertSame($before, $db->table('pengumuman')->orderBy('id')->get()->getResultArray());
+        $this->assertSame($ddl, $db->query('SHOW CREATE TABLE pengumuman')->getRowArray());
+        $this->assertSame(2, $db->table('notification_jobs')->where('kind', 'announcement')->countAllResults());
+        $fields = array_column($db->query('SHOW FULL COLUMNS FROM pengumuman')->getResultArray(), null, 'Field');
+        $this->assertSame('YES', $fields['dibuat_oleh']['Null']); $this->assertSame('YES', $fields['dibuat_oleh_superadmin']['Null']);
+        $code = null;
+        try { $db->table('pengumuman')->insert(['karang_taruna_id' => 101, 'judul' => 'Invalid', 'isi' => 'Synthetic', 'dibuat_oleh_superadmin' => 999999]); }
+        catch (\CodeIgniter\Database\Exceptions\DatabaseException $error) { $code = $db->error()['code']; }
+        $this->assertSame(1452, $code);
+        $this->assertSame(2, $db->table('pengumuman')->countAllResults());
+        $this->assertSame(2, $db->table('notification_jobs')->where('kind', 'announcement')->countAllResults());
+        $this->saveEvidence('announcement-authors', ['rows_preserved' => true, 'ddl' => $ddl, 'fields' => $fields, 'foreign_key_error' => $code]);
+    }
 }

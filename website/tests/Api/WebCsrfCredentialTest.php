@@ -86,19 +86,7 @@ class WebCsrfCredentialTest extends \Tests\Support\BaseTest
     {
         [$path, $params] = $this->fixtures()[$key];
         $before = $this->snapshot();
-        try {
-            $result = $this->withSession($this->browser())->withHeaders([])->post($path, $params + ['csrf_test_name' => str_repeat('a', 64)]);
-        } catch (\CodeIgniter\Database\Exceptions\DatabaseException $e) {
-            // Existing web announcement create uses penulis_id but the migrated
-            // table requires dibuat_oleh. Verify CSRF allowed controller execution;
-            // preserve and report this separate pre-existing schema defect.
-            if ($key !== 'announcement/create') {
-                throw $e;
-            }
-            $this->assertStringContainsString('pengumuman.dibuat_oleh', $e->getMessage());
-            $this->assertSame($before, $this->snapshot());
-            return;
-        }
+        $result = $this->withSession($this->browser())->withHeaders([])->post($path, $params + ['csrf_test_name' => str_repeat('a', 64)]);
         if ($key === 'reset') {
             $result->assertStatus(200);
             $this->assertStringContainsString('no-store', $result->response()->getHeaderLine('Cache-Control'));

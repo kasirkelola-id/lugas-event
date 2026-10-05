@@ -141,9 +141,10 @@ class DashboardTest extends \Tests\Support\BaseTest
         $yesterday = date('Y-m-d', strtotime('-1 day'));
         $today = date('Y-m-d');
         $tomorrow = date('Y-m-d', strtotime('+1 day'));
-        $nowTime = date('H:i:s');
-        $pastTime = date('H:i:s', strtotime('-2 hours'));
-        $futureTime = date('H:i:s', strtotime('+2 hours'));
+        // A same-date ongoing fixture must stay ordered across midnight; adding
+        // hours to a time-only field can wrap into the following/previous day.
+        $pastTime = '00:00:00';
+        $futureTime = '23:59:59';
 
         $db->table('events')->insertBatch([
             ['id' => 1, 'karang_taruna_id' => $tenantId, 'nama_acara' => 'Event Kemarin', 'tanggal_acara' => $yesterday, 'waktu_mulai' => '08:00:00', 'waktu_selesai' => '10:00:00', 'status_aktif' => 1, 'dibuat_oleh' => $adminId, 'kode_qr' => 'A1'],
@@ -169,6 +170,7 @@ class DashboardTest extends \Tests\Support\BaseTest
         $result2 = $this->withHeaders(['Authorization' => 'Bearer ' . $adminToken, 'X-Tenant-ID' => $tenantId])->get("api/dashboard");
         $body2 = json_decode($result2->getJSON(), true);
         $this->assertEquals('Event Sedang Berlangsung', $body2['data']['upcoming_event']['title']);
+        $this->assertTrue($body2['data']['upcoming_event']['is_ongoing']);
     }
 
     public function testDashboardCommunityActivitySelection()

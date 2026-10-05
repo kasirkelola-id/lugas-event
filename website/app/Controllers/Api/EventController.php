@@ -29,16 +29,16 @@ class EventController extends BaseApiController
 
     private function getAttendanceState($event)
     {
-        if ($event['status_aktif'] === 'selesai') {
+        if (!in_array(strtolower((string)$event['status_aktif']), ['aktif', '1'], true)) {
             return 'closed_manually';
         }
         
         $today = date('Y-m-d');
         if ($today < $event['tanggal_acara']) {
             return 'not_open';
-        } elseif ($today > $event['tanggal_acara']) {
-            return 'closed_time';
         } else {
+            // Existing check-in policy explicitly permits past active events;
+            // only a future date or manual closure prevents attendance.
             return 'open';
         }
     }

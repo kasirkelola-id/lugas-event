@@ -23,8 +23,9 @@ class AnnouncementController extends BaseApiController
         $model = new PengumumanModel();
         
         $builder = $model->builder();
-        $builder->select('pengumuman.*, users.nama_lengkap as pembuat');
+        $builder->select('pengumuman.*, COALESCE(users.nama_lengkap, superadmins.nama_lengkap) as pembuat');
         $builder->join('users', 'users.id = pengumuman.dibuat_oleh', 'left');
+        $builder->join('superadmins', 'superadmins.id = pengumuman.dibuat_oleh_superadmin', 'left');
         $builder->where('pengumuman.karang_taruna_id', $tenantId);
 
         if (!AuthService::can('announcement.manage')) {

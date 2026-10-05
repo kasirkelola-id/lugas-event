@@ -147,18 +147,6 @@ class KarangTarunaController extends BaseController
 
     public function users($id)
     {
-        $ktModel = new KarangTarunaModel();
-        $userModel = new \App\Models\UserModel();
-
-        $karang_taruna = $ktModel->find($id);
-        
-        if (!$karang_taruna) {
-            return redirect()->to('/superadmin/karang_taruna')->with('error', 'Data Karang Taruna tidak ditemukan');
-        }
-
-        $data['karang_taruna'] = $karang_taruna;
-        $data['users'] = $userModel->where('karang_taruna_id', $id)->findAll();
-
-        return view('superadmin/karang_taruna/users', $data);
+        return redirect()->to('/superadmin/manage/' . (int)$id . '/users');
     }
 }

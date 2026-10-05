@@ -235,18 +235,26 @@ class ManageController extends BaseController
 
     public function createPengumuman($kt_id)
     {
+        $this->getKarangTaruna($kt_id);
         if (!\App\Services\SettingsPolicy::text($this->request->getPost('judul'), 200)
             || !\App\Services\SettingsPolicy::text($this->request->getPost('isi'), 10000)) {
             return redirect()->back()->with('error', 'Judul atau isi pengumuman tidak valid.');
         }
         $pengumumanModel = new PengumumanModel();
-        $pengumumanModel->insert([
-            'karang_taruna_id' => $kt_id,
-            'judul' => $this->request->getPost('judul'),
-            'isi' => $this->request->getPost('isi'),
-            'penulis_id' => null, // Superadmin doesn't have a user ID in the users table
-            'status_aktif' => 1
-        ]);
+        try {
+            $id = $pengumumanModel->insert([
+                'karang_taruna_id' => $kt_id,
+                'judul' => $this->request->getPost('judul'),
+                'isi' => $this->request->getPost('isi'),
+                'dibuat_oleh' => null,
+                'dibuat_oleh_superadmin' => (int)session()->get('superadmin_id'),
+                'status_aktif' => 1
+            ]);
+            if (!$id) throw new \RuntimeException('Announcement write failed');
+        } catch (\Throwable $error) {
+            log_message('error', 'Announcement write failed');
+            return redirect()->to("/superadmin/manage/{$kt_id}/pengumuman")->with('error', 'Pengumuman gagal disimpan');
+        }
         
         return redirect()->to("/superadmin/manage/{$kt_id}/pengumuman")->with('success', 'Pengumuman berhasil ditambahkan');
     }

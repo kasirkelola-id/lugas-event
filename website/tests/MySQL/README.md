@@ -79,18 +79,20 @@ unverified.
 
 ## Additional overnight verification
 
-`OvernightConcurrencyMySQLTest.php` adds nine opt-in cases using the same strict
+`OvernightConcurrencyMySQLTest.php` adds ten opt-in cases using the same strict
 new-schema guard: duplicate chat writers/atomic outbox, competing membership
 decisions, competing identity creation, idempotent participant batches, concurrent
 queue claims/one receipt, wheel spin versus close, forced outbox rollback, and
 row-preserving measured-index reapplication/directions, and bounded maintenance
-with current rows preserved/session settings restored. Each fresh fixture runs
+with current rows preserved/session settings restored, and legacy/browser
+announcement authors with row-preserving upgrade/reapplication and outbox/FK
+behavior. Each fresh fixture runs
 the complete current migration chain. Numeric database failures are retained in
 synthetic TEMP evidence; failed attempts do not count as final proof. Standalone
 workers initialize the normal App timezone and keep all provider calls mocked.
 
 Run `php vendor/bin/phpunit tests/MySQL` with the explicit local test environment
-above to execute both classes. Without opt-in, all fifteen MySQL cases skip.
+above to execute both classes. Without opt-in, all sixteen MySQL cases skip.
 For the guarded 10/100-tenant query/dataset probe and exact EXPLAIN evidence, see
 `deploy/MYSQL_QUERY_VERIFICATION.md` at the repository root. That probe verifies
 controllers/database behavior without claiming authenticated HTTP load capacity.
