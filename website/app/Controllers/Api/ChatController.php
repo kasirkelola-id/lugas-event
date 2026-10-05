@@ -380,42 +380,22 @@ class ChatController extends BaseApiController
 
     private function sendGroupNotification($roomId, $senderName, $message, $chatData)
     {
-        $roomModel = new ChatRoomModel();
-        $room = $roomModel->find($roomId);
+        $tenantId = (int)$chatData['karang_taruna_id'];
+        $room = (new ChatRoomModel())->where('karang_taruna_id', $tenantId)->find($roomId);
         if (!$room) return;
-
-        $db = \Config\Database::connect();
-
-        if ($room['type'] === 'default') {
-            // Get all user IDs in this karang_taruna
-            $members = $db->table('organization_members')->where('karang_taruna_id', $room['karang_taruna_id'])->where('status_aktif', 1)->get()->getResultArray();
-            $userIds = array_column($members, 'user_id');
-        } else {
-            // Get from chat_room_members
-            $members = $db->table('chat_room_members')->where('chat_room_id', $roomId)->get()->getResultArray();
-            $userIds = array_column($members, 'user_id');
-        }
-
-        // Get devices
-        if (!empty($userIds)) {
-            $devices = $db->table('user_devices')->whereIn('user_id', $userIds)->get()->getResultArray();
-            $tokens = array_filter(array_column($devices, 'fcm_token'));
-            if (!empty($tokens)) {
-                $title = "Grup " . $room['name'] . " - " . $senderName;
-                \App\Services\NotificationService::sendPushNotification($tokens, $title, $message, ['type' => 'group_chat', 'room_id' => (string)$roomId]);
-            }
-        }
+        $tokens = \App\Services\NotificationService::getTokensForRoom($tenantId, (int)$roomId, (int)$chatData['sender_id']);
+        if ($tokens !== []) \App\Services\NotificationService::sendPushNotification($tokens,
+            'Grup ' . $room['name'] . ' - ' . $senderName, $message,
+            ['type' => 'group_chat', 'tenant_id' => (string)$tenantId, 'room_id' => (string)$roomId,
+             'sender_id' => (string)$chatData['sender_id']]);
     }
 
     private function sendPrivateNotification($receiverId, $senderName, $message, $chatData)
     {
-        $db = \Config\Database::connect();
-        $devices = $db->table('user_devices')->where('user_id', $receiverId)->get()->getResultArray();
-        $tokens = array_filter(array_column($devices, 'fcm_token'));
-
-        if (!empty($tokens)) {
-            $title = "Pesan dari " . $senderName;
-            \App\Services\NotificationService::sendPushNotification($tokens, $title, $message, ['type' => 'private_chat', 'sender_id' => (string)$chatData['sender_id']]);
-        }
+        $tenantId = (int)$chatData['karang_taruna_id'];
+        $tokens = \App\Services\NotificationService::getTokensForUsers($tenantId, [$receiverId], 'chat.read');
+        if ($tokens !== []) \App\Services\NotificationService::sendPushNotification($tokens,
+            'Pesan dari ' . $senderName, $message,
+            ['type' => 'private_chat', 'tenant_id' => (string)$tenantId, 'sender_id' => (string)$chatData['sender_id']]);
     }
 }

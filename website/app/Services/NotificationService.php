@@ -2,143 +2,60 @@
 
 namespace App\Services;
 
-use Google\Auth\Credentials\ServiceAccountCredentials;
-use CodeIgniter\Config\Services;
-
-class NotificationService
+final class NotificationService
 {
-    private static $serviceAccountPath = APPPATH . 'Config/firebase-service-account.json';
-    private static $projectId = ''; // To be filled from service account
-
-    public static function sendPushNotification($deviceTokens, $title, $body, $data = [])
+    public static function sendPushNotification($tokens, $title, $body, $data = [])
     {
-        if (empty($deviceTokens)) return false;
-
-        // Testing never reads service-account material or invokes Google auth.
-        if (ENVIRONMENT === 'testing') {
-            return getenv('FCM_MOCK') === 'true';
-        }
-
-        if (!file_exists(self::$serviceAccountPath)) {
-            log_message('error', 'Firebase Service Account file not found.');
-            return false;
-        }
-
-        try {
-            $serviceAccount = json_decode(file_get_contents(self::$serviceAccountPath), true);
-            self::$projectId = $serviceAccount['project_id'];
-
-            $credentials = new ServiceAccountCredentials(
-                'https://www.googleapis.com/auth/firebase.messaging',
-                self::$serviceAccountPath
-            );
-
-            $token = $credentials->fetchAuthToken();
-            if (!isset($token['access_token'])) {
-                log_message('error', 'Failed to fetch FCM access token.');
-                return false;
-            }
-
-            $accessToken = $token['access_token'];
-            $url = 'https://fcm.googleapis.com/v1/projects/' . self::$projectId . '/messages:send';
-
-            $client = Services::curlrequest();
-            $successCount = 0;
-
-            if (!is_array($deviceTokens)) {
-                $deviceTokens = [$deviceTokens];
-            }
-
-            // Note: HTTP v1 API only allows sending 1 message per request natively, 
-            // but we can loop through the tokens.
-            foreach ($deviceTokens as $deviceToken) {
-                $payload = [
-                    'message' => [
-                        'token' => $deviceToken,
-                        'notification' => [
-                            'title' => $title,
-                            'body' => $body,
-                        ],
-                        'data' => $data
-                    ]
-                ];
-
-                $options = [
-                    'headers' => [
-                        'Authorization' => 'Bearer ' . $accessToken,
-                        'Content-Type'  => 'application/json'
-                    ],
-                    'json' => $payload,
-                    'http_errors' => false,
-                    'timeout' => 5, // MVP timeout (seconds)
-                    'connect_timeout' => 3,
-                ];
-
-                $response = $client->post($url, $options);
-
-                if ($response->getStatusCode() == 200) {
-                    $successCount++;
-                } else {
-                    $body = $response->getBody();
-                    log_message('error', 'FCM delivery failed', ['status' => (int)$response->getStatusCode()]);
-                    
-                    // Cleanup invalid token
-                    $jsonBody = json_decode($body, true);
-                    if (self::isUnregistered((int)$response->getStatusCode(), $jsonBody ?? [])) {
-                        $deviceModel = new \App\Models\UserDeviceModel();
-                        $deviceModel->where('fcm_token', $deviceToken)->delete();
-                        log_message('info', 'FCM token registration removed');
-                    }
-                }
-            }
-
-            return $successCount > 0;
-        } catch (\Throwable $e) {
-            log_message('error', 'FCM transport failed');
-            return false;
-        }
+        return \Config\Services::pushTransport()->send($tokens, $title, $body, $data);
     }
 
     public static function isUnregistered(int $status, array $response): bool
     {
-        if ($status !== 404) return false;
-        foreach ($response['error']['details'] ?? [] as $detail) {
-            if (($detail['@type'] ?? '') === 'type.googleapis.com/google.firebase.fcm.v1.FcmError'
-                && ($detail['errorCode'] ?? '') === 'UNREGISTERED') return true;
-        }
-        // INVALID_ARGUMENT can describe a malformed payload, not a bad device.
-        return false;
+        return PushTransport::isUnregistered($status, $response);
     }
 
-    /**
-     * Resolves active members of a tenant and returns their FCM tokens.
-     */
-    public static function getTokensForTenant(int $tenantId, array $excludeUserIds = []): array
+    public static function getTokensForTenant(int $tenantId, array $excludeUserIds = [], ?string $role = null, ?string $permission = null): array
+    {
+        return self::eligibleTokens($tenantId, null, $excludeUserIds, $role, $permission);
+    }
+
+    public static function getTokensForUsers(int $tenantId, array $userIds, ?string $permission = null): array
+    {
+        if ($userIds === []) return [];
+        return self::eligibleTokens($tenantId, $userIds, [], null, $permission);
+    }
+
+    public static function getTokensForRoom(int $tenantId, int $roomId, int $senderId): array
     {
         $db = \Config\Database::connect();
-        
-        // 1. Get all active members for this tenant
-        $builder = $db->table('organization_members');
-        $builder->select('user_id');
-        $builder->where('karang_taruna_id', $tenantId);
-        $builder->where('status_aktif', 1);
-        if (!empty($excludeUserIds)) {
-            $builder->whereNotIn('user_id', $excludeUserIds);
-        }
-        $members = $builder->get()->getResultArray();
-        
-        $userIds = array_column($members, 'user_id');
-        if (empty($userIds)) {
-            return [];
-        }
+        $room = $db->table('chat_rooms')->where('id', $roomId)->where('karang_taruna_id', $tenantId)->get()->getRowArray();
+        if (!$room) return [];
+        if ($room['type'] === 'default') return self::getTokensForTenant($tenantId, [$senderId], null, 'chat.read');
+        return self::eligibleTokens($tenantId, null, [$senderId], null, 'chat.read', $roomId);
+    }
 
-        // 2. Get tokens for these users
-        $devices = $db->table('user_devices')
-                      ->whereIn('user_id', $userIds)
-                      ->where('fcm_token !=', null)
-                      ->where('fcm_token !=', '')
-                      ->get()->getResultArray();
-                      
-        return array_values(array_unique(array_filter(array_column($devices, 'fcm_token'))));
+    private static function eligibleTokens(int $tenantId, ?array $userIds, array $exclude, ?string $role, ?string $permission, ?int $roomId = null): array
+    {
+        $db = \Config\Database::connect();
+        $builder = $db->table('user_devices d')->select('d.fcm_token')->distinct()
+            ->join('user_tokens t', 't.id = d.user_token_id AND t.user_id = d.user_id')
+            ->join('users u', 'u.id = d.user_id')
+            ->join('organization_members m', 'm.user_id = u.id')
+            ->join('karang_taruna k', 'k.id = m.karang_taruna_id')
+            ->where('m.karang_taruna_id', $tenantId)->where('k.status_aktif', 1)
+            ->where('u.status_aktif', 1)->where('u.password_must_change', 0)
+            ->where('m.status_aktif', 1)->where('m.approval_status', 'approved')
+            ->where('t.revoked_at', null)->where('t.expires_at >', date('Y-m-d H:i:s'))
+            ->where('d.fcm_token !=', '');
+        if ($userIds !== null) $builder->whereIn('u.id', $userIds);
+        if ($exclude !== []) $builder->whereNotIn('u.id', $exclude);
+        if ($role !== null && $role !== 'semua') $builder->where('m.role_level', $role);
+        if ($permission !== null) {
+            $roles = array_keys(array_filter(config('Rbac')->permissions, static fn($permissions) => in_array($permission, $permissions, true)));
+            if ($roles === []) return [];
+            $builder->whereIn('m.role_level', $roles);
+        }
+        if ($roomId !== null) $builder->join('chat_room_members r', 'r.user_id = u.id')->where('r.chat_room_id', $roomId);
+        return array_values(array_filter(array_column($builder->get()->getResultArray(), 'fcm_token')));
     }
 }

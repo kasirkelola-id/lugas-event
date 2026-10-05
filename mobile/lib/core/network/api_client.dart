@@ -10,6 +10,30 @@ class ApiClient {
   static String get baseUrl => ApiConfig.baseUrl;
   static const Duration _timeout = Duration(seconds: 30);
 
+  // Revocation must use the old session, never an account that logged in later.
+  static Future<int> revokeSession(String token) async {
+    final client = http.Client();
+    try {
+      final response = await client
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}/logout'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: '{}',
+          )
+          .timeout(const Duration(seconds: 3));
+      logResponse('POST', '', response.statusCode, '');
+      return response.statusCode;
+    } catch (_) {
+      logException('', null);
+      return 503;
+    } finally {
+      client.close();
+    }
+  }
+
   static Future<Map<String, String>> getHeaders({
     bool excludeTenantHeader = false,
   }) async {

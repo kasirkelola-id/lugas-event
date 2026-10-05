@@ -180,10 +180,9 @@ class AuthController extends BaseApiController
     {
         $tokenData = \App\Services\AuthService::getToken();
         if ($tokenData) {
-            $tokenModel = new UserTokenModel();
-            $tokenModel->update($tokenData['id'], [
-                'revoked_at' => date('Y-m-d H:i:s')
-            ]);
+            if (!\App\Services\BearerLogoutService::revoke($tokenData)) {
+                return $this->sendError('Logout tidak dapat diproses. Silakan coba lagi.', null, 503);
+            }
         }
 
         return $this->sendSuccess('Logout berhasil');
@@ -293,54 +292,37 @@ class AuthController extends BaseApiController
 
     public function updateFcmToken()
     {
-        $rules = [
-            'fcm_token' => 'required',
-            'device_type' => 'permit_empty'
-        ];
-
-        $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
-
-        if (!$this->validateData($rawInput, $rules)) {
-            return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
+        $input = $this->request->getJSON(true) ?? $this->request->getRawInput();
+        $value = $input['fcm_token'] ?? null;
+        $type = $input['device_type'] ?? 'android';
+        if (!is_string($value) || trim($value) === '' || strlen($value) > 255
+            || !in_array($type, ['android', 'ios', 'web', 'desktop'], true)) {
+            return $this->sendError('Token perangkat tidak valid', null, 422);
         }
-
-        $user = \App\Services\AuthService::getUser();
-        if (!$user) {
-            return $this->sendError('Unauthenticated', null, 401);
+        $userId = (int)\App\Services\AuthService::getGlobalUserId();
+        $token = \App\Services\AuthService::getToken();
+        if ($userId < 1 || !$token) return $this->sendError('Unauthenticated', null, 401);
+        $now = date('Y-m-d H:i:s');
+        $db = \Config\Database::connect();
+        try {
+            $ok = $db->table('user_devices')->onConstraint('fcm_token')
+                ->updateFields(['user_id', 'user_token_id', 'device_type', 'updated_at'])
+                ->upsert(['user_id' => (string)$userId, 'user_token_id' => (int)$token['id'],
+                    'fcm_token' => $value, 'device_type' => $type, 'created_at' => $now, 'updated_at' => $now]);
+            if (!$ok) throw new \RuntimeException('Device binding failed');
+        } catch (\Throwable $error) {
+            log_message('error', 'Push device binding failed');
+            return $this->sendError('Perangkat tidak dapat didaftarkan. Silakan coba lagi.', null, 503);
         }
-
-        $deviceModel = new \App\Models\UserDeviceModel();
-
-        // Find existing token
-        $existing = $deviceModel->where('fcm_token', $rawInput['fcm_token'])->first();
-
-        if ($existing) {
-            // Update owner and device type if token already exists (handles logout/login to another account on same device)
-            $deviceModel->update($existing['id'], [
-                'user_id' => (string)$user['id'],
-                'device_type' => $rawInput['device_type'] ?? 'android'
-            ]);
-        } else {
-            $deviceModel->insert([
-                'user_id' => (string)$user['id'],
-                'fcm_token' => $rawInput['fcm_token'],
-                'device_type' => $rawInput['device_type'] ?? 'android'
-            ]);
-        }
-
         return $this->sendSuccess('Token berhasil diupdate');
     }
 
     public function removeFcmToken()
     {
-        $rules = [
-            'fcm_token' => 'required'
-        ];
-
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
-
-        if (!$this->validateData($rawInput, $rules)) {
-            return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
+        $value = $rawInput['fcm_token'] ?? null;
+        if (!is_string($value) || trim($value) === '' || strlen($value) > 255) {
+            return $this->sendError('Token perangkat tidak valid', null, 422);
         }
 
         $user = \App\Services\AuthService::getUser();
@@ -353,6 +335,7 @@ class AuthController extends BaseApiController
         // Only allow deleting token if it belongs to the current user
         $deviceModel->where('user_id', (string)$user['id'])
                     ->where('fcm_token', $rawInput['fcm_token'])
+                    ->where('user_token_id', \App\Services\AuthService::getToken()['id'])
                     ->delete();
 
         return $this->sendSuccess('Token berhasil dihapus');

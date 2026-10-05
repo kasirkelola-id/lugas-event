@@ -18,6 +18,9 @@ class AuthTest extends \Tests\Support\BaseTest
     protected function setUp(): void
     {
         parent::setUp();
+        // The migrated disposable SQLite fixture can retain historical Forge
+        // failure status; each freshly emptied test begins a new transaction.
+        $this->db->resetTransStatus();
         
         // Reset rate limiter cache before each test
         cache()->clean();

@@ -164,9 +164,7 @@ class InventoryController extends BaseApiController
     protected function notifyLoanTransition(array $loan, array $inventory, int $tenantId, string $status): void
     {
         // Trigger push notification to borrower
-        $dbDevices = \Config\Database::connect();
-        $devices = $dbDevices->table('user_devices')->where('user_id', $loan['user_id'])->get()->getResultArray();
-        $tokens = array_filter(array_column($devices, 'fcm_token'));
+        $tokens = \App\Services\NotificationService::getTokensForUsers($tenantId, [$loan['user_id']], 'inventory.view');
         if (!empty($tokens)) {
             $ktModel = new \App\Models\KarangTarunaModel();
             $kt = $ktModel->find($tenantId);

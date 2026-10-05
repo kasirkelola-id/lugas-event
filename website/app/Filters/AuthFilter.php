@@ -44,6 +44,10 @@ class AuthFilter implements FilterInterface
                 ->setStatusCode(401);
         }
 
+        $path = ltrim($request->getUri()->getPath(), '/');
+        if (str_starts_with($path, 'index.php/')) $path = substr($path, 10);
+        $cleanupOnly = ($path === 'api/logout' && strtoupper($request->getMethod()) === 'POST')
+            || ($path === 'api/fcm-token' && strtoupper($request->getMethod()) === 'DELETE');
         $user = null;
 
         if (empty($tokenData['user_id']) || $tokenData['user_id'] == 0) {
@@ -68,7 +72,7 @@ class AuthFilter implements FilterInterface
             $userModel = new UserModel();
             $user = $userModel->find($tokenData['user_id']);
 
-            if (!$user || $user['status_aktif'] != 1) {
+            if (!$user || ($user['status_aktif'] != 1 && !$cleanupOnly)) {
                 return Services::response()
                     ->setJSON(['status' => false, 'message' => 'Unauthenticated'])
                     ->setStatusCode(401);
@@ -91,6 +95,9 @@ class AuthFilter implements FilterInterface
             if ($headerTenantId === '' && !empty($tokenData['karang_taruna_id'])) {
                 $headerTenantId = (string)$tokenData['karang_taruna_id'];
             }
+            // A valid bearer can revoke only itself/its bound push registration
+            // even after tenant/account deactivation. No business access granted.
+            if ($cleanupOnly) $headerTenantId = '';
             $memberModel = new \App\Models\OrganizationMemberModel();
 
             // Do not retain a legacy tenant/role when no eligible membership is

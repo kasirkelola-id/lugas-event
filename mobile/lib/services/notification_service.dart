@@ -2,6 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import 'chat_service.dart';
+import 'logout_retry.dart';
 import '../storage/auth_storage.dart';
 import '../main.dart' as main_app;
 
@@ -9,6 +10,11 @@ class NotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
   static Future<void> initialize() async {
+    try {
+      await LogoutRetry.flush();
+    } catch (_) {
+      // Native storage failure must not disclose or reactivate old credentials.
+    }
     // Request permission (Apple & Web)
     NotificationSettings settings = await _messaging.requestPermission(
       alert: true,
@@ -80,9 +86,7 @@ class NotificationService {
         final membershipResult = await AuthService.getMemberships();
 
         if (!membershipResult['success']) {
-          debugPrint(
-            'Notification membership validation failed',
-          );
+          debugPrint('Notification membership validation failed');
           // If network fails, do not blindly switch tenant. Keep current.
           if (membershipResult['statusCode'] == 401) {
             main_app.navigatorKey.currentState?.pushAndRemoveUntil(

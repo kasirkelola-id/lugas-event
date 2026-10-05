@@ -19,6 +19,8 @@ final class SafeLogger extends \CodeIgniter\Log\Logger
         'Chat cleanup failed' => 'chat.cleanup_failed',
         'Wheel operation failed' => 'wheel.operation_failed',
         'Wheel socket delivery failed' => 'wheel.delivery_failed',
+        'Bearer logout failed' => 'session.logout_failed',
+        'Push device binding failed' => 'notification.binding_failed',
     ];
 
     public function log($level, string|\Stringable $message, array $context = []): void

@@ -243,7 +243,7 @@ class EventController extends BaseApiController
 
         // Trigger push notification for new event
         $excludeUsers = [$userId];
-        $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, $excludeUsers);
+        $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, $excludeUsers, null, 'event.view');
         if (!empty($tokens)) {
             $ktModel = new \App\Models\KarangTarunaModel();
             $kt = $ktModel->find($tenantId);

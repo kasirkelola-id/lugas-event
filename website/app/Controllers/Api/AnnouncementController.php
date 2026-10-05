@@ -99,7 +99,7 @@ class AnnouncementController extends BaseApiController
         if ($data['status_aktif'] == 1) {
             // Trigger push notification (asynchronously ideally, but curl is fairly fast, or we just do it synchronously for MVP)
             $excludeUsers = [$userId];
-            $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, $excludeUsers);
+            $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, $excludeUsers, $data['target_role'], 'announcement.view');
             if (!empty($tokens)) {
                 $ktModel = new \App\Models\KarangTarunaModel();
                 $kt = $ktModel->find($tenantId);

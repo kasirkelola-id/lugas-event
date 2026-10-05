@@ -14,6 +14,7 @@ class UserDeviceModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'user_id',
+        'user_token_id',
         'fcm_token',
         'device_type',
         'created_at',

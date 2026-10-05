@@ -69,6 +69,7 @@ final class SecurityDiagnosticsTest extends CIUnitTestCase
 
     public function test_fcm_mock_does_not_require_credentials_and_bad_payload_does_not_delete_token(): void
     {
+        \Config\Services::resetSingle('pushTransport');
         $old = getenv('FCM_MOCK');
         try {
             putenv('FCM_MOCK=true');

@@ -100,29 +100,14 @@ class InternalApiController extends BaseApiController
         $title = '';
 
         if ($type === 'private') {
-            $receiverId = (string)$chat['receiver_id'];
-            $devices = $db->table('user_devices')->where('user_id', $receiverId)->get()->getResultArray();
-            $tokens = array_values(array_unique(array_filter(array_column($devices, 'fcm_token'))));
-            $title = "Pesan dari " . $senderName;
-        } else if ($type === 'group') {
-            $roomId = $chat['chat_room_id'];
-            $room = $db->table('chat_rooms')->where('id', $roomId)->get()->getRowArray();
+            $tokens = \App\Services\NotificationService::getTokensForUsers($tenantId, [$chat['receiver_id']], 'chat.read');
+            $title = 'Pesan dari ' . $senderName;
+        } elseif ($type === 'group') {
+            $roomId = (int)$chat['chat_room_id'];
+            $room = $db->table('chat_rooms')->where('id', $roomId)->where('karang_taruna_id', $tenantId)->get()->getRowArray();
             if ($room) {
-                if ($room['type'] === 'default') {
-                    $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, [$senderId]);
-                } else {
-                    // Custom room
-                    $members = $db->table('chat_room_members')->where('chat_room_id', $roomId)->get()->getResultArray();
-                    $memberIds = array_column($members, 'user_id');
-                    // Exclude sender
-                    $memberIds = array_filter($memberIds, fn($id) => (string)$id !== $senderId);
-
-                    if (!empty($memberIds)) {
-                        $devices = $db->table('user_devices')->whereIn('user_id', $memberIds)->get()->getResultArray();
-                        $tokens = array_values(array_unique(array_filter(array_column($devices, 'fcm_token'))));
-                    }
-                }
-                $title = "Grup " . $room['name'] . " - " . $senderName;
+                $tokens = \App\Services\NotificationService::getTokensForRoom($tenantId, $roomId, (int)$senderId);
+                $title = 'Grup ' . $room['name'] . ' - ' . $senderName;
             }
         }
 

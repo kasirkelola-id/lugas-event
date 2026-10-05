@@ -19,6 +19,12 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    public static function pushTransport(bool $getShared = true)
+    {
+        if ($getShared) return static::getSharedInstance('pushTransport');
+        return new \App\Services\PushTransport();
+    }
+
     public static function logger(bool $getShared = true)
     {
         if ($getShared) {

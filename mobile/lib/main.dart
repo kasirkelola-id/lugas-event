@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/pin_screen.dart';
@@ -7,6 +8,7 @@ import 'screens/admin/admin_home_screen.dart';
 import 'screens/anggota/anggota_home_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
+import 'services/logout_retry.dart';
 import 'storage/auth_storage.dart';
 import 'models/user_model.dart';
 import 'core/theme/app_theme.dart';
@@ -57,6 +59,7 @@ class _InitialScreenState extends State<InitialScreen> {
   }
 
   void _checkSession() async {
+    unawaited(LogoutRetry.flush().catchError((Object _) {}));
     final hasToken = await AuthStorage.hasToken();
     if (!mounted) return;
 

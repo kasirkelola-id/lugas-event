@@ -4,6 +4,7 @@ import '../models/user_model.dart';
 import '../storage/auth_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../services/chat_service.dart';
+import 'logout_retry.dart';
 
 class AuthService {
   static Future<Map<String, dynamic>> verifyPin(String pin) async {
@@ -27,6 +28,14 @@ class AuthService {
     String password,
   ) async {
     try {
+      await LogoutRetry.flush();
+      if (!await LogoutRetry.canCreateSession()) {
+        return {
+          'success': false,
+          'message': 'Sesi sebelumnya belum dapat ditutup. Silakan coba lagi.',
+        };
+      }
+
       final tenant = await AuthStorage.getTenant();
       if (tenant == null) {
         return {
@@ -107,7 +116,7 @@ class AuthService {
           'statusCode': 401,
         };
       }
-      
+
       Map<String, dynamic> data;
       try {
         data = jsonDecode(response.body);
@@ -118,7 +127,7 @@ class AuthService {
           'statusCode': response.statusCode,
         };
       }
-      
+
       if (response.statusCode == 403) {
         return {
           'success': false,
@@ -171,26 +180,35 @@ class AuthService {
   }
 
   static Future<void> logout() async {
+    final token = await AuthStorage.getToken();
+    var queued = false;
     try {
-      // First, remove FCM Token from backend
-      try {
-        final fcmToken = await FirebaseMessaging.instance.getToken();
-        if (fcmToken != null) {
-          await ApiClient.delete('/fcm-token', {'fcm_token': fcmToken});
-        }
-      } catch (e) {
-        // Ignore FCM errors
+      if (token != null) {
+        await LogoutRetry.enqueue(token);
+        queued = true;
       }
-
-      await ApiClient.post('/logout', {});
-    } catch (e) {
-      // Ignore network errors on logout
+    } catch (_) {
+      // Secure storage may be unavailable: attempt direct revocation below.
     }
-
-    // Close global socket connection on logout
     ChatService().closeConnection();
-
-    await AuthStorage.removeToken();
+    try {
+      await AuthStorage.removeToken();
+    } finally {
+      try {
+        await FirebaseMessaging.instance.deleteToken();
+      } catch (_) {
+        // Backend binding cleanup is independent of Firebase availability.
+      }
+      try {
+        if (queued) {
+          await LogoutRetry.flush();
+        } else if (token != null) {
+          await ApiClient.revokeSession(token);
+        }
+      } catch (_) {
+        // Encrypted job remains for the next application lifecycle if saved.
+      }
+    }
   }
 
   static Future<Map<String, dynamic>> updatePassword(
