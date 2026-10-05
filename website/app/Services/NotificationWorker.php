@@ -91,8 +91,21 @@ final class NotificationWorker
         if ($db->transDepth !== 0 || !$db->transStatus() || !$db->transBegin()) throw new \RuntimeException('Notification claim unavailable');
         try {
             $now = gmdate('Y-m-d H:i:s');
-            $job = $db->query("SELECT * FROM notification_jobs WHERE (status = 'pending' AND next_attempt_at <= ?) OR (status = 'processing' AND lease_expires_at <= ?) ORDER BY next_attempt_at, id LIMIT 1" . ($db->DBDriver === 'MySQLi' ? ' FOR UPDATE' : ''), [$now, $now])->getRowArray();
-            if (!$job) { $db->transRollback(); return null; }
+            $lock = $db->DBDriver === 'MySQLi' ? ' FOR UPDATE' : '';
+            // Recover a crashed owner first. Separate ordered ranges avoid an OR scan
+            // and keep recovery from being starved by a continuously growing backlog.
+            // Candidate reads do not lock an empty secondary-index range. Such gap
+            // locks can deadlock concurrent owners while they change pending->processing.
+            $candidate = $db->query("SELECT id FROM notification_jobs WHERE status = 'processing' AND lease_expires_at <= ? ORDER BY lease_expires_at, id LIMIT 1", [$now])->getRowArray();
+            if (!$candidate) $candidate = $db->query("SELECT id FROM notification_jobs WHERE status = 'pending' AND next_attempt_at <= ? ORDER BY next_attempt_at, id LIMIT 1", [$now])->getRowArray();
+            if (!$candidate) { $db->transRollback(); return null; }
+            $job = $db->query('SELECT * FROM notification_jobs WHERE id = ?' . $lock, [$candidate['id']])->getRowArray();
+            // Locking reads see the current committed row, unlike the earlier candidate
+            // snapshot. A competing winner causes a clean no-work result, not a retry.
+            if (!$job || !(($job['status'] === 'pending' && $job['next_attempt_at'] <= $now)
+                || ($job['status'] === 'processing' && $job['lease_expires_at'] !== null && $job['lease_expires_at'] <= $now))) {
+                $db->transRollback(); return null;
+            }
             $oldLease = $job['lease_token'];
             $job['lease_token'] = bin2hex(random_bytes(16)); $job['attempts']++;
             if (!$db->table('notification_jobs')->where('id', $job['id'])->where('lease_token', $oldLease)->update([

@@ -147,6 +147,23 @@ final class NotificationWorkerTest extends BaseTest
         $this->assertCount(1, $probe->calls);
     }
 
+    public function test_expired_lease_is_recovered_before_an_older_pending_backlog(): void
+    {
+        [$sender, $receiver] = $this->fixture();
+        $expired = (int)$this->db->table('notification_jobs')->get()->getRowArray()['id'];
+        $this->db->table('notification_jobs')->where('id', $expired)->update([
+            'status' => 'processing', 'lease_token' => str_repeat('a', 32),
+            'lease_expires_at' => '2000-01-01 00:00:00', 'next_attempt_at' => '2020-01-01 00:00:00',
+        ]);
+        $this->db->table('chats')->insert(['karang_taruna_id' => 101, 'sender_id' => $sender['id'], 'receiver_id' => $receiver['id'],
+            'type' => 'private', 'message' => 'Synthetic backlog', 'created_at' => gmdate('Y-m-d H:i:s')]);
+        $this->db->table('notification_jobs')->where('status', 'pending')->update(['next_attempt_at' => '2000-01-01 00:00:00']);
+        $probe = new WorkerTransportProbe();
+        $this->assertSame(1, (new NotificationWorker($probe))->runOne()['claimed']);
+        $this->assertSame('completed', $this->db->table('notification_jobs')->where('id', $expired)->get()->getRowArray()['status']);
+        $this->assertSame(1, $this->db->table('notification_jobs')->where('status', 'pending')->countAllResults());
+    }
+
     public function test_fanout_retries_are_finite_without_resending_successful_fcm(): void
     {
         $this->fixture(); $probe = new WorkerTransportProbe();
