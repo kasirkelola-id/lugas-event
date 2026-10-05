@@ -58,6 +58,9 @@ const pool = mysql.createPool({
 
 // To track online users: map[socket.id] = { userId, karangTarunaId, role, permissions }
 const onlineUsers = new Map();
+const health = require('./health').createHealth(pool, io, () => onlineUsers.size);
+server.on('listening', health.start);
+server.on('close', health.stop);
 
 // Rate limit tracking: map[socket.id] = { lastMessageTime, count }
 const rateLimits = new Map();
@@ -506,6 +509,14 @@ io.on('connection', (socket) => {
       console.log(`User ${socket.userId} joined wheel session ${sessionId}`);
     } finally { socket.joining = false; }
   });
+});
+
+app.get('/internal/health', async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  if (!acceptsSecret(req.headers['x-internal-secret'], process.env.INTERNAL_API_SECRET)) return res.status(403).json({ error: 'Forbidden' });
+  if (!abuse.consume(`health:${req.socket.remoteAddress}`, 30, 60000)) return res.status(429).json({ error: 'RATE_LIMITED' });
+  const ready = await health.databaseReady();
+  return res.status(ready ? 200 : 503).json(health.snapshot(ready));
 });
 
 app.post('/internal/chat-event', async (req, res) => {
