@@ -27,23 +27,27 @@ class WheelController extends ResourceController
 
     public function index()
     {
-        $tenantId = AuthService::getTenantId();
-        if (!$tenantId) {
-            return $this->failUnauthorized('Unauthorized');
+        try {
+            $tenantId = AuthService::getTenantId();
+            if (!$tenantId) {
+                return $this->failUnauthorized('Unauthorized');
+            }
+
+            $sessions = $this->sessionModel
+                ->where('karang_taruna_id', $tenantId)
+                ->orderBy('created_at', 'DESC')
+                ->findAll();
+
+            // Attach item count
+            foreach ($sessions as &$session) {
+                $session['item_count'] = $this->itemModel->where('session_id', $session['id'])->countAllResults();
+                $session['creator_id'] = $session['created_by_user_id'];
+            }
+
+            return $this->respond(['success' => true, 'data' => $sessions]);
+        } catch (\Throwable $error) {
+            return $this->safeFailure();
         }
-
-        $sessions = $this->sessionModel
-            ->where('karang_taruna_id', $tenantId)
-            ->orderBy('created_at', 'DESC')
-            ->findAll();
-
-        // Attach item count
-        foreach ($sessions as &$session) {
-            $session['item_count'] = $this->itemModel->where('session_id', $session['id'])->countAllResults();
-            $session['creator_id'] = $session['created_by_user_id'];
-        }
-
-        return $this->respond(['success' => true, 'data' => $sessions]);
     }
 
     public function create()
@@ -79,150 +83,162 @@ class WheelController extends ResourceController
             }
         }
 
-        // Begin Transaction
-        $db = \Config\Database::connect();
-        if (ENVIRONMENT !== 'testing') {
-            $db->transStart();
-        }
+        try {
+            // Begin Transaction
+            $db = \Config\Database::connect();
+            if (ENVIRONMENT !== 'testing') {
+                $db->transStart();
+            }
 
-        $data = [
-            'karang_taruna_id'         => $tenantId,
-            'created_by_user_id'       => $userId,
-            'title'                    => $title,
-            'source_type'              => $sourceType,
-            'spin_duration_seconds'    => $duration,
-            'remove_winner_after_spin' => $removeWinner,
-            'status'                   => 'active',
-        ];
+            $data = [
+                'karang_taruna_id'         => $tenantId,
+                'created_by_user_id'       => $userId,
+                'title'                    => $title,
+                'source_type'              => $sourceType,
+                'spin_duration_seconds'    => $duration,
+                'remove_winner_after_spin' => $removeWinner,
+                'status'                   => 'active',
+            ];
 
-        if (!empty($this->request->getVar('dashboard_until'))) {
-            $data['dashboard_until'] = $this->request->getVar('dashboard_until');
-        } else {
-            // Default 1 hour if not provided
-            $data['dashboard_until'] = date('Y-m-d H:i:s', strtotime('+1 hour'));
-        }
+            if (!empty($this->request->getVar('dashboard_until'))) {
+                $data['dashboard_until'] = $this->request->getVar('dashboard_until');
+            } else {
+                // Default 1 hour if not provided
+                $data['dashboard_until'] = date('Y-m-d H:i:s', strtotime('+1 hour'));
+            }
 
-        $sessionId = $this->sessionModel->insert($data);
+            $sessionId = $this->sessionModel->insert($data);
 
-        if ($sourceType === 'custom') {
-            $insertItems = [];
-            foreach ($items as $itemStr) {
-                $label = trim($itemStr);
-                if (!empty($label)) {
+            if ($sourceType === 'custom') {
+                $insertItems = [];
+                foreach ($items as $itemStr) {
+                    $label = trim($itemStr);
+                    if (!empty($label)) {
+                        $insertItems[] = [
+                            'session_id'     => $sessionId,
+                            'member_user_id' => null,
+                            'label_snapshot' => $label,
+                            'is_active'      => 1
+                        ];
+                    }
+                }
+                if (count($insertItems) < 2) {
+                    $db->transRollback();
+                    return $this->failValidationErrors('Minimal 2 kandidat valid diperlukan');
+                }
+                $this->itemModel->insertBatch($insertItems);
+            } else {
+                // mode members
+                // Items are actually array of organization_members ids or user_ids?
+                // The prompt says MVP supports selecting active members.
+                // We expect an array of user_id in $items, or if empty, all active members.
+                $memberModel = new OrganizationMemberModel();
+
+                $builder = $memberModel->builder()
+                    ->select('organization_members.user_id, users.nama_lengkap')
+                    ->join('users', 'users.id = organization_members.user_id')
+                    ->where('organization_members.karang_taruna_id', $tenantId)
+                    ->where('organization_members.status_aktif', 1);
+
+                if (!empty($items) && is_array($items)) {
+                    $builder->whereIn('organization_members.user_id', $items);
+                }
+
+                $activeMembers = $builder->limit(1001)->get()->getResultArray();
+                if (count($activeMembers) > 1000) {
+                    $db->transRollback();
+                    return $this->fail('Pilih maksimal 1000 kandidat', 422);
+                }
+
+                if (count($activeMembers) < 2) {
+                    $db->transRollback();
+                    return $this->failValidationErrors('Minimal 2 kandidat anggota aktif diperlukan');
+                }
+
+                $insertItems = [];
+                foreach ($activeMembers as $m) {
                     $insertItems[] = [
                         'session_id'     => $sessionId,
-                        'member_user_id' => null,
-                        'label_snapshot' => $label,
+                        'member_user_id' => $m['user_id'],
+                        'label_snapshot' => $m['nama_lengkap'],
                         'is_active'      => 1
                     ];
                 }
-            }
-            if (count($insertItems) < 2) {
-                $db->transRollback();
-                return $this->failValidationErrors('Minimal 2 kandidat valid diperlukan');
-            }
-            $this->itemModel->insertBatch($insertItems);
-        } else {
-            // mode members
-            // Items are actually array of organization_members ids or user_ids?
-            // The prompt says MVP supports selecting active members.
-            // We expect an array of user_id in $items, or if empty, all active members.
-            $memberModel = new OrganizationMemberModel();
-
-            $builder = $memberModel->builder()
-                ->select('organization_members.user_id, users.nama_lengkap')
-                ->join('users', 'users.id = organization_members.user_id')
-                ->where('organization_members.karang_taruna_id', $tenantId)
-                ->where('organization_members.status_aktif', 1);
-
-            if (!empty($items) && is_array($items)) {
-                $builder->whereIn('organization_members.user_id', $items);
+                $this->itemModel->insertBatch($insertItems);
             }
 
-            $activeMembers = $builder->limit(1001)->get()->getResultArray();
-            if (count($activeMembers) > 1000) {
-                $db->transRollback();
-                return $this->fail('Pilih maksimal 1000 kandidat', 422);
+            if (ENVIRONMENT !== 'testing') {
+                $db->transComplete();
             }
 
-            if (count($activeMembers) < 2) {
-                $db->transRollback();
-                return $this->failValidationErrors('Minimal 2 kandidat anggota aktif diperlukan');
+            // In CI4 testing, transStatus can sometimes falsely return false due to nested transactions
+            // We rely on exceptions being thrown for true failures if transException(true) was set
+            // But let's check for actual errors
+            $error = $db->error();
+            if ($error['code'] !== 0) {
+                return $this->safeFailure();
             }
 
-            $insertItems = [];
-            foreach ($activeMembers as $m) {
-                $insertItems[] = [
-                    'session_id'     => $sessionId,
-                    'member_user_id' => $m['user_id'],
-                    'label_snapshot' => $m['nama_lengkap'],
-                    'is_active'      => 1
-                ];
-            }
-            $this->itemModel->insertBatch($insertItems);
+            return $this->respondCreated(['success' => true, 'message' => 'Sesi undian berhasil dibuat', 'session_id' => $sessionId]);
+        } catch (\Throwable $error) {
+            if (isset($db)) $db->transRollback();
+            return $this->safeFailure();
         }
-
-        if (ENVIRONMENT !== 'testing') {
-            $db->transComplete();
-        }
-
-        // In CI4 testing, transStatus can sometimes falsely return false due to nested transactions
-        // We rely on exceptions being thrown for true failures if transException(true) was set
-        // But let's check for actual errors
-        $error = $db->error();
-        if ($error['code'] !== 0) {
-            log_message('error', 'WheelController DB Error: ' . json_encode($error));
-            return $this->failServerError('Gagal membuat sesi undian: ' . json_encode($error));
-        }
-
-        return $this->respondCreated(['success' => true, 'message' => 'Sesi undian berhasil dibuat', 'session_id' => $sessionId]);
     }
 
     public function show($id = null)
     {
-        $tenantId = AuthService::getTenantId();
+        try {
+            $tenantId = AuthService::getTenantId();
 
-        $session = $this->sessionModel->find($id);
-        if (!$session || $session['karang_taruna_id'] != $tenantId) {
-            return $this->failNotFound('Sesi tidak ditemukan');
+            $session = $this->sessionModel->find($id);
+            if (!$session || $session['karang_taruna_id'] != $tenantId) {
+                return $this->failNotFound('Sesi tidak ditemukan');
+            }
+
+            $session['creator_id'] = $session['created_by_user_id'];
+            $items = $this->itemModel->where('session_id', $id)->findAll();
+            $results = $this->resultModel->where('session_id', $id)->orderBy('spin_sequence', 'ASC')->findAll();
+
+            return $this->respond([
+                'success' => true,
+                'data'    => [
+                    'session' => $session,
+                    'items'   => $items,
+                    'results' => $results
+                ]
+            ]);
+        } catch (\Throwable $error) {
+            return $this->safeFailure();
         }
-
-        $session['creator_id'] = $session['created_by_user_id'];
-        $items = $this->itemModel->where('session_id', $id)->findAll();
-        $results = $this->resultModel->where('session_id', $id)->orderBy('spin_sequence', 'ASC')->findAll();
-
-        return $this->respond([
-            'success' => true,
-            'data'    => [
-                'session' => $session,
-                'items'   => $items,
-                'results' => $results
-            ]
-        ]);
     }
 
     public function close($id = null)
     {
-        $tenantId = AuthService::getTenantId();
-        $userId   = AuthService::getGlobalUserId();
+        try {
+            $tenantId = AuthService::getTenantId();
+            $userId   = AuthService::getGlobalUserId();
 
-        $session = $this->sessionModel->find($id);
-        if (!$session || $session['karang_taruna_id'] != $tenantId) {
-            return $this->failNotFound('Sesi tidak ditemukan');
+            $session = $this->sessionModel->find($id);
+            if (!$session || $session['karang_taruna_id'] != $tenantId) {
+                return $this->failNotFound('Sesi tidak ditemukan');
+            }
+
+            if ($session['created_by_user_id'] != $userId) {
+                return $this->failForbidden('Hanya pembuat sesi yang dapat mengakhiri undian');
+            }
+
+            $this->sessionModel->update($id, ['status' => 'closed']);
+
+            // Broadcast to socket
+            $this->triggerSocketEvent($id, 'wheel_closed', [
+                'session_id' => $id
+            ]);
+
+            return $this->respond(['success' => true, 'message' => 'Sesi berhasil diakhiri']);
+        } catch (\Throwable $error) {
+            return $this->safeFailure();
         }
-
-        if ($session['created_by_user_id'] != $userId) {
-            return $this->failForbidden('Hanya pembuat sesi yang dapat mengakhiri undian');
-        }
-
-        $this->sessionModel->update($id, ['status' => 'closed']);
-
-        // Broadcast to socket
-        $this->triggerSocketEvent($id, 'wheel_closed', [
-            'session_id' => $id
-        ]);
-
-        return $this->respond(['success' => true, 'message' => 'Sesi berhasil diakhiri']);
     }
 
     public function spin($id = null)
@@ -331,81 +347,90 @@ class WheelController extends ResourceController
                 'data'    => $resultData
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $db->transRollback();
             $code = $e->getCode();
             $msg = $e->getMessage();
-            if ($code == 409) return $this->failResourceExists($msg);
-            if ($code == 404) return $this->failNotFound($msg);
-            if ($code == 400) return $this->failValidationErrors($msg);
-            return $this->failServerError($msg);
+            if ($code === 409 && $msg === 'Putaran sebelumnya masih berlangsung') return $this->failResourceExists($msg);
+            if ($code === 404 && $msg === 'Sesi undian tidak ditemukan atau sudah dihapus') return $this->failNotFound($msg);
+            if ($code === 400 && $msg === 'Kandidat sudah habis') return $this->failValidationErrors($msg);
+            return $this->safeFailure();
         }
     }
 
     public function duplicate($id = null)
     {
-        $tenantId = AuthService::getTenantId();
-        $userId   = AuthService::getGlobalUserId();
+        try {
+            $tenantId = AuthService::getTenantId();
+            $userId   = AuthService::getGlobalUserId();
 
-        if (!$tenantId || !$userId) {
-            return $this->failUnauthorized('Unauthorized');
-        }
+            if (!$tenantId || !$userId) {
+                return $this->failUnauthorized('Unauthorized');
+            }
 
-        $session = $this->sessionModel->find($id);
-        if (!$session || $session['karang_taruna_id'] != $tenantId) {
-            return $this->failNotFound('Sesi tidak ditemukan');
-        }
+            $session = $this->sessionModel->find($id);
+            if (!$session || $session['karang_taruna_id'] != $tenantId) {
+                return $this->failNotFound('Sesi tidak ditemukan');
+            }
 
-        $db = \Config\Database::connect();
-        if (ENVIRONMENT !== 'testing') {
-            $db->transStart();
-        }
+            $db = \Config\Database::connect();
+            if (ENVIRONMENT !== 'testing') {
+                $db->transStart();
+            }
 
-        $newSessionData = [
-            'karang_taruna_id'         => $tenantId,
-            'created_by_user_id'       => $userId, // Current creator
-            'title'                    => $session['title'] . ' (Copy)',
-            'source_type'              => $session['source_type'],
-            'spin_duration_seconds'    => $session['spin_duration_seconds'],
-            'remove_winner_after_spin' => $session['remove_winner_after_spin'],
-            'status'                   => 'active',
-            'dashboard_until'          => date('Y-m-d H:i:s', strtotime('+1 hour')),
-        ];
-
-        $newSessionId = $this->sessionModel->insert($newSessionData);
-
-        $oldItems = $this->itemModel->where('session_id', $id)->findAll();
-        $insertItems = [];
-        foreach ($oldItems as $item) {
-            $insertItems[] = [
-                'session_id'     => $newSessionId,
-                'member_user_id' => $item['member_user_id'],
-                'label_snapshot' => $item['label_snapshot'],
-                'is_active'      => 1 // Reset to active for all items in the new session
+            $newSessionData = [
+                'karang_taruna_id'         => $tenantId,
+                'created_by_user_id'       => $userId, // Current creator
+                'title'                    => $session['title'] . ' (Copy)',
+                'source_type'              => $session['source_type'],
+                'spin_duration_seconds'    => $session['spin_duration_seconds'],
+                'remove_winner_after_spin' => $session['remove_winner_after_spin'],
+                'status'                   => 'active',
+                'dashboard_until'          => date('Y-m-d H:i:s', strtotime('+1 hour')),
             ];
-        }
 
-        if (!empty($insertItems)) {
-            $this->itemModel->insertBatch($insertItems);
-        }
+            $newSessionId = $this->sessionModel->insert($newSessionData);
 
-        if (ENVIRONMENT !== 'testing') {
-            $db->transComplete();
-        }
+            $oldItems = $this->itemModel->where('session_id', $id)->findAll();
+            $insertItems = [];
+            foreach ($oldItems as $item) {
+                $insertItems[] = [
+                    'session_id'     => $newSessionId,
+                    'member_user_id' => $item['member_user_id'],
+                    'label_snapshot' => $item['label_snapshot'],
+                    'is_active'      => 1 // Reset to active for all items in the new session
+                ];
+            }
 
-        return $this->respondCreated([
-            'success' => true,
-            'message' => 'Sesi undian berhasil diduplikasi',
-            'session_id' => $newSessionId
-        ]);
+            if (!empty($insertItems)) {
+                $this->itemModel->insertBatch($insertItems);
+            }
+
+            if (ENVIRONMENT !== 'testing') {
+                $db->transComplete();
+            }
+
+            return $this->respondCreated([
+                'success' => true,
+                'message' => 'Sesi undian berhasil diduplikasi',
+                'session_id' => $newSessionId
+            ]);
+        } catch (\Throwable $error) {
+            if (isset($db)) $db->transRollback();
+            return $this->safeFailure();
+        }
     }
 
     private function triggerSocketEvent($sessionId, $event, $payload, $tenantId = null)
     {
-        $tenantId = $tenantId ?? $this->request->getHeaderLine('X-Karang-Taruna-ID');
+        $tenantId = $tenantId ?? AuthService::getTenantId();
         $nodeUrl = env('NODE_SOCKET_URL', 'http://localhost:3000');
         $apiUrl = $nodeUrl . '/internal/wheel-event';
-        $secret = env('INTERNAL_API_SECRET', 'default_internal_secret_for_dev');
+        $secret = \App\Services\InternalSecret::configured();
+        if ($secret === null || !in_array(parse_url($nodeUrl, PHP_URL_HOST), ['localhost', '127.0.0.1', '::1'], true)) {
+            log_message('error', 'Wheel socket delivery failed');
+            return;
+        }
 
         try {
             $client = \Config\Services::curlrequest();
@@ -422,8 +447,16 @@ class WheelController extends ResourceController
                 ],
                 'timeout' => 3
             ]);
-        } catch (\Exception $e) {
-            log_message('error', 'Failed to trigger wheel socket event: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            log_message('error', 'Wheel socket delivery failed');
         }
+    }
+
+    private function safeFailure()
+    {
+        $id = bin2hex(random_bytes(8));
+        log_message('error', 'Wheel operation failed', ['correlation_id' => $id, 'status' => 500]);
+        $this->response->setHeader('X-Correlation-ID', $id);
+        return $this->failServerError('Operasi undian gagal. Silakan coba lagi.');
     }
 }

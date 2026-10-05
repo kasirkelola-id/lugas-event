@@ -212,7 +212,7 @@ class CredentialHardeningTest extends \Tests\Support\BaseTest
         \Config\Services::injectMock('toolbar', $toolbar);
         $this->assertSame(\App\Filters\CredentialSafeToolbar::class, config('Filters')->aliases['toolbar']);
         $filter = new \App\Filters\CredentialSafeToolbar();
-        foreach (['/', '/superadmin/login', '/superadmin/manage/101/users/1/reset-password', '/superadmin/settings', '/api/login', '/api/register', '/api/me', '/api/logout', '/api/profile/password', '/api/users', '/api/users/1/reset-password', '/index.php/api/users'] as $path) {
+        foreach (['/', '/superadmin/login', '/superadmin/manage/101/users/1/reset-password', '/superadmin/settings', '/api/login', '/api/register', '/api/me', '/api/logout', '/api/profile/password', '/api/users', '/api/users/1/reset-password', '/index.php/api/users', '/api/chats', '/api/profile/fcm-token', '/api/wheels', '/api/app-version'] as $path) {
             $request = new \CodeIgniter\HTTP\IncomingRequest(config('App'), new \CodeIgniter\HTTP\URI('http://localhost' . $path), null, new \CodeIgniter\HTTP\UserAgent());
             $this->assertNull($filter->after($request, service('response')));
         }
@@ -223,7 +223,7 @@ class CredentialHardeningTest extends \Tests\Support\BaseTest
         $toolbar = $this->getMockBuilder(\CodeIgniter\Debug\Toolbar::class)->disableOriginalConstructor()->onlyMethods(['prepare'])->getMock();
         $toolbar->expects($this->once())->method('prepare');
         \Config\Services::injectMock('toolbar', $toolbar);
-        $request = new \CodeIgniter\HTTP\IncomingRequest(config('App'), new \CodeIgniter\HTTP\URI('http://localhost/api/app-version'), null, new \CodeIgniter\HTTP\UserAgent());
+        $request = new \CodeIgniter\HTTP\IncomingRequest(config('App'), new \CodeIgniter\HTTP\URI('http://localhost/diagnostic-test-page'), null, new \CodeIgniter\HTTP\UserAgent());
         $this->assertNull((new \App\Filters\CredentialSafeToolbar())->after($request, service('response')));
     }
 }

@@ -10,6 +10,9 @@ void main() {
     '/api/profile/password',
     '/api/users',
     '/api/users/17/reset-password',
+    '/api/chats?search=synthetic-query-secret',
+    '/api/profile/fcm-token',
+    '/api/wheels',
   ]) {
     test('Credential logs omit payloads, headers and exceptions: $path', () {
       final messages = <String>[];

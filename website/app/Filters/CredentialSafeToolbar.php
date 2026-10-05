@@ -15,9 +15,9 @@ class CredentialSafeToolbar extends DebugToolbar
             $path = substr($path, 10);
         }
         // CI's toolbar persists POST, headers, session and view variables. Do
-        // not collect browser sessions or the credential delivery/change flows.
+        // not collect browser sessions or any bearer API request/response.
         if ($path === '' || $path === 'superadmin' || str_starts_with($path, 'superadmin/')
-            || preg_match('#^api/(?:login|register|me|logout|profile/password|users(?:/[0-9]+/reset-password)?)$#', $path)) {
+            || $path === 'api' || str_starts_with($path, 'api/')) {
             return null;
         }
         return parent::after($request, $response, $arguments);

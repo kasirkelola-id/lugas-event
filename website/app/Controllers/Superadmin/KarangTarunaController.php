@@ -153,7 +153,7 @@ class KarangTarunaController extends BaseController
                 
             return 'uploads/karang_taruna/logos/' . $newName;
         } catch (\Exception $e) {
-            log_message('error', 'Image processing failed: ' . $e->getMessage());
+            log_message('error', 'Image processing failed');
             // Fallback to moving the file directly if image processing fails (e.g. GD not installed)
             $file->move($uploadDir, $newName);
             return 'uploads/karang_taruna/logos/' . $newName;

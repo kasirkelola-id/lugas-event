@@ -19,6 +19,14 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    public static function logger(bool $getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('logger');
+        }
+        return new \App\Log\SafeLogger(config(\Config\Logger::class));
+    }
+
     public static function migrations(?\Config\Migrations $config = null, ?\CodeIgniter\Database\ConnectionInterface $db = null, bool $getShared = true)
     {
         if ($getShared) {

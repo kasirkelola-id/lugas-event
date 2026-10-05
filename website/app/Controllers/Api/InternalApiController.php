@@ -20,10 +20,10 @@ class InternalApiController extends BaseApiController
             $allowedIps[] = '0.0.0.0';
         }
         $internalSecret = $this->request->getHeaderLine('X-Internal-Secret');
-        $validSecret = getenv('INTERNAL_API_SECRET') ?: 'default_internal_secret_for_dev';
+
 
         $isLocalhost = in_array($clientIp, $allowedIps);
-        $isValidSecret = hash_equals($validSecret, $internalSecret);
+        $isValidSecret = \App\Services\InternalSecret::accepts($internalSecret);
 
         if (!$isLocalhost) {
             return $this->sendError('Forbidden: External access denied to internal API', null, 403);
@@ -63,10 +63,10 @@ class InternalApiController extends BaseApiController
             $allowedIps[] = '0.0.0.0';
         }
         $internalSecret = $this->request->getHeaderLine('X-Internal-Secret');
-        $validSecret = getenv('INTERNAL_API_SECRET') ?: 'default_internal_secret_for_dev';
-        
+
+
         $isLocalhost = in_array($clientIp, $allowedIps);
-        $isValidSecret = hash_equals($validSecret, $internalSecret);
+        $isValidSecret = \App\Services\InternalSecret::accepts($internalSecret);
 
         if (!$isLocalhost) {
             return $this->sendError('Forbidden: External access denied to internal API', null, 403);
@@ -152,10 +152,10 @@ class InternalApiController extends BaseApiController
             $allowedIps[] = '0.0.0.0';
         }
         $internalSecret = $this->request->getHeaderLine('X-Internal-Secret');
-        $validSecret = getenv('INTERNAL_API_SECRET') ?: 'default_internal_secret_for_dev';
-        
+
+
         $isLocalhost = in_array($clientIp, $allowedIps);
-        $isValidSecret = hash_equals($validSecret, $internalSecret);
+        $isValidSecret = \App\Services\InternalSecret::accepts($internalSecret);
 
         if (!$isLocalhost) {
             return $this->sendError('Forbidden: External access denied to internal API', null, 403);

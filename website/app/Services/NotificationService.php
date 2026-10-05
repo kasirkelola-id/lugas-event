@@ -14,6 +14,11 @@ class NotificationService
     {
         if (empty($deviceTokens)) return false;
 
+        // Testing never reads service-account material or invokes Google auth.
+        if (ENVIRONMENT === 'testing') {
+            return getenv('FCM_MOCK') === 'true';
+        }
+
         if (!file_exists(self::$serviceAccountPath)) {
             log_message('error', 'Firebase Service Account file not found.');
             return false;
@@ -28,12 +33,7 @@ class NotificationService
                 self::$serviceAccountPath
             );
 
-            // Mock auth token for testing
-            if (ENVIRONMENT === 'testing' && getenv('FCM_MOCK') === 'true') {
-                $token = ['access_token' => 'mock_token'];
-            } else {
-                $token = $credentials->fetchAuthToken();
-            }
+            $token = $credentials->fetchAuthToken();
             if (!isset($token['access_token'])) {
                 log_message('error', 'Failed to fetch FCM access token.');
                 return false;
@@ -74,38 +74,40 @@ class NotificationService
                     'connect_timeout' => 3,
                 ];
 
-                // Mock injection for testing
-                if (ENVIRONMENT === 'testing' && getenv('FCM_MOCK') === 'true') {
-                    $response = Services::response()->setStatusCode(200);
-                } else {
-                    $response = $client->post($url, $options);
-                }
+                $response = $client->post($url, $options);
 
                 if ($response->getStatusCode() == 200) {
                     $successCount++;
                 } else {
                     $body = $response->getBody();
-                    log_message('error', 'FCM Send Error: ' . $body);
+                    log_message('error', 'FCM delivery failed', ['status' => (int)$response->getStatusCode()]);
                     
                     // Cleanup invalid token
                     $jsonBody = json_decode($body, true);
-                    $errorCode = $jsonBody['error']['details'][0]['errorCode'] ?? null;
-                    if ($response->getStatusCode() == 404 || $response->getStatusCode() == 400) {
-                        // In FCM HTTP v1, UNREGISTERED or INVALID_ARGUMENT might indicate a bad token
-                        if (strpos($body, 'UNREGISTERED') !== false || strpos($body, 'INVALID_ARGUMENT') !== false) {
-                            $deviceModel = new \App\Models\UserDeviceModel();
-                            $deviceModel->where('fcm_token', $deviceToken)->delete();
-                            log_message('info', 'FCM token removed due to invalid/unregistered: ' . $deviceToken);
-                        }
+                    if (self::isUnregistered((int)$response->getStatusCode(), $jsonBody ?? [])) {
+                        $deviceModel = new \App\Models\UserDeviceModel();
+                        $deviceModel->where('fcm_token', $deviceToken)->delete();
+                        log_message('info', 'FCM token registration removed');
                     }
                 }
             }
 
             return $successCount > 0;
-        } catch (\Exception $e) {
-            log_message('error', 'FCM Exception: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            log_message('error', 'FCM transport failed');
             return false;
         }
+    }
+
+    public static function isUnregistered(int $status, array $response): bool
+    {
+        if ($status !== 404) return false;
+        foreach ($response['error']['details'] ?? [] as $detail) {
+            if (($detail['@type'] ?? '') === 'type.googleapis.com/google.firebase.fcm.v1.FcmError'
+                && ($detail['errorCode'] ?? '') === 'UNREGISTERED') return true;
+        }
+        // INVALID_ARGUMENT can describe a malformed payload, not a bad device.
+        return false;
     }
 
     /**

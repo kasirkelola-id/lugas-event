@@ -123,18 +123,18 @@ class ChatService {
 
     _socket!.on('auth_error', (data) {
       if (!current()) return;
-      debugPrint('Socket.io auth error: ${data['message']}');
+      debugPrint('Socket.io authentication failed');
       _isAuthenticated = false;
     });
 
     _socket!.onConnectError((data) {
       if (!current()) return;
-      debugPrint('Socket.io connect error: $data');
+      debugPrint('Socket.io connection failed');
       _isAuthenticated = false;
     });
 
     _socket!.on('error', (data) {
-      debugPrint('Socket.io error: ${data['message']}');
+      debugPrint('Socket.io request failed');
     });
 
     // Listen to incoming messages
@@ -151,7 +151,7 @@ class ChatService {
         }
         _messageStreamController.add(chat);
       } catch (e) {
-        debugPrint("Error parsing chat: $e");
+        debugPrint("Chat response invalid");
       }
     });
 
@@ -201,7 +201,7 @@ class ChatService {
       }
       return null;
     } catch (e) {
-      debugPrint("Error sending message via API: $e");
+      debugPrint("Chat request failed");
       return null;
     }
   }

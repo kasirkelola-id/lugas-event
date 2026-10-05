@@ -26,7 +26,7 @@ class ChatCleanupCommand extends BaseCommand
 
             return EXIT_SUCCESS;
         } catch (\Throwable $error) {
-            log_message('error', 'Chat cleanup failed: {message}', ['message' => $error->getMessage()]);
+            log_message('error', 'Chat cleanup failed');
             CLI::error('Chat cleanup failed; see application logs for details.');
 
             return EXIT_ERROR;

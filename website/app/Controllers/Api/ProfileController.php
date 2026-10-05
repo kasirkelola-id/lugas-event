@@ -167,7 +167,7 @@ class ProfileController extends BaseApiController
 
             $photoPath = 'uploads/users/profile/' . $newName;
         } catch (\Exception $e) {
-            log_message('error', 'Profile photo processing failed: ' . $e->getMessage());
+            log_message('error', 'Profile photo processing failed');
             $file->move($uploadDir, $newName);
             $photoPath = 'uploads/users/profile/' . $newName;
         }

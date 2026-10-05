@@ -28,10 +28,6 @@ class ApiClient {
     return headers;
   }
 
-  static bool _isCredentialUrl(String url) => RegExp(
-    r'/(?:login|register|profile/password|users(?:/\d+/reset-password)?)$',
-  ).hasMatch(Uri.tryParse(url)?.path ?? '');
-
   @visibleForTesting
   static void logRequest(
     String method,
@@ -39,48 +35,7 @@ class ApiClient {
     Map<String, String> headers, [
     String? body,
   ]) {
-    if (_isCredentialUrl(url)) {
-      if (kDebugMode) debugPrint('Credential request: $method');
-      return;
-    }
-    if (kDebugMode) {
-      final safeHeaders = Map<String, String>.from(headers);
-      if (safeHeaders.containsKey('Authorization')) {
-        safeHeaders['Authorization'] = 'Bearer [REDACTED]';
-      }
-
-      String safeBody = '';
-      if (body != null && body.isNotEmpty) {
-        try {
-          final Map<String, dynamic> parsedBody = jsonDecode(body);
-          final safeMap = Map<String, dynamic>.from(parsedBody);
-          final sensitiveFields = [
-            'password',
-            'password_confirmation',
-            'old_password',
-            'new_password',
-            'confirm_password',
-          ];
-          for (var field in sensitiveFields) {
-            if (safeMap.containsKey(field)) {
-              safeMap[field] = '[REDACTED]';
-            }
-          }
-          safeBody = jsonEncode(safeMap);
-        } catch (_) {
-          safeBody = body; // If not JSON, print as is (but this app uses JSON)
-        }
-      }
-
-      debugPrint('\n========== [API REQUEST] ==========');
-      debugPrint('METHOD: $method');
-      debugPrint('URL: $url');
-      debugPrint('HEADERS: $safeHeaders');
-      if (safeBody.isNotEmpty) {
-        debugPrint('BODY: $safeBody');
-      }
-      debugPrint('===================================\n');
-    }
+    if (kDebugMode) debugPrint('API request: $method');
   }
 
   @visibleForTesting
@@ -90,56 +45,12 @@ class ApiClient {
     int statusCode,
     String body,
   ) {
-    if (_isCredentialUrl(url)) {
-      if (kDebugMode) debugPrint('Credential response: $statusCode');
-      return;
-    }
-    if (kDebugMode) {
-      // Body is not redacted usually for responses, unless response returns token/password.
-      // Lugas API returns token on login. We'll redact token from response just in case.
-      String safeBody = body;
-      try {
-        final Map<String, dynamic> parsedBody = jsonDecode(body);
-        if (parsedBody['data'] != null && parsedBody['data'] is Map) {
-          if (parsedBody['data'].containsKey('token')) {
-            final Map<String, dynamic> safeMap = Map.from(parsedBody);
-            final Map<String, dynamic> safeData = Map.from(safeMap['data']);
-            safeData['token'] = '[REDACTED]';
-            safeMap['data'] = safeData;
-            safeBody = jsonEncode(safeMap);
-          }
-        }
-      } catch (_) {}
-
-      if (statusCode >= 200 && statusCode < 300) {
-        debugPrint('\n========== [API RESPONSE] =========');
-        debugPrint('STATUS: $statusCode');
-        debugPrint('URL: $url');
-        debugPrint('BODY: $safeBody');
-        debugPrint('===================================\n');
-      } else {
-        debugPrint('\n========== [API ERROR] ============');
-        debugPrint('STATUS: $statusCode');
-        debugPrint('URL: $url');
-        debugPrint('BODY: $safeBody');
-        debugPrint('ERROR: HTTP Error $statusCode');
-        debugPrint('===================================\n');
-      }
-    }
+    if (kDebugMode) debugPrint('API response: $statusCode');
   }
 
   @visibleForTesting
   static void logException(String url, dynamic e) {
-    if (_isCredentialUrl(url)) {
-      if (kDebugMode) debugPrint('Credential transport failed');
-      return;
-    }
-    if (kDebugMode) {
-      debugPrint('\n========== [API EXCEPTION] ========');
-      debugPrint('URL: $url');
-      debugPrint('EXCEPTION: $e');
-      debugPrint('===================================\n');
-    }
+    if (kDebugMode) debugPrint('API transport failed');
   }
 
   static Future<http.Response> _executeRequest(

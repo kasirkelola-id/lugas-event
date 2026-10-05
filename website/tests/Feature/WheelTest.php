@@ -95,6 +95,60 @@ class WheelTest extends \Tests\Support\BaseTest
         $this->token = $this->generateTokenForUser($userKetua);
     }
 
+    public function test_database_failure_is_not_returned_to_client(): void
+    {
+        $sessionId = (new WheelSessionModel())->insert([
+            'karang_taruna_id' => $this->tenantId, 'created_by_user_id' => $this->userId,
+            'title' => 'Synthetic', 'source_type' => 'custom', 'spin_duration_seconds' => 10,
+            'remove_winner_after_spin' => 0, 'status' => 'active',
+        ]);
+        (new WheelItemModel())->insert([
+            'session_id' => $sessionId, 'label_snapshot' => 'Candidate', 'is_active' => 1,
+        ]);
+        $this->db->query("CREATE TRIGGER wheel_error_probe BEFORE INSERT ON wheel_results BEGIN SELECT RAISE(ABORT, 'synthetic-private-database-detail'); END");
+        try {
+            $response = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token,
+                'X-Karang-Taruna-ID' => $this->tenantId])->post("api/wheels/{$sessionId}/spin");
+            $response->assertStatus(500);
+            $this->assertStringNotContainsString('synthetic-private-database-detail', $response->getJSON());
+            $this->assertStringNotContainsString('INSERT INTO', $response->getJSON());
+            $this->assertSame(0, $this->db->table('wheel_results')->where('session_id', $sessionId)->countAllResults());
+        } finally {
+            $this->db->query('DROP TRIGGER wheel_error_probe');
+            $this->db->resetTransStatus();
+        }
+    }
+
+    public function test_caught_driver_exception_is_generic_and_correlated(): void
+    {
+        $sessionId = (new WheelSessionModel())->insert([
+            'karang_taruna_id' => $this->tenantId, 'created_by_user_id' => $this->userId,
+            'title' => 'Synthetic', 'source_type' => 'custom', 'spin_duration_seconds' => 10,
+            'remove_winner_after_spin' => 0, 'status' => 'active',
+        ]);
+        (new WheelItemModel())->insert(['session_id' => $sessionId, 'label_snapshot' => 'Candidate', 'is_active' => 1]);
+        $controller = new \App\Controllers\Api\WheelController();
+        $controller->initController(service('request'), service('response'), service('logger'));
+        $property = new \ReflectionProperty($controller, 'resultModel');
+        $property->setValue($controller, new class extends WheelResultModel {
+            public function insert($row = null, bool $returnID = true) {
+                throw new \RuntimeException('synthetic-private-driver-detail INSERT credentials', 500);
+            }
+        });
+        \App\Services\AuthService::setUser(['id' => $this->userId, 'karang_taruna_id' => $this->tenantId]);
+        try {
+            $response = $controller->spin($sessionId);
+            $this->assertSame(500, $response->getStatusCode());
+            $this->assertStringNotContainsString('synthetic-private-driver-detail', $response->getBody());
+            $this->assertStringNotContainsString('INSERT', $response->getBody());
+            $this->assertMatchesRegularExpression('/^[a-f0-9]{16}$/', $response->getHeaderLine('X-Correlation-ID'));
+            $this->assertSame(0, $this->db->table('wheel_results')->where('session_id', $sessionId)->countAllResults());
+        } finally {
+            \App\Services\AuthService::setUser(null);
+            $this->db->resetTransStatus();
+        }
+    }
+
     public function test_can_create_custom_wheel_session()
     {
         $payload = [

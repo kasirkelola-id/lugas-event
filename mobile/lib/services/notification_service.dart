@@ -33,30 +33,29 @@ class NotificationService {
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Received a foreground message: ${message.messageId}');
+      debugPrint('Foreground notification received');
       // Optional: show local notification
     });
 
     // Handle background / terminated messages when tapped
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('Message clicked (background): ${message.messageId}');
+      debugPrint('Background notification opened');
       _handleNotificationTap(message);
     });
 
     // Handle cold start message
     RemoteMessage? initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
-      debugPrint('Message clicked (terminated): ${initialMessage.messageId}');
+      debugPrint('Startup notification opened');
       _handleNotificationTap(initialMessage);
     }
   }
 
   static Future<void> _handleNotificationTap(RemoteMessage message) async {
     // Determine target screen based on data payload
-    String? type = message.data['type'];
     String? tenantIdStr = message.data['tenant_id'];
 
-    debugPrint('Notification tapped. Type: $type, Tenant ID: $tenantIdStr');
+    debugPrint('Notification opened');
 
     final currentTenant = await AuthStorage.getTenant();
 
@@ -82,7 +81,7 @@ class NotificationService {
 
         if (!membershipResult['success']) {
           debugPrint(
-            'Failed to fetch memberships: ${membershipResult['message']}',
+            'Notification membership validation failed',
           );
           // If network fails, do not blindly switch tenant. Keep current.
           if (membershipResult['statusCode'] == 401) {
@@ -166,10 +165,10 @@ class NotificationService {
 
   static Future<void> sendTokenToBackend(String token) async {
     try {
-      debugPrint('FCM Token: $token');
+      debugPrint('FCM registration updated');
       await AuthService.updateFcmToken(token);
     } catch (e) {
-      debugPrint('Failed to send FCM token to backend: $e');
+      debugPrint('FCM registration failed');
     }
   }
 }

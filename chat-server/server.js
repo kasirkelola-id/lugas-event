@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { resolveSecret, acceptsSecret } = require('./internal-secret');
 
 const requiredEnvs = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'INTERNAL_API_SECRET', 'INTERNAL_API_URL'];
 for (const env of requiredEnvs) {
@@ -7,6 +8,11 @@ for (const env of requiredEnvs) {
     console.error(`FATAL ERROR: Environment variable ${env} is missing or empty.`);
     process.exit(1);
   }
+}
+
+if (!resolveSecret(process.env.INTERNAL_API_SECRET, process.env.NODE_ENV)) {
+  console.error('FATAL ERROR: Internal service secret is not configured safely.');
+  process.exit(1);
 }
 
 const express = require('express');
@@ -502,13 +508,16 @@ app.post('/internal/wheel-event', (req, res) => {
   const secret = req.headers['x-internal-secret'];
   const validSecret = process.env.INTERNAL_API_SECRET;
 
-  if (secret !== validSecret) {
+  if (!acceptsSecret(secret, validSecret)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
   const { session_id, karang_taruna_id, event, payload } = req.body;
 
-  if (!session_id || !karang_taruna_id || !event) {
+  if (!Number.isSafeInteger(Number(session_id)) || Number(session_id) < 1
+      || !Number.isSafeInteger(Number(karang_taruna_id)) || Number(karang_taruna_id) < 1
+      || !['wheel_closed', 'wheel_spin_started'].includes(event)
+      || !payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return res.status(400).json({ error: 'Missing parameters' });
   }
 
@@ -521,7 +530,7 @@ app.post('/internal/wheel-event', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
-  server.listen(PORT, () => {
+  server.listen(PORT, '127.0.0.1', () => {
     console.log(`Socket.IO Server running on port ${PORT}`);
   });
 }
