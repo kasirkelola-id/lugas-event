@@ -89,7 +89,15 @@ class EventController extends BaseApiController
         $pagination = $page->apply($builder, 'events.id');
         $events = $builder->get()->getResultArray();
 
-        $data = array_map(function ($event) {
+        $counts = [];
+        if ($events) {
+            $rows = \Config\Database::connect()->table('absensi')->select('absensi.event_id, COUNT(*) AS total')
+                ->join('events', 'events.id = absensi.event_id')->where('events.karang_taruna_id', $tenantId)
+                ->where('absensi.karang_taruna_id', $tenantId)->whereIn('absensi.event_id', array_column($events, 'id'))
+                ->groupBy('absensi.event_id')->get()->getResultArray();
+            $counts = array_column($rows, 'total', 'event_id');
+        }
+        $data = array_map(function ($event) use ($counts) {
             // Hitung status_kegiatan
             $statusKegiatan = 'akan_datang';
             if ($event['status_aktif'] === 'selesai') {
@@ -114,7 +122,7 @@ class EventController extends BaseApiController
                 'status_aktif' => $event['status_aktif'] === 1 || $event['status_aktif'] === '1' || strtolower((string)$event['status_aktif']) === 'aktif' ? 1 : 0,
                 'status_kegiatan' => $statusKegiatan,
                 'attendance_state' => $this->getAttendanceState($event),
-                'jumlah_hadir' => (new \App\Models\AbsensiModel())->where('event_id', $event['id'])->countAllResults(),
+                'jumlah_hadir' => (int)($counts[$event['id']] ?? 0),
                 'require_gps' => (int)$event['require_gps'],
                 'latitude' => $event['latitude'] ? (float)$event['latitude'] : null,
                 'longitude' => $event['longitude'] ? (float)$event['longitude'] : null,

@@ -80,29 +80,13 @@ class ParticipantController extends BaseApiController
         }
 
         $userIds = $rawInput['user_ids'];
-        if (count($userIds) > 100 || array_filter($userIds, static fn($id) => !is_scalar($id) || !ctype_digit((string)$id) || (int)$id < 1)) {
+        if (count($userIds) > 100 || array_filter($userIds, static fn($id) => !is_scalar($id) || !ctype_digit((string)$id) || (int)$id < 1 || (int)$id > 4294967295)) {
             return $this->sendError('Daftar peserta maksimal 100 ID valid', null, 422);
         }
-        $participantModel = new EventParticipantModel();
-        $memberModel = new \App\Models\OrganizationMemberModel();
-        $tenantId = AuthService::getTenantId();
-
-        $added = 0;
-        foreach ($userIds as $userId) {
-            $userTarget = $memberModel->where('karang_taruna_id', $tenantId)->where('user_id', $userId)->first();
-            if ($userTarget && $userTarget['role_level'] === 'anggota' && (int)$userTarget['status_aktif'] === 1) {
-                // Check if already registered
-                $exists = $participantModel->where('event_id', $eventId)->where('user_id', $userId)->first();
-                if (!$exists) {
-                    $participantModel->insert([
-                        'karang_taruna_id' => $tenantId,
-                        'event_id' => $eventId,
-                        'user_id' => $userId,
-                        'created_at' => date('Y-m-d H:i:s')
-                    ]);
-                    $added++;
-                }
-            }
+        try {
+            $added = \App\Services\ParticipantBatchService::add((int)AuthService::getTenantId(), (int)$eventId, $userIds);
+        } catch (\Throwable $error) {
+            return $this->sendError('Peserta gagal disimpan', null, 500);
         }
 
         return $this->sendSuccess("Berhasil menambahkan $added peserta");

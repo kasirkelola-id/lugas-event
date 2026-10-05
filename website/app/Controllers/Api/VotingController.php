@@ -44,15 +44,20 @@ class VotingController extends BaseApiController
         catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
         $votings = $builder->get()->getResultArray();
 
+        $counts = [];
+        if ($votings) {
+            $rows = \Config\Database::connect()->table('voting_votes')
+                ->select('voting_votes.voting_id, COUNT(*) AS total, SUM(CASE WHEN voting_votes.user_id = ' . (int)$userId . ' THEN 1 ELSE 0 END) AS mine', false)
+                ->join('votings', 'votings.id = voting_votes.voting_id')->where('votings.karang_taruna_id', $tenantId)
+                ->whereIn('voting_votes.voting_id', array_column($votings, 'id'))->groupBy('voting_votes.voting_id')->get()->getResultArray();
+            foreach ($rows as $row) $counts[$row['voting_id']] = $row;
+        }
         foreach ($votings as &$voting) {
             $voting['status'] = $this->getDynamicStatus($voting);
-            $hasVoted = $this->voteModel->where('voting_id', $voting['id'])
-                                        ->where('user_id', $userId)
-                                        ->first();
-            $voting['has_voted'] = $hasVoted ? true : false;
-            
+            $voting['has_voted'] = (int)($counts[$voting['id']]['mine'] ?? 0) > 0;
+
             if ($voting['status'] === 'ended') {
-                $voting['total_votes'] = $this->voteModel->where('voting_id', $voting['id'])->countAllResults();
+                $voting['total_votes'] = (int)($counts[$voting['id']]['total'] ?? 0);
             } else {
                 $voting['total_votes'] = null;
             }
@@ -81,9 +86,13 @@ class VotingController extends BaseApiController
         $voting['voted_option_id'] = $hasVoted ? $hasVoted['option_id'] : null;
 
         if ($voting['status'] === 'ended') {
-            $voting['total_votes'] = $this->voteModel->where('voting_id', $id)->countAllResults();
+            $rows = \Config\Database::connect()->table('voting_votes')->select('option_id, COUNT(*) AS total')
+                ->join('votings', 'votings.id = voting_votes.voting_id')->where('votings.karang_taruna_id', $tenantId)
+                ->where('voting_votes.voting_id', $id)->groupBy('option_id')->get()->getResultArray();
+            $optionCounts = array_column($rows, 'total', 'option_id');
+            $voting['total_votes'] = (int)array_sum($optionCounts);
             foreach ($options as &$option) {
-                $optionVotes = $this->voteModel->where('option_id', $option['id'])->countAllResults();
+                $optionVotes = (int)($optionCounts[$option['id']] ?? 0);
                 $option['vote_count'] = $optionVotes;
                 $option['percentage'] = $voting['total_votes'] > 0 ? round(($optionVotes / $voting['total_votes']) * 100, 1) : 0;
             }

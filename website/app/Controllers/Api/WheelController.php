@@ -38,9 +38,16 @@ class WheelController extends ResourceController
             catch (\InvalidArgumentException $error) { return $this->fail('Pagination tidak valid', 422); }
             $sessions = $builder->get()->getResultArray();
 
+            $counts = [];
+            if ($sessions) {
+                $rows = \Config\Database::connect()->table('wheel_items')->select('wheel_items.session_id, COUNT(*) AS total')
+                    ->join('wheel_sessions', 'wheel_sessions.id = wheel_items.session_id')->where('wheel_sessions.karang_taruna_id', $tenantId)
+                    ->whereIn('wheel_items.session_id', array_column($sessions, 'id'))->groupBy('wheel_items.session_id')->get()->getResultArray();
+                $counts = array_column($rows, 'total', 'session_id');
+            }
             // Attach item count
             foreach ($sessions as &$session) {
-                $session['item_count'] = $this->itemModel->where('session_id', $session['id'])->countAllResults();
+                $session['item_count'] = (int)($counts[$session['id']] ?? 0);
                 $session['creator_id'] = $session['created_by_user_id'];
             }
 
