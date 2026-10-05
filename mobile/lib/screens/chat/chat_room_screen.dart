@@ -114,7 +114,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     _messageSubscription = _chatService.messageStream.listen((Chat chat) {
       if (!mounted) return;
       if (!_chatService.isCurrentTenant(chat)) return;
-      if (_renderedChatIds.contains(chat.id)) return; // Deduplicate by server ID
+      if (_renderedChatIds.contains(chat.id)) {
+        return; // Deduplicate by server ID
+      }
 
       // Filter message for this room
       if (widget.type == 'group' && chat.chatRoomId == widget.roomId) {
@@ -242,6 +244,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     if (mounted) {
       if (sentChat != null) {
         _addNewMessage(sentChat);
+      } else {
+        if (_msgController.text.isEmpty) _msgController.text = text;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pesan belum dikonfirmasi. Silakan kirim ulang.'),
+          ),
+        );
       }
       setState(() {
         _isSending = false;

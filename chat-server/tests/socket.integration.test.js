@@ -1,3 +1,4 @@
+const storedChatRow = require('./support/chat-row');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const ioc = require('socket.io-client');
@@ -153,7 +154,7 @@ describe('Socket.IO Chat Integration', () => {
       .mockResolvedValueOnce([ [{ user_id: 10, status_aktif: 1 }] ]) // sender validation
       .mockResolvedValueOnce([ [{ user_id: 20, status_aktif: 1 }] ]) // receiver validation
       .mockResolvedValueOnce([ { insertId: 500 } ]) // insert
-      .mockResolvedValueOnce([ [{ created_at_iso: '2026-09-12T10:15:30Z' }] ]); // timestamp
+      .mockImplementationOnce(async (sql, params) => [[storedChatRow(pool, params, '2026-09-12T10:15:30Z')]]); // timestamp
 
     const port = server.address().port;
     clientSocket = ioc(`http://localhost:${port}`);
@@ -409,10 +410,10 @@ describe('Socket.IO Chat Integration', () => {
       json: async () => ({ status: true, data: { user_id: 10, karang_taruna_id: 1, permissions: ['chat.send', 'chat.read'] } })
     });
     let insertId = 1000;
-    pool.execute.mockImplementation((sql) => {
+    pool.execute.mockImplementation((sql, params) => {
       if (sql.includes('organization_members')) return Promise.resolve([[{ user_id: 10, status_aktif: 1 }]]);
       if (sql.includes('INSERT INTO chats')) return Promise.resolve([{ insertId: insertId++ }]);
-      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[{ created_at_iso: '2026-09-12T10:15:30Z' }]]);
+      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[storedChatRow(pool, params, '2026-09-12T10:15:30Z')]]);
       return Promise.resolve([[]]);
     });
     const port = server.address().port;
@@ -464,7 +465,7 @@ describe('Socket.IO Chat Integration', () => {
         insertCount++;
         return Promise.resolve([{ insertId: 500 }]);
       }
-      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[{ created_at_iso: '2026-09-12T10:15:30Z' }]]);
+      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[storedChatRow(pool, params, '2026-09-12T10:15:30Z')]]);
       return Promise.resolve([[]]);
     });
     const port = server.address().port;
@@ -515,7 +516,7 @@ describe('Socket.IO Chat Integration', () => {
     pool.execute.mockImplementation((sql, params) => {
       if (sql.includes('organization_members')) return Promise.resolve([[{ user_id: params[0], status_aktif: 1 }]]);
       if (sql.includes('INSERT INTO chats')) return Promise.resolve([{ insertId: 600 }]);
-      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[{ created_at_iso: '2026-09-12T10:15:30Z' }]]);
+      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[storedChatRow(pool, params, '2026-09-12T10:15:30Z')]]);
       return Promise.resolve([[]]);
     });
     const port = server.address().port;
@@ -585,7 +586,7 @@ describe('Socket.IO Chat Integration', () => {
         return Promise.resolve([[{ id: 1, type: 'default', karang_taruna_id: 1 }]]);
       }
       if (sql.includes('INSERT INTO chats')) return Promise.resolve([{ insertId: 700 }]);
-      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[{ created_at_iso: '2026-09-12T10:15:30Z' }]]);
+      if (sql.includes('DATE_FORMAT')) return Promise.resolve([[storedChatRow(pool, params, '2026-09-12T10:15:30Z')]]);
       return Promise.resolve([[]]);
     });
     const port = server.address().port;

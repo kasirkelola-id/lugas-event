@@ -1,5 +1,6 @@
 class Chat {
   final int id;
+  final String? clientMessageId;
   final int karangTarunaId;
   final String type;
   final int senderId;
@@ -13,6 +14,7 @@ class Chat {
 
   Chat({
     required this.id,
+    this.clientMessageId,
     required this.karangTarunaId,
     required this.type,
     required this.senderId,
@@ -28,6 +30,7 @@ class Chat {
   factory Chat.fromJson(Map<String, dynamic> json) {
     return Chat(
       id: int.parse(json['id'].toString()),
+      clientMessageId: json['client_message_id'],
       karangTarunaId: int.parse(json['karang_taruna_id'].toString()),
       type: json['type'],
       senderId: int.parse(json['sender_id'].toString()),
@@ -48,6 +51,7 @@ class Chat {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'client_message_id': clientMessageId,
       'karang_taruna_id': karangTarunaId,
       'type': type,
       'sender_id': senderId,

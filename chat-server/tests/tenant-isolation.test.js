@@ -1,3 +1,4 @@
+const storedChatRow = require('./support/chat-row');
 // Local Socket.IO transport only; PHP auth/FCM and MySQL are in-memory mocks.
 const ioc = require('socket.io-client');
 jest.mock('mysql2/promise', () => ({ createPool: jest.fn(() => ({
@@ -73,7 +74,7 @@ beforeEach(() => {
       return [[{ user_id: params[0] }]];
     }
     if (sql.includes('INSERT INTO chats')) return [{ insertId: ++insertId }];
-    if (sql.includes('DATE_FORMAT')) return [[{ created_at_iso: '2026-10-05T00:00:00Z' }]];
+    if (sql.includes('DATE_FORMAT')) return [[storedChatRow(pool, params, '2026-10-05T00:00:00Z')]];
     if (sql.includes('chat_rooms')) return [[{ id: params[0], type: params[0] === 7 ? 'custom' : 'default', karang_taruna_id: params[1] }]];
     if (sql.includes('chat_room_members')) return [[{ user_id: params[1] }]];
     throw new Error('Unexpected SQL in isolated test');
@@ -166,7 +167,7 @@ test('spoofed sender and tenant cannot override persistence or either destinatio
   const message = await send(sender, { sender_id: 999, karang_taruna_id: 102, tenant_id: 102 });
   expect(message.sender_id).toBe(10);
   expect(message.karang_taruna_id).toBe(101);
-  expect(pool.execute.mock.calls.find(([sql]) => sql.includes('INSERT INTO chats'))[1]).toEqual([101,'private',10,20,'Synthetic']);
+  expect(pool.execute.mock.calls.find(([sql]) => sql.includes('INSERT INTO chats'))[1]).toEqual([101,'private',10,20,'Synthetic',null]);
   expect(received.map(rows => rows.length)).toEqual([1,0]);
 });
 test.each([
@@ -328,4 +329,47 @@ test('concurrent auth cannot add private rooms from two tenants', async () => {
   const rooms = io.sockets.sockets.get(socket.id).rooms;
   expect(rooms.has(privateUserRoom(101,20))).toBe(true);
   expect(rooms.has(privateUserRoom(102,20))).toBe(false);
+});
+
+
+test('lost ACK retry after reconnect acknowledges one persisted row with one broadcast and notification', async () => {
+  const store = require('./support/chat-store')();
+  const original = pool.execute.getMockImplementation();
+  pool.execute.mockImplementation((sql, args) => sql.includes('chats') ? store.execute(sql, args) : original(sql, args));
+  const first = await connect(10, 101);
+  const peer = await connect(20, 101);
+  const received = track([peer]);
+  const data = { type: 'private', receiver_id: 20, message: 'Retry', client_message_id: '01234567-89ab-4cde-8f01-23456789abcd' };
+  // Intentionally ignore the first server acknowledgement.
+  first.emit('send_message', data);
+  await delay(40);
+  first.disconnect();
+  const second = await connect(10, 101);
+  const ack = await new Promise(resolve => second.emit('send_message', data, resolve));
+  await delay(30);
+  expect(ack.success).toBe(true); expect(ack.duplicate).toBe(true);
+  expect(ack.message.id).toBe(store.rows[0].id);
+  expect(ack.message.created_at).toBe(store.rows[0].created_at_iso);
+  expect(store.rows).toHaveLength(1); expect(received[0]).toHaveLength(1);
+  expect(global.fetch.mock.calls.filter(([url]) => url.endsWith('chat-notification'))).toHaveLength(1);
+});
+
+test('no socket ACK or fanout precedes successful canonical row read', async () => {
+  const store = require('./support/chat-store')();
+  const original = pool.execute.getMockImplementation();
+  let release;
+  pool.execute.mockImplementation((sql, args) => {
+    if (!sql.includes('chats')) return original(sql, args);
+    if (sql.startsWith('INSERT')) return store.execute(sql, args);
+    return new Promise(resolve => { release = () => resolve(store.execute(sql, args)); });
+  });
+  const sender = await connect(10, 101);
+  const received = track([sender]); let acknowledged = false;
+  const result = new Promise(resolve => sender.emit('send_message', { type: 'private', receiver_id: 20, message: 'Synthetic' }, ack => {
+    acknowledged = true; resolve(ack);
+  }));
+  await delay(30);
+  expect(acknowledged).toBe(false); expect(received[0]).toEqual([]);
+  expect(global.fetch.mock.calls.filter(([url]) => url.endsWith('chat-notification'))).toHaveLength(0);
+  release(); expect((await result).success).toBe(true);
 });

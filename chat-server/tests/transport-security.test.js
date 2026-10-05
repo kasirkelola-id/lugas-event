@@ -1,3 +1,4 @@
+const storedChatRow = require('./support/chat-row');
 // No external auth, notification, or database I/O. All listeners are loopback.
 const http = require('http');
 const ioc = require('socket.io-client');
@@ -53,7 +54,7 @@ beforeEach(() => {
   pool.execute.mockImplementation(async (sql,params) => {
     if (sql.includes('organization_members')) return [[{user_id:params[0]}]];
     if (sql.includes('INSERT INTO chats')) return [{insertId:++sequence}];
-    if (sql.includes('DATE_FORMAT')) return [[{created_at_iso:'2026-10-05T00:00:00Z'}]];
+    if (sql.includes('DATE_FORMAT')) return [[storedChatRow(pool, params, '2026-10-05T00:00:00Z')]];
     if (sql.includes('chat_rooms')) return [[{id:7,type:'default',karang_taruna_id:101}]];
     throw new Error('Unexpected SQL');
   });

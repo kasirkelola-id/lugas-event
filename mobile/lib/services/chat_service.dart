@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:convert';
 import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -30,6 +31,20 @@ class ChatService {
   String? _socketToken;
   int _contextGeneration = 0;
   int _initialization = 0;
+  final Map<String, String> _pendingIds = {};
+  String? _pendingToken;
+  int? _pendingTenant;
+
+  static String _messageId() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    final hex = bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+  }
 
   bool isCurrentTenant(Chat chat) =>
       _isAuthenticated && chat.karangTarunaId == _socketTenant;
@@ -180,11 +195,13 @@ class ChatService {
   }
 
   // Send message via REST API (Triggers FCM)
-  Future<Chat?> sendMessageViaApi(
+  Future<Chat?> _sendMessageViaApi(
     String message, {
     String type = 'group',
     int? receiverId,
     int? chatRoomId,
+    required String clientId,
+    required Map<String, String> headers,
   }) async {
     try {
       final response = await ApiClient.post('/chats/messages', {
@@ -192,7 +209,8 @@ class ChatService {
         'message': message,
         'receiver_id': receiverId,
         'chat_room_id': chatRoomId,
-      });
+        'client_message_id': clientId,
+      }, requestHeaders: headers);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
         if (data['data'] != null) {
@@ -206,48 +224,105 @@ class ChatService {
     }
   }
 
-  // Keep WebSocket send as primary, fallback to REST if disconnected
+  // One logical ID survives a lost ACK and an explicit same-message retry.
   Future<Chat?> sendMessage(
     String message, {
     String type = 'group',
     int? receiverId,
     int? chatRoomId,
+    Duration acknowledgementTimeout = const Duration(seconds: 5),
   }) async {
+    if (message.trim().isEmpty || message.runes.length > 2000) return null;
     final tenant = await AuthStorage.getTenant();
     final token = await AuthStorage.getToken();
+    final tenantId = tenant?['id'] as int?;
+    if (_pendingToken != token || _pendingTenant != tenantId) {
+      _pendingIds.clear();
+      _pendingToken = token;
+      _pendingTenant = tenantId;
+    }
+    final key = jsonEncode([type, receiverId, chatRoomId, message]);
+    if (!_pendingIds.containsKey(key) && _pendingIds.length >= 50) return null;
+    final clientId = _pendingIds.putIfAbsent(key, _messageId);
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+      if (tenantId != null) 'X-Karang-Taruna-ID': '$tenantId',
+    };
+    Future<bool> current() async =>
+        await AuthStorage.getToken() == token &&
+        (await AuthStorage.getTenant())?['id'] == tenantId;
     if (_socket != null &&
-        (_socketTenant != tenant?['id'] || _socketToken != token)) {
+        (_socketTenant != tenantId || _socketToken != token)) {
       closeConnection();
     }
-    bool canSocketSend = false;
-    if (_socket != null && _socket!.connected && _isAuthenticated) {
-      if (type == 'private') {
-        canSocketSend = true;
-      } else if (type == 'group' &&
-          chatRoomId != null &&
-          _joinedRooms.contains(chatRoomId)) {
-        canSocketSend = true;
+    final canSend =
+        _socket?.connected == true &&
+        _isAuthenticated &&
+        (type == 'private' ||
+            (chatRoomId != null && _joinedRooms.contains(chatRoomId)));
+    Chat? result;
+    if (canSend) {
+      final ack = Completer<Chat?>();
+      try {
+        _socket!
+            .timeout(acknowledgementTimeout.inMilliseconds)
+            .emitWithAck(
+              'send_message',
+              {
+                'type': type,
+                'message': message,
+                'receiver_id': receiverId,
+                'chat_room_id': chatRoomId,
+                'client_message_id': clientId,
+              },
+              ack: (dynamic error, [dynamic response]) {
+                if (ack.isCompleted) return;
+                try {
+                  if (error == null &&
+                      response is Map &&
+                      response['success'] == true &&
+                      response['message'] is Map &&
+                      response['message']['client_message_id'] == clientId) {
+                    ack.complete(
+                      Chat.fromJson(
+                        Map<String, dynamic>.from(response['message']),
+                      ),
+                    );
+                  } else {
+                    ack.complete(null);
+                  }
+                } catch (_) {
+                  ack.complete(null);
+                }
+              },
+            );
+      } catch (_) {
+        if (!ack.isCompleted) ack.complete(null);
       }
-    }
-
-    if (canSocketSend) {
-      _socket!.emit('send_message', {
-        'type': type,
-        'message': message,
-        'receiver_id': receiverId,
-        'chat_room_id': chatRoomId,
-      });
-      // Do NOT trigger REST API here if socket is connected. Node.js server will handle DB insertion and FCM trigger.
-      return null; // Local UI will wait for websocket broadcast
-    } else {
-      // Fallback to REST API if socket not connected
-      return await sendMessageViaApi(
-        message,
-        type: type,
-        receiverId: receiverId,
-        chatRoomId: chatRoomId,
+      result = await ack.future.timeout(
+        acknowledgementTimeout,
+        onTimeout: () => null,
       );
     }
+    if (!await current()) return null;
+    result ??= await _sendMessageViaApi(
+      message,
+      type: type,
+      receiverId: receiverId,
+      chatRoomId: chatRoomId,
+      clientId: clientId,
+      headers: headers,
+    );
+    if (!await current() ||
+        (result != null &&
+            tenantId != null &&
+            result.karangTarunaId != tenantId)) {
+      return null;
+    }
+    if (result != null) _pendingIds.remove(key);
+    return result;
   }
 
   void closeConnection() {

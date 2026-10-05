@@ -1,3 +1,4 @@
+const storedChatRow = require('./support/chat-row');
 // SEC-02 regression: a pass requires tenant-context isolation.
 const ioc = require('socket.io-client');
 jest.mock('mysql2/promise', () => ({ createPool: jest.fn(() => ({
@@ -36,7 +37,7 @@ test('SEC-02: private message for tenant A never arrives on receiver socket auth
   pool.execute.mockResolvedValueOnce([[{ user_id: 10, status_aktif: 1 }]])
     .mockResolvedValueOnce([[{ user_id: 20, status_aktif: 1 }]])
     .mockResolvedValueOnce([{ insertId: 123 }])
-    .mockResolvedValueOnce([[{ created_at_iso: '2026-10-05T00:00:00Z' }]]);
+    .mockImplementationOnce(async (sql, params) => [[storedChatRow(pool, params, '2026-10-05T00:00:00Z')]]);
   const received = [];
   receiverInB.on('new_message', payload => received.push(payload));
   const sent = new Promise(resolve => sender.once('new_message', resolve));

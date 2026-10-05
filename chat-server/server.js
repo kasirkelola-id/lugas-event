@@ -1,3 +1,4 @@
+const { persistChat, validMessageId } = require('./chat-persistence');
 require('dotenv').config();
 const { resolveSecret, acceptsSecret } = require('./internal-secret');
 
@@ -309,9 +310,12 @@ io.on('connection', (socket) => {
   });
 
   // Handle incoming messages
-  socket.on('send_message', async (data) => {
-    if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
-    if (!data || typeof data !== 'object') return socket.emit('error', { message: 'Invalid message payload' });
+  socket.on('send_message', async (data, ack) => {
+    const deny = (message) => { socket.emit('error', { message }); if (typeof ack === 'function') ack({ success: false, error: message }); };
+    const clientId = data?.client_message_id == null ? null : data.client_message_id;
+    if (clientId !== null && !validMessageId(clientId)) return deny('Invalid message ID');
+    if (!socket.userId || !socket.karangTarunaId) return deny('Not authenticated');
+    if (!data || typeof data !== 'object') return deny('Invalid message payload');
 
     // Rate Limiting
     const now = Date.now();
@@ -320,7 +324,7 @@ io.on('connection', (socket) => {
       rateData.count++;
       if (rateData.count > 5) {
         rateLimits.set(socket.id, rateData);
-        return socket.emit('error', { message: 'RATE_LIMITED' });
+        return deny('RATE_LIMITED');
       }
     } else {
       rateData.count = 1;
@@ -328,43 +332,46 @@ io.on('connection', (socket) => {
     }
     rateLimits.set(socket.id, rateData);
     if (!abuse.consume(`message:${socket.userId}`, 5, 1000)) {
-      return socket.emit('error', { message: 'RATE_LIMITED' });
+      return deny('RATE_LIMITED');
     }
 
     // Share the receiving authorization lease with the send path.
     const userInfo = onlineUsers.get(socket.id);
     if (socket.authorizationRenewal || (userInfo && now - userInfo.authTime >= AUTH_LEASE_MS)) {
-      if (!await renewAuthorization(socket)) return;
+      if (!await renewAuthorization(socket)) return deny('Not authenticated');
     }
 
     if (!socket.permissions || !socket.permissions.includes('chat.send')) {
-      return socket.emit('error', { message: 'PERMISSION_DENIED' });
+      return deny('PERMISSION_DENIED');
     }
 
     const type = data.type || 'group';
     let message = data.message || '';
-    const receiverId = data.receiver_id || null;
-    const roomId = data.chat_room_id || null;
+    const destinationId = value => typeof value === 'number' || (typeof value === 'string' && /^[0-9]+$/.test(value)) ? Number(value) : NaN;
+    const receiverId = data.receiver_id == null ? null : destinationId(data.receiver_id);
+    const roomId = data.chat_room_id == null ? null : destinationId(data.chat_room_id);
+    const destination = type === 'private' ? receiverId : roomId;
+    if (!Number.isSafeInteger(destination) || destination < 1 || destination > 4294967295) return deny('Invalid destination');
 
     if (typeof message !== 'string' || message.trim().length === 0) {
-      return socket.emit('error', { message: 'Message cannot be empty' });
+      return deny('Message cannot be empty');
     }
     if (Array.from(message).length > 2000) {
-       return socket.emit('error', { message: 'Message exceeds 2000 characters limit' });
+       return deny('Message exceeds 2000 characters limit');
     }
     if (type !== 'group' && type !== 'private') {
-      return socket.emit('error', { message: 'Invalid message type' });
+      return deny('Invalid message type');
     }
 
     try {
       let chatId;
       if (type === 'group') {
-        if (!roomId) return socket.emit('error', { message: 'Room ID required for group chat' });
+        if (!roomId) return deny('Room ID required for group chat');
 
         // Ensure user is in the socket room
         const roomName = `room_${roomId}`;
         if (!socket.rooms.has(roomName)) {
-           return socket.emit('error', { message: 'You must join the room first' });
+           return deny('You must join the room first');
         }
 
         // H. NODE GROUP SEND MEMBERSHIP VALIDATION
@@ -372,36 +379,29 @@ io.on('connection', (socket) => {
           `SELECT * FROM chat_rooms WHERE id = ? AND karang_taruna_id = ?`,
           [roomId, socket.karangTarunaId]
         );
-        if (rooms.length === 0) return socket.emit('error', { message: 'Room not found or belongs to another tenant' });
+        if (rooms.length === 0) return deny('Room not found or belongs to another tenant');
 
         // Check active membership globally for this tenant
         const [activeMembers] = await pool.execute(
           `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
           [socket.userId, socket.karangTarunaId]
         );
-        if (activeMembers.length === 0) return socket.emit('error', { message: 'You are not an active member of this tenant' });
+        if (activeMembers.length === 0) return deny('You are not an active member of this tenant');
 
         if (rooms[0].type === 'custom') {
           const [members] = await pool.execute(
             `SELECT * FROM chat_room_members WHERE chat_room_id = ? AND user_id = ?`,
             [roomId, socket.userId]
           );
-          if (members.length === 0) return socket.emit('error', { message: 'You are not a member of this custom room' });
+          if (members.length === 0) return deny('You are not a member of this custom room');
         }
 
-        const [result] = await pool.execute(
-          `INSERT INTO chats (karang_taruna_id, chat_room_id, type, sender_id, message, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())`,
-          [socket.karangTarunaId, roomId, type, socket.userId, message]
-        );
-        chatId = result.insertId;
-
-        const [chatRows] = await pool.execute(`SELECT DATE_FORMAT(created_at, '%Y-%m-%dT%TZ') as created_at_iso FROM chats WHERE id = ?`, [chatId]);
-        let canonicalTimestamp = new Date().toISOString();
-        if (chatRows.length > 0 && chatRows[0].created_at_iso) {
-           canonicalTimestamp = chatRows[0].created_at_iso;
-        }
+        const persisted = await persistChat(pool, { karang_taruna_id: socket.karangTarunaId, chat_room_id: roomId, type, sender_id: socket.userId, message, client_message_id: clientId?.toLowerCase() ?? null });
+        chatId = persisted.row.id;
+        const canonicalTimestamp = persisted.row.created_at_iso;
 
         const chatPayload = {
+          ...persisted.row,
           id: chatId,
           karang_taruna_id: socket.karangTarunaId,
           chat_room_id: roomId,
@@ -414,38 +414,36 @@ io.on('connection', (socket) => {
           sender_photo_url: socket.profilePhotoUrl
         };
 
+        delete chatPayload.created_at_iso;
+        chatPayload.client_message_id = persisted.row.client_message_id;
+        if (typeof ack === 'function') ack({ success: true, message: chatPayload, duplicate: !persisted.created });
+        if (!persisted.created) return;
+
         io.to(roomName).emit('new_message', chatPayload);
 
         // Fire and forget notification
         _triggerChatNotification(chatId);
       } else if (type === 'private') {
-        if (!receiverId) return socket.emit('error', { message: 'Receiver ID required for private chat' });
+        if (!receiverId) return deny('Receiver ID required for private chat');
 
         if (socket.userId.toString() === receiverId.toString()) {
-          return socket.emit('error', { message: 'Cannot send private message to yourself' });
+          return deny('Cannot send private message to yourself');
         }
 
         // Check active membership for sender globally for this tenant
         if (!await eligibleMember(socket.userId, socket.karangTarunaId)) {
-          return socket.emit('error', { message: 'You are not an active member of this tenant' });
+          return deny('You are not an active member of this tenant');
         }
         if (!await eligibleMember(receiverId, socket.karangTarunaId)) {
-          return socket.emit('error', { message: 'Receiver not found or not active in this tenant' });
+          return deny('Receiver not found or not active in this tenant');
         }
 
-        const [result] = await pool.execute(
-          `INSERT INTO chats (karang_taruna_id, type, sender_id, receiver_id, message, created_at) VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())`,
-          [socket.karangTarunaId, type, socket.userId, receiverId, message]
-        );
-        chatId = result.insertId;
-
-        const [chatRows] = await pool.execute(`SELECT DATE_FORMAT(created_at, '%Y-%m-%dT%TZ') as created_at_iso FROM chats WHERE id = ?`, [chatId]);
-        let canonicalTimestamp = new Date().toISOString();
-        if (chatRows.length > 0 && chatRows[0].created_at_iso) {
-           canonicalTimestamp = chatRows[0].created_at_iso;
-        }
+        const persisted = await persistChat(pool, { karang_taruna_id: socket.karangTarunaId, type, sender_id: socket.userId, receiver_id: receiverId, message, client_message_id: clientId?.toLowerCase() ?? null });
+        chatId = persisted.row.id;
+        const canonicalTimestamp = persisted.row.created_at_iso;
 
         const chatPayload = {
+          ...persisted.row,
           id: chatId,
           karang_taruna_id: socket.karangTarunaId,
           type: type,
@@ -457,6 +455,11 @@ io.on('connection', (socket) => {
           role_level: socket.roleLevel,
           sender_photo_url: socket.profilePhotoUrl
         };
+
+        delete chatPayload.created_at_iso;
+        chatPayload.client_message_id = persisted.row.client_message_id;
+        if (typeof ack === 'function') ack({ success: true, message: chatPayload, duplicate: !persisted.created });
+        if (!persisted.created) return;
 
         // Emit to sender's sockets (all devices) and receiver's sockets (all devices)
         // using the user rooms they joined during auth.
@@ -470,7 +473,7 @@ io.on('connection', (socket) => {
     } catch (error) {
       // Driver error objects can contain SQL and private message parameters.
       console.error('Error saving message');
-      socket.emit('error', { message: 'Failed to send message' });
+      deny('Failed to send message');
     }
   });
 

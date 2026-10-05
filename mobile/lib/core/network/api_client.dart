@@ -137,9 +137,10 @@ class ApiClient {
 
   static Future<http.Response> post(
     String endpoint,
-    Map<String, dynamic> body,
-  ) async {
-    final headers = await getHeaders();
+    Map<String, dynamic> body, {
+    Map<String, String>? requestHeaders,
+  }) async {
+    final headers = requestHeaders ?? await getHeaders();
     final jsonBody = jsonEncode(body);
     return _executeRequest(
       'POST',

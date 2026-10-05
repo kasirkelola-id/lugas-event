@@ -279,6 +279,8 @@ class ChatController extends BaseApiController
         $roomId = $this->request->getVar('chat_room_id');
         $receiverId = $this->request->getVar('receiver_id');
         $message = $this->request->getVar('message');
+        $clientId = $this->request->getVar('client_message_id');
+        if ($clientId !== null && !\App\Services\ChatPersistenceService::validId($clientId)) return $this->sendError('ID pesan tidak valid', null, 400);
 
         if (!is_string($message) || trim($message) === '') {
             return $this->sendError('Pesan tidak boleh kosong', null, 400);
@@ -291,6 +293,12 @@ class ChatController extends BaseApiController
         if (!in_array($type, ['group', 'private'], true)) {
             return $this->sendError('Tipe pesan tidak valid', null, 400);
         }
+
+        $destination = $type === 'private' ? $receiverId : $roomId;
+        if ((!is_int($destination) && !(is_string($destination) && ctype_digit($destination)))
+            || (int)$destination < 1 || (int)$destination > 4294967295) return $this->sendError('Tujuan pesan tidak valid', null, 400);
+        if ($type === 'private') $receiverId = (int)$destination;
+        else $roomId = (int)$destination;
 
         if ($type === 'private' && (string)$userId === (string)$receiverId) {
             return $this->sendError('Tidak dapat mengirim pesan ke diri sendiri', null, 400);
@@ -310,6 +318,7 @@ class ChatController extends BaseApiController
             'message' => $message,
             'type' => $type,
             'created_at' => gmdate('Y-m-d H:i:s'),
+            'client_message_id' => $clientId === null ? null : strtolower($clientId),
         ];
 
         if ($type === 'group') {
@@ -329,20 +338,32 @@ class ChatController extends BaseApiController
             }
 
             $data['chat_room_id'] = $roomId;
-            // TODO: Trigger Notification to all members
-            $this->sendGroupNotification($roomId, $user['nama_lengkap'], $message, $data);
+
         } else {
             $receiverMembership = $orgMemberModel->where('user_id', $receiverId)->where('karang_taruna_id', $tenantId)->where('status_aktif', 1)->first();
             if (!$receiverMembership) {
                 return $this->sendError('Pengguna tidak ditemukan', null, 404);
             }
             $data['receiver_id'] = $receiverId;
-            // TODO: Trigger Notification to receiver
-            $this->sendPrivateNotification($receiverId, $user['nama_lengkap'], $message, $data);
+
         }
 
-        $chatModel->insert($data);
-        $data['id'] = $chatModel->getInsertID();
+        try {
+            $persisted = \App\Services\ChatPersistenceService::persist($data);
+            $data = $persisted['row'];
+        } catch (\DomainException $error) {
+            return $this->sendError('ID pesan sudah digunakan untuk pesan berbeda', null, 409);
+        } catch (\Throwable $error) {
+            return $this->sendError('Pesan gagal disimpan', null, 500);
+        }
+        if ($persisted['created']) {
+            try {
+                if ($type === 'group') $this->sendGroupNotification($roomId, $user['nama_lengkap'], $message, $data);
+                else $this->sendPrivateNotification($receiverId, $user['nama_lengkap'], $message, $data);
+            } catch (\Throwable $error) {
+                log_message('error', 'Notification dispatch failed');
+            }
+        }
         $data['nama_lengkap'] = $user['nama_lengkap'];
         $data['role_level'] = $user['role_level'];
         $data['sender_photo_url'] = !empty($user['profile_photo']) ? base_url($user['profile_photo']) : null;

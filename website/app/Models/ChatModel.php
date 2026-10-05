@@ -19,6 +19,7 @@ class ChatModel extends Model
         'sender_id',
         'receiver_id',
         'message',
+        'client_message_id',
         'created_at'
     ];
 
