@@ -22,6 +22,9 @@ class KarangTarunaController extends BaseController
 
     public function create()
     {
+        if (!\App\Services\WebInputPolicy::organization($this->request->getPost(), true)) {
+            return redirect()->back()->with('error', 'Data organisasi tidak valid.');
+        }
         $ktModel = new KarangTarunaModel();
         
         $kode_pin = $this->request->getPost('kode_pin');
@@ -63,6 +66,9 @@ class KarangTarunaController extends BaseController
 
     public function update($id)
     {
+        if (!\App\Services\WebInputPolicy::organization($this->request->getPost(), false)) {
+            return redirect()->back()->with('error', 'Data organisasi tidak valid.');
+        }
         $ktModel = new KarangTarunaModel();
         
         $kt = $ktModel->find($id);

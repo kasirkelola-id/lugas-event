@@ -71,6 +71,9 @@ class ManageController extends BaseController
         }
 
         $newRole = $this->request->getPost('role_level');
+        if (!is_string($newRole)) {
+            return redirect()->back()->with('error', 'Role tidak valid.');
+        }
         $validRoles = ['ketua', 'wakil_ketua', 'sekretaris', 'wakil_sekretaris', 'bendahara', 'wakil_bendahara', 'pengelola', 'anggota'];
         
         if (!in_array($newRole, $validRoles)) {
@@ -238,6 +241,10 @@ class ManageController extends BaseController
 
     public function createPengumuman($kt_id)
     {
+        if (!\App\Services\SettingsPolicy::text($this->request->getPost('judul'), 200)
+            || !\App\Services\SettingsPolicy::text($this->request->getPost('isi'), 10000)) {
+            return redirect()->back()->with('error', 'Judul atau isi pengumuman tidak valid.');
+        }
         $pengumumanModel = new PengumumanModel();
         $pengumumanModel->insert([
             'karang_taruna_id' => $kt_id,

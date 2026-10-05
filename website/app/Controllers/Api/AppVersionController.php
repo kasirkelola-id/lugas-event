@@ -39,6 +39,12 @@ class AppVersionController extends BaseController
             }
         }
 
+        // Historical unsafe settings must not publish an untrusted update link.
+        if (!\App\Services\SettingsPolicy::trustedDownloadUrl($data['download_url'])) {
+            $data['update_enabled'] = false;
+            $data['download_url'] = '';
+        }
+
         return $this->response->setJSON([
             'status' => true,
             'data' => $data

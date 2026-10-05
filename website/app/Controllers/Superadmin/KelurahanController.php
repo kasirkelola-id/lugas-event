@@ -21,6 +21,9 @@ class KelurahanController extends BaseController
 
     public function store()
     {
+        if (!\App\Services\SettingsPolicy::text($this->request->getPost('nama'), 100)) {
+            return redirect()->back()->with('error', 'Nama kelurahan tidak valid.');
+        }
         $kelurahanModel = new KelurahanModel();
         
         $data = [
@@ -36,6 +39,9 @@ class KelurahanController extends BaseController
 
     public function update($id)
     {
+        if (!\App\Services\SettingsPolicy::text($this->request->getPost('nama'), 100)) {
+            return redirect()->back()->with('error', 'Nama kelurahan tidak valid.');
+        }
         $kelurahanModel = new KelurahanModel();
         
         $data = [

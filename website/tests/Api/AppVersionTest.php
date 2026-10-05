@@ -34,6 +34,7 @@ class AppVersionTest extends BaseTest
     protected function setUp(): void
     {
         parent::setUp();
+        $this->db->resetTransStatus();
         
         $settingModel = new SettingModel();
         // Bersihkan pengaturan global untuk test
@@ -46,7 +47,7 @@ class AppVersionTest extends BaseTest
         $settingModel->insertBatch([
             ['karang_taruna_id' => 0, 'setting_key' => 'android_version_name', 'setting_value' => '1.5.0'],
             ['karang_taruna_id' => 0, 'setting_key' => 'android_version_code', 'setting_value' => '15'],
-            ['karang_taruna_id' => 0, 'setting_key' => 'android_download_url', 'setting_value' => 'https://example.com/app.apk'],
+            ['karang_taruna_id' => 0, 'setting_key' => 'android_download_url', 'setting_value' => 'https://kartar.kelolakasir.id/app.apk'],
             ['karang_taruna_id' => 0, 'setting_key' => 'android_release_notes', 'setting_value' => 'Test Note'],
             ['karang_taruna_id' => 0, 'setting_key' => 'android_update_enabled', 'setting_value' => 'true'],
             ['karang_taruna_id' => 0, 'setting_key' => 'temporary_reset_password', 'setting_value' => 'secret123'], // Sensitive!
@@ -61,7 +62,7 @@ class AppVersionTest extends BaseTest
                 'update_enabled' => true,
                 'version_name' => '1.5.0',
                 'version_code' => 15,
-                'download_url' => 'https://example.com/app.apk',
+                'download_url' => 'https://kartar.kelolakasir.id/app.apk',
                 'release_notes' => 'Test Note'
             ]
         ]);
@@ -99,7 +100,7 @@ class AppVersionTest extends BaseTest
             'android_update_enabled' => 'true',
             'android_version_name' => '2.0',
             'android_version_code' => '20',
-            'android_download_url' => 'https://github.com/test/app.apk',
+            'android_download_url' => 'https://kartar.kelolakasir.id/app.apk',
             'android_release_notes' => 'New release'
         ]);
         

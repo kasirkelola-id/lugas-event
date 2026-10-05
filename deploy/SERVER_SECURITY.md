@@ -58,3 +58,6 @@ evidence and does not close deployed SEC-19 or PERF-11.
 Primary documentation: [location selection](https://nginx.org/en/docs/http/ngx_http_core_module.html#location),
 [WebSocket proxying](https://nginx.org/en/docs/http/websocket.html),
 [FastCGI parameters](https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_param).
+
+
+Android update links are restricted by `website/app/Config/UpdatePolicy.php` to HTTPS and exact reviewed distribution hostnames (default `kartar.kelolakasir.id`). Authentication components, fragments, IP/localhost hosts and non-443 ports are rejected. Add another operator-controlled distribution hostname only through reviewed configuration; no wildcard/subdomain suffix trust. Existing untrusted stored links disable the public update prompt without deleting historical settings. This is an origin policy, not APK signature/digest verification or a redirect-chain guarantee; review redirect behavior and distribution identity before rollout.
