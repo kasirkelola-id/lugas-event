@@ -73,25 +73,7 @@ class ProfileService {
 
   static Future<Map<String, dynamic>> updateProfilePhoto(File imageFile) async {
     try {
-      final token = await AuthStorage.getToken();
-      final tenant = await AuthStorage.getTenant();
-
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse('${ApiClient.baseUrl}/profile/photo'),
-      );
-      request.headers['Authorization'] = 'Bearer $token';
-      request.headers['Accept'] = 'application/json';
-      if (tenant != null) {
-        request.headers['X-Karang-Taruna-ID'] = tenant['id'].toString();
-      }
-
-      request.files.add(
-        await http.MultipartFile.fromPath('photo', imageFile.path),
-      );
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+      final response = await ApiClient.uploadPhoto(imageFile);
 
       return _handleResponse(response);
     } catch (e) {

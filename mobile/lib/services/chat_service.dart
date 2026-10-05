@@ -17,6 +17,10 @@ class ChatService {
 
   IO.Socket? _socket;
   IO.Socket? get socket => _socket;
+  final _socketChanges = StreamController<IO.Socket?>.broadcast();
+  Stream<IO.Socket?> get socketChanges => _socketChanges.stream;
+  bool get isAuthenticated => _isAuthenticated;
+  int? get activeTenantId => _socketTenant;
 
   final StreamController<Chat> _messageStreamController =
       StreamController<Chat>.broadcast();
@@ -93,6 +97,7 @@ class ChatService {
           .build(),
     );
     _socket = socket;
+    _socketChanges.add(socket);
     bool current() =>
         generation == _contextGeneration && identical(_socket, socket);
 
@@ -333,6 +338,7 @@ class ChatService {
       _socket!.disconnect();
       _socket!.dispose();
       _socket = null;
+      _socketChanges.add(null);
     }
     _isAuthenticated = false;
     _socketTenant = null;

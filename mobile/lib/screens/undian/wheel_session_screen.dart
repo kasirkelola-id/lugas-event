@@ -10,6 +10,9 @@ import '../widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_dialog.dart';
 import '../widgets/common/app_error_state.dart';
 import 'create_wheel_screen.dart';
+import 'dart:async';
+import 'package:socket_io_client/socket_io_client.dart' as io;
+import '../../utils/owned_socket_listeners.dart';
 
 class WheelSessionScreen extends StatefulWidget {
   final int sessionId;
@@ -32,19 +35,29 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
 
   late AnimationController _spinController;
   late Animation<double> _spinAnimation;
+  VoidCallback? _spinTick;
+  AnimationStatusListener? _spinStatus;
   double _currentAngle = 0;
   bool _isSpinning = false;
+  late final OwnedSocketListeners _socketListeners;
+  StreamSubscription<io.Socket?>? _socketSubscription;
 
   @override
   void initState() {
     super.initState();
     _spinController = AnimationController(vsync: this);
+    _socketListeners = OwnedSocketListeners({
+      'wheel_spin_started': _onSpinStarted,
+      'wheel_closed': _onWheelClosed,
+      'auth_success': (_) => _joinWheel(),
+    });
+    _socketSubscription = ChatService().socketChanges.listen(_setupSocket);
     _loadData();
-    _setupSocket();
   }
 
   Future<void> _loadData() async {
     final user = await AuthService.getMe();
+    if (!mounted) return;
     if (user['success']) {
       _currentUserId = int.tryParse(user['user'].id.toString()) ?? 0;
     }
@@ -63,6 +76,7 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
         _pagination = result['pagination'];
         _isLoading = false;
       });
+      _setupSocket(ChatService().socket);
     } else {
       setState(() {
         _isError = true;
@@ -71,18 +85,33 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
     }
   }
 
-  void _setupSocket() {
-    final socket = ChatService().socket;
-    if (socket == null) return;
+  void _setupSocket(io.Socket? socket) {
+    if (!mounted) return;
+    final service = ChatService();
+    // Ignore a queued replacement notification for an already superseded context.
+    if (!identical(socket, service.socket)) return;
+    if (_session?.karangTarunaId != service.activeTenantId) socket = null;
+    _socketListeners.attach(socket);
+    _joinWheel();
+  }
 
-    socket.emit('join_wheel', {'session_id': widget.sessionId});
-
-    socket.on('wheel_spin_started', _onSpinStarted);
-    socket.on('wheel_closed', _onWheelClosed);
+  void _joinWheel() {
+    final service = ChatService();
+    if (mounted &&
+        service.isAuthenticated &&
+        identical(_socketListeners.socket, service.socket) &&
+        _session?.karangTarunaId == service.activeTenantId) {
+      _socketListeners.socket?.emit('join_wheel', {
+        'session_id': widget.sessionId,
+      });
+    }
   }
 
   void _onSpinStarted(dynamic data) {
     if (!mounted) return;
+    if (data is! Map ||
+        int.tryParse('${data['session_id']}') != widget.sessionId)
+      return;
 
     // Convert to integers carefully
     final winnerId =
@@ -113,6 +142,8 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
       _isSpinning = true;
     });
 
+    if (_spinTick != null) _spinAnimation.removeListener(_spinTick!);
+    if (_spinStatus != null) _spinAnimation.removeStatusListener(_spinStatus!);
     _spinController.duration = Duration(seconds: durationSeconds);
     _spinAnimation =
         Tween<double>(
@@ -122,13 +153,15 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
           CurvedAnimation(parent: _spinController, curve: Curves.decelerate),
         );
 
-    _spinAnimation.addListener(() {
+    _spinTick = () {
+      if (!mounted) return;
       setState(() {
         _currentAngle = _spinAnimation.value;
       });
-    });
+    };
+    _spinAnimation.addListener(_spinTick!);
 
-    _spinAnimation.addStatusListener((status) {
+    _spinStatus = (status) {
       if (status == AnimationStatus.completed) {
         if (!mounted) return;
         setState(() {
@@ -138,13 +171,17 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
         _showWinnerDialog(activeItems[winnerIndex]);
         _loadData(); // reload to get new results list and updated items (if removed)
       }
-    });
+    };
+    _spinAnimation.addStatusListener(_spinStatus!);
 
     _spinController.forward(from: 0);
   }
 
   void _onWheelClosed(dynamic data) {
     if (!mounted) return;
+    if (data is! Map ||
+        int.tryParse('${data['session_id']}') != widget.sessionId)
+      return;
     _loadData();
   }
 
@@ -204,12 +241,11 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
 
   @override
   void dispose() {
+    if (_spinTick != null) _spinAnimation.removeListener(_spinTick!);
+    if (_spinStatus != null) _spinAnimation.removeStatusListener(_spinStatus!);
     _spinController.dispose();
-    final socket = ChatService().socket;
-    if (socket != null) {
-      socket.off('wheel_spin_started');
-      socket.off('wheel_closed');
-    }
+    _socketSubscription?.cancel();
+    _socketListeners.dispose();
     super.dispose();
   }
 

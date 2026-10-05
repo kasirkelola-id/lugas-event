@@ -148,6 +148,7 @@ class _InitialScreenState extends State<InitialScreen> {
     if (result['success']) {
       // Initialize Push Notification
       await NotificationService.initialize();
+      if (!mounted) return;
 
       final UserModel user = result['user'];
       if (user.statusAktif != 1) {

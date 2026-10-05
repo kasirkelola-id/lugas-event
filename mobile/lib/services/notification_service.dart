@@ -5,55 +5,73 @@ import 'chat_service.dart';
 import 'logout_retry.dart';
 import '../storage/auth_storage.dart';
 import '../main.dart' as main_app;
+import '../utils/subscription_lifecycle.dart';
 
 class NotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  static final SubscriptionLifecycle _lifecycle = SubscriptionLifecycle();
 
   static Future<void> initialize() async {
+    try {
+      await _lifecycle.initialize(_initializeListeners, () async {
+        final token = await _messaging.getToken().timeout(
+          const Duration(seconds: 10),
+        );
+        if (token != null) await sendTokenToBackend(token);
+      });
+    } catch (_) {
+      // Push availability must not prevent the user from opening the application.
+      debugPrint('Notification initialization failed');
+    }
+  }
+
+  static Future<void> _initializeListeners() async {
     try {
       await LogoutRetry.flush();
     } catch (_) {
       // Native storage failure must not disclose or reactivate old credentials.
     }
     // Request permission (Apple & Web)
-    NotificationSettings settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    NotificationSettings settings = await _messaging
+        .requestPermission(alert: true, badge: true, sound: true)
+        .timeout(const Duration(seconds: 30));
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       debugPrint('User granted notification permission');
     }
 
-    // Get the FCM token and send to backend
-    String? token = await _messaging.getToken();
-    if (token != null) {
-      await sendTokenToBackend(token);
-    }
-
     // Listen to token updates
-    _messaging.onTokenRefresh.listen((newToken) {
-      sendTokenToBackend(newToken);
-    });
+    _lifecycle.track(
+      _messaging.onTokenRefresh.listen((newToken) {
+        sendTokenToBackend(newToken);
+      }, onError: (_) => debugPrint('Notification token refresh failed')),
+    );
 
     // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Foreground notification received');
-      // Optional: show local notification
-    });
+    _lifecycle.track(
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('Foreground notification received');
+        // Optional: show local notification
+      }, onError: (_) => debugPrint('Notification stream failed')),
+    );
 
     // Handle background / terminated messages when tapped
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('Background notification opened');
-      _handleNotificationTap(message);
-    });
+    _lifecycle.track(
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        debugPrint('Background notification opened');
+        _handleNotificationTap(
+          message,
+        ).catchError((_) => debugPrint('Notification navigation failed'));
+      }, onError: (_) => debugPrint('Notification stream failed')),
+    );
 
     // Handle cold start message
-    RemoteMessage? initialMessage = await _messaging.getInitialMessage();
+    RemoteMessage? initialMessage = await _messaging
+        .getInitialMessage()
+        .timeout(const Duration(seconds: 5));
     if (initialMessage != null) {
       debugPrint('Startup notification opened');
-      _handleNotificationTap(initialMessage);
+      await _handleNotificationTap(initialMessage);
     }
   }
 
@@ -78,7 +96,8 @@ class NotificationService {
     }
 
     if (tenantIdStr != null) {
-      int tenantId = int.parse(tenantIdStr);
+      final tenantId = int.tryParse(tenantIdStr);
+      if (tenantId == null || tenantId <= 0) return;
       if (currentTenant == null || currentTenant['id'] != tenantId) {
         debugPrint('Switching tenant to $tenantId requested by notification.');
 

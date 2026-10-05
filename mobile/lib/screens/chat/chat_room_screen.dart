@@ -80,6 +80,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   Future<void> _loadUserAndHistory() async {
     final userResult = await AuthService.getMe();
+    if (!mounted) return;
     if (userResult['success']) {
       _currentUser = userResult['user'] as UserModel;
     }
@@ -106,7 +107,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       _scrollToBottom(force: true);
     }
 
+    if (!mounted) return;
     await _chatService.initWebSocket();
+    if (!mounted) return;
     if (widget.type == 'group' && widget.roomId != null) {
       _chatService.joinRoom(widget.roomId!);
     }

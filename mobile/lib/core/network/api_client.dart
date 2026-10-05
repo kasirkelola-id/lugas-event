@@ -135,6 +135,35 @@ class ApiClient {
     );
   }
 
+  static Future<http.Response> uploadPhoto(File imageFile) async {
+    final headers = await getHeaders();
+    headers.remove('Content-Type'); // MultipartRequest owns the boundary.
+    final client = http.Client();
+    try {
+      return await _executeRequest('POST', '/profile/photo', () async {
+        if (await imageFile.length() > 5 * 1024 * 1024) {
+          return http.Response(
+            jsonEncode({'status': false, 'message': 'Foto maksimal 5 MB'}),
+            422,
+          );
+        }
+        final request = http.MultipartRequest(
+          'POST',
+          Uri.parse('$baseUrl/profile/photo'),
+        );
+        request.headers.addAll(headers);
+        request.files.add(
+          await http.MultipartFile.fromPath('photo', imageFile.path),
+        );
+        // The shared deadline includes response-body collection. Closing the owned
+        // client below also aborts transport when that deadline expires.
+        return http.Response.fromStream(await client.send(request));
+      }, headers: headers);
+    } finally {
+      client.close();
+    }
+  }
+
   static Future<http.Response> post(
     String endpoint,
     Map<String, dynamic> body, {
