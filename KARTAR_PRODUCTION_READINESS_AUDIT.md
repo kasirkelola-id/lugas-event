@@ -2,7 +2,9 @@
 
 Audit date: **2026-10-05, Asia/Bangkok**. Repository: `D:\project\lugas`. Audited HEAD: `7f5986c` (`chore: version bump to 1.0.2+3 and track tools`).
 
-**Latest remediation update — Overnight phases0–9, 2026-10-05:** Local checkpoints through **20f46ea**; phase9 verification completed. SEC-09/10/12/14/15/16/17/18/20/21/22 are **RESOLVED IN WORKTREE — NOT DEPLOYED**. SEC-11 remains **PARTIAL / operator distribution transition required**; SEC-19 deployed protection remains unverified. Open registry **0 critical /1 high /1 medium /0 low**. Backend **380 tests /2,237 assertions /0 failures/errors /7 skips**, Node **58 PASS**, Flutter **82 PASS**, analyzer **0 errors /16 warnings /152 infos**. Full and runtime npm audits report zero vulnerabilities. Overnight reliability/performance work continues. Production DDL/device QA/configuration/capacity remain unproven; no push or deployment. Appended overnight ledger is authoritative over historical snapshots.
+**Latest remediation update - Overnight completion, 2026-10-06, Asia/Bangkok:** Start HEAD **ceb64cb**; all phases0-29 attempted,25 source/evidence checkpoints through **5949c80** plus the final documentation checkpoint (26 local commits total; final hash in Git). Worktree findings **0 critical /1 high /1 medium /0 low**; SEC11 signing/distribution and SEC19 deployed server protection remain partial. Backend **452 tests/2811 assertions/0 failures/errors/17 skips**, Node **71 PASS**, Flutter **93 PASS**, analyzer **0 errors/0 warnings/70 infos**, actual MySQL **16/16 PASS/260 assertions/0 skips**. Composer valid/audit0; full/runtime npm audit0. Synthetic100-tenant/10k-user/100k-row query evidence and actual localhost load25/50 measured;100 stopped at auth quota, larger stages NOT PROVEN. Earlier background callback failures preserved/disclosed and redundant callback source repaired before final proof. MySQL gracefully stopped, owned schemas0;255 changed/new paths listed in [overnight scope](KARTAR_OVERNIGHT_SCOPE.md). **Production NOT READY; manual review ready. No push, deployment, production network/database/SSH or real FCM delivery.** Historical ledgers remain snapshots; final appended ledger is authoritative.
+
+**Historical overnight update — Overnight phases0–9, 2026-10-05:** Local checkpoints through **20f46ea**; phase9 verification completed. SEC-09/10/12/14/15/16/17/18/20/21/22 are **RESOLVED IN WORKTREE — NOT DEPLOYED**. SEC-11 remains **PARTIAL / operator distribution transition required**; SEC-19 deployed protection remains unverified. Open registry **0 critical /1 high /1 medium /0 low**. Backend **380 tests /2,237 assertions /0 failures/errors /7 skips**, Node **58 PASS**, Flutter **82 PASS**, analyzer **0 errors /16 warnings /152 infos**. Full and runtime npm audits report zero vulnerabilities. Overnight reliability/performance work continues. Production DDL/device QA/configuration/capacity remain unproven; no push or deployment. Appended overnight ledger is authoritative over historical snapshots.
 
 **Historical remediation update — Batch 5, 2026-10-05:** **SEC-05 and SEC-06: RESOLVED IN WORKTREE — NOT DEPLOYED.** Session CSRF protects browser forms; eight GET mutations became POST. Creation/reset uses independent random credentials with enforced password change and immediate response-only delivery. Known historical defaults/username passwords cannot mint production sessions; demo seeding is testing-only. Open counts: **0 CRITICAL, 3 HIGH, 8 MEDIUM, 2 LOW**. SEC-12 remains open. Full PHPUnit **306 tests /1,766 assertions /0 failures /0 errors /7 skips**, Jest **51 PASS**, Flutter **64 PASS**, analysis **0 errors /16 warnings /152 infos**. Production remains **NOT READY**. HEAD is the existing local checkpoint `ceb64cb`; Batch5 is uncommitted/unstaged. No push or deployment. The appended ledger discloses the existing announcement-create/legacy-view limitations and required private privileged provisioning before rollout.
 
@@ -474,11 +476,11 @@ No dependency was upgraded and no lockfile was modified.
 | ID | Priority | Severity | Evidence / bottleneck | Proposed bounded intervention |
 |---|---|---|---|---|
 | PERF-01 | P0 | HIGH | PARTIAL: durable transactional jobs, finite dispatch and real MySQL concurrent claims locally measured; request-side recipient/provider loops removed | Installed worker, real provider and staging throughput pending; no capacity claim |
-| PERF-02 | P1 | HIGH | PARTIAL: growing API collections and primary browser/mobile lists bounded and locally measured; request arrays capped | Reference selectors/reports, global filter UX, older-client rollout and MySQL/load validation pending |
+| PERF-02 | P1 | HIGH | PARTIAL: growing API collections and primary browser/mobile lists bounded and locally measured; request arrays capped | Phase24 exact MySQL controller/page proof measured; reference selectors/reports, global filter UX, older-client rollout and broader authenticated endpoint load pending |
 | PERF-03 | P1 | HIGH | RESOLVED IN WORKTREE - NOT DEPLOYED: event/voting/wheel list and voting option counts grouped; participant add batched | Measured constant child query counts, atomic batch rollback and phase15 actual MySQL plans/concurrent batches; deployed latency remains pending |
 | PERF-04 | P1 | MEDIUM | PARTIAL / LOCALLY MEASURED: exact MySQL plans for seven query families; three selective forward indexes, cash/wheel page filesorts removed | Other query variants, scoped residual sorts, index-build/write costs and staging/deployed plans remain |
 | PERF-05 | P1 | HIGH | SOURCE FIXED / LOCALLY MEASURED: aggregate user/IP quotas, auth/join in-flight bounds and payload/room caps | Phase1 security regression; configured proxy/IP policy and real reconnect/fanout load remain STAGING REQUIRED |
-| PERF-06 | P1 | HIGH | SOURCE FIXED / LOCALLY MEASURED: pool queue cap100, connection budget1..100, auth5s/notification3s deadlines and in-flight guards | Phase1/19 tests; production PHP worker sizing, acquisition timeout and sustained saturation remain STAGING REQUIRED |
+| PERF-06 | P1 | HIGH | SOURCE FIXED / LOCALLY MEASURED: pool queue cap100, connection budget1..100, auth5s deadlines, bounded finite-worker transport and in-flight guards; phase25 redundant notification callbacks removed | Phase1/19 tests; production PHP worker sizing, acquisition timeout and sustained saturation remain STAGING REQUIRED |
 | PERF-07 | P2 | MEDIUM | Contacts aggregate scans + offset work before page LIMIT | UNION direction plans, candidate receiver index, cursor/summary if measured |
 | PERF-08 | P2 | MEDIUM | Dashboard/report internally unbounded and repeated sums | SQL aggregation, bounded candidates; tenant-keyed short cache only after profiling |
 | PERF-09 | P2 | MEDIUM | PARTIAL / SOURCE FIXED / LOCALLY MEASURED: listener ownership, upload deadline, bounded image dimensions and async mounted guards | Phase16/21 tests/analyzer; accumulated backing history, older client behavior and actual device heap/frame/image profiling remain |
@@ -1752,3 +1754,78 @@ Exact new/revised scope: chat-server/server.js; chat-server/tests/health.test.js
 |Flutter analyzer |70 infos |-- |-- |0 errors,0 warnings |-- |
 
 Backend66.889s/36MiB; Node5.731s; Flutter37s; MySQL113.715s/14MiB. Backend skips are16 explicitly opt-in MySQL plus existing remote-IP CLI; the separate real MySQL run has no skips and includes child application2/2,19 assertions. Analyzer exit1 due70 infos, not an issue-free analyzer claim. Composer validate exits0/valid; locked audit exits0/**0 advisories/0 abandoned**. Full and omit-dev npm audits exit0/**0 vulnerabilities**. Advisory registry queries are intentional dependency-audit I/O, not production application traffic; no dependency upgrade/resolution occurred here.23 Flutter guard summaries all production_attempts=0/transport_attempts=0/external_successful_requests=0; backend request guard and Node isolation tests PASS; final load production_attempts=0/provider_requests=0. **Unexpected production application/test requests0**, no actual Firebase delivery; this is guard evidence, not packet capture. Syntax and git diff --check PASS. Evidence phase26 backend.log/xml,mysql.log/xml,composer-validate.log,composer-audit.json,npm-audit.json,npm-runtime-audit.json plus overnight phase26-node-final.log/json,phase26-flutter.log,phase26-analyze.log. Security recount unchanged0/1/1/0; production remains NOT READY. MySQL graceful shutdown and final Git state remain the final completion steps.
+
+
+### Overnight completion - Phases 27-29 - 2026-10-06, Asia/Bangkok
+
+**All requested phases attempted; safe local checkpoints complete. Production remains NOT READY.** Complete security classifications/recount are in phases22/23; reliability/performance rows distinguish source, measured local and missing staging/production evidence. No blanket production closure. Start HEAD ceb64cb, source checkpoint5949c80,25 local checkpoints before this final documentation commit. Including this commit:26 new local commits,255 unique changed/new paths, main expected28 ahead of the existing origin/main reference (two pre-existing local checkpoints). Final hash/status are verified after commit; no self-referential commit hash is inserted into this document.
+
+| Phase | Attempt / final evidence / scope |
+|---|---|
+|0 |Batch5 source/tests/ledger reviewed and checkpointcd32308; backend/Node/Flutter PASS |
+|1 |SEC09 quotas/in-flight/payload/arrays, regression PASS; da03e6d |
+|2 |SEC10 configured REST chat/dashboard authorization, red/green PASS; b904aee |
+|3 |SEC11 signing fail-closed/test-only build PARTIAL; SEC15 built cleartext prohibition PASS; 5564647 |
+|4 |SEC12 bearer/browser credential-bound revocation and rollback PASS; 6d614e2 |
+|5 |SEC14 secure storage/plaintext migration/logout failures/native compile PASS; 048b55b |
+|6 |SEC16/17/18 payload-free diagnostics/generic errors/production secret policy PASS; 98177fb |
+|7 |SEC19 source uploads/33 local Nginx cases PASS; deployed config PARTIAL; cf96764 |
+|8 |SEC20 eligible recipients/global device ownership/logout retry guards PASS; 20f46ea |
+|9 |SEC21 bounded settings/trusted links; SEC22 narrow dev dependency repair/audit0 PASS; 4474dab |
+|10 |Reliability identity/approval, wheel transactions and DB/file ordering PASS locally; b8d8016/4ceae3b/ff6c490 |
+|11 |Scoped UUID idempotent chat persistence/ACK/reconnect tests PASS; 6aad3cd |
+|12 |Atomic durable outbox/finite retry worker/eligibility/rollback PASS locally; 63fb093 |
+|13 |Bounded collection/API/browser/mobile pages and metadata PASS locally; f17f2d0 |
+|14 |Constant grouped query counts/batched eligible participant transaction PASS; 13db667 |
+|15 |Actual MySQL8 races/current chain/exact plans/three forward indexes PASS; fb0db89 |
+|16 |Owned mobile listeners, FCM init, upload deadline/image dimensions/mounted guards PASS; 034c507 |
+|17 |Finite locked/dry-run maintenance, read-only orphans and isolated test FCPATH PASS; 0998585 |
+|18 |Actual isolated synthetic dump/restore28 tables4 triggers/files PASS; production off-host recovery pending; 6c61256 |
+|19 |Private Node DB/RSS/lag/pool/socket health and CLI outbox aggregates PASS; supervisor/alarms pending; ed060e9 |
+|20 |Independent announcement authors/new forward repair, legacy redirect and existing attendance semantics PASS; e777aa6 |
+|21 |Mechanical analyzer cleanup:0 errors/0 warnings/70 infos;93 Flutter PASS; caa9a23 |
+|22 |All SEC01-22 independently classified; open/partial0/1/1/0; 5949c80 |
+|23 |All REL01-12/PERF01-12 classified; operational/device/load evidence retained; 5949c80 |
+|24 |New10/100-tenant MySQL datasets/current chain/exact bounded controller queries PASS; 5949c80 |
+|25 |Actual localhost load25/50 PASS;100 quota STOP; callback failures retained, narrow callback removal red/green; 5949c80 |
+|26 |Full backend452/Node71/Flutter93/MySQL16 PASS; analyzer0 errors/0 warnings; audits0; 5949c80 |
+|27 |Final canonical ledger/recount/blockers/test evidence and complete255-path scope manifest; this documentation commit |
+|28 |26 reviewed local checkpoints; explicit paths only, full cached review/check PASS; no push/amend |
+|29 |Owned MySQL graceful shutdown, schemas0, final clean Git/log/status after this commit; wait for manual review |
+
+Complete exact file inventory and all25 preceding commit subjects are in [KARTAR_OVERNIGHT_SCOPE.md](KARTAR_OVERNIGHT_SCOPE.md). Earlier per-phase ledgers describe changes and targeted/full verification; complete reviewed staged.diff files remain outside Git. The manifest includes every path, including itself and this audit, and excludes both unchanged/unrun tools directories. No historical migration or existing Batch4 forward migration was edited. The six new forward migrations cover privileged bearer binding, push bearer binding, chat idempotency, durable jobs, measured indexes and independent browser announcement authors. Staging must apply/verify these against an isolated restored deployment baseline before releasing dependent code.
+
+Final evidence root: C:/Users/lenovo/AppData/Local/Temp/kartar-overnight-b9ebcb8c5672403d80005471f2848070. Each phase retains red/failed attempts and final logs/XML/JSON/source diff/scope evidence where generated. Final raw load root C:/Users/lenovo/AppData/Local/Temp/kartar-local-load-3b798a7535b2946f has synthetic token file removed;75 rows/jobs retained only in result snapshots after schema drop. No production rows/real secrets embedded in repository evidence. Test-only signing/private test account material is outside Git; generated builds and ignored private website/phpunit.xml excluded. Tracked phpunit.xml.dist is canonical.
+
+Cleanup measured: explicit runtime ownership/version/datadir/loopback check returned MySQL8.0.46/127.0.0.1:3309 and **remaining_owned_schemas=0**. Private dedicated mysqladmin shutdown exited0; log records **Shutdown complete at2026-10-05T23:38:28.924995Z** (2026-10-06 Asia/Bangkok). Owned child22128 and launcher3032 gone; no3309 listener remains (TIME_WAIT is not a listener). Only pre-existing XAMPP mysqld21832 remains. Owned load PHP/Node processes absent. Runtime binary/archive/new data and evidence retained; no recursive TEMP removal attempted, and the previous automatic cleanup rejection was not retried/bypassed. Temporary MySQL logs retain two observed redo checkpoint-space pressure warnings during synthetic large inserts; no tuning/suppression or production capacity claim introduced. Existing XAMPP/Laragon data, Windows services/PATH/firewall and production hosts were unchanged.
+
+Remaining production/staging gates:
+
+- SEC11: protected real release signing identity/key recovery/provider fingerprints; actual update/installation transition from distributed debug-signed APKs. Local keystore/build was TEST ONLY.
+- SEC19: actual nginx configuration/TLS/FPM/document-root/private path denies/upload static-only/socket proxy/permissions. Candidate config/local cases do not prove deployment.
+- REL01/02 and additive migrations: actual DDL/history; no destructive historical replay; lossless non-destructive baseline/backfill/forward upgrade on an isolated restored copy, trigger/index/FK/InnoDB/charset semantics and privileges.
+- Credentials/config: privately provision non-default privileged credentials and matching internal secret; HTTPS/update distribution/proxy IP policy/secure writable/platform settings. No real secrets requested/used here.
+- REL04: independent off-host encrypted DB/uploads/config/key recovery set, authenticated checksums/manifests, coordinated consistency, retention and actual isolated restore with agreed RPO/RTO/PITR. A second local synthetic copy is not production off-host proof.
+- REL05/PERF01/REL12: installed/observed finite notification worker and cleanup scheduler, provider retries/eligibility/dead-letter/backlog/history/alerts/retention; actual-device FCM delivery/rebinding/logout. No permanent worker/scheduler started.
+- REL08/PERF09: actual-device upgrade/secure token migration/Keystore or Keychain/logout retry, killed/background/foreground lifecycle, custom-room lease removal/replay/durable offline history; backing history/frame/heap/image budgets remain partial local work.
+- REL09/PERF10: actual supervisor/startup/restart, protected metrics/alarms, disk/log/outbox rotation/backlog limits/operator recovery. CLI/local health alone does not establish availability.
+- REL10: complete upload crash reconciliation/concurrent managed-reference reuse and deployed upload/backup validation. Read-only orphan candidates are not deletion authority or a complete census.
+- PERF02/04/05/06/07/08/11: old-client rollout/reference/report filtering, representative query distributions/residual sorts/index costs, sustained multiworker staging/auth-renewal/fanout/pool acquisition/queue timeouts, contacts/dashboard/report internals and static caching/compression.50 local clients do not establish production capacity;100+ burst stages not proven, controls not weakened.
+
+| Final gate | Result |
+|---|---|
+|CRITICAL SECURITY OPEN |0 |
+|HIGH SECURITY OPEN |1, SEC11 partial/operator |
+|MEDIUM / LOW SECURITY OPEN |1 (SEC19) /0 |
+|FULL BACKEND / FULL NODE / FULL FLUTTER |PASS /PASS /PASS |
+|ANALYZER |PASS required0 errors/0 warnings;70 infos remain, exit1 |
+|MYSQL |PASS locally,16 cases/260 assertions/no skips; production schema unverified |
+|LOCAL LOAD |PASS25/50 completed;100 STOPPED expected quota, larger stages NOT PROVEN |
+|DEPENDENCY AUDITS / DIFF CHECK / SCOPE |PASS /PASS /PASS |
+|PRODUCTION NETWORK / DATABASE / SSH TOUCHED |NO /NO /NO |
+|PRODUCTION DEPLOYED / PUSH PERFORMED |NO /NO |
+|READY FOR MANUAL REVIEW |YES |
+|READY FOR STAGING/PRODUCTION VALIDATION |YES for controlled staging after operator prerequisites; production execution outside authorization |
+|PRODUCTION READY |NO |
+
+No push/deployment or additional production action is authorized by this completion record. Stop for manual review after the final local Git checkpoint.
