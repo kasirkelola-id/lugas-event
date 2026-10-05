@@ -133,20 +133,6 @@ class TenantIsolationTest extends \Tests\Support\BaseTest
 
     public function testSettingCacheIsolation()
     {
-        if ($this->db->DBDriver === 'SQLite3') {
-            $this->db->query("DROP TABLE IF EXISTS settings");
-            $this->db->query("CREATE TABLE settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                karang_taruna_id INT,
-                setting_key VARCHAR(100),
-                setting_value TEXT,
-                description VARCHAR(255),
-                created_at DATETIME,
-                updated_at DATETIME,
-                UNIQUE(setting_key, karang_taruna_id)
-            )");
-        }
-
         $tenantA = 201;
         $tenantB = 202;
 
@@ -176,20 +162,6 @@ class TenantIsolationTest extends \Tests\Support\BaseTest
 
     public function testSettingsReadIsolation()
     {
-        if ($this->db->DBDriver === 'SQLite3') {
-            $this->db->query("DROP TABLE IF EXISTS settings");
-            $this->db->query("CREATE TABLE settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                karang_taruna_id INT,
-                setting_key VARCHAR(100),
-                setting_value TEXT,
-                description VARCHAR(255),
-                created_at DATETIME,
-                updated_at DATETIME,
-                UNIQUE(setting_key, karang_taruna_id)
-            )");
-        }
-
         $tenantA = 201;
         $tenantB = 202;
 

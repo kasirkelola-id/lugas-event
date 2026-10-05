@@ -43,7 +43,7 @@ class ParticipantController extends BaseApiController
 
         $participantModel = new EventParticipantModel();
         $builder = $participantModel->builder();
-        $builder->select('event_participants.id as participant_id, event_participants.user_id, users.nama_lengkap, users.nama_panggilan, users.whatsapp, users.role_level, users.rt as user_rt');
+        $builder->select('event_participants.id as participant_id, event_participants.user_id, users.nama_lengkap, users.nama_panggilan, users.no_whatsapp as whatsapp, users.role_level, users.rt as user_rt');
         $builder->join('users', 'users.id = event_participants.user_id');
         $builder->where('event_participants.event_id', $eventId);
         $participants = $builder->get()->getResultArray();
@@ -90,6 +90,7 @@ class ParticipantController extends BaseApiController
                 $exists = $participantModel->where('event_id', $eventId)->where('user_id', $userId)->first();
                 if (!$exists) {
                     $participantModel->insert([
+                        'karang_taruna_id' => $tenantId,
                         'event_id' => $eventId,
                         'user_id' => $userId,
                         'created_at' => date('Y-m-d H:i:s')

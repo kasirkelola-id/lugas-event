@@ -41,7 +41,7 @@ $routes->group('api', function ($routes) {
     $routes->patch('events/(:num)/reopen', 'Api\EventController::reopen/$1', ['filter' => 'auth']);
     
     // Participants
-    $routes->get('events/(:num)/participants', 'Api\ParticipantController::getByEvent/$1', ['filter' => 'auth']);
+    $routes->get('events/(:num)/participants', 'Api\ParticipantController::index/$1', ['filter' => 'auth']);
     $routes->post('events/(:num)/participants', 'Api\ParticipantController::add/$1', ['filter' => 'auth']);
     $routes->delete('events/(:num)/participants/(:num)', 'Api\ParticipantController::remove/$1/$2', ['filter' => 'auth']);
     

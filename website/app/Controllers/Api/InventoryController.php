@@ -144,72 +144,25 @@ class InventoryController extends BaseApiController
             return $this->sendError('Validasi gagal', ['status' => 'Status tidak valid'], 422);
         }
 
-        $db = \Config\Database::connect();
-        // Removed transStart for now to debug tests
-
-        $forUpdate = $db->DBDriver === 'SQLite3' ? '' : 'FOR UPDATE';
-        $loan = $db->query("SELECT * FROM inventory_loans WHERE id = ? {$forUpdate}", [$id])->getRowArray();
-
-        if (!$loan) {
-
-            return $this->sendError('Data pinjaman tidak ditemukan', null, 404);
+        try {
+            $transition = (new \App\Services\InventoryLoanTransitionService(\Config\Database::connect()))
+                ->change((int) $tenantId, (int) $id, $status);
+        } catch (\App\Services\InventoryTransitionException $error) {
+            return $this->sendError($error->getMessage(), null, $error->getCode());
+        } catch (\Throwable $error) {
+            log_message('error', 'Inventory loan transaction failed');
+            return $this->sendError('Gagal memproses status peminjaman', null, 500);
         }
-
-        // Idempotency: Jika status sudah sama, anggap sukses dan hentikan eksekusi tanpa mengubah apapun
-        if ($loan['status'] === $status) {
-
+        if (!$transition['changed']) {
             return $this->sendSuccess('Status peminjaman berhasil diproses');
         }
+        // The service has durably committed; no notification runs under locks.
+        $this->notifyLoanTransition($transition['loan'], $transition['inventory'], (int) $tenantId, $status);
+        return $this->sendSuccess('Status peminjaman berhasil diubah');
+    }
 
-        $inventory = $db->query("SELECT * FROM inventories WHERE id = ? AND karang_taruna_id = ? {$forUpdate}", [$loan['inventory_id'], $tenantId])->getRowArray();
-
-        if (!$inventory) {
-
-            return $this->sendError('Barang tidak ditemukan atau akses ditolak', null, 404);
-        }
-
-        $qty = (int)$loan['quantity'];
-        $newQuantity = (int)$inventory['available_quantity'];
-        $stockChanged = false;
-
-        // Logic stok dan validasi State Machine
-        if ($status === 'approved') {
-            if ($loan['status'] !== 'pending') {
-
-                return $this->sendError('Transisi tidak valid: Hanya pinjaman pending yang dapat disetujui', null, 409);
-            }
-            if ($newQuantity < $qty) {
-
-                return $this->sendError('Stok tidak mencukupi untuk disetujui', null, 409);
-            }
-            $newQuantity -= $qty;
-            $stockChanged = true;
-        } elseif ($status === 'returned') {
-            if ($loan['status'] !== 'approved') {
-
-                return $this->sendError('Transisi tidak valid: Hanya pinjaman yang disetujui yang dapat dikembalikan', null, 409);
-            }
-            $newQuantity += $qty;
-            $stockChanged = true;
-        } elseif ($status === 'rejected') {
-            if ($loan['status'] === 'approved') {
-                // Rollback stok pembatalan
-                $newQuantity += $qty;
-                $stockChanged = true;
-            } elseif ($loan['status'] !== 'pending') {
-
-                return $this->sendError('Transisi tidak valid: Tidak dapat menolak pinjaman pada status ini', null, 409);
-            }
-        }
-
-        if ($stockChanged) {
-            $this->inventoryModel->update($inventory['id'], ['available_quantity' => $newQuantity]);
-        }
-
-        $this->loanModel->update($loan['id'], ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')]);
-
-        // Removed transComplete for now
-
+    protected function notifyLoanTransition(array $loan, array $inventory, int $tenantId, string $status): void
+    {
         // Trigger push notification to borrower
         $dbDevices = \Config\Database::connect();
         $devices = $dbDevices->table('user_devices')->where('user_id', $loan['user_id'])->get()->getResultArray();
@@ -231,6 +184,5 @@ class InventoryController extends BaseApiController
             ]);
         }
 
-        return $this->sendSuccess('Status peminjaman berhasil diubah');
     }
 }

@@ -262,16 +262,6 @@ class AbsensiTest extends \Tests\Support\BaseTest
         // Clear static cache in Testing environment
         \App\Services\SettingService::clearCache();
 
-        // Hack for SQLite: Recreate settings table to allow multiple tenant settings
-        // because historical migration made setting_key the primary key and we can't change it.
-        if ($this->db->DBDriver === 'SQLite3') {
-            $this->db->query("CREATE TABLE IF NOT EXISTS settings_new (id INTEGER PRIMARY KEY AUTOINCREMENT, setting_key VARCHAR(100), setting_value TEXT, description VARCHAR(255), created_at DATETIME, updated_at DATETIME, karang_taruna_id INT)");
-            $this->db->query("INSERT INTO settings_new (setting_key, setting_value, description, created_at, updated_at, karang_taruna_id) SELECT setting_key, setting_value, description, created_at, updated_at, karang_taruna_id FROM settings");
-            $this->db->query("DROP TABLE settings");
-            $this->db->query("ALTER TABLE settings_new RENAME TO settings");
-            $this->db->query("CREATE UNIQUE INDEX IF NOT EXISTS unique_setting_tenant ON settings (setting_key, karang_taruna_id)");
-        }
-
         // Create Tenant 2
         $this->db->table('karang_taruna')->insert([
             'id' => 2,

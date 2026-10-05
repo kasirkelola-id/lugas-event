@@ -2,7 +2,9 @@
 
 Audit date: **2026-10-05, Asia/Bangkok**. Repository: `D:\project\lugas`. Audited HEAD: `7f5986c` (`chore: version bump to 1.0.2+3 and track tools`).
 
-**Latest remediation update — Batch 3, 2026-10-05:** SEC-04 (**LEGACY SERVICE RETIRED**) and SEC-07 (**Engine.IO 6.6.9 → 6.6.10**) are **RESOLVED IN WORKTREE — NOT DEPLOYED**. Current open worktree registry: **0 CRITICAL, 6 HIGH, 8 MEDIUM, 2 LOW**. SEC-12 remains open; zero critical worktree findings does not establish production readiness. Runtime npm audit:0 vulnerabilities; dev-only brace-expansion remains1 high package family. Production is **NOT READY**; ready for next remediation batch review: **YES**. Original and earlier remediation evidence are preserved; the latest ledger is appended in section29. Production runtime/deployed dependencies remain unverified.
+**Latest remediation update — Batch 4.1, 2026-10-05:** Real disposable **MySQL 8.0.46**, bound to **127.0.0.1:3308**, passed all six MySQL cases (**99 assertions, no failures/errors/skips**) plus two existing application cases. **SEC-08: RESOLVED IN WORKTREE — NOT DEPLOYED. REL-01: RESOLVED LOCALLY — PRODUCTION SCHEMA STILL UNVERIFIED. REL-03: RESOLVED IN WORKTREE — NOT DEPLOYED.** Open security counts are **0 CRITICAL, 5 HIGH, 8 MEDIUM, 2 LOW**; only SEC-08 was removed from the open security registry. Backend/Jest/Flutter regressions pass; Flutter analysis has zero errors and the unchanged 16 warnings/158 infos. Production remains **NOT READY**. MySQL proof permits next-batch review, but Batch 5 was not started. HEAD remains `ad4ff37`; no commit, push or deployment. Earlier ledgers remain historical snapshots; the appended Batch 4.1 ledger supersedes their unproven local MySQL status.
+
+**Historical remediation update — Batch 3, 2026-10-05:** SEC-04 (**LEGACY SERVICE RETIRED**) and SEC-07 (**Engine.IO 6.6.9 → 6.6.10**) are **RESOLVED IN WORKTREE — NOT DEPLOYED**. Current open worktree registry: **0 CRITICAL, 6 HIGH, 8 MEDIUM, 2 LOW**. SEC-12 remains open; zero critical worktree findings does not establish production readiness. Runtime npm audit:0 vulnerabilities; dev-only brace-expansion remains1 high package family. Production is **NOT READY**; ready for next remediation batch review: **YES**. Original and earlier remediation evidence are preserved; the latest ledger is appended in section29. Production runtime/deployed dependencies remain unverified.
 
 **Historical remediation update — Batch 2, 2026-10-05:** SEC-02 is **RESOLVED IN WORKTREE — NOT DEPLOYED**. Current open worktree security registry: **1 CRITICAL, 7 HIGH, 8 MEDIUM, 2 LOW**. The remaining critical is SEC-04. SEC-07 and SEC-12 remain open. Production is **NOT READY**; ready for Batch 3 review: **YES**. Historical audit and Batch 0/1 evidence below are preserved; the latest Batch 2 ledger is appended at the end of section 29. No deployed fix is asserted.
 
@@ -434,7 +436,7 @@ Canonical security registry; severity reflects source/reproduced scope, with dep
 | SEC-05 | HIGH | CSRF filter off; superadmin DELETE/reset/status/approval via GET | Enable web CSRF, convert mutations to POST/DELETE, require tokens; cross-site/session regression |
 | SEC-06 | HIGH | Created password=username with no forced change (reproduced); seeded admin default, shared reset secret, six-character password policy | Random single-use reset/invitation, forced change; eliminate production defaults, check ownership policy; no credentials printed |
 | SEC-07 | HIGH, historical | Installed/locked runtime engine.io6.6.9 had unauthenticated transport-upgrade DoS. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch3 | Engine.IO6.6.10 targeted override under unchanged Socket.IO4.8.3; only Engine.IO npm lock entry changes; runtime audit0; polling/upgrade and full security regression pass |
-| SEC-08 | HIGH | Inventory stock/loan writes lack transaction despite FOR UPDATE | Restore scoped transaction/locks; last-stock, duplicate-return and rollback MySQL tests |
+| SEC-08 | HIGH, resolved in worktree | Historical autocommit stock/loan defect. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch 4.1: existing scoped transaction/checked writes passed real MySQL approval/return/decision races and forced rollback | MySQL 8.0.46; InnoDB; one last-stock approval; one return increment; one opposing decision; rollback with no notification. Open HIGH count reduced only for SEC-08 |
 | SEC-09 | HIGH | Most API mutations/registration/uploads lack rate controls; unbounded arrays and socket join/auth bursts | User/IP limits and caps; test multiple connections, payload boundaries and saturation rejection |
 | SEC-10 | HIGH | REST chat omits chat permissions; dashboard omits role/target visibility checks | Explicit gates + role-target filters; deputy/denied role and targeted announcement tests |
 | SEC-11 | HIGH | Existing release artifact is debug signed | Protected production signing identity + tested upgrade plan; artifact certificate gate |
@@ -498,9 +500,9 @@ Needed MySQL dataset: migrations faithfully applied to a disposable MySQL 8 data
 
 | ID | Severity | Finding / state | Required evidence or minimal repair |
 |---|---|---|---|
-| REL-01 | HIGH | MySQL global-user/participant schema drift; SOURCE | Fresh and restored MySQL migration suite; actual DDL |
+| REL-01 | HIGH, resolved locally; production unverified | **RESOLVED LOCALLY — PRODUCTION SCHEMA STILL UNVERIFIED**, Batch 4.1: fresh chain, stricter synthetic upgrade, preserved rows, equivalent DDL/index/FK semantics and application writes passed MySQL 8.0.46 | Production DDL was not inspected. Historical ADD COLUMN nullability assumptions corrected in the latest ledger; no production NOT NULL guarantee is claimed |
 | REL-02 | HIGH | Historical migration truncates real tables; SOURCE | Never replay on data; validate a non-destructive upgrade/backfill strategy |
-| REL-03 | MEDIUM | Participant GET route/function/field mismatch; SOURCE | Route test and schema-correct query |
+| REL-03 | MEDIUM, historical | Participant GET route/function/field mismatch. **RESOLVED IN WORKTREE — NOT DEPLOYED**, narrow Batch 4 repair | Existing index method routed; no_whatsapp selected as whatsapp; authenticated route/tenant/phone regression passes |
 | REL-04 | HIGH readiness gap | Backup/restore evidence absent | Off-host DB/uploads/config backups, tested restore, agreed RPO/RTO |
 | REL-05 | MEDIUM | Chat persistence/notification/broadcast ordering and no durable retry | Idempotent persistence + reliable postcommit notification |
 | REL-06 | MEDIUM | REST membership approval/history and registration multiple writes are not atomic | Transaction with state/ownership checks; forced second-write rollback |
@@ -1080,3 +1082,246 @@ Original/deployed-unknown baseline remains **4 critical,7 high,9 medium,2 low**.
 | Production ready | **NO** |
 
 Batch3 change record: **11 paths touched**, including one deletion and two new test files. `website/app/Libraries/ChatServer.php` deleted; `website/app/Commands/WebsocketServe.php` replaced with retirement stub; `website/composer.json`/`composer.lock` remove unused Ratchet subtree; `website/README.md` documents retirement; new `website/tests/LegacyRealtimeRetirementTest.php`; `chat-server/package.json`/`package-lock.json` patch only Engine.IO; `chat-server/server.js` changes only four unsafe error-log arguments relative to Batch2; new `chat-server/tests/transport-security.test.js`; this canonical audit updated. A batch-start hash inventory distinguishes these changes from earlier uncommitted remediation. Existing Batch0/1/2 tests/mobile/backend authorization files, both tools directories, migrations and unrelated dependencies remain unchanged in this batch. Git status/name-status/stat/check and lock entry comparisons were reviewed; cumulative Git output includes prior batches and untracked files. **No commit, push or deployment. Await review before additional remediation.**
+
+
+### Remediation Batch 4 — Inventory Atomicity + MySQL Schema Parity — worktree only, 2026-10-05
+
+Scope: explicitly authorized SEC-08 transaction/ownership/notification repair, REL-01 migration-chain analysis and forward alignment, plus the request's extremely narrow REL-03 participant route/phone exception. Work started from the clean local checkpoint **ad4ff37** (`fix(security): harden tenant isolation and realtime access`). Its failed push was not retried or treated as a prerequisite. The checkpoint was not recreated/amended. No other finding, queue, pool, rate, pagination, signing, credential or CSRF repair occurred. No production probe, SSH, production migration, seeding, deployment, commit or push occurred. Historical audit and earlier ledgers remain snapshots.
+
+**SEC-08: PARTIAL. REL-01: OPEN / NOT PROVEN. REL-03: RESOLVED IN WORKTREE — NOT DEPLOYED.** Source changes and serial SQLite regressions do not establish MySQL row-lock correctness or deployed schema parity. Open security counts remain **0 critical, 6 high, 8 medium, 2 low**. Production remains **NOT READY**.
+
+Inventory state machine and preserved semantics:
+
+| Request / existing state | Stock effect | Loan effect | Notification | Authorization / result |
+|---|---|---|---|---|
+| pending → approved | Subtract quantity if sufficient | approved | Existing borrower notification after commit | inventory.approve + selected tenant owns inventory |
+| pending → rejected | None | rejected | After commit | Same gate |
+| approved → returned | Add quantity, bounded by total | returned | After commit | Same gate |
+| approved → rejected | Add quantity, bounded by total | rejected | After commit | Same gate; intentional cancellation preserved |
+| approved/returned/rejected → identical status | None | None | None | Ownership first; existing idempotent success |
+| Other transition to approved/returned/rejected | None | None | None | 409 conflict |
+| Target pending/unknown | None | None | None | Existing 422 target validation |
+| Foreign/missing loan, including same status | None | None | None | 404 before successful state disclosure |
+
+Only inventory.approve roles can change status; ordinary borrower independent-return permission was not redesigned. Pending borrowing still does not reserve stock. Existing successful response text for changed and unchanged requests is preserved.
+
+[InventoryLoanTransitionService.php](website/app/Services/InventoryLoanTransitionService.php) starts a real transaction before reads, observes the scoped source state, then locks **loan → inventory** consistently. The loan uses an inventory tenant ownership predicate; the inventory lock repeats the selected tenant constraint. MySQL uses FOR UPDATE; SQLite does not pretend to implement that lock. State/quantity/stock are reevaluated under locks. Quantity must be positive and existing/resulting stock must stay within zero and total. Conditional stock and loan writes require success and exactly one affected row, then transaction status and commit are checked. Uncommitted paths roll back. An outer transaction is refused because a nested CI transaction cannot promise a durable commit before notification. Same-status read-only transactions release locks through rollback, without writes/notification.
+
+If two competing decisions both observed pending, a different locked state yields409 rather than reinterpreting a losing rejection as cancellation. A later request that first observes approved may still intentionally reject it. There is no client expected-status protocol or guarantee that arbitrarily timed requests share a source snapshot. The MySQL opposing-decision fixture synchronizes their initial observations to exercise this boundary; no application sleep/retry was added.
+
+[InventoryController.php](website/app/Controllers/Api/InventoryController.php) calls the existing borrower notification only after the service successfully commits a changed result. A narrow protected notification seam observes committed state and transaction depth0 in tests. No notification is invoked on unchanged/rollback. This verifies local ordering, not actual FCM delivery/durable retries; synchronous fan-out remains. Domain failures preserve404/409/422; DB failures return generic500 and log a fixed label without raw SQL/driver details.
+
+Before/after proof: three safe foreign same-status cases were added **before** changing runtime PHP. They failed against the old controller: **3 tests,6 assertions,3 failures,0 errors**, old200 versus required404. They now pass with foreign stock unchanged. [InventoryAtomicityTest.php](website/tests/Api/InventoryAtomicityTest.php) has **18 serial cases**: those ownership negatives, all four transitions, three owned repeats, last-stock sequential approvals, sequential duplicate return, insufficient/invalid transition, corrupt restock upper bound, forced second-write failure, zero-affected-row stock/loan failures and nested-transaction refusal. Actual SQLite triggers abort/ignore writes; tests execute the controller/service, not a mocked transition. Rollback preserves both records and sends no notification. The postcommit probe checks depth0 and newly stored status/stock. **Serial tests are not concurrency proof.**
+
+Local MySQL runtime and limits:
+
+| Check | Result |
+|---|---|
+| Local MySQL 8 available | **NO** |
+| Existing XAMPP engine | **MariaDB10.4.32**, not MySQL8; not used as substitute |
+| Local TCP3306 listener | None found |
+| Docker Linux engine | Unavailable: dockerDesktopLinuxEngine named pipe absent |
+| Actual MySQL concurrency | **0 passed,0 failed,4 NOT RUN** |
+| Fresh full MySQL migration | **NOT RUN** |
+| Upgrade-only-new MySQL migration | **NOT RUN** |
+| Actual SHOW CREATE TABLE / SHOW INDEX | **NOT RUN**; no measured MySQL schema/index evidence |
+| Production schema/runtime | **UNVERIFIED**, no connection made |
+
+The opt-in path is documented in [tests/MySQL/README.md](website/tests/MySQL/README.md). [DisposableMySQL.php](website/tests/_support/DisposableMySQL.php) requires testing environment, explicit opt-in/port/user and fixed loopback host; it rejects MariaDB/non-8 versions. It generates a new random `kartar_batch4_test_<16 hex>` schema with plain CREATE, never adopts an existing database, and drops only its own successfully created schema. It does not inherit application credentials or print/pass credentials as process arguments. Four guard unit cases run without connecting. A disabled worker exits before bootstrap/DB startup.
+
+[InventorySchemaMySQLTest.php](website/tests/MySQL/InventorySchemaMySQLTest.php) contains six MySQL-only cases: two approvals against stock1, two returns, opposing pending decisions, a forced second-write MySQL trigger failure, full fresh migrations, and synthetic upgrade row preservation/equivalent four-table DDL. Independent PHP/MySQL workers invoke the actual transition service; the observation barrier/deadline is test-only. Inventory/loans must use InnoDB. Intended TEMP JSON captures statuses/stock/responses/version and SHOW CREATE/INDEX. Historical migrations run only to construct a newly empty baseline; after seeding, the upgrade applies **only the new migration**. The fixture is linted and its boundary guards tested, but **actual MySQL execution remains unverified**. Skipped cases produced no race/schema proof.
+
+Migration timeline, **SOURCE**: migrations creating/altering/populating the four target tables. Other migrations referencing users as a foreign parent do not modify these target columns/keys and remain unchanged.
+
+| Migration | Fields / keys / data | Driver distinction / later change |
+|---|---|---|
+| 2026-08-21-205028 CreateUsersTable | Unsigned auto id PK; required full name; nullable nickname; username100 initially unique; password255; nullable no_whatsapp20; role/status; timestamps | Global username key replaced later on MySQL |
+| 2026-08-22-070334 CreateEventParticipantsTable | Unsigned id PK; event/user IDs; unique(event,user); cascade FKs; created_at | Tenant added later |
+| 2026-08-22-082101 AddPasswordMustChangeToUsers | password_must_change default0 | SQLite down skips drop |
+| 2026-08-27-112401 CreateSettingsTable | setting_key100 PK; TEXT value; description255; timestamps; default setting | Key-only PK later diverges from MySQL |
+| 2026-08-27-180000 AddRtToUsersTable | rt default1 | SQLite down skips drop |
+| 2026-08-27-183000 ModifyRolesEnum | users six-role ENUM default anggota | MySQL-only ALTER |
+| 2026-09-01-054552 AddTenantIdToAllTables | Required unsigned tenant; MySQL tenant FKs; users unique(username,tenant) replaces global key | **Historical TRUNCATE of eight tables**; never replay on real data. SQLite skips FK/unique replacement |
+| 2026-09-02-120000 UpdateUsersEnumForSQLiteTest | PRAGMA ignore_check_constraints | SQLite testing only |
+| 2026-09-02-130000 CreateOrganizationMembersTable | Unsigned id PK, user/tenant; nine-role enum, active/joined/timestamps; unique(user,tenant); legacy membership backfill | MySQL cascade user/tenant FKs; SQLite skips FKs; empty legacy tenants skipped in backfill |
+| 2026-09-03-064118 AddUsernameToOrganizationMembers | Nullable username100; backfill; unique(tenant,username) | MySQL JOIN versus SQLite correlated update |
+| 2026-09-03-065633 FixSQLiteUsersUniqueConstraint | Users rebuild with nullable legacy tenant and unique(username,tenant) | **SQLite testing only**; no original MySQL nullable-user counterpart |
+| 2026-09-03-072554 AddProfilePhotoToUsers | Nullable profile_photo255 | SQLite down skips drop |
+| 2026-09-04-060017 UpdateOrganizationMembersRoles | Eleven-role enum including deputy secretary/treasurer | MySQL-only ALTER |
+| 2026-09-04-062000 FixSettingsTableFk | Remove settings tenant FK to allow global0 | MySQL-only; SQLite had no such FK |
+| 2026-09-07-024618 AddApprovalStatusToOrganizationMembers | pending/approved/rejected enum default approved | Existing memberships inherit approved default |
+| 2026-09-07-032712 InsertSuperadminDummyUser | Dummy tenant/user0 | SQLite testing only |
+| 2026-09-09-063655 FixSettingsTablePrimaryKey | Signed auto INT id PK; unique(key,tenant) | MySQL-only; SQLite retained key-only PK |
+| 2026-09-16-065925 CreateAndroidUpdateSettings | Global0 metadata settings | Data insert; no DDL |
+| **2026-10-05-000001 AlignGlobalIdentityAndSettingsSchema** | **New:** nullable MySQL legacy user tenant; SQLite settings id PK + unique(key,tenant) | Forward-only; historical migrations unchanged |
+
+Final expected schema, **SOURCE / MySQL NOT PROVEN**:
+
+| Table | Relevant expected fields / keys | Current write/authority rule |
+|---|---|---|
+| users | Unsigned auto id PK; legacy tenant unsigned INT **NULL DEFAULT NULL**; existing fk_users_tenant and unique(username,legacy tenant) retained; other fields preserved | Global identity inserts omit legacy tenant; membership supplies organization/role |
+| organization_members | Unsigned id PK; required user/tenant; unique(user,tenant); unique(tenant,nullable username); MySQL cascade user/tenant FKs; eleven-role enum; approval enum default approved | Batch1 active approved membership + active user/organization remains authoritative |
+| event_participants | Unsigned id PK; required unsigned event/user/tenant; unique(event,user); existing cascade FKs | Insert tenant from authenticated scoped event context, ignoring body override |
+| settings | MySQL signed auto INT id PK; key100/value/description/timestamps; required unsigned tenant; unique(key,tenant); no tenant FK | Global0 and multiple tenants can share a key; id updates and exact key/tenant lookup |
+
+The nullable users legacy tenant does not invent global username uniqueness: the existing (username,tenant) index stays, with membership usernames for tenant login. No membership authority or login policy is reverted. SQLite now matches application settings identity/uniqueness, but its types/enums/FKs/locks still do not prove MySQL equivalence.
+
+New migration: [2026-10-05-000001_AlignGlobalIdentityAndSettingsSchema.php](website/app/Database/Migrations/2026-10-05-000001_AlignGlobalIdentityAndSettingsSchema.php).
+
+- **MySQL up:** relax users legacy tenant to unsigned INT NULL/defaultNULL, preserving rows/values/FK/index definitions. No membership backfill or automatic approval. MySQL settings already has the intended September9 PK/key and remains unchanged. DDL may implicitly commit/take metadata locks; successful ALTER execution remains unproven.
+- **SQLite up:** users already permits NULL through historical test rebuild. Checked transactional create → copy every original value/timestamp → **DROP old settings table** → rename → commit introduces id/key-tenant uniqueness. This is a lossless table rebuild, not a claim of zero DROP DDL. No truncation/delete/filter/value rewrite. An invalid-copy test proves rollback retains original rows/table and removes the temporary replacement. Already-aligned settings only ensures its unique index. IDs are newly generated because the old schema had none.
+- **Preconditions:** expected prior migrations/column types, valid nonnull settings tenants and no surrounding SQLite transaction. Before rollout, verify DDL/FKs/indexes and pending migration history on a restored copy. Legacy values and memberships remain; no tenant backfill is required. Never blindly replay pending destructive historical migrations on real data.
+- **down:** deliberately refuses lossy rollback. New global users cannot safely become tenant-required, and repeated global/tenant keys cannot fit the old key-only PK. Use an independently verified backup/restore or reviewed forward correction; do not invent tenant values or delete rows.
+
+[SchemaParityRegressionTest.php](website/tests/Api/SchemaParityRegressionTest.php) has six cases: actual create/register without legacy tenant; settings id/global0/repeated tenant keys; old-schema lossless alignment; invalid-copy rollback; down refusal; and participant insert/list tenant/phone correctness. REL-03 qualifies under the explicitly allowed extremely narrow/isolated exception: GET routes to the existing `index`, and `no_whatsapp as whatsapp` preserves the response field. POST supplies the schema-required selected tenant; spoofed body tenant/foreign member do not create foreign participation and a foreign viewer is denied. No participant approval/role redesign occurred.
+
+Attendance/tenant tests now use the real migrated settings table instead of dropping/recreating adhoc fixtures. Two existing inventory setups reset only the test transaction flag left dirty by suppressed historical SQLite DDL failures. Shared Batch0 BaseTest/cURL/FCM/network guards and production transaction behavior are not bypassed.
+
+Final verification:
+
+| Run | Tests / passed | Assertions | Failures | Errors | Skipped | Evidence |
+|---|---:|---:|---:|---:|---:|---|
+| Targeted inventory/schema/existing inventory/guard/MySQL | **41 /35** | **175** | **0** | **0** | **6** |2.850s;18MiB; six MySQL-only skips |
+| Full PHPUnit | **230 /223** | **1,186** | **0** | **0** | **7** |21.311s;28MiB; six new MySQL skips + existing remote-IP CLI skip |
+| Full Node Jest | **51 /51** |Not emitted | **0** |0 |0 |5 suites;4.705s; source/tests unchanged |
+| Full Flutter tests | **56 /56** |Not emitted | **0** |0 |0 |15 files; final elapsed4s |
+| Flutter analyze |— |— |— | **0 analysis errors** |— |**16 warnings,158 infos;174 issues; exit1**, baseline unchanged |
+| PHP syntax |16 changed/new PHP files |— |0 syntax failures |0 |— |PASS |
+| MySQL concurrency |0 /0 |— |0 |— |4 NOT RUN |No measured concurrency proof |
+| MySQL fresh/upgrade schema |0 /0 |— |0 |— |2 NOT RUN |No measured DDL/index proof |
+| Git whitespace |— |— |0 |— |— |git diff --check PASS |
+
+Preliminary test setup errors (framework seed-method naming collision, missing password confirmation, protected-property assignment, fixture property collision and incorrect lint path) were corrected before final passing checks. They are not application defects or final-suite results. Wider upgrade-row/DDL evidence in the skipped fixture was linted; it does not count as executed MySQL verification.
+
+Network isolation: **15 Flutter guard summaries**, all unexpected **production_attempts=0, transport_attempts=0, external_successful_requests=0**. Existing deliberate negative controls still block before I/O. Backend cURL/FCM mocks remain; Node uses ephemeral loopback with mocked PHP/FCM/SQL. **Unexpected production application/test attempts:0. External successful application/test requests:0.** No real Firebase delivery, production HTTP or dependency download occurred in Batch4. This is source/guard/test evidence, not packet capture.
+
+Commands: targeted/full PHPUnit with testing/FCM mock; full Jest; Flutter test/analyze without package resolution; PHP lint; disabled worker/guard tests; local MySQL/listener/Docker availability checks; Git status/name-status/stat/check. TEMP logs: `kartar-batch4-targeted.log`, `kartar-batch4-phpunit.log`, `kartar-batch4-node.log`, `kartar-batch4-flutter-tests.log`, `kartar-batch4-flutter-analyze.log`. Historical migrations were executed only on testing in-memory/disposable SQLite fixtures. Existing tools scripts were not executed.
+
+| Security severity | Before Batch4 | Resolved here | After Batch4 open |
+|---|---:|---|---:|
+| Critical |0 |None | **0** |
+| High |6 |None; SEC-08 partial pending MySQL proof | **6** |
+| Medium |8 |None | **8** |
+| Low |2 |None | **2** |
+
+REL-03 is a separate reliability finding, so its local resolution does not subtract a security finding. REL-01 stays open. Other findings and the performance registry remain unchanged. Original/deployed-unknown security baseline remains4/7/9/2.
+
+| Final gate | Result |
+|---|---|
+| SEC-08 inventory atomicity | **NOT PROVEN end-to-end; PARTIAL IN WORKTREE** |
+| Tenant ownership before idempotent response | **PASS**, foreign same-status404 |
+| Transaction / lock order | **ADDED**, loan then inventory; MySQL execution unverified |
+| Transaction rollback / second-write failure | **PASS locally**; MySQL counterpart NOT RUN |
+| Notification after commit | **PASS locally**, committed state/depth0; none on rollback |
+| Last-stock approval / duplicate return / opposing-decision races | **NOT PROVEN on MySQL**; serial tests pass |
+| MySQL concurrency | **NOT PROVEN**, four cases NOT RUN |
+| Fresh MySQL migration | **NOT PROVEN**, NOT RUN |
+| Upgrade MySQL migration | **NOT PROVEN**, NOT RUN |
+| MySQL schema parity / REL-01 | **PARTIAL source repair; OPEN / NOT PROVEN** |
+| Production schema verified | **NO** |
+| REL-03 | **RESOLVED IN WORKTREE — NOT DEPLOYED** |
+| Full backend | **PASS**, skips disclosed |
+| Full Node | **PASS** |
+| Full Flutter | **PASS tests / 0 analyzer errors**; baseline warnings/infos remain |
+| Test network isolation | **PASS** |
+| Ready for next batch | **NO — await MySQL verification and review** |
+| Production ready | **NO** |
+
+Batch4 change record: **18 paths touched**. Runtime: `website/app/Controllers/Api/InventoryController.php`; new `app/Services/InventoryLoanTransitionService.php` and `InventoryTransitionException.php`; `app/Controllers/Api/ParticipantController.php`; `app/Config/Routes.php`; new `app/Database/Migrations/2026-10-05-000001_AlignGlobalIdentityAndSettingsSchema.php`. Tests: new `tests/Api/InventoryAtomicityTest.php`, `SchemaParityRegressionTest.php`, `tests/DisposableMySQLGuardTest.php`, `tests/MySQL/InventorySchemaMySQLTest.php`, `tests/MySQL/README.md`, `tests/_support/DisposableMySQL.php`, `mysql_inventory_worker.php`; existing `tests/Api/InventoryIntegrityTest.php`, `InventoryLoanTest.php`, `AbsensiTest.php`, `TenantIsolationTest.php`. Documentation: this canonical audit, preserving historical sections with registry annotations.
+
+Scope review: eight tracked modifications including the report, ten new files; tracked diff statistics exclude new files. Both tools directories, historical migrations, dependency manifests/locks, Node/mobile source, Batch0 transport guards, Batch1 authorization runtime and Batch2/3 realtime behavior remain untouched. Git status/name-status/stat/check reviewed. Local HEAD remains **ad4ff37**; nothing staged. **No commit, push or deployment. Await review.** MySQL8 execution and later sanitized production DDL remain required before sign-off.
+
+### Remediation Batch 4.1 — Real MySQL 8 Concurrency + Schema Verification — 2026-10-05, Asia/Bangkok
+
+**MEASURED: SEC-08 RESOLVED IN WORKTREE — NOT DEPLOYED. REL-01 RESOLVED LOCALLY — PRODUCTION SCHEMA STILL UNVERIFIED. REL-03 remains RESOLVED IN WORKTREE — NOT DEPLOYED.** This ledger supersedes Batch 4's local MySQL NOT PROVEN status. Production remains **NOT READY**. No Batch 5 work, production connection, production migration, SSH, commit, push or deployment occurred. Existing Batch 4 production code and the forward migration were reused without redesign.
+
+Runtime discovery checked PATH, Windows services, Program Files/ProgramData/MySQL Installer locations, portable/application/download/TEMP directories, Laragon and XAMPP separately. No MySQL service or usable MySQL 8 binary was found. Laragon's `mysql-8.0.30-winx64` directory contained only `my.ini`; its existing data was not adopted or changed. XAMPP's binary identified itself as **10.4.32-MariaDB** and was excluded from verification. Docker's Linux engine was unavailable.
+
+An isolated [Oracle MySQL Community ZIP](https://dev.mysql.com/downloads/mysql/8.0.html) was downloaded over HTTPS, following the [noinstall ZIP instructions](https://dev.mysql.com/doc/refman/8.0/en/windows-install-archive.html). Published/downloaded MD5 matched `003f527d5df61b663ff191038cd676bd`. Only the new TEMP directory was initialized; no Windows service, system installation, PATH change, firewall rule or existing MySQL/MariaDB configuration was changed. MySQL X Protocol was disabled. `SELECT VERSION(), @@bind_address, @@port` returned **8.0.46 / 127.0.0.1 / 3308**, and netstat confirmed the listener bound only to loopback. A newly generated local test credential was used, with schema permissions restricted to the disposable namespace. Credentials are absent from test evidence and this report.
+
+| MySQL runtime | Result |
+|---|---|
+| MySQL 8 available for execution | **YES**, portable runtime; stopped after verification |
+| Exact version | **8.0.46**, MySQL Community Server GPL |
+| Host / port | **127.0.0.1 / 3308** |
+| MariaDB used | **NO** |
+| Existing application database adopted | **NO** |
+| Production database/host accessed | **NO** |
+
+The existing harness was audited before execution. `DisposableMySQL` now requires both `ENVIRONMENT` and `CI_ENVIRONMENT` to be testing, plus explicit enable/port/user. Its host is hardcoded to 127.0.0.1, without application credentials/DSN fallback. It rejects non-8 versions and MariaDB before CREATE. Random `kartar_batch4_test_<16 hex>` names use plain CREATE DATABASE, never IF NOT EXISTS; an existing schema is never adopted. DROP is limited to its validated schema after successful creation. The actual worker is `website/tests/_support/mysql_inventory_worker.php`, not the pasted `tests/mysql_inventory_worker.php` path. Its independent version gate now explicitly rejects MariaDB too.
+
+Narrow test-only completions: record numeric MySQL errors; exercise forced rollback through the real controller with an in-memory notification probe; reuse two existing application cases via a guarded child PHPUnit bootstrap; verify three-tenant settings coexistence and both InnoDB engines; capture before/after upgrade rows and DDL; compare DDL while ignoring constraint/index names and AUTO_INCREMENT counters; add a foreign-event POST negative assertion. No retries or sleeps were added to production code. Existing read barriers remain test orchestration only.
+
+Initial attempts are not final proof: temporary-server localhost account setup first failed, trigger creation initially lacked binary-log permission, and the old participant NOT NULL expectation failed against actual DDL. Only this new TEMP server received `log_bin_trust_function_creators=1`; no unrelated server setting changed. A diagnostic listener initially called a Query error accessor without a populated error and was corrected to read connection error codes during DBQuery. The final six-case run below was clean. Initial logs remain preserved where generated.
+
+| MySQL-only case | Result | Actual evidence |
+|---|---|---|
+| Approval race | **PASS** | Stock1, two loans/connections; HTTP-equivalent codes409/200; one approved, one pending; final stock0 |
+| Duplicate return race | **PASS** | Codes200/200; exactly one changed=true; final returned; final stock1, restored once |
+| Approve vs reject | **PASS** | Codes409/200; one decision; final rejected, stock1; no partial stock mutation |
+| Forced rollback | **PASS** | Real controller500; trigger error1644; loan still pending, stock still1; notifications empty |
+| Entire fresh migration chain | **PASS** | Newly empty schema; complete current App chain; four SHOW CREATE TABLE and SHOW INDEX results preserved |
+| Upgrade only new forward migration | **PASS** | Second disposable synthetic legacy schema; seeded rows preserved; final relevant DDL equivalent to separately migrated fresh schema |
+| MySQL cases executed / passed / failed / errors / skipped | **6 / 6 / 0 / 0 / 0** | **99 assertions**, 42.712s, 12MiB |
+| Additional existing application cases on MySQL | **2 / 2 PASS** | Real create/register and participant FeatureTest paths; **19 assertions**, no skips |
+
+Final race evidence recorded **no lock/deadlock error codes**. The only intentional database error was trigger SIGNAL **1644**. Lock/deadlock codes would be preserved by the same worker diagnostic path; no broad automatic retries hide a failed transition. This run does not claim to have induced a deadlock.
+
+| Real resulting schema / write behavior | Verified result |
+|---|---|
+| users.karang_taruna_id | Unsigned INT, **nullable/default NULL**; legacy tenant FK and unique(username,tenant) remain. Actual API create/register omit the column, insert successfully and leave it NULL |
+| organization_members | Unsigned id PK; required user/tenant; unique(user,tenant), unique(tenant,username); cascade user/tenant FKs; eleven-role ENUM and approval ENUM remain; create membership approved and registration membership pending in tenant101 |
+| event_participants | Unsigned id PK; required event/user; unique(event,user); event/user/tenant cascade FKs. Legacy tenant column is **nullable/default NULL in actual MySQL**, but the application always supplied authenticated tenant101 |
+| Participant tenant boundaries | Same-tenant member inserted; spoofed body tenant102 ignored; foreign member excluded; foreign viewer403; foreign-event POST403 with zero inserted foreign rows |
+| settings | Signed auto INT id PK; unique(setting_key,karang_taruna_id); legacy tenant column unsigned INT nullable/default NULL; no tenant FK. Same key with tenant0/101/102 coexists as three distinct rows/ids |
+| inventories engine | **InnoDB** |
+| inventory_loans engine | **InnoDB** |
+| Fresh / upgrade relevant schema equivalent | **YES**, semantic names normalized; columns, keys and FK definitions retained |
+| Existing users/memberships/participants/settings rows preserved | **YES**, exact row-array equality; non-user relevant DDL unchanged |
+
+**Correction to earlier SOURCE assumptions:** historical `AddTenantIdToAllTables` omits an explicit `null` option. In installed CodeIgniter Forge, CREATE TABLE defaults missing nullability to NOT NULL, but ADD COLUMN leaves it unspecified; real MySQL therefore creates these legacy tenant columns as nullable. The earlier assertion that migrated MySQL users/participants/settings necessarily had required tenants was inaccurate. Historical ledgers preserve that assumption as a snapshot; it is not asserted as current measured DDL. The stricter previously deployed users NOT NULL scenario is explicitly synthesized only in the empty baseline fixture, before seeding; its forward migration demonstrably changes Null=NO to YES/default NULL while preserving values and FK/index semantics. This proves the forward repair also handles that stricter deployment, without claiming production actually has it. No participant/settings nullability hardening or historical migration edit was introduced.
+
+The settings proof covers intended global0 and explicit tenant contexts. It does not claim NULL-tenant uniqueness or new global username uniqueness; MySQL nullable composite unique keys retain their existing semantics. Membership remains the application authority.
+
+Evidence retained outside the repository at:
+
+`C:\Users\lenovo\AppData\Local\Temp\kartar-batch41-2e356db4f25e415a9f8f752acd96d3c4`
+
+Core artifacts: `mysql-final.log`, `mysql-final.xml`, `phpunit-full.log/xml`, `jest-full.log/json`, `flutter-full.log`, `flutter-analyze.log`, `runtime-cleanup.txt`, and `evidence/` synthetic JSON/application logs/XML. Final inventory snapshots: `kartar_batch4_barrier_8223e59c6dc49579.json` (approval), `kartar_batch4_barrier_7d1c86e576ecb1a8.json` (return), `kartar_batch4_barrier_48a4496c7543c6fe.json` (opposing decisions). Fresh summary: `kartar_batch4_test_2579b8de9109a7ad_fresh.json`; upgrade rows/DDL: `kartar_batch4_test_08efca4f8b55024a_upgrade.json`. Four-table raw SHOW CREATE/INDEX captures and forced-rollback JSON are preserved alongside them. Synthetic rows only; no real credentials or production data are embedded.
+
+| Regression after successful MySQL proof | Tests / passed | Assertions | Failures | Errors | Skipped |
+|---|---:|---:|---:|---:|---:|
+| Full backend PHPUnit | **230 / 223** | **1,188** | **0** | **0** | **7** |
+| Full Node Jest | **51 / 51**, 5 suites | Not emitted | **0** | **0** | **0** |
+| Full Flutter test | **56 / 56** | Not emitted | **0** | **0** | **0** |
+| Flutter analyze | 174 existing issues | — | — | **0 errors** | — |
+
+Backend skips are six intentionally opt-in MySQL cases plus the existing remote-IP CLI case; these do not replace the separate successful MySQL run. PHPUnit25.715s/28MiB; Jest6.372s; Flutter7s. Flutter analyze has **16 warnings, 158 infos**, unchanged from Batch 4, and exits1; it is **not** an issue-free analyzer run. Commands retained existing isolation: testing/FCM mock for backend, mocked Node SQL/PHP/FCM and loopback fixtures, Flutter `--no-pub` tests/analyze. **15 Flutter guard summaries** report production_attempts=0, transport_attempts=0, external_successful_requests=0. Backend request guards passed. **Unexpected production application/test requests: 0.** The Oracle runtime download was intentional setup network I/O, not a production application request; no real Firebase delivery occurred. This remains guard/test evidence, not packet capture.
+
+| Security registry | Before Batch 4.1 | After Batch 4.1 |
+|---|---:|---:|
+| Critical | **0** | **0** |
+| High | **6** | **5** |
+| Medium | **8** | **8** |
+| Low | **2** | **2** |
+
+Only SEC-08 closed in this security count. REL-01/REL-03 belong to the separate reliability registry. No unrelated finding was reduced.
+
+Cleanup: harness-owned databases were dropped after each case. Before shutdown, SHOW DATABASES contained only MySQL system schemas; no disposable schema remained. The TEMP server received a graceful mysqladmin shutdown; its log records **Shutdown complete** and only the existing XAMPP mysqld process remained. **Automatic approval review rejected recursive removal of the TEMP runtime files with the stated reason “blocked by policy”; runtime/archive/data files were retained, with the server stopped.** No attempt was made to bypass that rejection. Evidence is preserved. XAMPP MariaDB, Laragon existing data and Windows services were not changed.
+
+| Final gate | Result |
+|---|---|
+| REAL MYSQL 8 USED | **PASS** |
+| MYSQL CONCURRENCY | **PASS** |
+| FRESH MYSQL MIGRATION | **PASS** |
+| UPGRADE MYSQL MIGRATION | **PASS** |
+| SCHEMA PARITY | **PASS locally**, measured nullability correction disclosed |
+| SEC-08 CLOSED | **PASS — RESOLVED IN WORKTREE, NOT DEPLOYED** |
+| REL-01 LOCALLY PROVEN | **PASS — PRODUCTION SCHEMA STILL UNVERIFIED** |
+| REL-03 | **RESOLVED IN WORKTREE — NOT DEPLOYED** |
+| FULL REGRESSION | **PASS tests / zero analyzer errors**; existing analyzer warnings/infos remain |
+| git diff --check | **PASS** |
+| READY FOR NEXT REMEDIATION BATCH | **YES, subject to review; Batch 5 not started** |
+| PRODUCTION READY | **NO** |
+
+Git hygiene: status/name-status/stat/check reviewed; nothing staged, HEAD still **ad4ff37**. Worktree includes the already-present Batch 4 changes; Batch 4.1 adds only test/evidence/documentation completions, including `tests/_support/mysql_application_bootstrap.php`. Nineteen total changed/new paths across Batch 4/4.1; tracked diff statistics exclude new files. Historical migrations, forward migration, application runtime, dependency manifests/locks, both tools directories and Node/mobile source were not modified by Batch 4.1. **No commit. No push. No deployment. Await review.**

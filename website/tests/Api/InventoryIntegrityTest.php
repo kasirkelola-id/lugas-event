@@ -19,6 +19,14 @@ class InventoryIntegrityTest extends \Tests\Support\BaseTest
     
     protected $namespace = 'App';
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Historical SQLite migrations suppress DDL failures; reset test setup
+        // status before exercising the real inventory transaction.
+        $this->db->resetTransStatus();
+    }
+
     protected function tearDown(): void
     {
         $this->cleanUpAuth();

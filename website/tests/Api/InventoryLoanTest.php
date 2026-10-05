@@ -21,6 +21,7 @@ class InventoryLoanTest extends \Tests\Support\BaseTest
     protected function setUp(): void
     {
         parent::setUp();
+        $this->db->resetTransStatus();
         // Clear databases
         $db = \Config\Database::connect();
         $db->disableForeignKeyChecks();
