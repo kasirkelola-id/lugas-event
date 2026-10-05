@@ -270,22 +270,16 @@ class AuthController extends BaseApiController
             'status_aktif'   => 1
         ];
 
-        $userModel->insert($userData);
-        $userId = $userModel->getInsertID();
-
-        // Insert into organization_members
-        $memberData = [
-            'user_id' => $userId,
-            'karang_taruna_id' => $karangTarunaId,
-            'username' => $rawInput['username'], // The real tenant-scoped username
-            'role_level' => 'anggota',
-            'approval_status' => 'pending',
-            'status_aktif' => 1,
-            'joined_at' => date('Y-m-d H:i:s'),
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ];
-        $memberModel->insert($memberData);
+        $memberData = ['username' => $rawInput['username'], 'role_level' => 'anggota',
+            'approval_status' => 'pending', 'status_aktif' => 1, 'joined_at' => date('Y-m-d H:i:s')];
+        try {
+            \App\Services\IdentityCreationService::create((int)$karangTarunaId, $userData, $memberData, true);
+        } catch (\DomainException $error) {
+            return $this->sendError($error->getMessage(), null, $error->getCode());
+        } catch (\Throwable $error) {
+            log_message('error', 'Membership identity creation failed');
+            return $this->sendError('Registrasi tidak dapat diproses.', null, 500);
+        }
 
         return $this->sendSuccess('Registrasi berhasil. Silakan login.', null, 201);
     }

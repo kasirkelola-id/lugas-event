@@ -78,8 +78,6 @@ class MembershipController extends BaseApiController
         $tenantId = AuthService::getTenantId();
         $db = \Config\Database::connect();
 
-        $memberModel = new OrganizationMemberModel();
-
         $membership = $db->table('organization_members')
             ->where('id', $membershipId)
             ->where('karang_taruna_id', $tenantId)
@@ -94,22 +92,13 @@ class MembershipController extends BaseApiController
             return $this->sendError('Membership ini tidak dalam status pending', null, 422);
         }
 
-        $memberModel->update($membershipId, [
-            'approval_status' => $action
-        ]);
-
-        $historyModel = new \App\Models\MembershipApprovalHistoryModel();
-        $historyModel->insert([
-            'organization_member_id' => $membershipId,
-            'karang_taruna_id' => $tenantId,
-            'action' => $action,
-            'actor_user_id' => AuthService::getGlobalUserId(),
-            'actor_type' => AuthService::getRole() === 'superadmin' ? 'superadmin' : 'user',
-            'note' => null,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
-
-        if ($db->error()['code'] !== 0 && $db->error()['code'] !== 1) {
+        try {
+            if (!\App\Services\MembershipApprovalService::decide((int)$tenantId, (int)$membershipId, $action,
+                AuthService::getGlobalUserId(), AuthService::getRole() === 'superadmin' ? 'superadmin' : 'user')) {
+                return $this->sendError('Membership ini tidak dalam status pending', null, 422);
+            }
+        } catch (\Throwable $error) {
+            log_message('error', 'Membership decision failed');
             return $this->sendError('Gagal memproses approval', null, 500);
         }
 

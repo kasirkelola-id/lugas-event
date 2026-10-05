@@ -23,6 +23,7 @@ class IdentitySemanticsTest extends \Tests\Support\BaseTest
     protected function setUp(): void
     {
         parent::setUp();
+        $this->db->resetTransStatus();
         AuthService::setUser(null);
     }
 

@@ -45,7 +45,7 @@ class Services extends BaseService
             return new \App\Database\TestMigrationRunner($config, $db);
         }
 
-        return new \CodeIgniter\Database\MigrationRunner($config, $db);
+        return new \App\Database\SafeMigrationRunner($config, $db);
     }
 
     /*

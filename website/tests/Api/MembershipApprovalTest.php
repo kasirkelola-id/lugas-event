@@ -23,6 +23,7 @@ class MembershipApprovalTest extends \Tests\Support\BaseTest
     protected function setUp(): void
     {
         parent::setUp();
+        $this->db->resetTransStatus();
         helper('text');
     }
 

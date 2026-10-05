@@ -167,28 +167,14 @@ class UserController extends BaseApiController
             'status_aktif'   => 1
         ];
 
-        $db = \Config\Database::connect();
-        $db->transStart();
-
-        $userModel->insert($userData);
-        $userId = $userModel->getInsertID();
-
-        // Insert to organization_members
-        $memberData = [
-            'user_id' => $userId,
-            'karang_taruna_id' => $tenantId,
-            'username' => $rawInput['username'], // Save username in member table
-            'role_level' => $rawInput['role_level'],
-            'status_aktif' => 1,
-            'joined_at' => date('Y-m-d H:i:s'),
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ];
-        $memberModel->insert($memberData);
-
-        $db->transComplete();
-
-        if ($db->transStatus() === false) {
+        $memberData = ['username' => $rawInput['username'], 'role_level' => $rawInput['role_level'],
+            'approval_status' => 'approved', 'status_aktif' => 1, 'joined_at' => date('Y-m-d H:i:s')];
+        try {
+            $userId = \App\Services\IdentityCreationService::create((int)$tenantId, $userData, $memberData);
+        } catch (\DomainException $error) {
+            return $this->sendError($error->getMessage(), null, $error->getCode());
+        } catch (\Throwable $error) {
+            log_message('error', 'Membership identity creation failed');
             return $this->sendError('Gagal membuat pengguna', null, 500);
         }
 

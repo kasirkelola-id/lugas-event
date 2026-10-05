@@ -193,27 +193,13 @@ class ManageController extends BaseController
             return redirect()->back()->with('error', 'Status pendaftaran anggota ini tidak dalam status pending.');
         }
 
-        $db = \Config\Database::connect();
-        $db->transStart();
-
-        $memberModel->update($membership_id, [
-            'approval_status' => $action
-        ]);
-
-        $historyModel = new \App\Models\MembershipApprovalHistoryModel();
-        $historyModel->insert([
-            'organization_member_id' => $membership_id,
-            'karang_taruna_id' => $kt_id,
-            'action' => $action,
-            'actor_user_id' => session()->get('superadmin_id'),
-            'actor_type' => 'superadmin',
-            'note' => null,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
-
-        $db->transComplete();
-
-        if ($db->transStatus() === false) {
+        try {
+            if (!\App\Services\MembershipApprovalService::decide((int)$kt_id, (int)$membership_id, $action,
+                (int)session()->get('superadmin_id'), 'superadmin')) {
+                return redirect()->back()->with('error', 'Status pendaftaran anggota ini tidak dalam status pending.');
+            }
+        } catch (\Throwable $error) {
+            log_message('error', 'Membership decision failed');
             return redirect()->back()->with('error', 'Gagal memproses approval.');
         }
 
