@@ -1,4 +1,5 @@
 const { persistChat, validMessageId } = require('./chat-persistence');
+const { fanoutChat } = require('./chat-fanout');
 require('dotenv').config();
 const { resolveSecret, acceptsSecret } = require('./internal-secret');
 
@@ -505,6 +506,18 @@ io.on('connection', (socket) => {
       console.log(`User ${socket.userId} joined wheel session ${sessionId}`);
     } finally { socket.joining = false; }
   });
+});
+
+app.post('/internal/chat-event', async (req, res) => {
+  if (!acceptsSecret(req.headers['x-internal-secret'], process.env.INTERNAL_API_SECRET)) return res.status(403).json({ error: 'Forbidden' });
+  const chatId = req.body?.chat_id;
+  if (!Number.isSafeInteger(chatId) || chatId < 1) return res.status(400).json({ error: 'Invalid chat ID' });
+  try {
+    if (!await fanoutChat(pool, io, chatId, currentAuthorization, privateUserRoom, eligibleMember)) return res.status(404).json({ error: 'Chat unavailable' });
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(503).json({ error: 'Chat fanout unavailable' });
+  }
 });
 
 app.post('/internal/wheel-event', (req, res) => {

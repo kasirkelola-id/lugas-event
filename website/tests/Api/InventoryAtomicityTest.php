@@ -25,7 +25,6 @@ class InventoryAtomicityTest extends \Tests\Support\BaseTest
         // Historical SQLite DDL compatibility leaves a dirty test status.
         $this->db->resetTransStatus();
         $this->admin = $this->createTestUser(101, 'ketua');
-        InventoryNotificationProbe::$notifications = [];
     }
 
     protected function tearDown(): void
@@ -62,10 +61,10 @@ class InventoryAtomicityTest extends \Tests\Support\BaseTest
 
     private function probe(int $loan, string $status)
     {
-        // Execute the real controller, substituting only its postcommit notifier.
+        // Execute the real controller; notification delivery is now queued.
         AuthService::setUser($this->admin);
         $request = Services::request()->setMethod('patch')->setBody(json_encode(['status' => $status]));
-        $controller = new InventoryNotificationProbe();
+        $controller = new InventoryController();
         $controller->initController($request, Services::response(), Services::logger());
         return $controller->changeLoanStatus($loan);
     }
@@ -100,7 +99,10 @@ class InventoryAtomicityTest extends \Tests\Support\BaseTest
         $this->assertSame(200, $this->probe($loan, $to)->getStatusCode());
         $this->assertSame($to, $this->db->table('inventory_loans')->where('id', $loan)->get()->getRow()->status);
         $this->assertSame($after, (int) $this->db->table('inventories')->where('id', $inventory)->get()->getRow()->available_quantity);
-        $this->assertSame([['depth' => 0, 'status' => $to, 'stock' => $after]], InventoryNotificationProbe::$notifications);
+        $this->assertSame(0, $this->db->transDepth);
+        $job = $this->db->table('notification_jobs')->where('job_key', 'loan:' . $loan . ':' . $to)->get()->getRowArray();
+        $this->assertSame('pending', $job['status']);
+        $this->assertSame($to, $job['action']);
     }
 
     #[DataProvider('sameStatuses')]
@@ -108,7 +110,7 @@ class InventoryAtomicityTest extends \Tests\Support\BaseTest
     {
         [$inventory, $loan] = $this->seedLoan($status, 1);
         $this->assertSame(200, $this->probe($loan, $status)->getStatusCode());
-        $this->assertSame([], InventoryNotificationProbe::$notifications);
+        $this->assertSame(0, $this->db->table('notification_jobs')->countAllResults());
         $this->assertSame(1, (int) $this->db->table('inventories')->where('id', $inventory)->get()->getRow()->available_quantity);
         $this->assertSame(0, $this->db->transDepth);
     }
@@ -139,7 +141,7 @@ class InventoryAtomicityTest extends \Tests\Support\BaseTest
         [$inventory, $loan] = $this->seedLoan('pending', 0);
         $this->assertSame(409, $this->probe($loan, 'approved')->getStatusCode());
         $this->assertSame(409, $this->probe($loan, 'returned')->getStatusCode());
-        $this->assertSame([], InventoryNotificationProbe::$notifications);
+        $this->assertSame(0, $this->db->table('notification_jobs')->countAllResults());
         $this->assertSame('pending', $this->db->table('inventory_loans')->where('id', $loan)->get()->getRow()->status);
         $this->assertSame(0, $this->db->transDepth);
     }
@@ -160,7 +162,7 @@ class InventoryAtomicityTest extends \Tests\Support\BaseTest
             $this->assertSame(500, $this->probe($loan, 'approved')->getStatusCode());
             $this->assertSame(2, (int) $this->db->table('inventories')->where('id', $inventory)->get()->getRow()->available_quantity);
             $this->assertSame('pending', $this->db->table('inventory_loans')->where('id', $loan)->get()->getRow()->status);
-            $this->assertSame([], InventoryNotificationProbe::$notifications);
+            $this->assertSame(0, $this->db->table('notification_jobs')->countAllResults());
             $this->assertSame(0, $this->db->transDepth);
         } finally {
             $this->db->query('DROP TRIGGER batch4_fail_loan');
@@ -181,7 +183,7 @@ class InventoryAtomicityTest extends \Tests\Support\BaseTest
             $this->assertSame(500, $this->probe($loan, 'approved')->getStatusCode());
             $this->assertSame(2, (int) $this->db->table('inventories')->where('id', $inventory)->get()->getRow()->available_quantity);
             $this->assertSame('pending', $this->db->table('inventory_loans')->where('id', $loan)->get()->getRow()->status);
-            $this->assertSame([], InventoryNotificationProbe::$notifications);
+            $this->assertSame(0, $this->db->table('notification_jobs')->countAllResults());
             $this->assertSame(0, $this->db->transDepth);
         } finally {
             $this->db->query('DROP TRIGGER batch4_ignore_write');
@@ -195,25 +197,10 @@ class InventoryAtomicityTest extends \Tests\Support\BaseTest
         try {
             $this->assertSame(500, $this->probe($loan, 'approved')->getStatusCode());
             $this->assertSame(1, $this->db->transDepth);
-            $this->assertSame([], InventoryNotificationProbe::$notifications);
+            $this->assertSame(0, $this->db->table('notification_jobs')->countAllResults());
             $this->assertSame('pending', $this->db->table('inventory_loans')->where('id', $loan)->get()->getRow()->status);
         } finally {
             $this->db->transRollback();
         }
-    }
-}
-
-class InventoryNotificationProbe extends InventoryController
-{
-    public static array $notifications = [];
-
-    protected function notifyLoanTransition(array $loan, array $inventory, int $tenantId, string $status): void
-    {
-        $db = \Config\Database::connect();
-        self::$notifications[] = [
-            'depth' => $db->transDepth,
-            'status' => $db->table('inventory_loans')->where('id', $loan['id'])->get()->getRow()->status,
-            'stock' => (int) $db->table('inventories')->where('id', $inventory['id'])->get()->getRow()->available_quantity,
-        ];
     }
 }

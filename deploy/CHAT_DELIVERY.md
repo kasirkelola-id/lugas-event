@@ -26,3 +26,8 @@ does not yet supply realtime fanout to other sockets. Durable notification work
 and reconciliation are tracked separately; do not treat this checkpoint alone as
 a closed delivery finding. Staging must exercise the combined PHP/Node/mobile
 rollout, reconnect, lost ACK, tenant switching, and provider failure paths.
+
+Phase 12 supersedes the remaining server enqueue/fanout gap above with a shared
+database outbox and finite worker. See [the worker runbook](NOTIFICATION_WORKER.md).
+Actual MySQL execution, worker installation and device rollout remain separate
+verification gates; process termination still loses the mobile in-memory draft ID.

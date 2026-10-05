@@ -78,7 +78,7 @@ class InternalApiController extends BaseApiController
 
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
         $chatId = $rawInput['chat_id'] ?? null;
-        if (!$chatId) {
+        if ((!is_int($chatId) && !(is_string($chatId) && ctype_digit($chatId))) || (int)$chatId < 1) {
             return $this->sendError('chat_id required', null, 400);
         }
 
@@ -89,44 +89,10 @@ class InternalApiController extends BaseApiController
             return $this->sendError('Chat not found', null, 404);
         }
 
-        $tenantId = (int)$chat['karang_taruna_id'];
-        $senderId = (string)$chat['sender_id'];
-        $type = $chat['type']; // 'private' or 'group'
-
-        $sender = $db->table('users')->where('id', $senderId)->get()->getRowArray();
-        $senderName = $sender ? $sender['nama_lengkap'] : 'User';
-
-        $tokens = [];
-        $title = '';
-
-        if ($type === 'private') {
-            $tokens = \App\Services\NotificationService::getTokensForUsers($tenantId, [$chat['receiver_id']], 'chat.read');
-            $title = 'Pesan dari ' . $senderName;
-        } elseif ($type === 'group') {
-            $roomId = (int)$chat['chat_room_id'];
-            $room = $db->table('chat_rooms')->where('id', $roomId)->where('karang_taruna_id', $tenantId)->get()->getRowArray();
-            if ($room) {
-                $tokens = \App\Services\NotificationService::getTokensForRoom($tenantId, $roomId, (int)$senderId);
-                $title = 'Grup ' . $room['name'] . ' - ' . $senderName;
-            }
-        }
-
-        if (!empty($tokens)) {
-            $body = mb_substr($chat['message'], 0, 100);
-            $payload = [
-                'type' => $type === 'private' ? 'private_chat' : 'group_chat',
-                'tenant_id' => (string)$tenantId,
-                'chat_id' => (string)$chatId,
-                'sender_id' => $senderId
-            ];
-            if ($type === 'group') {
-                $payload['room_id'] = (string)$chat['chat_room_id'];
-            }
-
-            \App\Services\NotificationService::sendPushNotification($tokens, $title, $body, $payload);
-        }
-
-        return $this->sendSuccess('Notification processed');
+        // The chat INSERT trigger owns enqueueing for both PHP and Node writers.
+        $job = $db->table('notification_jobs')->where('job_key', 'chat:' . $chat['id'])->get()->getRowArray();
+        if (!$job) return $this->sendError('Notification job unavailable', null, 503);
+        return $this->sendSuccess('Notification queued');
     }
 
     public function wheelEvent()

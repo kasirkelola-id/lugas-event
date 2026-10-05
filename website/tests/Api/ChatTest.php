@@ -28,6 +28,9 @@ class ChatTest extends CIUnitTestCase
 
         $db = \Config\Database::connect();
 
+        // These fixtures reuse explicit IDs: clear their dependent outbox too.
+        $db->table('notification_deliveries')->emptyTable();
+        $db->table('notification_jobs')->emptyTable();
         // Clean tables
         $db->table('chats')->emptyTable();
         $db->table('chat_room_members')->emptyTable();
@@ -36,6 +39,8 @@ class ChatTest extends CIUnitTestCase
         $db->table('organization_members')->emptyTable();
         $db->table('users')->emptyTable();
         $db->table('karang_taruna')->emptyTable();
+
+        $db->resetTransStatus();
 
         // Setup Tenant 1 and 2
         $db->table('karang_taruna')->insert(['id' => 1, 'nama_organisasi' => 'KT Satu', 'kode_pin' => '123']);

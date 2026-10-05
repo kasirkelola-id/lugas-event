@@ -36,8 +36,14 @@ final class NotificationService
 
     private static function eligibleTokens(int $tenantId, ?array $userIds, array $exclude, ?string $role, ?string $permission, ?int $roomId = null): array
     {
+        return array_values(array_filter(array_column(self::eligibleDevices($tenantId, $userIds, $exclude, $role, $permission, $roomId, 0, null), 'fcm_token')));
+    }
+
+    public static function eligibleDevices(int $tenantId, ?array $userIds = null, array $exclude = [], ?string $role = null,
+        ?string $permission = null, ?int $roomId = null, int $after = 0, ?int $limit = 100, ?int $deviceId = null): array
+    {
         $db = \Config\Database::connect();
-        $builder = $db->table('user_devices d')->select('d.fcm_token')->distinct()
+        $builder = $db->table('user_devices d')->select('d.id, d.user_id, d.fcm_token')->distinct()
             ->join('user_tokens t', 't.id = d.user_token_id AND t.user_id = d.user_id')
             ->join('users u', 'u.id = d.user_id')
             ->join('organization_members m', 'm.user_id = u.id')
@@ -56,6 +62,9 @@ final class NotificationService
             $builder->whereIn('m.role_level', $roles);
         }
         if ($roomId !== null) $builder->join('chat_room_members r', 'r.user_id = u.id')->where('r.chat_room_id', $roomId);
-        return array_values(array_filter(array_column($builder->get()->getResultArray(), 'fcm_token')));
+        if ($deviceId !== null) $builder->where('d.id', $deviceId);
+        $builder->where('d.id >', $after)->orderBy('d.id', 'ASC');
+        if ($limit !== null) $builder->limit(max(1, min($limit, 100)));
+        return $builder->get()->getResultArray();
     }
 }

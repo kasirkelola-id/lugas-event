@@ -356,14 +356,7 @@ class ChatController extends BaseApiController
         } catch (\Throwable $error) {
             return $this->sendError('Pesan gagal disimpan', null, 500);
         }
-        if ($persisted['created']) {
-            try {
-                if ($type === 'group') $this->sendGroupNotification($roomId, $user['nama_lengkap'], $message, $data);
-                else $this->sendPrivateNotification($receiverId, $user['nama_lengkap'], $message, $data);
-            } catch (\Throwable $error) {
-                log_message('error', 'Notification dispatch failed');
-            }
-        }
+        // The database trigger enqueues delivery atomically with a new chat row.
         $data['nama_lengkap'] = $user['nama_lengkap'];
         $data['role_level'] = $user['role_level'];
         $data['sender_photo_url'] = !empty($user['profile_photo']) ? base_url($user['profile_photo']) : null;
@@ -399,24 +392,4 @@ class ChatController extends BaseApiController
         return (int)$value;
     }
 
-    private function sendGroupNotification($roomId, $senderName, $message, $chatData)
-    {
-        $tenantId = (int)$chatData['karang_taruna_id'];
-        $room = (new ChatRoomModel())->where('karang_taruna_id', $tenantId)->find($roomId);
-        if (!$room) return;
-        $tokens = \App\Services\NotificationService::getTokensForRoom($tenantId, (int)$roomId, (int)$chatData['sender_id']);
-        if ($tokens !== []) \App\Services\NotificationService::sendPushNotification($tokens,
-            'Grup ' . $room['name'] . ' - ' . $senderName, $message,
-            ['type' => 'group_chat', 'tenant_id' => (string)$tenantId, 'room_id' => (string)$roomId,
-             'sender_id' => (string)$chatData['sender_id']]);
-    }
-
-    private function sendPrivateNotification($receiverId, $senderName, $message, $chatData)
-    {
-        $tenantId = (int)$chatData['karang_taruna_id'];
-        $tokens = \App\Services\NotificationService::getTokensForUsers($tenantId, [$receiverId], 'chat.read');
-        if ($tokens !== []) \App\Services\NotificationService::sendPushNotification($tokens,
-            'Pesan dari ' . $senderName, $message,
-            ['type' => 'private_chat', 'tenant_id' => (string)$tenantId, 'sender_id' => (string)$chatData['sender_id']]);
-    }
 }

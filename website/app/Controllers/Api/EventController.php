@@ -236,28 +236,14 @@ class EventController extends BaseApiController
             'radius'        => $requireGps === 1 ? (int)\App\Services\SettingService::getSetting($tenantId, 'default_geofence_radius', 50) : null,
         ];
 
-        $eventModel->insert($eventData);
-        $eventId = $eventModel->getInsertID();
-
-        $eventData['id'] = $eventId;
-
-        // Trigger push notification for new event
-        $excludeUsers = [$userId];
-        $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, $excludeUsers, null, 'event.view');
-        if (!empty($tokens)) {
-            $ktModel = new \App\Models\KarangTarunaModel();
-            $kt = $ktModel->find($tenantId);
-            $ktName = $kt ? $kt['nama_organisasi'] : 'Karang Taruna';
-            
-            $title = "Event Baru: " . $ktName;
-            $body = mb_substr($namaAcara, 0, 100);
-            
-            \App\Services\NotificationService::sendPushNotification($tokens, $title, $body, [
-                'type' => 'event',
-                'tenant_id' => (string)$tenantId,
-                'event_id' => (string)$eventId
-            ]);
+        try {
+            $eventId = $eventModel->insert($eventData);
+            if (!$eventId) throw new \RuntimeException('Event write failed');
+        } catch (\Throwable $error) {
+            return $this->sendError('Event gagal disimpan', null, 500);
         }
+        $eventData['id'] = $eventId;
+        // The INSERT trigger persists its notification job in the same statement.
 
         return $this->sendSuccess('Event berhasil dibuat', $eventData, 201);
     }

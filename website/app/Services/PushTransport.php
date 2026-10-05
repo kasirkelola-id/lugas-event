@@ -33,7 +33,8 @@ class PushTransport
                 self::$serviceAccountPath
             );
 
-            $token = $credentials->fetchAuthToken();
+            $token = $credentials->fetchAuthToken(\Google\Auth\HttpHandler\HttpHandlerFactory::build(
+                new \GuzzleHttp\Client(['timeout' => 5, 'connect_timeout' => 3]), false));
             if (!isset($token['access_token'])) {
                 log_message('error', 'Failed to fetch FCM access token.');
                 return false;

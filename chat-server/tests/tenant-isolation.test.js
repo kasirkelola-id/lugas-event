@@ -373,3 +373,28 @@ test('no socket ACK or fanout precedes successful canonical row read', async () 
   expect(global.fetch.mock.calls.filter(([url]) => url.endsWith('chat-notification'))).toHaveLength(0);
   release(); expect((await result).success).toBe(true);
 });
+
+
+test('trusted persisted REST chat fanout ignores spoofed body tenant and stays in scoped device rooms', async () => {
+  const http = require('http');
+  const sockets = [await connect(10, 101), await connect(20, 101), await connect(20, 102)];
+  const received = track(sockets);
+  const original = pool.execute.getMockImplementation();
+  pool.execute.mockImplementation((sql, args) => sql.startsWith('SELECT c.') ? [[{
+    id: 99, karang_taruna_id: 101, sender_id: 10, receiver_id: 20, type: 'private', message: 'Persisted REST',
+    created_at_iso: '2026-10-05T00:00:00Z', client_message_id: '01234567-89ab-4cde-8f01-23456789abcd'
+  }]] : original(sql, args));
+  const request = secret => new Promise((resolve, reject) => {
+    const body = JSON.stringify({chat_id:99,tenant_id:102});
+    const req = http.request({host:'127.0.0.1',port:server.address().port,path:'/internal/chat-event',method:'POST',
+      headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body),'X-Internal-Secret':secret}},res => {
+      res.resume();res.on('end',()=>resolve(res.statusCode));
+    });req.on('error',reject);req.end(body);
+  });
+  expect(await request('wrong')).toBe(403);
+  expect(await request('test-secret')).toBe(200);
+  await delay(30);
+  expect(received.map(messages=>messages.length)).toEqual([1,1,0]);
+  expect(received[0][0].message).toBe('Persisted REST');
+  expect(received[0][0].karang_taruna_id).toBe(101);
+});

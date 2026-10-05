@@ -152,16 +152,22 @@ final class NotificationEligibilityTest extends BaseTest
             ->withBodyFormat('json')->post('api/chats/messages', ['type' => 'private', 'receiver_id' => $recipient['id'],
                 'message' => 'Synthetic', 'tenant_id' => 999]);
         $response->assertStatus(200);
-        $this->assertCount(1, $probe->calls);
-        $this->assertSame('101', $probe->calls[0]['data']['tenant_id']);
+        $this->assertCount(0, $probe->calls);
+        $this->assertSame(1, $this->db->table('notification_jobs')->countAllResults());
         $chat = json_decode($response->getJSON(), true)['data'];
         $old = getenv('INTERNAL_API_SECRET');
         putenv('INTERNAL_API_SECRET=synthetic-internal-value');
         try {
             $this->withHeaders(['X-Internal-Secret' => 'synthetic-internal-value'])->withBodyFormat('json')
                 ->post('api/internal/chat-notification', ['chat_id' => $chat['id'], 'tenant_id' => 999])->assertStatus(200);
-            $this->assertSame('101', $probe->calls[1]['data']['tenant_id']);
-            $this->assertSame((string)$chat['id'], $probe->calls[1]['data']['chat_id']);
+            $this->assertCount(0, $probe->calls);
+            $this->assertSame(1, $this->db->table('notification_jobs')->countAllResults());
+            (new \App\Services\NotificationWorker())->runOne();
+            $this->assertCount(1, $probe->calls);
+            $this->assertSame('101', $probe->calls[0]['data']['tenant_id']);
+            $this->assertSame((string)$chat['id'], $probe->calls[0]['data']['chat_id']);
+            (new \App\Services\NotificationWorker())->runOne();
+            $this->assertCount(1, $probe->calls);
         } finally {
             putenv($old === false ? 'INTERNAL_API_SECRET' : 'INTERNAL_API_SECRET=' . $old);
         }

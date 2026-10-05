@@ -118,6 +118,8 @@ final class ChatPersistenceTest extends BaseTest
                 $this->withHeaders($this->getAuthHeaders($senderToken) + ['X-Karang-Taruna-ID' => '101'])->withBodyFormat('json')
                     ->post('api/chats/messages', ['type' => 'private', 'receiver_id' => $b['id'], 'message' => 'Synthetic', 'client_message_id' => self::ID])->assertStatus(200);
             }
+            $this->assertSame(1, $this->db->table('notification_jobs')->countAllResults());
+            (new \App\Services\NotificationWorker())->runOne();
         } finally {
             \Config\Services::resetSingle('pushTransport');
         }

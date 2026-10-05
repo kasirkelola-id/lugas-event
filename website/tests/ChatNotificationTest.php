@@ -73,7 +73,10 @@ class ChatNotificationTest extends \Tests\Support\BaseTest
         ])->withBody(json_encode(['chat_id' => $chatId]))->post('api/internal/chat-notification');
         
         $result->assertStatus(200);
-        $result->assertJSONExact(['status' => true, 'message' => 'Notification processed']);
+        $result->assertJSONExact(['status' => true, 'message' => 'Notification queued']);
+        $job = $db->table('notification_jobs')->where('job_key', 'chat:' . $chatId)->get()->getRowArray();
+        $this->assertSame((int)$tenantId, (int)$job['karang_taruna_id']);
+        $this->assertSame((int)$chatId, (int)$job['entity_id']);
     }
 
     public function testChatNotificationGroupChat()
@@ -130,6 +133,9 @@ class ChatNotificationTest extends \Tests\Support\BaseTest
         ])->withBody(json_encode(['chat_id' => $chatId]))->post('api/internal/chat-notification');
         
         $result->assertStatus(200);
-        $result->assertJSONExact(['status' => true, 'message' => 'Notification processed']);
+        $result->assertJSONExact(['status' => true, 'message' => 'Notification queued']);
+        $job = $db->table('notification_jobs')->where('job_key', 'chat:' . $chatId)->get()->getRowArray();
+        $this->assertSame((int)$tenantId, (int)$job['karang_taruna_id']);
+        $this->assertSame((int)$chatId, (int)$job['entity_id']);
     }
 }

@@ -93,29 +93,14 @@ class AnnouncementController extends BaseApiController
             $data['dashboard_until'] = date('Y-m-d H:i:s', strtotime('+3 days'));
         }
 
-        $id = $model->insert($data);
-        $data['id'] = $id;
-
-        if ($data['status_aktif'] == 1) {
-            // Trigger push notification (asynchronously ideally, but curl is fairly fast, or we just do it synchronously for MVP)
-            $excludeUsers = [$userId];
-            $tokens = \App\Services\NotificationService::getTokensForTenant($tenantId, $excludeUsers, $data['target_role'], 'announcement.view');
-            if (!empty($tokens)) {
-                $ktModel = new \App\Models\KarangTarunaModel();
-                $kt = $ktModel->find($tenantId);
-                $ktName = $kt ? $kt['nama_organisasi'] : 'Karang Taruna';
-                
-                $title = "Pengumuman: " . $ktName;
-                $body = mb_substr($data['judul'], 0, 100);
-                
-                // Do not block if it fails
-                \App\Services\NotificationService::sendPushNotification($tokens, $title, $body, [
-                    'type' => 'announcement',
-                    'tenant_id' => (string)$tenantId,
-                    'announcement_id' => (string)$id
-                ]);
-            }
+        try {
+            $id = $model->insert($data);
+            if (!$id) throw new \RuntimeException('Announcement write failed');
+        } catch (\Throwable $error) {
+            return $this->sendError('Pengumuman gagal disimpan', null, 500);
         }
+        $data['id'] = $id;
+        // Active announcement INSERTs atomically persist their notification job.
 
         return $this->sendSuccess('Pengumuman berhasil dibuat', $data, 201);
     }

@@ -156,31 +156,8 @@ class InventoryController extends BaseApiController
         if (!$transition['changed']) {
             return $this->sendSuccess('Status peminjaman berhasil diproses');
         }
-        // The service has durably committed; no notification runs under locks.
-        $this->notifyLoanTransition($transition['loan'], $transition['inventory'], (int) $tenantId, $status);
+        // The status-update trigger committed its notification job with the stock transition.
         return $this->sendSuccess('Status peminjaman berhasil diubah');
     }
 
-    protected function notifyLoanTransition(array $loan, array $inventory, int $tenantId, string $status): void
-    {
-        // Trigger push notification to borrower
-        $tokens = \App\Services\NotificationService::getTokensForUsers($tenantId, [$loan['user_id']], 'inventory.view');
-        if (!empty($tokens)) {
-            $ktModel = new \App\Models\KarangTarunaModel();
-            $kt = $ktModel->find($tenantId);
-            $ktName = $kt ? $kt['nama_organisasi'] : 'Karang Taruna';
-
-            $statusIndo = $status === 'approved' ? 'disetujui' : ($status === 'rejected' ? 'ditolak' : 'dikembalikan');
-            $title = "Peminjaman Barang: " . $ktName;
-            $body = "Status peminjaman Anda untuk barang {$inventory['name']} telah " . $statusIndo . ".";
-
-            \App\Services\NotificationService::sendPushNotification($tokens, $title, $body, [
-                'type' => 'inventory_loan',
-                'tenant_id' => (string)$tenantId,
-                'loan_id' => (string)$loan['id'],
-                'status' => $status
-            ]);
-        }
-
-    }
 }
