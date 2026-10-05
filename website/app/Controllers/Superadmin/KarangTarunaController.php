@@ -136,27 +136,11 @@ class KarangTarunaController extends BaseController
             return false; // Validation failed
         }
 
-        // Generate random name
-        $newName = $file->getRandomName();
-        $uploadDir = FCPATH . 'uploads/karang_taruna/logos/';
-        
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-
-        // We use CI4 image processing to resize/compress
         try {
-            $image = \Config\Services::image()
-                ->withFile($file->getTempName())
-                ->resize(512, 512, true, 'auto') // preserve aspect ratio
-                ->save($uploadDir . $newName, 85); // 85% quality
-                
-            return 'uploads/karang_taruna/logos/' . $newName;
-        } catch (\Exception $e) {
+            return \App\Services\SafeImageUpload::store($file, 'uploads/karang_taruna/logos/', false);
+        } catch (\Throwable $error) {
             log_message('error', 'Image processing failed');
-            // Fallback to moving the file directly if image processing fails (e.g. GD not installed)
-            $file->move($uploadDir, $newName);
-            return 'uploads/karang_taruna/logos/' . $newName;
+            return false;
         }
     }
 

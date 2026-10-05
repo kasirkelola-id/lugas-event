@@ -151,25 +151,11 @@ class ProfileController extends BaseApiController
             return $this->sendError('Validasi gambar gagal', $this->validator->getErrors(), 422);
         }
 
-        $newName = $file->getRandomName();
-        $uploadDir = FCPATH . 'uploads/users/profile/';
-
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-
         try {
-            // Resize and crop to 512x512
-            $image = \Config\Services::image()
-                ->withFile($file->getTempName())
-                ->fit(512, 512, 'center')
-                ->save($uploadDir . $newName, 85);
-
-            $photoPath = 'uploads/users/profile/' . $newName;
-        } catch (\Exception $e) {
+            $photoPath = \App\Services\SafeImageUpload::store($file, 'uploads/users/profile/', true);
+        } catch (\Throwable $error) {
             log_message('error', 'Profile photo processing failed');
-            $file->move($uploadDir, $newName);
-            $photoPath = 'uploads/users/profile/' . $newName;
+            return $this->sendError('Gambar tidak dapat diproses. Silakan coba gambar lain.', null, 422);
         }
 
         $userModel = new UserModel();

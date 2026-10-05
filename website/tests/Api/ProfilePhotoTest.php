@@ -26,6 +26,18 @@ class ProfilePhotoTest extends \Tests\Support\BaseTest
     protected function setUp(): void
     {
         parent::setUp();
+
+        // File/DB workflow tests use an encoder double only when GD is absent.
+        // SafeImageUploadTest separately verifies real native output with GD.
+        if (!extension_loaded('gd')) {
+            $image = $this->getMockBuilder(\CodeIgniter\Images\Handlers\GDHandler::class)
+                ->disableOriginalConstructor()->onlyMethods(['withFile', 'fit', 'convert', 'save'])->getMock();
+            foreach (['withFile', 'fit', 'convert'] as $method) $image->method($method)->willReturnSelf();
+            $image->method('save')->willReturnCallback(static function ($target) {
+                return file_put_contents($target, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAFklEQVQImWP8z8DAwMDAxMDAwMDAAAANHQEDDMfniQAAAABJRU5ErkJggg==')) !== false;
+            });
+            \Config\Services::injectMock('image', $image);
+        }
         
         $db = \Config\Database::connect();
         $db->table('karang_taruna')->ignore(true)->insert([
@@ -37,6 +49,32 @@ class ProfilePhotoTest extends \Tests\Support\BaseTest
         
         $this->user = $this->createTestUser($this->tenantId, 'anggota', 'photouser');
         $this->token = $this->generateTokenForUser($this->user);
+    }
+
+    public function testEncoderFailureDoesNotPublishOriginalOrReplacePhoto(): void
+    {
+        $temp = tempnam(sys_get_temp_dir(), 'kartar_image_probe_');
+        file_put_contents($temp, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAFklEQVQImWP8z8DAwMDAxMDAwMDAAAANHQEDDMfniQAAAABJRU5ErkJggg=='));
+        $model = new UserModel();
+        $before = $model->find($this->user['id']);
+        $_FILES = ['photo' => ['name' => 'synthetic.php', 'type' => 'image/png',
+            'tmp_name' => $temp, 'error' => 0, 'size' => filesize($temp)]];
+        \Config\Services::injectMock('superglobals', \Config\Services::superglobals($_SERVER, $_GET, $_POST, $_COOKIE, $_FILES, $_REQUEST, false));
+        $image = $this->getMockBuilder(\CodeIgniter\Images\Handlers\GDHandler::class)
+            ->disableOriginalConstructor()->onlyMethods(['withFile'])->getMock();
+        $image->method('withFile')->willThrowException(new \RuntimeException('synthetic-private-encoder-detail'));
+        \Config\Services::injectMock('image', $image);
+        try {
+            $response = $this->withHeaders(['Authorization' => 'Bearer ' . $this->token,
+                'X-Karang-Taruna-ID' => (string)$this->tenantId])->call('POST', '/api/profile/photo');
+            $response->assertStatus(422);
+            $this->assertStringNotContainsString('synthetic-private-encoder-detail', $response->getJSON());
+            $this->assertSame($before, $model->find($this->user['id']));
+            $this->assertFileExists($temp);
+        } finally {
+            @unlink($temp);
+            \Config\Services::resetSingle('image');
+        }
     }
 
     public function testUploadPhotoAndReplaceOldPhoto()
@@ -59,7 +97,7 @@ class ProfilePhotoTest extends \Tests\Support\BaseTest
         $tempUploadFile = tempnam(sys_get_temp_dir(), 'test_img');
         
         // Since we need it to pass validation, let's mock a valid small image (1x1 PNG)
-        $pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
+        $pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAFklEQVQImWP8z8DAwMDAxMDAwMDAAAANHQEDDMfniQAAAABJRU5ErkJggg==';
         file_put_contents($tempUploadFile, base64_decode($pngBase64));
 
         $_FILES = [
@@ -104,7 +142,7 @@ class ProfilePhotoTest extends \Tests\Support\BaseTest
         $userModel->update($this->user['id'], ['profile_photo' => 'uploads/users/profile/missing_file.jpg']);
         
         $tempUploadFile = tempnam(sys_get_temp_dir(), 'test_img');
-        $pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
+        $pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAFklEQVQImWP8z8DAwMDAxMDAwMDAAAANHQEDDMfniQAAAABJRU5ErkJggg==';
         file_put_contents($tempUploadFile, base64_decode($pngBase64));
 
         $_FILES = [

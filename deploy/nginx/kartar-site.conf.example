@@ -1,0 +1,26 @@
+# Candidate only. Operator must supply domain, certificates, paths and upstream
+# bindings; inspect the complete effective nginx -T output before activation.
+# Install these map/log_format directives in the http context.
+map $http_upgrade $kartar_connection_upgrade {
+    default upgrade;
+    '' close;
+}
+log_format kartar_safe '$request_id method=$request_method status=$status '
+                       'seconds=$request_time upstream_seconds=$upstream_response_time';
+
+server {
+    listen 443 ssl;
+    server_name kartar.example.invalid;
+    ssl_certificate /operator/provided/fullchain.pem;
+    ssl_certificate_key /operator/provided/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    root /var/www/kartar/website;
+    access_log /var/log/nginx/kartar-access.log kartar_safe;
+    error_log /var/log/nginx/kartar-error.log crit;
+    include /operator/installed/kartar-locations.conf;
+}
+server {
+    listen 80;
+    server_name kartar.example.invalid;
+    return 308 https://kartar.example.invalid$request_uri;
+}
