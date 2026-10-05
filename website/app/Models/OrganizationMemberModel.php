@@ -50,6 +50,28 @@ class OrganizationMemberModel extends Model
     }
 
     /**
+     * Memberships that may establish an ordinary user's tenant context.
+     * A legacy users.karang_taruna_id value is never authorization.
+     */
+    public function getEligibleMemberships(int $userId, ?int $tenantId = null): array
+    {
+        $this->select('organization_members.*')
+             ->join('users', 'users.id = organization_members.user_id')
+             ->join('karang_taruna', 'karang_taruna.id = organization_members.karang_taruna_id')
+             ->where('organization_members.user_id', $userId)
+             ->where('users.status_aktif', 1)
+             ->where('karang_taruna.status_aktif', 1)
+             ->where('organization_members.status_aktif', 1)
+             ->where('organization_members.approval_status', 'approved');
+
+        if ($tenantId !== null) {
+            $this->where('organization_members.karang_taruna_id', $tenantId);
+        }
+
+        return $this->findAll();
+    }
+
+    /**
      * Get all memberships for a user.
      */
     public function getUserMemberships($userId)

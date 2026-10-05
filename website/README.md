@@ -1,5 +1,17 @@
 # CodeIgniter 4 Application Starter
 
+## KARTAR realtime service
+
+The supported chat transport is the Node Socket.IO service in `../chat-server`:
+run `npm ci` and `npm start` there using the required environment configuration.
+Flutter uses Socket.IO at `/socket.io/`; PHP exposes authenticated internal APIs
+and sends wheel events to Node.
+
+The legacy PHP Ratchet implementation has been retired. `php spark websocket:serve`
+now reports retirement and exits with an error; it cannot open a WebSocket listener.
+Remove that command from any external startup configuration before rollout.
+Repository inspection cannot verify or stop an already-running deployed legacy process.
+
 ## What is CodeIgniter?
 
 CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.

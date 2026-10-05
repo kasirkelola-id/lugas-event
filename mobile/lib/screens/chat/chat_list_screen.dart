@@ -54,6 +54,7 @@ class _ChatListScreenState extends State<ChatListScreen>
     _loadData();
 
     _messageSubscription = _chatService.messageStream.listen((chat) {
+      if (!_chatService.isCurrentTenant(chat)) return;
       if (chat.type == 'private') {
         _refreshTimer?.cancel();
         _refreshTimer = Timer(const Duration(milliseconds: 500), () {

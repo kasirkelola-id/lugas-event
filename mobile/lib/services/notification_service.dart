@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
+import 'chat_service.dart';
 import '../storage/auth_storage.dart';
 import '../main.dart' as main_app;
 
@@ -112,7 +113,7 @@ class NotificationService {
 
         // 3. Set active tenant and restart app state
         debugPrint('Membership validated. Switching tenant to $tenantId');
-        await AuthStorage.saveTenant(
+        await ChatService().switchTenant(
           targetMembership['karang_taruna_id'],
           targetMembership['nama'],
           logoUrl:

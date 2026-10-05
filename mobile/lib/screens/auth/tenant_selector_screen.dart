@@ -71,7 +71,7 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
 
   void _selectTenant(Map<String, dynamic> membership) async {
     // Save to storage
-    await AuthStorage.saveTenant(
+    await ChatService().switchTenant(
       membership['karang_taruna_id'],
       membership['nama'],
     );
@@ -90,10 +90,6 @@ class _TenantSelectorScreenState extends State<TenantSelectorScreen> {
     );
 
     if (!mounted) return;
-
-    // Close old socket connection and re-initialize for new tenant
-    ChatService().closeConnection();
-    ChatService().initWebSocket();
 
     final pengelolaRoles = ['pengelola', 'ketua', 'sekretaris', 'bendahara'];
 

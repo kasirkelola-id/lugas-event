@@ -52,6 +52,88 @@ const onlineUsers = new Map();
 // Rate limit tracking: map[socket.id] = { lastMessageTime, count }
 const rateLimits = new Map();
 
+const AUTH_LEASE_MS = 60000;
+function privateUserRoom(tenantId, userId) {
+  return `tenant_${tenantId}_user_${userId}`;
+}
+
+// Same ordinary-member eligibility as PHP AuthFilter, in one SQL statement.
+async function eligibleMember(userId, tenantId) {
+  const [rows] = await pool.execute(
+    `SELECT om.user_id FROM organization_members om
+     JOIN users u ON u.id = om.user_id
+     JOIN karang_taruna kt ON kt.id = om.karang_taruna_id
+     WHERE om.user_id = ? AND om.karang_taruna_id = ?
+       AND om.status_aktif = 1 AND om.approval_status = 'approved'
+       AND u.status_aktif = 1 AND kt.status_aktif = 1`,
+    [userId, tenantId]
+  );
+  return rows.length > 0;
+}
+
+function scheduleAuthorizationRenewal(socket) {
+  clearTimeout(socket.authorizationTimer);
+  socket.authorizationTimer = setTimeout(() => renewAuthorization(socket), AUTH_LEASE_MS);
+  socket.authorizationTimer.unref();
+}
+
+// One renewal in flight per socket; no authorization query per received packet.
+async function renewAuthorization(socket) {
+  if (socket.authorizationRenewal) return socket.authorizationRenewal;
+  const info = onlineUsers.get(socket.id);
+  if (!info || !socket.connected) return false;
+  clearTimeout(socket.authorizationTimer);
+  const rooms = [...socket.rooms].filter(room => room !== socket.id);
+  // Expired authorization cannot receive while PHP is slow or unavailable.
+  for (const room of rooms) socket.leave(room);
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), 5000);
+  socket.authorizationRenewal = (async () => {
+    try {
+      const response = await fetch(process.env.INTERNAL_API_URL, {
+        method: 'POST', signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${info.token}`,
+          'X-Karang-Taruna-ID': String(info.karangTarunaId),
+          'X-Internal-Secret': process.env.INTERNAL_API_SECRET
+        }
+      });
+      if (!response.ok) throw new Error('Authorization expired');
+      const json = await response.json();
+      const user = json.data;
+      if (!json.status || !user || String(user.user_id) !== String(info.userId) ||
+          String(user.karang_taruna_id) !== String(info.karangTarunaId) ||
+          !user.permissions?.includes('chat.read')) throw new Error('Authorization expired');
+      if (!socket.connected || onlineUsers.get(socket.id) !== info) return false;
+      socket.permissions = info.permissions = user.permissions;
+      socket.profilePhotoUrl = info.profilePhotoUrl = user.profile_photo_url;
+      info.authTime = Date.now();
+      for (const room of rooms) socket.join(room);
+      scheduleAuthorizationRenewal(socket);
+      return true;
+    } catch (_) {
+      if (socket.connected) {
+        socket.emit('auth_error', { message: 'Session revalidation failed, please reconnect' });
+        socket.disconnect(true);
+      }
+      return false;
+    } finally {
+      clearTimeout(deadline);
+      socket.authorizationRenewal = null;
+    }
+  })();
+  return socket.authorizationRenewal;
+}
+
+async function currentAuthorization(socket) {
+  const info = onlineUsers.get(socket.id);
+  if (!info || !socket.connected) return false;
+  if (socket.authorizationRenewal || Date.now() - info.authTime >= AUTH_LEASE_MS) {
+    return renewAuthorization(socket);
+  }
+  return true;
+}
+
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
@@ -65,7 +147,7 @@ io.on('connection', (socket) => {
 
   // Authenticate and join room
   socket.on('auth', async (data) => {
-    if (socket.userId) return socket.emit('auth_error', { message: 'Socket is already authenticated' });
+    if (socket.userId || socket.authenticating) return socket.emit('auth_error', { message: 'Socket is already authenticated' });
     if (!data || typeof data !== 'object') return socket.emit('auth_error', { message: 'Missing token or tenant_id' });
     const token = data.token;
     const karangTarunaId = data.tenant_id;
@@ -74,6 +156,7 @@ io.on('connection', (socket) => {
       return socket.emit('auth_error', { message: 'Missing token or tenant_id' });
     }
 
+    socket.authenticating = true;
     try {
       // Call Internal API
       const apiUrl = process.env.INTERNAL_API_URL;
@@ -99,6 +182,7 @@ io.on('connection', (socket) => {
       if (!user || String(user.karang_taruna_id) !== String(karangTarunaId)) {
         throw new Error('Authentication tenant mismatch');
       }
+      if (!socket.connected) return;
 
       socket.userId = user.user_id;
       socket.karangTarunaId = user.karang_taruna_id;
@@ -118,17 +202,20 @@ io.on('connection', (socket) => {
         token: token // Needed for revalidation
       });
 
-      // JOIN GLOBAL TENANT AND USER ROOMS
+      // Rooms derive only from the identity validated by PHP.
       socket.join(`tenant_${user.karang_taruna_id}`);
-      socket.join(`user_${user.user_id}`);
+      socket.join(privateUserRoom(user.karang_taruna_id, user.user_id));
+      scheduleAuthorizationRenewal(socket);
 
       clearTimeout(authTimeout);
       socket.emit('auth_success', { message: 'Authenticated' });
       console.log(`User ${user.user_id} authenticated via internal API for tenant ${user.karang_taruna_id}`);
     } catch (error) {
-      console.error('Socket Auth Error:', error.message);
+      console.error('Socket authentication failed');
       socket.emit('auth_error', { message: 'Authentication failed' });
       socket.disconnect();
+    } finally {
+      socket.authenticating = false;
     }
   });
 
@@ -138,6 +225,7 @@ io.on('connection', (socket) => {
 
     const roomId = data && data.room_id;
     if (!roomId) return;
+    if (!await currentAuthorization(socket)) return;
 
     try {
       // Validate room existence and tenant match
@@ -171,12 +259,13 @@ io.on('connection', (socket) => {
       }
 
       // Join the room
+      if (!await currentAuthorization(socket)) return;
       const roomName = `room_${roomId}`;
       socket.join(roomName);
       socket.emit('room_joined', { room_id: roomId });
       console.log(`User ${socket.userId} joined room ${roomName}`);
     } catch (error) {
-      console.error('Error joining room:', error);
+      console.error('Error joining room');
     }
   });
 
@@ -200,35 +289,10 @@ io.on('connection', (socket) => {
     }
     rateLimits.set(socket.id, rateData);
 
-    // Membership Revalidation (cache expires in 60s)
+    // Share the receiving authorization lease with the send path.
     const userInfo = onlineUsers.get(socket.id);
-    if (userInfo && (now - userInfo.authTime > 60000)) {
-      try {
-        const apiUrl = process.env.INTERNAL_API_URL;
-        const secret = process.env.INTERNAL_API_SECRET;
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${userInfo.token}`,
-            'X-Karang-Taruna-ID': socket.karangTarunaId.toString(),
-            'X-Internal-Secret': secret
-          }
-        });
-        if (!response.ok) throw new Error('Revalidation failed');
-        const json = await response.json();
-        if (!json.status) throw new Error('Revalidation failed');
-
-        socket.permissions = json.data.permissions;
-        socket.profilePhotoUrl = json.data.profile_photo_url;
-        userInfo.permissions = json.data.permissions;
-        userInfo.profilePhotoUrl = json.data.profile_photo_url;
-        userInfo.authTime = now;
-        onlineUsers.set(socket.id, userInfo);
-      } catch (err) {
-        console.error('Revalidation error:', err.message);
-        socket.emit('auth_error', { message: 'Session revalidation failed, please reconnect' });
-        return socket.disconnect();
-      }
+    if (socket.authorizationRenewal || (userInfo && now - userInfo.authTime >= AUTH_LEASE_MS)) {
+      if (!await renewAuthorization(socket)) return;
     }
 
     if (!socket.permissions || !socket.permissions.includes('chat.send')) {
@@ -320,18 +384,10 @@ io.on('connection', (socket) => {
         }
 
         // Check active membership for sender globally for this tenant
-        const [activeMembers] = await pool.execute(
-          `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
-          [socket.userId, socket.karangTarunaId]
-        );
-        if (activeMembers.length === 0) return socket.emit('error', { message: 'You are not an active member of this tenant' });
-
-        // D. NODE PRIVATE SEND SECURITY
-        const [receivers] = await pool.execute(
-          `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
-          [receiverId, socket.karangTarunaId]
-        );
-        if (receivers.length === 0) {
+        if (!await eligibleMember(socket.userId, socket.karangTarunaId)) {
+          return socket.emit('error', { message: 'You are not an active member of this tenant' });
+        }
+        if (!await eligibleMember(receiverId, socket.karangTarunaId)) {
           return socket.emit('error', { message: 'Receiver not found or not active in this tenant' });
         }
 
@@ -362,21 +418,23 @@ io.on('connection', (socket) => {
 
         // Emit to sender's sockets (all devices) and receiver's sockets (all devices)
         // using the user rooms they joined during auth.
-        io.to(`user_${socket.userId}`).emit('new_message', chatPayload);
-        io.to(`user_${receiverId}`).emit('new_message', chatPayload);
+        io.to(privateUserRoom(socket.karangTarunaId, socket.userId)).emit('new_message', chatPayload);
+        io.to(privateUserRoom(socket.karangTarunaId, receiverId)).emit('new_message', chatPayload);
 
         // Fire and forget notification
         _triggerChatNotification(chatId);
       }
 
     } catch (error) {
-      console.error('Error saving message:', error);
+      // Driver error objects can contain SQL and private message parameters.
+      console.error('Error saving message');
       socket.emit('error', { message: 'Failed to send message' });
     }
   });
 
   socket.on('disconnect', () => {
     clearTimeout(authTimeout);
+    clearTimeout(socket.authorizationTimer);
     console.log(`User disconnected: ${socket.id}`);
     onlineUsers.delete(socket.id);
     rateLimits.delete(socket.id);
@@ -385,8 +443,9 @@ io.on('connection', (socket) => {
   socket.on('join_wheel', async (data) => {
     if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
 
-    const sessionId = data.session_id;
+    const sessionId = data && data.session_id;
     if (!sessionId) return;
+    if (!await currentAuthorization(socket)) return;
 
     // Since session IDs are unique globally and we validate tenant id in PHP API,
     // we can just use wheel_session_${sessionId}.
@@ -425,7 +484,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, io, pool, boundedConnectionLimit };
+module.exports = { server, io, pool, boundedConnectionLimit, privateUserRoom, renewAuthorization, AUTH_LEASE_MS };
 
 function _triggerChatNotification(chatId) {
   const apiUrl = process.env.INTERNAL_API_URL.replace('socket-auth', 'chat-notification');
@@ -451,6 +510,6 @@ function _triggerChatNotification(chatId) {
   })
   .catch(err => {
     clearTimeout(timeoutId);
-    console.error('Failed to trigger chat notification:', err.message);
+    console.error('Failed to trigger chat notification');
   });
 }

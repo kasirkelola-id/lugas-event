@@ -13,6 +13,8 @@ class AuthFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
+        \App\Services\AuthService::setUser(null);
+        \App\Services\AuthService::setToken(null);
         $authHeader = $request->getHeaderLine('Authorization');
         if (empty($authHeader)) {
             $authHeader = $request->getServer('HTTP_AUTHORIZATION');
@@ -72,29 +74,35 @@ class AuthFilter implements FilterInterface
             
             // 1. Identify if this is a global endpoint or tenant endpoint
             $globalPaths = ['api/me', 'api/logout', 'api/profile', 'api/fcm-token', 'api/memberships'];
-            $isGlobal = false;
             $currentPath = ltrim($request->getUri()->getPath(), '/');
             if (strpos($currentPath, 'index.php/') === 0) {
                 $currentPath = substr($currentPath, 10);
             }
-            foreach ($globalPaths as $path) {
-                if (strpos($currentPath, $path) === 0) {
-                    $isGlobal = true;
-                    break;
-                }
-            }
+            // Membership administration requires tenant authorization. Only the
+            // exact discovery path is global; profile subroutes are user-owned.
+            $isGlobal = in_array($currentPath, $globalPaths, true)
+                || strpos($currentPath, 'api/profile/') === 0;
 
-            $headerTenantId = $request->getHeaderLine('X-Karang-Taruna-ID');
-            if (empty($headerTenantId) && !empty($tokenData['karang_taruna_id'])) {
-                $headerTenantId = $tokenData['karang_taruna_id'];
+            $headerTenantId = trim($request->getHeaderLine('X-Karang-Taruna-ID'));
+            if ($headerTenantId === '' && !empty($tokenData['karang_taruna_id'])) {
+                $headerTenantId = (string)$tokenData['karang_taruna_id'];
             }
             $memberModel = new \App\Models\OrganizationMemberModel();
-            
-            if (!empty($headerTenantId)) {
-                $membership = $memberModel->where('user_id', $user['id'])
-                                          ->where('karang_taruna_id', $headerTenantId)
-                                          ->first();
-                if (!$membership || (int)$membership['status_aktif'] !== 1) {
+
+            // Do not retain a legacy tenant/role when no eligible membership is
+            // selected, including on global profile/logout/discovery endpoints.
+            $user['karang_taruna_id'] = null;
+            $user['role_level'] = null;
+            $membership = null;
+
+            if ($headerTenantId !== '') {
+                $tenantId = filter_var($headerTenantId, FILTER_VALIDATE_INT, [
+                    'options' => ['min_range' => 1],
+                ]);
+                $memberships = $tenantId === false
+                    ? [] : $memberModel->getEligibleMemberships((int)$user['id'], $tenantId);
+                $membership = $memberships[0] ?? null;
+                if (!$membership) {
                     return Services::response()
                         ->setJSON([
                             'status' => false, 
@@ -104,27 +112,13 @@ class AuthFilter implements FilterInterface
                         ->setStatusCode(403);
                 }
                 
-                // Override legacy context
-                $user['karang_taruna_id'] = $membership['karang_taruna_id'];
-                $user['role_level'] = $membership['role_level'];
-                if (!empty($membership['username'])) {
-                    $user['username'] = $membership['username'];
-                }
-                
             } else {
                 // Header is absent
-                $activeMemberships = $memberModel->where('user_id', $user['id'])
-                                                 ->where('status_aktif', 1)
-                                                 ->findAll();
+                $activeMemberships = $memberModel->getEligibleMemberships((int)$user['id']);
                                                  
                 if (count($activeMemberships) === 1) {
                     // Auto-select single membership
                     $membership = $activeMemberships[0];
-                    $user['karang_taruna_id'] = $membership['karang_taruna_id'];
-                    $user['role_level'] = $membership['role_level'];
-                    if (!empty($membership['username'])) {
-                        $user['username'] = $membership['username'];
-                    }
                 } elseif (count($activeMemberships) > 1) {
                     // Ambiguous
                     if (!$isGlobal) {
@@ -133,20 +127,25 @@ class AuthFilter implements FilterInterface
                             ->setStatusCode(400);
                     }
                 } else {
-                    // count == 0. Safety fallback for legacy transition
-                    if (empty($user['karang_taruna_id'])) {
-                        // If the user has no memberships AND no legacy ID, block them unless it's a global endpoint (e.g. logout)
-                        if (!$isGlobal) {
-                            return Services::response()
-                                ->setJSON([
-                                    'status' => false, 
-                                    'message' => 'No active organization memberships found',
-                                    'errorCode' => 'ACTIVE_MEMBERSHIP_REVOKED'
-                                ])
-                                ->setStatusCode(403);
-                        }
+                    // Legacy accounts are backfilled by the membership migration.
+                    // Missing/invalid membership must fail closed on tenant APIs.
+                    if (!$isGlobal) {
+                        return Services::response()
+                            ->setJSON([
+                                'status' => false,
+                                'message' => 'No active organization memberships found',
+                                'errorCode' => 'ACTIVE_MEMBERSHIP_REVOKED'
+                            ])
+                            ->setStatusCode(403);
                     }
-                    // If they have legacy karang_taruna_id, we let it pass for now using global legacy values.
+                }
+            }
+
+            if ($membership !== null) {
+                $user['karang_taruna_id'] = $membership['karang_taruna_id'];
+                $user['role_level'] = $membership['role_level'];
+                if (!empty($membership['username'])) {
+                    $user['username'] = $membership['username'];
                 }
             }
         }

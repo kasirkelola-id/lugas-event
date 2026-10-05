@@ -17,42 +17,87 @@ class ChatService {
   IO.Socket? _socket;
   IO.Socket? get socket => _socket;
 
-  final StreamController<Chat> _messageStreamController = StreamController<Chat>.broadcast();
+  final StreamController<Chat> _messageStreamController =
+      StreamController<Chat>.broadcast();
   Stream<Chat> get messageStream => _messageStreamController.stream;
 
   Function()? onAuthSuccess;
-  
+
   bool _isAuthenticated = false;
   int? _activeRoomId;
   final Set<int> _joinedRooms = {};
+  int? _socketTenant;
+  String? _socketToken;
+  int _contextGeneration = 0;
+  int _initialization = 0;
+
+  bool isCurrentTenant(Chat chat) =>
+      _isAuthenticated && chat.karangTarunaId == _socketTenant;
+
+  Future<void> switchTenant(
+    int id,
+    String name, {
+    String? logoUrl,
+    IO.Socket Function(String, Map<String, dynamic>)? socketFactory,
+  }) async {
+    closeConnection();
+    await AuthStorage.saveTenant(id, name, logoUrl: logoUrl);
+    await initWebSocket(socketFactory: socketFactory);
+  }
 
   // Initialize WebSocket connection
-  Future<void> initWebSocket() async {
+  // The optional factory provides an in-memory transport for tests.
+  Future<void> initWebSocket({
+    IO.Socket Function(String, Map<String, dynamic>)? socketFactory,
+  }) async {
+    final initialization = ++_initialization;
     final token = await AuthStorage.getToken();
     final tenant = await AuthStorage.getTenant();
-
-    if (token == null || tenant == null) return;
-
-    final ktId = tenant['id'];
-
-    if (_socket != null && _socket!.connected) return;
-
-    _socket = IO.io(
+    if (initialization != _initialization) return;
+    if (token == null || tenant == null) {
+      closeConnection();
+      return;
+    }
+    final ktId = tenant['id'] as int;
+    final sameContext = _socketTenant == ktId && _socketToken == token;
+    if (sameContext && _socket?.connected == true) return;
+    final previousRoom = sameContext ? _activeRoomId : null;
+    closeConnection();
+    _activeRoomId = previousRoom;
+    _socketTenant = ktId;
+    _socketToken = token;
+    final generation = _contextGeneration;
+    final IO.Socket socket = (socketFactory ?? IO.io)(
       ApiConfig.socketBaseUrl,
       IO.OptionBuilder()
           .setTransports(['websocket', 'polling'])
           .disableAutoConnect()
           .enableReconnection()
+          .enableForceNew()
           .setPath('/socket.io/')
           .build(),
     );
+    _socket = socket;
+    bool current() =>
+        generation == _contextGeneration && identical(_socket, socket);
 
-    _socket!.connect();
-
-    _socket!.onConnect((_) {
+    socket.onConnect((_) async {
+      if (!current()) return;
+      _isAuthenticated = false;
+      final currentToken = await AuthStorage.getToken();
+      final currentTenant = await AuthStorage.getTenant();
+      if (!current()) return;
+      if (currentToken != token || currentTenant?['id'] != ktId) {
+        // A reconnect must not authenticate captured credentials from an old tenant.
+        await initWebSocket(socketFactory: socketFactory);
+        return;
+      }
       debugPrint('Socket.io connected');
       // Send authentication payload with opaque bearer token
-      _socket!.emit('auth', {'token': token, 'tenant_id': ktId});
+      socket.emit('auth', {
+        'token': currentToken,
+        'tenant_id': currentTenant!['id'],
+      });
     });
 
     // Prevent duplicate listeners by clearing first
@@ -65,6 +110,7 @@ class ChatService {
     _socket!.off('disconnect');
 
     _socket!.on('auth_success', (_) {
+      if (!current()) return;
       debugPrint('Socket.io authenticated successfully');
       _isAuthenticated = true;
       if (_activeRoomId != null) {
@@ -76,11 +122,13 @@ class ChatService {
     });
 
     _socket!.on('auth_error', (data) {
+      if (!current()) return;
       debugPrint('Socket.io auth error: ${data['message']}');
       _isAuthenticated = false;
     });
 
     _socket!.onConnectError((data) {
+      if (!current()) return;
       debugPrint('Socket.io connect error: $data');
       _isAuthenticated = false;
     });
@@ -90,9 +138,17 @@ class ChatService {
     });
 
     // Listen to incoming messages
-    _socket!.on('new_message', (data) {
+    _socket!.on('new_message', (data) async {
       try {
+        if (!current() || !_isAuthenticated) return;
         final chat = Chat.fromJson(data);
+        if (!isCurrentTenant(chat)) return;
+        final activeTenant = await AuthStorage.getTenant();
+        if (!current() ||
+            !isCurrentTenant(chat) ||
+            chat.karangTarunaId != activeTenant?['id']) {
+          return;
+        }
         _messageStreamController.add(chat);
       } catch (e) {
         debugPrint("Error parsing chat: $e");
@@ -100,16 +156,20 @@ class ChatService {
     });
 
     _socket!.on('room_joined', (data) {
+      if (!current()) return;
       if (data['room_id'] != null) {
         _joinedRooms.add(data['room_id'] as int);
       }
     });
 
     _socket!.onDisconnect((_) {
+      if (!current()) return;
       debugPrint('Socket.io disconnected');
       _isAuthenticated = false;
       _joinedRooms.clear();
     });
+    // Register handlers before connecting (also safe for synchronous mocks).
+    socket.connect();
   }
 
   void joinRoom(int roomId) {
@@ -153,13 +213,21 @@ class ChatService {
     int? receiverId,
     int? chatRoomId,
   }) async {
+    final tenant = await AuthStorage.getTenant();
+    final token = await AuthStorage.getToken();
+    if (_socket != null &&
+        (_socketTenant != tenant?['id'] || _socketToken != token)) {
+      closeConnection();
+    }
     bool canSocketSend = false;
     if (_socket != null && _socket!.connected && _isAuthenticated) {
-       if (type == 'private') {
-           canSocketSend = true;
-       } else if (type == 'group' && chatRoomId != null && _joinedRooms.contains(chatRoomId)) {
-           canSocketSend = true;
-       }
+      if (type == 'private') {
+        canSocketSend = true;
+      } else if (type == 'group' &&
+          chatRoomId != null &&
+          _joinedRooms.contains(chatRoomId)) {
+        canSocketSend = true;
+      }
     }
 
     if (canSocketSend) {
@@ -183,14 +251,19 @@ class ChatService {
   }
 
   void closeConnection() {
+    _initialization++;
+    _contextGeneration++;
     if (_socket != null) {
+      _socket!.clearListeners();
       _socket!.disconnect();
       _socket!.dispose();
       _socket = null;
-      _isAuthenticated = false;
-      _activeRoomId = null;
-      _joinedRooms.clear();
     }
+    _isAuthenticated = false;
+    _socketTenant = null;
+    _socketToken = null;
+    _activeRoomId = null;
+    _joinedRooms.clear();
   }
 
   // REST API: Get Rooms
@@ -238,7 +311,11 @@ class ChatService {
   }
 
   // REST API: Get Room Chat History
-  Future<List<Chat>> getRoomChatHistory(int roomId, {int? beforeId, int? limit}) async {
+  Future<List<Chat>> getRoomChatHistory(
+    int roomId, {
+    int? beforeId,
+    int? limit,
+  }) async {
     try {
       String url = '/chats/rooms/$roomId/messages';
       final query = <String>[];
@@ -284,7 +361,10 @@ class ChatService {
   }
 
   // REST API: Get Private Chat Contacts
-  Future<List<Map<String, dynamic>>> getPrivateContacts({int? limit, int offset = 0}) async {
+  Future<List<Map<String, dynamic>>> getPrivateContacts({
+    int? limit,
+    int offset = 0,
+  }) async {
     try {
       final query = <String>[];
       if (limit != null) query.add('limit=$limit');

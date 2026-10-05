@@ -374,7 +374,8 @@ describe('Socket.IO Chat Integration', () => {
     clientSocket = ioc(`http://localhost:${port}`);
     clientSocket.on('connect', () => clientSocket.emit('auth', { token: 'valid', tenant_id: 1 }));
     clientSocket.once('auth_success', () => {
-      expect(io.sockets.adapter.rooms.get('user_10').has(clientSocket.id)).toBe(true);
+      expect(io.sockets.adapter.rooms.get('tenant_1_user_10').has(clientSocket.id)).toBe(true);
+      expect(io.sockets.adapter.rooms.has('user_10')).toBe(false);
       clientSocket.emit('join_user_room', { user_id: 99 });
       setTimeout(() => {
         expect(io.sockets.adapter.rooms.has('user_99')).toBe(false);

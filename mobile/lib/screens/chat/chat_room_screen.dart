@@ -113,6 +113,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     _messageSubscription = _chatService.messageStream.listen((Chat chat) {
       if (!mounted) return;
+      if (!_chatService.isCurrentTenant(chat)) return;
       if (_renderedChatIds.contains(chat.id)) return; // Deduplicate by server ID
 
       // Filter message for this room

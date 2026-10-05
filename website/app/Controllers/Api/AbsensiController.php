@@ -199,17 +199,22 @@ class AbsensiController extends BaseApiController
     public function status()
     {
         $userId = AuthService::getGlobalUserId();
-        if ($userId === null) {
+        $tenantId = AuthService::getTenantId();
+        if ($userId === null || !$tenantId) {
             return $this->sendError('Forbidden', null, 403);
         }
 
         $absensiModel = new AbsensiModel();
         // Cari absensi hari ini yang belum checkout
         $today = date('Y-m-d');
-        $activeAbsensi = $absensiModel->where('user_id', $userId)
-                                      ->where('waktu_checkout IS NULL')
-                                      ->where('waktu_absen >=', $today . ' 00:00:00')
-                                      ->where('waktu_absen <=', $today . ' 23:59:59')
+        $activeAbsensi = $absensiModel->select('absensi.event_id')
+                                      ->join('events', 'events.id = absensi.event_id')
+                                      ->where('absensi.user_id', $userId)
+                                      ->where('absensi.karang_taruna_id', $tenantId)
+                                      ->where('events.karang_taruna_id', $tenantId)
+                                      ->where('absensi.waktu_checkout IS NULL')
+                                      ->where('absensi.waktu_absen >=', $today . ' 00:00:00')
+                                      ->where('absensi.waktu_absen <=', $today . ' 23:59:59')
                                       ->findAll();
 
         $activeEventIds = array_column($activeAbsensi, 'event_id');
