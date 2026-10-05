@@ -27,6 +27,7 @@ class WheelTest extends \Tests\Support\BaseTest
     protected function setUp(): void
     {
         parent::setUp();
+        $this->db->resetTransStatus();
         
         // Setup a tenant and user
         $this->db->table('karang_taruna')->insert([

@@ -45,6 +45,10 @@ abstract class BaseTest extends CIUnitTestCase
             }
             
             $db->enableForeignKeyChecks();
+            // Historical SQLite Forge compatibility attempts may leave a failed
+            // transaction status. This newly emptied testing fixture starts clean;
+            // controller/service transaction checks remain active during each test.
+            $db->resetTransStatus();
         }
     }
 

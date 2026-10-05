@@ -83,12 +83,12 @@ class WheelController extends ResourceController
             }
         }
 
+        $ownsTransaction = false;
         try {
             // Begin Transaction
             $db = \Config\Database::connect();
-            if (ENVIRONMENT !== 'testing') {
-                $db->transStart();
-            }
+            $this->beginMutationTransaction($db);
+            $ownsTransaction = true;
 
             $data = [
                 'karang_taruna_id'         => $tenantId,
@@ -108,6 +108,7 @@ class WheelController extends ResourceController
             }
 
             $sessionId = $this->sessionModel->insert($data);
+            if (!$sessionId) throw new \RuntimeException('Wheel session write failed');
 
             if ($sourceType === 'custom') {
                 $insertItems = [];
@@ -126,7 +127,7 @@ class WheelController extends ResourceController
                     $db->transRollback();
                     return $this->failValidationErrors('Minimal 2 kandidat valid diperlukan');
                 }
-                $this->itemModel->insertBatch($insertItems);
+                if ($this->itemModel->insertBatch($insertItems) === false) throw new \RuntimeException('Wheel items write failed');
             } else {
                 // mode members
                 // Items are actually array of organization_members ids or user_ids?
@@ -164,24 +165,14 @@ class WheelController extends ResourceController
                         'is_active'      => 1
                     ];
                 }
-                $this->itemModel->insertBatch($insertItems);
+                if ($this->itemModel->insertBatch($insertItems) === false) throw new \RuntimeException('Wheel items write failed');
             }
 
-            if (ENVIRONMENT !== 'testing') {
-                $db->transComplete();
-            }
-
-            // In CI4 testing, transStatus can sometimes falsely return false due to nested transactions
-            // We rely on exceptions being thrown for true failures if transException(true) was set
-            // But let's check for actual errors
-            $error = $db->error();
-            if ($error['code'] !== 0) {
-                return $this->safeFailure();
-            }
+            if (!$db->transStatus() || !$db->transCommit()) throw new \RuntimeException('Wheel commit failed');
 
             return $this->respondCreated(['success' => true, 'message' => 'Sesi undian berhasil dibuat', 'session_id' => $sessionId]);
         } catch (\Throwable $error) {
-            if (isset($db)) $db->transRollback();
+            if ($ownsTransaction && $db->transDepth > 0) $db->transRollback();
             return $this->safeFailure();
         }
     }
@@ -215,61 +206,42 @@ class WheelController extends ResourceController
 
     public function close($id = null)
     {
+        $db = \Config\Database::connect();
+        $ownsTransaction = false;
         try {
-            $tenantId = AuthService::getTenantId();
-            $userId   = AuthService::getGlobalUserId();
-
-            $session = $this->sessionModel->find($id);
-            if (!$session || $session['karang_taruna_id'] != $tenantId) {
-                return $this->failNotFound('Sesi tidak ditemukan');
-            }
-
-            if ($session['created_by_user_id'] != $userId) {
+            $this->beginMutationTransaction($db);
+            $ownsTransaction = true;
+            $session = $this->lockedSession($db, $id, AuthService::getTenantId());
+            if (!$session) return $this->failNotFound('Sesi tidak ditemukan');
+            if ($session['created_by_user_id'] != AuthService::getGlobalUserId()) {
                 return $this->failForbidden('Hanya pembuat sesi yang dapat mengakhiri undian');
             }
-
-            $this->sessionModel->update($id, ['status' => 'closed']);
-
-            // Broadcast to socket
-            $this->triggerSocketEvent($id, 'wheel_closed', [
-                'session_id' => $id
-            ]);
-
+            $changed = $session['status'] !== 'closed';
+            if ($changed && !$this->sessionModel->update($id, ['status' => 'closed'])) throw new \RuntimeException('Wheel close write failed');
+            if (!$db->transStatus() || !$db->transCommit()) throw new \RuntimeException('Wheel close commit failed');
+            if ($changed) $this->triggerSocketEvent($id, 'wheel_closed', ['session_id' => $id]);
             return $this->respond(['success' => true, 'message' => 'Sesi berhasil diakhiri']);
         } catch (\Throwable $error) {
             return $this->safeFailure();
+        } finally {
+            if ($ownsTransaction && $db->transDepth > 0) $db->transRollback();
         }
     }
 
     public function spin($id = null)
     {
-        $tenantId = AuthService::getTenantId();
-        $userId   = AuthService::getGlobalUserId();
-
-        $session = $this->sessionModel->find($id);
-        if (!$session || $session['karang_taruna_id'] != $tenantId) {
-            return $this->failNotFound('Sesi tidak ditemukan');
-        }
-
-        if ($session['created_by_user_id'] != $userId) {
-            return $this->failForbidden('Hanya pembuat sesi yang dapat memutar roda');
-        }
-
-        if ($session['status'] === 'closed') {
-            return $this->failValidationErrors('Sesi undian sudah diakhiri');
-        }
-
         $db = \Config\Database::connect();
-        $db->transBegin();
-
+        $ownsTransaction = false;
         try {
-            // Pessimistic Lock for Production (MySQL)
-            if ($db->DBDriver === 'MySQLi') {
-                $sessionLock = $db->query("SELECT * FROM wheel_sessions WHERE id = ? FOR UPDATE", [$id])->getRowArray();
-                if (!$sessionLock) {
-                    throw new \Exception('Sesi undian tidak ditemukan atau sudah dihapus', 404);
-                }
+            $this->beginMutationTransaction($db);
+            $ownsTransaction = true;
+            $session = $this->lockedSession($db, $id, AuthService::getTenantId());
+            if (!$session) return $this->failNotFound('Sesi tidak ditemukan');
+            if ($session['created_by_user_id'] != AuthService::getGlobalUserId()) {
+                return $this->failForbidden('Hanya pembuat sesi yang dapat memutar roda');
             }
+            if ($session['status'] === 'closed') return $this->failValidationErrors('Sesi undian sudah diakhiri');
+            $closed = false;
 
             // Concurrency Lock Check (Inside transaction)
             $latestSpin = $this->resultModel
@@ -309,27 +281,23 @@ class WheelController extends ResourceController
                 'completed_at'          => null,
             ]);
 
+            if (!$resultId) throw new \RuntimeException('Wheel result write failed');
+
             // Remove winner if ON
             if ($session['remove_winner_after_spin'] == 1) {
-                $this->itemModel->update($winnerItem['id'], ['is_active' => 0]);
+                if (!$this->itemModel->update($winnerItem['id'], ['is_active' => 0])) throw new \RuntimeException('Wheel winner write failed');
 
                 // Auto-finish if 1 or 0 remaining items
                 $remainingItems = $this->itemModel->where('session_id', $id)->where('is_active', 1)->countAllResults();
                 if ($remainingItems <= 1) {
-                    $this->sessionModel->update($id, ['status' => 'closed']);
-                    $this->triggerSocketEvent($id, 'wheel_closed', [
-                        'session_id' => $id
-                    ]);
+                    if (!$this->sessionModel->update($id, ['status' => 'closed'])) throw new \RuntimeException('Wheel close write failed');
+                    $closed = true;
                 }
             }
 
-            if (ENVIRONMENT !== 'testing' && $db->transStatus() === false) {
-                throw new \Exception('Gagal menyimpan hasil putaran', 500);
-            }
-
-            $db->transCommit();
-
             $resultData = $this->resultModel->find($resultId);
+            if (!$resultData || !$db->transStatus() || !$db->transCommit()) throw new \RuntimeException('Wheel result commit failed');
+            if ($closed) $this->triggerSocketEvent($id, 'wheel_closed', ['session_id' => $id]);
 
             // Emit Socket after successful commit
             $this->triggerSocketEvent($id, 'wheel_spin_started', [
@@ -348,18 +316,20 @@ class WheelController extends ResourceController
             ]);
 
         } catch (\Throwable $e) {
-            $db->transRollback();
             $code = $e->getCode();
             $msg = $e->getMessage();
             if ($code === 409 && $msg === 'Putaran sebelumnya masih berlangsung') return $this->failResourceExists($msg);
             if ($code === 404 && $msg === 'Sesi undian tidak ditemukan atau sudah dihapus') return $this->failNotFound($msg);
             if ($code === 400 && $msg === 'Kandidat sudah habis') return $this->failValidationErrors($msg);
             return $this->safeFailure();
+        } finally {
+            if ($ownsTransaction && $db->transDepth > 0) $db->transRollback();
         }
     }
 
     public function duplicate($id = null)
     {
+        $ownsTransaction = false;
         try {
             $tenantId = AuthService::getTenantId();
             $userId   = AuthService::getGlobalUserId();
@@ -374,9 +344,8 @@ class WheelController extends ResourceController
             }
 
             $db = \Config\Database::connect();
-            if (ENVIRONMENT !== 'testing') {
-                $db->transStart();
-            }
+            $this->beginMutationTransaction($db);
+            $ownsTransaction = true;
 
             $newSessionData = [
                 'karang_taruna_id'         => $tenantId,
@@ -390,6 +359,7 @@ class WheelController extends ResourceController
             ];
 
             $newSessionId = $this->sessionModel->insert($newSessionData);
+            if (!$newSessionId) throw new \RuntimeException('Wheel session write failed');
 
             $oldItems = $this->itemModel->where('session_id', $id)->findAll();
             $insertItems = [];
@@ -403,12 +373,10 @@ class WheelController extends ResourceController
             }
 
             if (!empty($insertItems)) {
-                $this->itemModel->insertBatch($insertItems);
+                if ($this->itemModel->insertBatch($insertItems) === false) throw new \RuntimeException('Wheel items write failed');
             }
 
-            if (ENVIRONMENT !== 'testing') {
-                $db->transComplete();
-            }
+            if (!$db->transStatus() || !$db->transCommit()) throw new \RuntimeException('Wheel commit failed');
 
             return $this->respondCreated([
                 'success' => true,
@@ -416,9 +384,21 @@ class WheelController extends ResourceController
                 'session_id' => $newSessionId
             ]);
         } catch (\Throwable $error) {
-            if (isset($db)) $db->transRollback();
+            if ($ownsTransaction && $db->transDepth > 0) $db->transRollback();
             return $this->safeFailure();
         }
+    }
+
+    private function beginMutationTransaction($db): void
+    {
+        if ($db->transDepth !== 0 || !$db->transStatus() || !$db->transBegin()) throw new \RuntimeException('Wheel transaction unavailable');
+    }
+
+    private function lockedSession($db, $id, $tenantId): ?array
+    {
+        $lock = $db->DBDriver === 'SQLite3' ? '' : ' FOR UPDATE';
+        return $db->query('SELECT * FROM wheel_sessions WHERE id = ? AND karang_taruna_id = ?' . $lock,
+            [$id, $tenantId])->getRowArray();
     }
 
     private function triggerSocketEvent($sessionId, $event, $payload, $tenantId = null)
