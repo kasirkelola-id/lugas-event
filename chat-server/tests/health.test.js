@@ -4,7 +4,7 @@ jest.mock('mysql2/promise', () => ({ createPool: jest.fn(() => ({ execute: jest.
 Object.assign(process.env, { DB_HOST: '127.0.0.1', DB_USER: 'synthetic', DB_PASSWORD: '', DB_NAME: 'synthetic',
   INTERNAL_API_SECRET: 'synthetic-health-private-secret', INTERNAL_API_URL: 'http://127.0.0.1/api/internal/socket-auth' });
 global.fetch = jest.fn(() => { throw new Error('No auth/provider transport expected'); });
-const { server, io, pool } = require('../server');
+const { server, io, pool, databasePort } = require('../server');
 const fakeIo = { sockets: { sockets: new Map() }, engine: { clientsCount: 0 } };
 const get = secret => new Promise((resolve, reject) => {
   const headers = secret ? { 'X-Internal-Secret': secret } : {};
@@ -15,6 +15,14 @@ const get = secret => new Promise((resolve, reject) => {
 });
 beforeAll(done => { server.listen(0, '127.0.0.1', done); });
 afterAll(async () => { io.close(); server.close(); await pool.end(); });
+
+test('database port defaults only when absent and rejects invalid explicit values', () => {
+  expect(databasePort(undefined)).toBe(3306);
+  expect(databasePort('3309')).toBe(3309);
+  for (const value of ['', '0', '-1', '65536', '3309extra', '3.5', ' 3309']) {
+    expect(() => databasePort(value)).toThrow('Invalid database port configuration');
+  }
+});
 
 test('internal HTTP health denies missing/wrong secret before SQL and serves safe no-store metrics', async () => {
   expect((await get()).code).toBe(403); expect((await get('wrong')).code).toBe(403);

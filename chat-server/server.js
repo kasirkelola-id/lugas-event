@@ -44,10 +44,19 @@ function boundedConnectionLimit(value) {
   return Math.min(Math.max(parsed, 1), 100);
 }
 
+function databasePort(value) {
+  if (value === undefined) return 3306;
+  if (!/^[0-9]+$/.test(value) || Number(value) < 1 || Number(value) > 65535) {
+    throw new Error('Invalid database port configuration');
+  }
+  return Number(value);
+}
+
 // MySQL Connection Pool. This cap prevents an invalid environment value from
 // exhausting MySQL; deployment must still budget it against max_connections.
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
+  port: databasePort(process.env.DB_PORT),
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
@@ -425,8 +434,7 @@ io.on('connection', (socket) => {
 
         io.to(roomName).emit('new_message', chatPayload);
 
-        // Fire and forget notification
-        _triggerChatNotification(chatId);
+        // The committed INSERT trigger owns the durable notification job.
       } else if (type === 'private') {
         if (!receiverId) return deny('Receiver ID required for private chat');
 
@@ -470,8 +478,7 @@ io.on('connection', (socket) => {
         io.to(privateUserRoom(socket.karangTarunaId, socket.userId)).emit('new_message', chatPayload);
         io.to(privateUserRoom(socket.karangTarunaId, receiverId)).emit('new_message', chatPayload);
 
-        // Fire and forget notification
-        _triggerChatNotification(chatId);
+        // The committed INSERT trigger owns the durable notification job.
       }
 
     } catch (error) {
@@ -562,32 +569,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, io, pool, boundedConnectionLimit, privateUserRoom, renewAuthorization, AUTH_LEASE_MS, abuse };
-
-function _triggerChatNotification(chatId) {
-  const apiUrl = process.env.INTERNAL_API_URL.replace('socket-auth', 'chat-notification');
-  const secret = process.env.INTERNAL_API_SECRET;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3000); // 3-second timeout
-
-  fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Internal-Secret': secret
-    },
-    body: JSON.stringify({ chat_id: chatId }),
-    signal: controller.signal
-  })
-  .then(res => {
-    clearTimeout(timeoutId);
-    if (!res.ok) {
-      console.error(`Chat notification failed with status: ${res.status}`);
-    }
-  })
-  .catch(err => {
-    clearTimeout(timeoutId);
-    console.error('Failed to trigger chat notification');
-  });
-}
+module.exports = { server, io, pool, boundedConnectionLimit, databasePort, privateUserRoom, renewAuthorization, AUTH_LEASE_MS, abuse };

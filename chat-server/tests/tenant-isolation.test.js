@@ -332,7 +332,7 @@ test('concurrent auth cannot add private rooms from two tenants', async () => {
 });
 
 
-test('lost ACK retry after reconnect acknowledges one persisted row with one broadcast and notification', async () => {
+test('lost ACK retry persists once and broadcasts without redundant PHP notification requests', async () => {
   const store = require('./support/chat-store')();
   const original = pool.execute.getMockImplementation();
   pool.execute.mockImplementation((sql, args) => sql.includes('chats') ? store.execute(sql, args) : original(sql, args));
@@ -351,7 +351,7 @@ test('lost ACK retry after reconnect acknowledges one persisted row with one bro
   expect(ack.message.id).toBe(store.rows[0].id);
   expect(ack.message.created_at).toBe(store.rows[0].created_at_iso);
   expect(store.rows).toHaveLength(1); expect(received[0]).toHaveLength(1);
-  expect(global.fetch.mock.calls.filter(([url]) => url.endsWith('chat-notification'))).toHaveLength(1);
+  expect(global.fetch.mock.calls.filter(([url]) => url.endsWith('chat-notification'))).toHaveLength(0);
 });
 
 test('no socket ACK or fanout precedes successful canonical row read', async () => {
