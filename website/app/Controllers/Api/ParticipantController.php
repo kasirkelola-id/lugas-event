@@ -46,6 +46,8 @@ class ParticipantController extends BaseApiController
         $builder->select('event_participants.id as participant_id, event_participants.user_id, users.nama_lengkap, users.nama_panggilan, users.no_whatsapp as whatsapp, users.role_level, users.rt as user_rt');
         $builder->join('users', 'users.id = event_participants.user_id');
         $builder->where('event_participants.event_id', $eventId);
+        try { $pagination = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'event_participants.id'); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
         $participants = $builder->get()->getResultArray();
 
         $participants = array_map(function($p) {
@@ -54,7 +56,7 @@ class ParticipantController extends BaseApiController
             return $p;
         }, $participants);
 
-        return $this->sendSuccess('Daftar peserta', $participants);
+        return $this->sendSuccess('Daftar peserta', $participants, 200, $pagination);
     }
 
     public function add($eventId)

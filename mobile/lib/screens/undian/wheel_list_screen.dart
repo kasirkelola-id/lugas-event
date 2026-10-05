@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/wheel_model.dart';
@@ -20,6 +21,8 @@ class WheelListScreen extends StatefulWidget {
 
 class _WheelListScreenState extends State<WheelListScreen> {
   List<WheelSessionModel> _sessions = [];
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   bool _isError = false;
   String _errorMessage = '';
@@ -38,7 +41,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
       _isError = false;
     });
 
-    final result = await WheelService.getSessions();
+    final result = await WheelService.getSessions(page: _page);
     final userResult = await AuthService.getMe();
 
     if (!mounted) return;
@@ -48,6 +51,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
     }
 
     if (result['success']) {
+      _pagination = result['pagination'];
       setState(() {
         _sessions = result['sessions'] as List<WheelSessionModel>;
         _isLoading = false;
@@ -66,7 +70,17 @@ class _WheelListScreenState extends State<WheelListScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        drawer: (widget.fromDrawer && _currentUser != null) ? AppDrawer(user: _currentUser!) : null,
+        bottomNavigationBar: CollectionPager(
+          pagination: _pagination,
+          loading: _isLoading,
+          onPage: (page) {
+            setState(() => _page = page);
+            _loadData();
+          },
+        ),
+        drawer: (widget.fromDrawer && _currentUser != null)
+            ? AppDrawer(user: _currentUser!)
+            : null,
         backgroundColor: AppTheme.background,
         body: RefreshIndicator(
           onRefresh: _loadData,
@@ -116,12 +130,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
                 ),
               ];
             },
-            body: TabBarView(
-              children: [
-                _buildList(true),
-                _buildList(false),
-              ],
-            ),
+            body: TabBarView(children: [_buildList(true), _buildList(false)]),
           ),
         ),
         floatingActionButton: FloatingActionButton(
@@ -151,12 +160,16 @@ class _WheelListScreenState extends State<WheelListScreen> {
       );
     }
 
-    final filteredSessions = _sessions.where((s) => (s.status == 'active') == active).toList();
+    final filteredSessions = _sessions
+        .where((s) => (s.status == 'active') == active)
+        .toList();
 
     if (filteredSessions.isEmpty) {
       return Center(
         child: Text(
-          active ? 'Belum ada sesi undian aktif' : 'Belum ada sesi undian selesai',
+          active
+              ? 'Belum ada sesi undian aktif'
+              : 'Belum ada sesi undian selesai',
           style: const TextStyle(color: AppTheme.textSecondary),
         ),
       );
@@ -176,7 +189,9 @@ class _WheelListScreenState extends State<WheelListScreen> {
             borderRadius: AppTheme.radiusLarge,
             boxShadow: AppTheme.shadowSoft,
             border: Border.all(
-              color: active ? AppTheme.primary.withOpacity(0.3) : Colors.grey.shade200,
+              color: active
+                  ? AppTheme.primary.withOpacity(0.3)
+                  : Colors.grey.shade200,
               width: active ? 2 : 1,
             ),
           ),
@@ -266,10 +281,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
                       ],
                     ),
                   ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: Colors.grey,
-                  ),
+                  const Icon(Icons.chevron_right, color: Colors.grey),
                 ],
               ),
             ),

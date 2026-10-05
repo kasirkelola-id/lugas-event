@@ -25,6 +25,7 @@ class AnnouncementService {
         return {
           'success': true,
           'data': data['data'],
+          'pagination': data['pagination'],
           'message': data['message'],
         };
       }
@@ -49,9 +50,14 @@ class AnnouncementService {
     }
   }
 
-  static Future<Map<String, dynamic>> getAnnouncements() async {
+  static Future<Map<String, dynamic>> getAnnouncements({
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final response = await ApiClient.get('/announcements');
+      final response = await ApiClient.get(
+        '/announcements?page=$page&limit=$limit',
+      );
       final result = await _handleResponse(response);
 
       if (result['success']) {
@@ -60,7 +66,11 @@ class AnnouncementService {
           final announcements = list
               .map((e) => AnnouncementModel.fromJson(e))
               .toList();
-          return {'success': true, 'data': announcements};
+          return {
+            'success': true,
+            'data': announcements,
+            'pagination': result['pagination'],
+          };
         } catch (e) {
           return {
             'success': false,

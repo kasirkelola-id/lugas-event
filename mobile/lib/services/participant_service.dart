@@ -26,6 +26,7 @@ class ParticipantService {
           'success': true,
           'data': data['data'],
           'message': data['message'],
+          'pagination': data['pagination'],
         };
       }
 
@@ -49,16 +50,26 @@ class ParticipantService {
     }
   }
 
-  static Future<Map<String, dynamic>> getParticipants(int eventId) async {
+  static Future<Map<String, dynamic>> getParticipants(
+    int eventId, {
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final response = await ApiClient.get('/events/$eventId/participants');
+      final response = await ApiClient.get(
+        '/events/$eventId/participants?page=$page&limit=$limit',
+      );
       final result = await _handleResponse(response);
 
       if (result['success']) {
         final list = (result['data'] as List)
             .map((e) => ParticipantModel.fromJson(e))
             .toList();
-        return {'success': true, 'participants': list};
+        return {
+          'success': true,
+          'participants': list,
+          'pagination': result['pagination'],
+        };
       }
       return result;
     } catch (e) {

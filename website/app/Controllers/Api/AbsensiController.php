@@ -238,6 +238,8 @@ class AbsensiController extends BaseApiController
         $builder->where('absensi.user_id', $userId);
         $builder->orderBy('absensi.waktu_absen', 'DESC');
         
+        try { $pagination = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'absensi.id'); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
         $history = $builder->get()->getResultArray();
 
         $history = array_map(function($h) {
@@ -256,7 +258,7 @@ class AbsensiController extends BaseApiController
             return $h;
         }, $history);
 
-        return $this->sendSuccess('Histori absensi', $history);
+        return $this->sendSuccess('Histori absensi', $history, 200, $pagination);
     }
 
     public function eventAttendees($eventId)
@@ -280,6 +282,8 @@ class AbsensiController extends BaseApiController
         $builder->where('absensi.event_id', $eventId);
         $builder->orderBy('absensi.waktu_absen', 'ASC');
 
+        try { $pagination = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'absensi.id'); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
         $attendees = $builder->get()->getResultArray();
 
         // Convert types and calculate duration
@@ -297,6 +301,6 @@ class AbsensiController extends BaseApiController
             return $a;
         }, $attendees);
 
-        return $this->sendSuccess('Daftar hadir', $attendees);
+        return $this->sendSuccess('Daftar hadir', $attendees, 200, $pagination);
     }
 }

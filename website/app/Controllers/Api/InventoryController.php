@@ -24,11 +24,12 @@ class InventoryController extends BaseApiController
         $tenantId = AuthService::getTenantId();
         if (!$tenantId || !AuthService::can('inventory.view')) return $this->sendError('Tidak diizinkan', null, 403);
 
-        $inventories = $this->inventoryModel->where('karang_taruna_id', $tenantId)
-                                            ->orderBy('name', 'ASC')
-                                            ->findAll();
+        $builder = $this->inventoryModel->builder()->where('karang_taruna_id', $tenantId)->orderBy('name', 'ASC');
+        try { $pagination = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'inventories.id'); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
+        $inventories = $builder->get()->getResultArray();
 
-        return $this->sendSuccess('Daftar inventory', $inventories);
+        return $this->sendSuccess('Daftar inventory', $inventories, 200, $pagination);
     }
 
     public function create()
@@ -80,9 +81,11 @@ class InventoryController extends BaseApiController
         }
 
         $builder->orderBy('inventory_loans.created_at', 'DESC');
+        try { $pagination = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'inventory_loans.id'); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
         $loans = $builder->get()->getResultArray();
 
-        return $this->sendSuccess('Daftar pinjaman', $loans);
+        return $this->sendSuccess('Daftar pinjaman', $loans, 200, $pagination);
     }
 
     public function requestLoan()

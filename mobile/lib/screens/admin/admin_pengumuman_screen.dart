@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
@@ -24,6 +25,8 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
   UserModel? _user;
   List<AnnouncementModel> _announcements = [];
   List<AnnouncementModel> _filteredAnnouncements = [];
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
@@ -56,9 +59,12 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
       _user = userResult['user'];
     }
 
-    final announcementResult = await AnnouncementService.getAnnouncements();
+    final announcementResult = await AnnouncementService.getAnnouncements(
+      page: _page,
+    );
     if (mounted) {
       if (announcementResult['success']) {
+        _pagination = announcementResult['pagination'];
         setState(() {
           _announcements = announcementResult['data'];
           _filteredAnnouncements = _announcements;
@@ -356,13 +362,23 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination,
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _page = page);
+          _loadData();
+        },
+      ),
       appBar: AppBar(
         title: const Text('Pengumuman'),
         backgroundColor: AppTheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      drawer: (widget.fromDrawer && _user != null) ? AppDrawer(user: _user!) : null,
+      drawer: (widget.fromDrawer && _user != null)
+          ? AppDrawer(user: _user!)
+          : null,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showFormDialog(),
         backgroundColor: AppTheme.primary,
@@ -554,7 +570,8 @@ class _AdminPengumumanScreenState extends State<AdminPengumumanScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => PengumumanDetailScreen(announcement: a),
+                            builder: (_) =>
+                                PengumumanDetailScreen(announcement: a),
                           ),
                         );
                       },

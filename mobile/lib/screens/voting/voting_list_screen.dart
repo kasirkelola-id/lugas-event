@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/voting_model.dart';
@@ -20,6 +21,8 @@ class VotingListScreen extends StatefulWidget {
 }
 
 class _VotingListScreenState extends State<VotingListScreen> {
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   List<Voting> _votings = [];
   UserModel? _currentUser;
@@ -42,10 +45,11 @@ class _VotingListScreenState extends State<VotingListScreen> {
   }
 
   Future<void> _fetchVotings() async {
-    final result = await VotingService.getVotings();
+    final result = await VotingService.getVotings(page: _page);
     if (mounted) {
       setState(() {
         if (result['success']) {
+          _pagination = result['pagination'];
           _votings = result['votings'];
         }
         _isLoading = false;
@@ -72,7 +76,17 @@ class _VotingListScreenState extends State<VotingListScreen> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        drawer: (widget.fromDrawer && _currentUser != null) ? AppDrawer(user: _currentUser!) : null,
+        bottomNavigationBar: CollectionPager(
+          pagination: _pagination,
+          loading: _isLoading,
+          onPage: (page) {
+            setState(() => _page = page);
+            _loadData();
+          },
+        ),
+        drawer: (widget.fromDrawer && _currentUser != null)
+            ? AppDrawer(user: _currentUser!)
+            : null,
         appBar: AppBar(
           title: const Text(
             'Voting & Pemilu',
@@ -85,10 +99,7 @@ class _VotingListScreenState extends State<VotingListScreen> {
             indicatorWeight: 3,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
-            labelStyle: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
+            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             tabs: [
               Tab(text: 'Berlangsung'),
               Tab(text: 'Belum Dimulai'),
@@ -111,7 +122,8 @@ class _VotingListScreenState extends State<VotingListScreen> {
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => const CreateVotingScreen()),
+                      builder: (_) => const CreateVotingScreen(),
+                    ),
                   );
                   if (result == true) {
                     _fetchVotings();
@@ -259,7 +271,9 @@ class _VotingListScreenState extends State<VotingListScreen> {
                             ],
                           ),
                           Text(
-                            dateFormat.format(voting.waktuMulai ?? voting.createdAt),
+                            dateFormat.format(
+                              voting.waktuMulai ?? voting.createdAt,
+                            ),
                             style: TextStyle(
                               color: Colors.grey.shade500,
                               fontSize: 12,

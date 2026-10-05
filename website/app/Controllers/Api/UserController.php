@@ -44,9 +44,9 @@ class UserController extends BaseApiController
 
         $tenantId = AuthService::getTenantId();
 
-        $page = (int)($this->request->getVar('page') ?? 1);
-        $limit = (int)($this->request->getVar('limit') ?? 100);
-        if ($limit > 100) $limit = 100;
+        try { $collectionPage = \App\Services\CollectionPage::fromRequest($this->request, 100); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
+        $page = $collectionPage->page; $limit = $collectionPage->limit;
         $offset = ($page - 1) * $limit;
 
         $search = $this->request->getVar('search');
@@ -59,7 +59,7 @@ class UserController extends BaseApiController
                       ->join('users', 'users.id = organization_members.user_id')
                       ->where('organization_members.karang_taruna_id', $tenantId)
                       ->orderBy('organization_members.status_aktif', 'DESC')
-                      ->orderBy('users.nama_lengkap', 'ASC');
+                      ->orderBy('users.nama_lengkap', 'ASC')->orderBy('organization_members.id', 'ASC');
 
         if (!AuthService::can('members.manage')) {
             $builder->where('organization_members.role_level', 'anggota');
@@ -112,7 +112,8 @@ class UserController extends BaseApiController
                 'page' => $page,
                 'limit' => $limit,
                 'total' => $total,
-                'total_pages' => ceil($total / $limit)
+                'total_pages' => (int)ceil($total / $limit),
+                'has_more' => $page * $limit < $total
             ]
         ], 200);
     }

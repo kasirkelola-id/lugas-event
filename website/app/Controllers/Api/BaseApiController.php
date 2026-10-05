@@ -9,7 +9,7 @@ class BaseApiController extends ResourceController
 {
     use ResponseTrait;
 
-    protected function sendSuccess(string $message, $data = null, int $statusCode = 200)
+    protected function sendSuccess(string $message, $data = null, int $statusCode = 200, ?array $pagination = null)
     {
         $response = [
             'status'  => true,
@@ -19,6 +19,7 @@ class BaseApiController extends ResourceController
             $response['data'] = $data;
         }
 
+        if ($pagination !== null) $response['pagination'] = $pagination;
         return $this->respond($response, $statusCode);
     }
 

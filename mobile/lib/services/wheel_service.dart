@@ -3,16 +3,23 @@ import '../models/wheel_model.dart';
 import '../core/network/api_client.dart';
 
 class WheelService {
-  static Future<Map<String, dynamic>> getSessions() async {
+  static Future<Map<String, dynamic>> getSessions({
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final response = await ApiClient.get('/wheels');
+      final response = await ApiClient.get('/wheels?page=$page&limit=$limit');
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         final List<dynamic> list = body['data'];
         final sessions = list
             .map((e) => WheelSessionModel.fromJson(e))
             .toList();
-        return {'success': true, 'sessions': sessions};
+        return {
+          'success': true,
+          'sessions': sessions,
+          'pagination': body['pagination'],
+        };
       }
       return _handleError(response);
     } catch (e) {
@@ -47,9 +54,15 @@ class WheelService {
     }
   }
 
-  static Future<Map<String, dynamic>> getSessionDetails(int id) async {
+  static Future<Map<String, dynamic>> getSessionDetails(
+    int id, {
+    int page = 1,
+    int limit = 100,
+  }) async {
     try {
-      final response = await ApiClient.get('/wheels/$id');
+      final response = await ApiClient.get(
+        '/wheels/$id?page=$page&limit=$limit',
+      );
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
         final data = body['data'];
@@ -66,6 +79,7 @@ class WheelService {
           'session': session,
           'items': items,
           'results': results,
+          'pagination': data['results_pagination'],
         };
       }
       return _handleError(response);

@@ -22,7 +22,11 @@ class KasService {
       if (response.statusCode >= 200 &&
           response.statusCode < 300 &&
           data['status'] == true) {
-        return {'success': true, 'data': data['data']};
+        return {
+          'success': true,
+          'data': data['data'],
+          'pagination': data['pagination'],
+        };
       }
 
       String message = data['message'] ?? 'Terjadi kesalahan';
@@ -45,9 +49,14 @@ class KasService {
     }
   }
 
-  static Future<Map<String, dynamic>> getKasData({String? month}) async {
+  static Future<Map<String, dynamic>> getKasData({
+    String? month,
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final url = month != null ? '/kas?month=$month' : '/kas';
+      final url =
+          '/kas?page=$page&limit=$limit${month != null ? '&month=${Uri.encodeQueryComponent(month)}' : ''}';
       final response = await ApiClient.get(url);
       final result = await _handleResponse(response);
       if (result['success']) {
@@ -56,7 +65,12 @@ class KasService {
           final int saldo = data['saldo'] ?? 0;
           final List<dynamic> list = data['transaksi'];
           final transaksi = list.map((e) => KasModel.fromJson(e)).toList();
-          return {'success': true, 'saldo': saldo, 'transaksi': transaksi};
+          return {
+            'success': true,
+            'saldo': saldo,
+            'transaksi': transaksi,
+            'pagination': result['pagination'],
+          };
         } catch (e) {
           return {
             'success': false,

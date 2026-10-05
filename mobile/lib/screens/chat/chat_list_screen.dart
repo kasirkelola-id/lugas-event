@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../models/chat_model.dart';
@@ -25,6 +26,8 @@ class _ChatListScreenState extends State<ChatListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  int _roomPage = 1;
+  Map<String, dynamic>? _roomPagination;
   bool _isLoadingRooms = true;
   List<ChatRoom> _rooms = [];
   UserModel? _currentUser;
@@ -33,7 +36,8 @@ class _ChatListScreenState extends State<ChatListScreen>
   Timer? _refreshTimer;
 
   // Pagination Controller for Private Contacts
-  final ChatPaginationController _paginationController = ChatPaginationController();
+  final ChatPaginationController _paginationController =
+      ChatPaginationController();
   final ScrollController _privateScrollController = ScrollController();
 
   @override
@@ -78,10 +82,11 @@ class _ChatListScreenState extends State<ChatListScreen>
   }
 
   Future<void> _fetchRooms() async {
-    final rooms = await _chatService.getRooms();
+    final rooms = await _chatService.getRooms(page: _roomPage);
     if (mounted) {
       setState(() {
         _rooms = rooms;
+        _roomPagination = _chatService.roomsPagination;
         _isLoadingRooms = false;
       });
     }
@@ -90,7 +95,7 @@ class _ChatListScreenState extends State<ChatListScreen>
   Future<void> _refreshPrivateContacts() async {
     final contacts = await _chatService.getPrivateContacts(
       limit: _paginationController.contactsPageSize,
-      offset: 0
+      offset: 0,
     );
     if (!mounted) return;
 
@@ -112,8 +117,9 @@ class _ChatListScreenState extends State<ChatListScreen>
     });
 
     final contacts = await _chatService.getPrivateContacts(
-        limit: _paginationController.contactsPageSize,
-        offset: _paginationController.contactsOffset);
+      limit: _paginationController.contactsPageSize,
+      offset: _paginationController.contactsOffset,
+    );
 
     if (!mounted) return;
 
@@ -140,6 +146,19 @@ class _ChatListScreenState extends State<ChatListScreen>
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        bottomNavigationBar: _tabController.index == 0
+            ? CollectionPager(
+                pagination: _roomPagination,
+                loading: _isLoadingRooms,
+                onPage: (page) {
+                  setState(() {
+                    _roomPage = page;
+                    _isLoadingRooms = true;
+                  });
+                  _fetchRooms();
+                },
+              )
+            : null,
         drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
         backgroundColor: AppTheme.background,
         body: NestedScrollView(
@@ -358,7 +377,9 @@ class _ChatListScreenState extends State<ChatListScreen>
           left: 16,
           right: 16,
         ),
-        itemCount: _paginationController.privateContacts.length + (_paginationController.hasMoreContacts ? 1 : 0),
+        itemCount:
+            _paginationController.privateContacts.length +
+            (_paginationController.hasMoreContacts ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _paginationController.privateContacts.length) {
             return Padding(

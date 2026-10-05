@@ -17,6 +17,8 @@ class KasController extends BaseApiController
             return $this->sendError('Forbidden', null, 403);
         }
 
+        try { $page = \App\Services\CollectionPage::fromRequest($this->request); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
         $kasModel = new KasModel();
 
         $builder = $kasModel->builder();
@@ -31,6 +33,7 @@ class KasController extends BaseApiController
 
         $builder->orderBy('kas.tanggal', 'DESC');
         $builder->orderBy('kas.created_at', 'DESC');
+        $pagination = $page->apply($builder, 'kas.id');
         $transaksi = $builder->get()->getResultArray();
 
         $saldo = $kasModel->getTotalSaldo($tenantId);
@@ -46,7 +49,7 @@ class KasController extends BaseApiController
         return $this->sendSuccess('Data Kas', [
             'saldo' => (int)$saldo,
             'transaksi' => $transaksi
-        ]);
+        ], 200, $pagination);
     }
 
     public function create()

@@ -49,11 +49,13 @@ class ManageController extends BaseController
         $data['kt'] = $this->getKarangTaruna($kt_id);
         
         $db = \Config\Database::connect();
-        $data['users'] = $db->table('organization_members')
+        $builder = $db->table('organization_members')
             ->select('users.id, users.nama_lengkap, users.username, users.no_whatsapp, organization_members.role_level, organization_members.status_aktif, organization_members.approval_status, organization_members.id as membership_id')
             ->join('users', 'users.id = organization_members.user_id')
-            ->where('organization_members.karang_taruna_id', $kt_id)
-            ->get()->getResultArray();
+            ->where('organization_members.karang_taruna_id', $kt_id);
+        try { $data['pagination'] = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'organization_members.id'); }
+        catch (\InvalidArgumentException $error) { return $this->response->setStatusCode(422)->setBody('Pagination tidak valid'); }
+        $data['users'] = $builder->get()->getResultArray();
         
         return view('superadmin/manage/users', $data);
     }
@@ -211,7 +213,10 @@ class ManageController extends BaseController
     {
         $data['kt'] = $this->getKarangTaruna($kt_id);
         $eventModel = new EventModel();
-        $data['events'] = $eventModel->where('karang_taruna_id', $kt_id)->orderBy('created_at', 'DESC')->findAll();
+        $builder = $eventModel->builder()->where('karang_taruna_id', $kt_id)->orderBy('created_at', 'DESC');
+        try { $data['pagination'] = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'events.id'); }
+        catch (\InvalidArgumentException $error) { return $this->response->setStatusCode(422)->setBody('Pagination tidak valid'); }
+        $data['events'] = $builder->get()->getResultArray();
         
         return view('superadmin/manage/events', $data);
     }
@@ -220,7 +225,10 @@ class ManageController extends BaseController
     {
         $data['kt'] = $this->getKarangTaruna($kt_id);
         $pengumumanModel = new PengumumanModel();
-        $data['pengumuman'] = $pengumumanModel->where('karang_taruna_id', $kt_id)->orderBy('created_at', 'DESC')->findAll();
+        $builder = $pengumumanModel->builder()->where('karang_taruna_id', $kt_id)->orderBy('created_at', 'DESC');
+        try { $data['pagination'] = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'pengumuman.id'); }
+        catch (\InvalidArgumentException $error) { return $this->response->setStatusCode(422)->setBody('Pagination tidak valid'); }
+        $data['pengumuman'] = $builder->get()->getResultArray();
         
         return view('superadmin/manage/pengumuman', $data);
     }
@@ -255,7 +263,10 @@ class ManageController extends BaseController
     {
         $data['kt'] = $this->getKarangTaruna($kt_id);
         $kasModel = new KasModel();
-        $data['kas'] = $kasModel->where('karang_taruna_id', $kt_id)->orderBy('tanggal', 'DESC')->findAll();
+        $builder = $kasModel->builder()->where('karang_taruna_id', $kt_id)->orderBy('tanggal', 'DESC');
+        try { $data['pagination'] = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'kas.id'); }
+        catch (\InvalidArgumentException $error) { return $this->response->setStatusCode(422)->setBody('Pagination tidak valid'); }
+        $data['kas'] = $builder->get()->getResultArray();
         $data['saldo_kas'] = $kasModel->getTotalSaldo($kt_id);
         
         return view('superadmin/manage/kas', $data);

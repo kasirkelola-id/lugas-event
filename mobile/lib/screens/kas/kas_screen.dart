@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
@@ -27,6 +28,8 @@ class _KasScreenState extends State<KasScreen> {
   int _pemasukanBulanIni = 0;
   int _pengeluaranBulanIni = 0;
   List<KasModel> _transaksi = [];
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -45,7 +48,7 @@ class _KasScreenState extends State<KasScreen> {
     final String monthStr = DateFormat('yyyy-MM').format(_selectedMonth);
 
     final results = await Future.wait([
-      KasService.getKasData(month: monthStr),
+      KasService.getKasData(month: monthStr, page: _page),
       KasService.getSummary(),
     ]);
 
@@ -55,6 +58,7 @@ class _KasScreenState extends State<KasScreen> {
     if (!mounted) return;
 
     if (result['success']) {
+      _pagination = result['pagination'];
       setState(() {
         _saldo = result['saldo'] ?? 0;
         _transaksi = result['transaksi'] as List<KasModel>;
@@ -115,6 +119,14 @@ class _KasScreenState extends State<KasScreen> {
         ['admin', 'ketua', 'bendahara'].contains(widget.user!.roleLevel);
 
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination,
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _page = page);
+          _loadData();
+        },
+      ),
       drawer: widget.user != null ? AppDrawer(user: widget.user!) : null,
       backgroundColor: AppTheme.background,
       body: RefreshIndicator(
@@ -365,12 +377,19 @@ class _KasScreenState extends State<KasScreen> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, color: AppTheme.primary),
+                    icon: const Icon(
+                      Icons.chevron_left,
+                      color: AppTheme.primary,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () {
                       setState(() {
-                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+                        _page = 1;
+                        _selectedMonth = DateTime(
+                          _selectedMonth.year,
+                          _selectedMonth.month - 1,
+                        );
                       });
                       _loadData();
                     },
@@ -385,12 +404,19 @@ class _KasScreenState extends State<KasScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right, color: AppTheme.primary),
+                    icon: const Icon(
+                      Icons.chevron_right,
+                      color: AppTheme.primary,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () {
                       setState(() {
-                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+                        _page = 1;
+                        _selectedMonth = DateTime(
+                          _selectedMonth.year,
+                          _selectedMonth.month + 1,
+                        );
                       });
                       _loadData();
                     },

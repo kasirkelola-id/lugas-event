@@ -12,9 +12,11 @@ class KarangTarunaController extends BaseController
         $ktModel = new KarangTarunaModel();
         $kelurahanModel = new \App\Models\KelurahanModel();
         
-        $data['karang_taruna'] = $ktModel->select('karang_taruna.*, kelurahan.nama as kelurahan_nama')
-                                         ->join('kelurahan', 'kelurahan.id = karang_taruna.kelurahan_id', 'left')
-                                         ->findAll();
+        $builder = $ktModel->builder()->select('karang_taruna.*, kelurahan.nama as kelurahan_nama')
+            ->join('kelurahan', 'kelurahan.id = karang_taruna.kelurahan_id', 'left');
+        try { $data['pagination'] = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'karang_taruna.id'); }
+        catch (\InvalidArgumentException $error) { return $this->response->setStatusCode(422)->setBody('Pagination tidak valid'); }
+        $data['karang_taruna'] = $builder->get()->getResultArray();
         $data['kelurahan'] = $kelurahanModel->findAll();
 
         return view('superadmin/karang_taruna/index', $data);

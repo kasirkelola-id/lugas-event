@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
@@ -20,6 +21,8 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
   UserModel? _user;
   List<AnnouncementModel> _announcements = [];
   List<AnnouncementModel> _filteredAnnouncements = [];
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
@@ -52,9 +55,12 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
       _user = userResult['user'];
     }
 
-    final announcementResult = await AnnouncementService.getAnnouncements();
+    final announcementResult = await AnnouncementService.getAnnouncements(
+      page: _page,
+    );
     if (mounted) {
       if (announcementResult['success']) {
+        _pagination = announcementResult['pagination'];
         setState(() {
           _announcements = announcementResult['data'];
           _filteredAnnouncements = _announcements;
@@ -73,13 +79,23 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination,
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _page = page);
+          _loadData();
+        },
+      ),
       appBar: AppBar(
         title: const Text('Pengumuman'),
         backgroundColor: AppTheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      drawer: (widget.fromDrawer && _user != null) ? AppDrawer(user: _user!) : null,
+      drawer: (widget.fromDrawer && _user != null)
+          ? AppDrawer(user: _user!)
+          : null,
       backgroundColor: AppTheme.background,
       body: RefreshIndicator(
         onRefresh: _loadData,
@@ -209,7 +225,8 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => PengumumanDetailScreen(announcement: a),
+                          builder: (_) =>
+                              PengumumanDetailScreen(announcement: a),
                         ),
                       );
                     },
@@ -267,7 +284,11 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
+                                  Icon(
+                                    Icons.person_outline,
+                                    size: 14,
+                                    color: Colors.grey.shade500,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     a.pembuat,
@@ -279,7 +300,10 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                                 ],
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: a.targetRole == 'semua'
                                       ? Colors.blue.shade50
@@ -287,7 +311,9 @@ class _UserPengumumanScreenState extends State<UserPengumumanScreen> {
                                   borderRadius: AppTheme.radiusSmall,
                                 ),
                                 child: Text(
-                                  a.targetRole == 'semua' ? 'UNTUK SEMUA' : 'TERBATAS',
+                                  a.targetRole == 'semua'
+                                      ? 'UNTUK SEMUA'
+                                      : 'TERBATAS',
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: a.targetRole == 'semua'

@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/attendance_model.dart';
@@ -23,6 +24,8 @@ class AttendanceHistoryScreen extends StatefulWidget {
 class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   List<AttendanceModel> _history = [];
   UserModel? _user;
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -41,7 +44,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     });
 
     final userResult = await AuthService.getMe();
-    final result = await AttendanceService.getMyHistory();
+    final result = await AttendanceService.getMyHistory(page: _page);
     if (!mounted) return;
 
     if (userResult['success']) {
@@ -49,6 +52,7 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
     }
 
     if (result['success']) {
+      _pagination = result['pagination'];
       setState(() {
         _history = result['history'] as List<AttendanceModel>;
         _isLoading = false;
@@ -76,6 +80,14 @@ class _AttendanceHistoryScreenState extends State<AttendanceHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination,
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _page = page);
+          _loadHistory();
+        },
+      ),
       appBar: AppBar(
         title: const Text('Riwayat Absensi'),
         backgroundColor: AppTheme.surface,

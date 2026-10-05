@@ -26,6 +26,7 @@ class InventoryService {
         return {
           'success': true,
           'data': data['data'],
+          'pagination': data['pagination'],
           'message': data['message'],
         };
       }
@@ -50,14 +51,23 @@ class InventoryService {
     }
   }
 
-  static Future<Map<String, dynamic>> getInventories() async {
+  static Future<Map<String, dynamic>> getInventories({
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final response = await ApiClient.get('/inventories');
+      final response = await ApiClient.get(
+        '/inventories?page=$page&limit=$limit',
+      );
       final result = await _handleResponse(response);
       if (result['success']) {
         final List<dynamic> list = result['data'];
         final inventories = list.map((e) => Inventory.fromJson(e)).toList();
-        return {'success': true, 'inventories': inventories};
+        return {
+          'success': true,
+          'inventories': inventories,
+          'pagination': result['pagination'],
+        };
       }
       return result;
     } catch (e) {
@@ -76,14 +86,23 @@ class InventoryService {
     }
   }
 
-  static Future<Map<String, dynamic>> getLoans() async {
+  static Future<Map<String, dynamic>> getLoans({
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final response = await ApiClient.get('/inventories/loans');
+      final response = await ApiClient.get(
+        '/inventories/loans?page=$page&limit=$limit',
+      );
       final result = await _handleResponse(response);
       if (result['success']) {
         final List<dynamic> list = result['data'];
         final loans = list.map((e) => InventoryLoan.fromJson(e)).toList();
-        return {'success': true, 'loans': loans};
+        return {
+          'success': true,
+          'loans': loans,
+          'pagination': result['pagination'],
+        };
       }
       return result;
     } catch (e) {

@@ -23,7 +23,7 @@ class ChatRoomModel extends Model
     protected $useTimestamps = false; // Using default CURRENT_TIMESTAMP on DB level is fine, but better CI4 handles it
     
     // We can define getRooms for a user
-    public function getRoomsForUser($karangTarunaId, $userId)
+    public function roomsForUserBuilder($karangTarunaId, $userId)
     {
         // 1. Get default room for the karang taruna
         // 2. Get custom rooms where user is a member
@@ -37,6 +37,6 @@ class ChatRoomModel extends Model
                         ->groupEnd()
                         ->orderBy('chat_rooms.created_at', 'ASC');
 
-        return $builder->get()->getResultArray();
+        return $builder;
     }
 }

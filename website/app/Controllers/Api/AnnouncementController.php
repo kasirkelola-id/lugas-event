@@ -18,6 +18,8 @@ class AnnouncementController extends BaseApiController
             return $this->sendError('Forbidden', null, 403);
         }
         
+        try { $page = \App\Services\CollectionPage::fromRequest($this->request); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
         $model = new PengumumanModel();
         
         $builder = $model->builder();
@@ -42,6 +44,7 @@ class AnnouncementController extends BaseApiController
         }
 
         $builder->orderBy('pengumuman.created_at', 'DESC');
+        $pagination = $page->apply($builder, 'pengumuman.id');
         $announcements = $builder->get()->getResultArray();
 
         // Cast types
@@ -52,7 +55,7 @@ class AnnouncementController extends BaseApiController
             return $a;
         }, $announcements);
 
-        return $this->sendSuccess('Daftar pengumuman', $announcements);
+        return $this->sendSuccess('Daftar pengumuman', $announcements, 200, $pagination);
     }
 
     public function create()

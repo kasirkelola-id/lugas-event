@@ -32,9 +32,12 @@ class ChatController extends BaseApiController
         }
 
         $roomModel = new ChatRoomModel();
-        $rooms = $roomModel->getRoomsForUser($tenantId, $userId);
+        $builder = $roomModel->roomsForUserBuilder($tenantId, $userId);
+        try { $pagination = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'chat_rooms.id'); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
+        $rooms = $builder->get()->getResultArray();
 
-        return $this->sendSuccess('Berhasil mengambil daftar grup chat', $rooms);
+        return $this->sendSuccess('Berhasil mengambil daftar grup chat', $rooms, 200, $pagination);
     }
 
     public function createRoom()

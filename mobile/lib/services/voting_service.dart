@@ -25,6 +25,7 @@ class VotingService {
         return {
           'success': true,
           'data': data['data'],
+          'pagination': data['pagination'],
           'message': data['message'],
         };
       }
@@ -49,14 +50,21 @@ class VotingService {
     }
   }
 
-  static Future<Map<String, dynamic>> getVotings() async {
+  static Future<Map<String, dynamic>> getVotings({
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final response = await ApiClient.get('/votings');
+      final response = await ApiClient.get('/votings?page=$page&limit=$limit');
       final result = await _handleResponse(response);
       if (result['success']) {
         final List<dynamic> list = result['data'];
         final votings = list.map((e) => Voting.fromJson(e)).toList();
-        return {'success': true, 'votings': votings};
+        return {
+          'success': true,
+          'votings': votings,
+          'pagination': result['pagination'],
+        };
       }
       return result;
     } catch (e) {

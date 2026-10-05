@@ -33,10 +33,10 @@ class WheelController extends ResourceController
                 return $this->failUnauthorized('Unauthorized');
             }
 
-            $sessions = $this->sessionModel
-                ->where('karang_taruna_id', $tenantId)
-                ->orderBy('created_at', 'DESC')
-                ->findAll();
+            $builder = $this->sessionModel->builder()->where('karang_taruna_id', $tenantId)->orderBy('created_at', 'DESC');
+            try { $pagination = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'wheel_sessions.id'); }
+            catch (\InvalidArgumentException $error) { return $this->fail('Pagination tidak valid', 422); }
+            $sessions = $builder->get()->getResultArray();
 
             // Attach item count
             foreach ($sessions as &$session) {
@@ -44,7 +44,7 @@ class WheelController extends ResourceController
                 $session['creator_id'] = $session['created_by_user_id'];
             }
 
-            return $this->respond(['success' => true, 'data' => $sessions]);
+            return $this->respond(['success' => true, 'data' => $sessions, 'pagination' => $pagination]);
         } catch (\Throwable $error) {
             return $this->safeFailure();
         }
@@ -189,14 +189,18 @@ class WheelController extends ResourceController
 
             $session['creator_id'] = $session['created_by_user_id'];
             $items = $this->itemModel->where('session_id', $id)->findAll();
-            $results = $this->resultModel->where('session_id', $id)->orderBy('spin_sequence', 'ASC')->findAll();
+            $builder = $this->resultModel->builder()->where('session_id', $id)->orderBy('spin_sequence', 'DESC');
+            try { $resultsPagination = \App\Services\CollectionPage::fromRequest($this->request, 100)->apply($builder, 'wheel_results.id'); }
+            catch (\InvalidArgumentException $error) { return $this->fail('Pagination tidak valid', 422); }
+            $results = array_reverse($builder->get()->getResultArray());
 
             return $this->respond([
                 'success' => true,
                 'data'    => [
                     'session' => $session,
                     'items'   => $items,
-                    'results' => $results
+                    'results' => $results,
+                    'results_pagination' => $resultsPagination
                 ]
             ]);
         } catch (\Throwable $error) {

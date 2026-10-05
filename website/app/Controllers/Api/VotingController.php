@@ -39,9 +39,10 @@ class VotingController extends BaseApiController
         $userId = AuthService::getGlobalUserId();
         if (!$tenantId || !AuthService::can('voting.view')) return $this->sendError('Tidak diizinkan', null, 403);
 
-        $votings = $this->votingModel->where('karang_taruna_id', $tenantId)
-                                     ->orderBy('created_at', 'DESC')
-                                     ->findAll();
+        $builder = $this->votingModel->builder()->where('karang_taruna_id', $tenantId)->orderBy('created_at', 'DESC');
+        try { $pagination = \App\Services\CollectionPage::fromRequest($this->request)->apply($builder, 'votings.id'); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
+        $votings = $builder->get()->getResultArray();
 
         foreach ($votings as &$voting) {
             $voting['status'] = $this->getDynamicStatus($voting);
@@ -57,7 +58,7 @@ class VotingController extends BaseApiController
             }
         }
 
-        return $this->sendSuccess('Daftar voting', $votings);
+        return $this->sendSuccess('Daftar voting', $votings, 200, $pagination);
     }
 
     public function show($id = null)

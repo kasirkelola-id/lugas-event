@@ -342,11 +342,14 @@ class ChatService {
   }
 
   // REST API: Get Rooms
-  Future<List<ChatRoom>> getRooms() async {
+  Map<String, dynamic>? roomsPagination;
+  Future<List<ChatRoom>> getRooms({int page = 1}) async {
+    roomsPagination = null;
     try {
-      final response = await ApiClient.get('/chats/rooms');
+      final response = await ApiClient.get('/chats/rooms?page=$page&limit=50');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        roomsPagination = data['pagination'];
         return (data['data'] as List).map((c) => ChatRoom.fromJson(c)).toList();
       }
       return [];

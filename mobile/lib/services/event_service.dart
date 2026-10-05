@@ -22,7 +22,11 @@ class EventService {
       if (response.statusCode >= 200 &&
           response.statusCode < 300 &&
           data['status'] == true) {
-        return {'success': true, 'data': data['data']};
+        return {
+          'success': true,
+          'data': data['data'],
+          'pagination': data['pagination'],
+        };
       }
 
       String message = data['message'] ?? 'Terjadi kesalahan';
@@ -45,16 +49,25 @@ class EventService {
     }
   }
 
-  static Future<Map<String, dynamic>> getEvents({bool attendanceOnly = false}) async {
+  static Future<Map<String, dynamic>> getEvents({
+    bool attendanceOnly = false,
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final endpoint = attendanceOnly ? '/events?attendance_only=1' : '/events';
+      final endpoint =
+          '/events?page=$page&limit=$limit${attendanceOnly ? '&attendance_only=1' : ''}';
       final response = await ApiClient.get(endpoint);
       final result = await _handleResponse(response);
       if (result['success']) {
         try {
           final List<dynamic> list = result['data'];
           final events = list.map((e) => EventModel.fromJson(e)).toList();
-          return {'success': true, 'events': events};
+          return {
+            'success': true,
+            'events': events,
+            'pagination': result['pagination'],
+          };
         } catch (e) {
           return {
             'success': false,

@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/inventory_model.dart';
@@ -24,6 +25,8 @@ class _InventoryMainScreenState extends State<InventoryMainScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  final _pages = [1, 1];
+  final List<Map<String, dynamic>?> _pagination = [null, null];
   bool _isLoading = true;
   List<Inventory> _inventories = [];
   List<InventoryLoan> _loans = [];
@@ -56,16 +59,18 @@ class _InventoryMainScreenState extends State<InventoryMainScreen>
   }
 
   Future<void> _fetchInventories() async {
-    final result = await InventoryService.getInventories();
+    final result = await InventoryService.getInventories(page: _pages[0]);
     if (result['success']) {
       _inventories = result['inventories'];
+      _pagination[0] = result['pagination'];
     }
   }
 
   Future<void> _fetchLoans() async {
-    final result = await InventoryService.getLoans();
+    final result = await InventoryService.getLoans(page: _pages[1]);
     if (result['success']) {
       _loans = result['loans'];
+      _pagination[1] = result['pagination'];
     }
   }
 
@@ -142,6 +147,14 @@ class _InventoryMainScreenState extends State<InventoryMainScreen>
         _currentUser?.roleLevel == 'admin';
 
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination[_tabController.index],
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _pages[_tabController.index] = page);
+          _loadData();
+        },
+      ),
       drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       appBar: AppBar(
         title: const Text(

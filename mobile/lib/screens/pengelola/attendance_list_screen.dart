@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/attendance_model.dart';
@@ -17,6 +18,8 @@ class AttendanceListScreen extends StatefulWidget {
 
 class _AttendanceListScreenState extends State<AttendanceListScreen> {
   List<AttendanceModel> _attendees = [];
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   String? _errorMessage;
   String _searchQuery = '';
@@ -57,10 +60,14 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
       _errorMessage = null;
     });
 
-    final result = await AttendanceService.getEventAttendance(widget.event.id);
+    final result = await AttendanceService.getEventAttendance(
+      widget.event.id,
+      page: _page,
+    );
     if (!mounted) return;
 
     if (result['success']) {
+      _pagination = result['pagination'];
       setState(() {
         _attendees = result['attendees'] as List<AttendanceModel>;
         _isLoading = false;
@@ -88,6 +95,14 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination,
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _page = page);
+          _loadAttendees();
+        },
+      ),
       appBar: AppBar(
         title: const Text('Daftar Hadir'),
         backgroundColor: AppTheme.surface,
@@ -163,9 +178,16 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
               ),
               prefixIcon: const Padding(
                 padding: EdgeInsets.only(left: 12.0, right: 8.0),
-                child: Icon(Icons.search, color: AppTheme.textSecondary, size: 22),
+                child: Icon(
+                  Icons.search,
+                  color: AppTheme.textSecondary,
+                  size: 22,
+                ),
               ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              prefixIconConstraints: const BoxConstraints(
+                minWidth: 40,
+                minHeight: 40,
+              ),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
                       icon: const Icon(
@@ -198,7 +220,7 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
               final label = rt == null
                   ? 'Semua RT'
                   : 'RT ${rt.toString().padLeft(2, '0')}';
-              
+
               return Padding(
                 padding: const EdgeInsets.only(right: 10.0),
                 child: FilterChip(
@@ -206,13 +228,12 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                   selected: isSelected,
                   showCheckmark: false,
                   selectedColor: AppTheme.primary,
-                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.dark
                       ? AppTheme.surface
                       : Colors.white,
                   labelStyle: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : AppTheme.textPrimary,
+                    color: isSelected ? Colors.white : AppTheme.textPrimary,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                   ),
                   shape: RoundedRectangleBorder(
@@ -224,7 +245,10 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                       width: 1,
                     ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   onSelected: (selected) {
                     setState(() {
                       _rtFilter = rt?.toString();

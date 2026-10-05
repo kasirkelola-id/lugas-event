@@ -85,4 +85,5 @@ Manajemen Pengumuman
     </form>
   </div>
 </div>
+<?= $this->include('superadmin/partials/collection_page') ?>
 <?= $this->endSection() ?>

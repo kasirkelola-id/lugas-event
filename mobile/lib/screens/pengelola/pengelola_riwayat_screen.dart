@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
@@ -18,6 +19,8 @@ class PengelolaRiwayatScreen extends StatefulWidget {
 class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
   UserModel? _user;
   List<EventModel> _events = [];
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -39,10 +42,11 @@ class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
       return;
     }
 
-    final eventsResult = await EventService.getEvents();
+    final eventsResult = await EventService.getEvents(page: _page);
     if (!mounted) return;
 
     if (eventsResult['success']) {
+      _pagination = eventsResult['pagination'];
       final allEvents = eventsResult['events'] as List<EventModel>;
       setState(() {
         _user = userResult['user'];
@@ -64,6 +68,14 @@ class _PengelolaRiwayatScreenState extends State<PengelolaRiwayatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination,
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _page = page);
+          _loadData();
+        },
+      ),
       appBar: AppBar(
         title: const Text('Riwayat Acara'),
         backgroundColor: AppTheme.surface,

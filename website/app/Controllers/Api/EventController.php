@@ -50,6 +50,8 @@ class EventController extends BaseApiController
             return $this->sendError('Forbidden', null, 403);
         }
         
+        try { $page = \App\Services\CollectionPage::fromRequest($this->request); }
+        catch (\InvalidArgumentException $error) { return $this->sendError('Pagination tidak valid', null, 422); }
         $eventModel = new EventModel();
         $builder = $eventModel->builder();
         $builder->where('karang_taruna_id', $tenantId);
@@ -84,6 +86,7 @@ class EventController extends BaseApiController
         $builder->orderBy("CASE WHEN tanggal_acara >= '$today' THEN tanggal_acara ELSE NULL END", 'ASC');
         $builder->orderBy("CASE WHEN tanggal_acara < '$today' THEN tanggal_acara ELSE NULL END", 'DESC');
         $builder->orderBy("waktu_mulai", 'ASC');
+        $pagination = $page->apply($builder, 'events.id');
         $events = $builder->get()->getResultArray();
 
         $data = array_map(function ($event) {
@@ -120,7 +123,7 @@ class EventController extends BaseApiController
             ];
         }, $events);
 
-        return $this->sendSuccess('Daftar event', $data);
+        return $this->sendSuccess('Daftar event', $data, 200, $pagination);
     }
 
     public function show($id = null)

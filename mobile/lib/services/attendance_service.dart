@@ -22,7 +22,11 @@ class AttendanceService {
       if (response.statusCode >= 200 &&
           response.statusCode < 300 &&
           data['status'] == true) {
-        return {'success': true, 'data': data['data']};
+        return {
+          'success': true,
+          'data': data['data'],
+          'pagination': data['pagination'],
+        };
       }
 
       String message = data['message'] ?? 'Terjadi kesalahan';
@@ -45,15 +49,24 @@ class AttendanceService {
     }
   }
 
-  static Future<Map<String, dynamic>> getMyHistory() async {
+  static Future<Map<String, dynamic>> getMyHistory({
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final response = await ApiClient.get('/absensi/my');
+      final response = await ApiClient.get(
+        '/absensi/my?page=$page&limit=$limit',
+      );
       final result = await _handleResponse(response);
       if (result['success']) {
         try {
           final List<dynamic> list = result['data'];
           final history = list.map((e) => AttendanceModel.fromJson(e)).toList();
-          return {'success': true, 'history': history};
+          return {
+            'success': true,
+            'history': history,
+            'pagination': result['pagination'],
+          };
         } catch (e) {
           return {
             'success': false,
@@ -139,9 +152,15 @@ class AttendanceService {
     }
   }
 
-  static Future<Map<String, dynamic>> getEventAttendance(int eventId) async {
+  static Future<Map<String, dynamic>> getEventAttendance(
+    int eventId, {
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
-      final response = await ApiClient.get('/events/$eventId/absensi');
+      final response = await ApiClient.get(
+        '/events/$eventId/absensi?page=$page&limit=$limit',
+      );
       final result = await _handleResponse(response);
       if (result['success']) {
         try {
@@ -149,7 +168,11 @@ class AttendanceService {
           final attendees = list
               .map((e) => AttendanceModel.fromJson(e))
               .toList();
-          return {'success': true, 'attendees': attendees};
+          return {
+            'success': true,
+            'attendees': attendees,
+            'pagination': result['pagination'],
+          };
         } catch (e) {
           return {
             'success': false,

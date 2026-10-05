@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
@@ -23,6 +24,8 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
   WheelSessionModel? _session;
   List<WheelItemModel> _items = [];
   List<WheelResultModel> _results = [];
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   bool _isError = false;
   int _currentUserId = 0;
@@ -46,7 +49,10 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
       _currentUserId = int.tryParse(user['user'].id.toString()) ?? 0;
     }
 
-    final result = await WheelService.getSessionDetails(widget.sessionId);
+    final result = await WheelService.getSessionDetails(
+      widget.sessionId,
+      page: _page,
+    );
     if (!mounted) return;
 
     if (result['success']) {
@@ -54,6 +60,7 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
         _session = result['session'];
         _items = result['items'];
         _results = result['results'];
+        _pagination = result['pagination'];
         _isLoading = false;
       });
     } else {
@@ -209,6 +216,14 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination,
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _page = page);
+          _loadData();
+        },
+      ),
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         title: Text(_session?.title ?? 'Undian'),
@@ -329,7 +344,10 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
               onPressed: _isSpinning ? null : _spinWheel,
               child: Text(
                 activeItems.length == 1 ? 'PILIH OTOMATIS' : 'PUTAR SEKARANG',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -367,7 +385,7 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Pemenang Terakhir: ${_results.last.resultLabelSnapshot}',
+              'Pemenang pada halaman ini: ${_results.last.resultLabelSnapshot}',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

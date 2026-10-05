@@ -1,3 +1,4 @@
+import 'package:mobile/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../models/event_model.dart';
@@ -20,6 +21,8 @@ class AttendanceGeofenceScreen extends StatefulWidget {
 }
 
 class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
+  int _page = 1;
+  Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   String _errorMessage = '';
   Position? _currentPosition;
@@ -113,10 +116,15 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
   }
 
   Future<void> _fetchData() async {
-    final eventResult = await EventService.getEvents(attendanceOnly: true);
+    final eventResult = await EventService.getEvents(
+      attendanceOnly: true,
+      page: _page,
+    );
     final statusResult = await AttendanceService.getStatus();
 
+    if (!mounted) return;
     if (eventResult['success'] && statusResult['success']) {
+      _pagination = eventResult['pagination'];
       final List<EventModel> allEvents = eventResult['events'];
       _activeCheckinEventIds = (statusResult['active_event_ids'] as List)
           .map((e) => e is int ? e : int.parse(e.toString()))
@@ -291,6 +299,14 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: CollectionPager(
+        pagination: _pagination,
+        loading: _isLoading,
+        onPage: (page) {
+          setState(() => _page = page);
+          _initLocationAndData();
+        },
+      ),
       drawer: _currentUser != null ? AppDrawer(user: _currentUser!) : null,
       backgroundColor: AppTheme.background,
       body: _isLoading
