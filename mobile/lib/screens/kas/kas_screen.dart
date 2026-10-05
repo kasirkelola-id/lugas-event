@@ -187,7 +187,10 @@ class _KasScreenState extends State<KasScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+              colors: [
+                AppTheme.primary,
+                AppTheme.primary.withValues(alpha: 0.8),
+              ],
             ),
           ),
           child: SafeArea(
@@ -206,7 +209,7 @@ class _KasScreenState extends State<KasScreen> {
                       ),
                       Icon(
                         Icons.account_balance_wallet,
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         size: 28,
                       ),
                     ],
@@ -228,9 +231,11 @@ class _KasScreenState extends State<KasScreen> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -327,7 +332,7 @@ class _KasScreenState extends State<KasScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.error.withOpacity(0.1),
+                  color: AppTheme.error.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -471,7 +476,7 @@ class _KasScreenState extends State<KasScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

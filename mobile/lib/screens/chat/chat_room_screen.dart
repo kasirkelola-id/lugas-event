@@ -311,7 +311,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -348,7 +348,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     gradient: LinearGradient(
                       colors: [
                         AppTheme.primary,
-                        AppTheme.primary.withOpacity(0.5),
+                        AppTheme.primary.withValues(alpha: 0.5),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -389,7 +389,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -524,7 +524,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     ),
                   ),
                 ).then((value) {
-                  if (value == true) {
+                  if (context.mounted && value == true) {
                     // Room was deleted
                     Navigator.pop(context, true);
                   }
@@ -758,7 +758,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: Colors.black
-                                                      .withOpacity(0.06),
+                                                      .withValues(alpha: 0.06),
                                                   spreadRadius: 0,
                                                   blurRadius: 6,
                                                   offset: const Offset(0, 2),
@@ -903,7 +903,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                               borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   spreadRadius: 0,
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),

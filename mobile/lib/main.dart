@@ -12,10 +12,8 @@ import 'services/logout_retry.dart';
 import 'storage/auth_storage.dart';
 import 'models/user_model.dart';
 import 'core/theme/app_theme.dart';
-import 'screens/auth/tenant_selector_screen.dart';
 
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 
@@ -65,6 +63,7 @@ class _InitialScreenState extends State<InitialScreen> {
 
     if (!hasToken) {
       final tenant = await AuthStorage.getTenant();
+      if (!mounted) return;
       if (tenant != null) {
         Navigator.pushReplacement(
           context,

@@ -108,7 +108,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
                         end: Alignment.bottomRight,
                         colors: [
                           AppTheme.primary,
-                          AppTheme.primary.withOpacity(0.8),
+                          AppTheme.primary.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -117,7 +117,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
                     indicatorColor: Colors.white,
                     indicatorWeight: 3,
                     labelColor: Colors.white,
-                    unselectedLabelColor: Colors.white.withOpacity(0.6),
+                    unselectedLabelColor: Colors.white.withValues(alpha: 0.6),
                     labelStyle: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
@@ -190,7 +190,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
             boxShadow: AppTheme.shadowSoft,
             border: Border.all(
               color: active
-                  ? AppTheme.primary.withOpacity(0.3)
+                  ? AppTheme.primary.withValues(alpha: 0.3)
                   : Colors.grey.shade200,
               width: active ? 2 : 1,
             ),
@@ -214,7 +214,7 @@ class _WheelListScreenState extends State<WheelListScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: active
-                          ? AppTheme.primary.withOpacity(0.1)
+                          ? AppTheme.primary.withValues(alpha: 0.1)
                           : Colors.grey.shade100,
                       shape: BoxShape.circle,
                     ),
@@ -263,8 +263,8 @@ class _WheelListScreenState extends State<WheelListScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: active
-                                ? AppTheme.success.withOpacity(0.1)
-                                : AppTheme.textSecondary.withOpacity(0.1),
+                                ? AppTheme.success.withValues(alpha: 0.1)
+                                : AppTheme.textSecondary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(

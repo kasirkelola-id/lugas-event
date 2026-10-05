@@ -7,9 +7,7 @@ import '../../models/dashboard_summary_model.dart';
 import 'package:mobile/screens/auth/login_screen.dart';
 import 'attendance_geofence_screen.dart';
 import '../kas/kas_screen.dart';
-import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/common/custom_button.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_error_state.dart';
@@ -27,7 +25,6 @@ class AnggotaHomeScreen extends StatefulWidget {
 class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
   UserModel? _user;
   DashboardSummary? _summary;
-  DateTime _lastRefreshTime = DateTime.now();
 
   bool _isLoading = true;
   bool _isError = false;
@@ -84,7 +81,6 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
       setState(() {
         _user = userResult['user'] as UserModel;
         _summary = summaryResult['summary'] as DashboardSummary;
-        _lastRefreshTime = DateTime.now();
         _isLoading = false;
       });
     } catch (e) {
@@ -144,7 +140,10 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [AppTheme.primary, AppTheme.primary.withOpacity(0.8)],
+              colors: [
+                AppTheme.primary,
+                AppTheme.primary.withValues(alpha: 0.8),
+              ],
             ),
             borderRadius: const BorderRadius.vertical(
               bottom: Radius.circular(32),
@@ -190,7 +189,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         elevation: 2,
-        shadowColor: AppTheme.primary.withOpacity(0.1),
+        shadowColor: AppTheme.primary.withValues(alpha: 0.1),
         child: InkWell(
           onTap: () {
             Navigator.push(
@@ -212,7 +211,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppTheme.success.withOpacity(0.1),
+                            color: AppTheme.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -270,7 +269,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
+                              color: Colors.green.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -314,7 +313,7 @@ class _AnggotaHomeScreenState extends State<AnggotaHomeScreen> {
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
+                              color: Colors.red.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(

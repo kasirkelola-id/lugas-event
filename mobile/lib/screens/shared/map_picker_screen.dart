@@ -43,7 +43,9 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
         throw Exception('Izin ditolak permanen');
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       final newLocation = LatLng(position.latitude, position.longitude);
 

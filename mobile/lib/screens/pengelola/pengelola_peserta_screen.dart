@@ -138,7 +138,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                         end: Alignment.bottomRight,
                         colors: [
                           AppTheme.primary,
-                          AppTheme.primary.withOpacity(0.8),
+                          AppTheme.primary.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -193,7 +193,9 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                           indicatorColor: Colors.white,
                           indicatorWeight: 3,
                           labelColor: Colors.white,
-                          unselectedLabelColor: Colors.white.withOpacity(0.6),
+                          unselectedLabelColor: Colors.white.withValues(
+                            alpha: 0.6,
+                          ),
                           labelStyle: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -297,7 +299,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
         borderRadius: AppTheme.radiusLarge,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -325,7 +327,7 @@ class _PengelolaPesertaScreenState extends State<PengelolaPesertaScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.people_alt, color: statusColor),

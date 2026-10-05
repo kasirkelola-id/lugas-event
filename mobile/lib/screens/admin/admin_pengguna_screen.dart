@@ -256,6 +256,8 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                                     result = await UserService.createUser(data);
                                   }
 
+                                  if (!context.mounted) return;
+
                                   if (result['success']) {
                                     if (context.mounted) {
                                       Navigator.pop(context);
@@ -355,7 +357,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                       end: Alignment.bottomRight,
                       colors: [
                         AppTheme.primary,
-                        AppTheme.primary.withOpacity(0.8),
+                        AppTheme.primary.withValues(alpha: 0.8),
                       ],
                     ),
                   ),
@@ -367,10 +369,14 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                     children: [
                       // Search Bar
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
                                 ? AppTheme.surface
                                 : Colors.white,
                             borderRadius: BorderRadius.circular(30),
@@ -388,19 +394,34 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                           ),
                           child: TextField(
                             controller: _searchController,
-                            style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.textPrimary,
+                            ),
                             decoration: InputDecoration(
                               filled: false,
                               hintText: 'Cari nama atau email...',
                               hintStyle: TextStyle(
-                                color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                                color: AppTheme.textSecondary.withValues(
+                                  alpha: 0.7,
+                                ),
                                 fontSize: 14,
                               ),
                               prefixIcon: const Padding(
-                                padding: EdgeInsets.only(left: 12.0, right: 8.0),
-                                child: Icon(Icons.search, color: AppTheme.textSecondary, size: 22),
+                                padding: EdgeInsets.only(
+                                  left: 12.0,
+                                  right: 8.0,
+                                ),
+                                child: Icon(
+                                  Icons.search,
+                                  color: AppTheme.textSecondary,
+                                  size: 22,
+                                ),
                               ),
-                              prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                              prefixIconConstraints: const BoxConstraints(
+                                minWidth: 40,
+                                minHeight: 40,
+                              ),
                               suffixIcon: _searchQuery.isNotEmpty
                                   ? IconButton(
                                       icon: const Icon(
@@ -435,29 +456,43 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             children: [null, ..._rtOptions].map((rt) {
                               final isSelected = _rtFilter == rt;
-                              final label = rt == null ? 'Semua RT' : 'RT ${rt.toString().padLeft(2, '0')}';
+                              final label = rt == null
+                                  ? 'Semua RT'
+                                  : 'RT ${rt.toString().padLeft(2, '0')}';
                               return Padding(
                                 padding: const EdgeInsets.only(right: 10.0),
                                 child: InkWell(
-                                  onTap: () => _onRtFilterChanged(rt?.toString()),
+                                  onTap: () =>
+                                      _onRtFilterChanged(rt?.toString()),
                                   borderRadius: BorderRadius.circular(20),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? Colors.white : Colors.white.withOpacity(0.1),
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.white.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
                                         color: isSelected
                                             ? Colors.white
-                                            : Colors.white.withOpacity(0.3),
+                                            : Colors.white.withValues(
+                                                alpha: 0.3,
+                                              ),
                                         width: 1,
                                       ),
                                     ),
                                     child: Text(
                                       label,
                                       style: TextStyle(
-                                        color: isSelected ? AppTheme.primary : Colors.white,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                        color: isSelected
+                                            ? AppTheme.primary
+                                            : Colors.white,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w500,
                                       ),
                                     ),
                                   ),
@@ -473,7 +508,9 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                         indicatorColor: Colors.white,
                         indicatorWeight: 3,
                         labelColor: Colors.white,
-                        unselectedLabelColor: Colors.white.withOpacity(0.6),
+                        unselectedLabelColor: Colors.white.withValues(
+                          alpha: 0.6,
+                        ),
                         labelStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -752,7 +789,7 @@ class _UserListTabState extends State<_UserListTab>
         borderRadius: AppTheme.radiusLarge,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -771,14 +808,14 @@ class _UserListTabState extends State<_UserListTab>
               shape: BoxShape.circle,
               border: Border.all(
                 color: isActive
-                    ? AppTheme.primary.withOpacity(0.3)
+                    ? AppTheme.primary.withValues(alpha: 0.3)
                     : Colors.grey.shade300,
                 width: 2,
               ),
             ),
             child: CircleAvatar(
               backgroundColor: isActive
-                  ? AppTheme.primary.withOpacity(0.1)
+                  ? AppTheme.primary.withValues(alpha: 0.1)
                   : Colors.grey.shade100,
               radius: 22,
               child: Text(
@@ -814,7 +851,7 @@ class _UserListTabState extends State<_UserListTab>
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.1),
+                    color: AppTheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Text(
@@ -1012,7 +1049,7 @@ class _UserListTabState extends State<_UserListTab>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),

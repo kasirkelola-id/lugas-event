@@ -22,7 +22,8 @@ class AppUpdateBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final updateService = AppUpdateService();
 
-    if (!updateService.isUpdateAvailable || updateService.latestVersionInfo == null) {
+    if (!updateService.isUpdateAvailable ||
+        updateService.latestVersionInfo == null) {
       return const SizedBox.shrink();
     }
 
@@ -36,7 +37,7 @@ class AppUpdateBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -48,7 +49,11 @@ class AppUpdateBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.system_update_rounded, color: Colors.blue.shade700, size: 28),
+              Icon(
+                Icons.system_update_rounded,
+                color: Colors.blue.shade700,
+                size: 28,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -91,10 +96,7 @@ class AppUpdateBanner extends StatelessWidget {
               ),
               child: Text(
                 info.releaseNotes,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.blue.shade900,
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.blue.shade900),
               ),
             ),
           ],
@@ -106,7 +108,10 @@ class AppUpdateBanner extends StatelessWidget {
               icon: const Icon(Icons.download_rounded, color: Colors.white),
               label: const Text(
                 'Download Update',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade700,

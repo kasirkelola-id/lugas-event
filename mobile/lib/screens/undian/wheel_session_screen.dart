@@ -464,8 +464,8 @@ class _WheelSessionScreenState extends State<WheelSessionScreen>
                             final res = _results.reversed.toList()[index];
                             return ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: AppTheme.primary.withOpacity(
-                                  0.1,
+                                backgroundColor: AppTheme.primary.withValues(
+                                  alpha: 0.1,
                                 ),
                                 child: Text(
                                   '${res.spinSequence}',

@@ -7,10 +7,8 @@ import '../../undian/wheel_list_screen.dart';
 class CommunityActivitySection extends StatelessWidget {
   final Map<String, dynamic>? communityActivity;
 
-  const CommunityActivitySection({
-    Key? key,
-    required this.communityActivity,
-  }) : super(key: key);
+  const CommunityActivitySection({Key? key, required this.communityActivity})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +18,8 @@ class CommunityActivitySection extends StatelessWidget {
     final votingData = communityActivity!['voting'];
     final wheelData = communityActivity!['wheel'];
 
-    final hasAnnouncement = announcementData != null && announcementData['item'] != null;
+    final hasAnnouncement =
+        announcementData != null && announcementData['item'] != null;
     final hasVoting = votingData != null && votingData['item'] != null;
     final hasWheel = wheelData != null && wheelData['item'] != null;
 
@@ -42,7 +41,8 @@ class CommunityActivitySection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          if (hasAnnouncement) _buildAnnouncementCard(context, announcementData),
+          if (hasAnnouncement)
+            _buildAnnouncementCard(context, announcementData),
           if (hasVoting) _buildVotingCard(context, votingData),
           if (hasWheel) _buildWheelCard(context, wheelData),
         ],
@@ -50,7 +50,10 @@ class CommunityActivitySection extends StatelessWidget {
     );
   }
 
-  Widget _buildAnnouncementCard(BuildContext context, Map<String, dynamic> data) {
+  Widget _buildAnnouncementCard(
+    BuildContext context,
+    Map<String, dynamic> data,
+  ) {
     final item = data['item'];
     final additionalCount = data['additional_count'] ?? 0;
 
@@ -63,7 +66,10 @@ class CommunityActivitySection extends StatelessWidget {
       description: item['preview'] != null ? '${item['preview']}...' : '',
       additionalCount: additionalCount,
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const UserPengumumanScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const UserPengumumanScreen()),
+        );
       },
     );
   }
@@ -80,7 +86,10 @@ class CommunityActivitySection extends StatelessWidget {
       subtitle: item['title'] ?? '',
       additionalCount: additionalCount,
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const VotingListScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const VotingListScreen()),
+        );
       },
     );
   }
@@ -88,11 +97,13 @@ class CommunityActivitySection extends StatelessWidget {
   Widget _buildWheelCard(BuildContext context, Map<String, dynamic> data) {
     final item = data['item'];
     final additionalCount = data['additional_count'] ?? 0;
-    
+
     // Status can be 'active' or 'result_available' based on our backend logic.
     final status = item['status'];
     final subtitle = item['title'] ?? 'Undian';
-    final desc = status == 'result_available' ? 'Pemenang baru saja dipilih' : 'Undian sedang berlangsung';
+    final desc = status == 'result_available'
+        ? 'Pemenang baru saja dipilih'
+        : 'Undian sedang berlangsung';
 
     return _buildCard(
       context: context,
@@ -103,7 +114,10 @@ class CommunityActivitySection extends StatelessWidget {
       description: desc,
       additionalCount: additionalCount,
       onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const WheelListScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const WheelListScreen()),
+        );
       },
     );
   }
@@ -140,7 +154,7 @@ class CommunityActivitySection extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: iconColor.withOpacity(0.1),
+                      color: iconColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(icon, color: iconColor, size: 24),
@@ -193,7 +207,10 @@ class CommunityActivitySection extends StatelessWidget {
               if (additionalCount > 0) ...[
                 const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.background,
                     borderRadius: BorderRadius.circular(8),

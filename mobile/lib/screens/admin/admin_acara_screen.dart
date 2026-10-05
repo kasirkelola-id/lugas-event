@@ -25,7 +25,7 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
   Map<String, dynamic>? _pagination;
   bool _isLoading = true;
   String _searchQuery = '';
-  String _sortBy = 'Tanggal Acara (Terdekat)';
+  final String _sortBy = 'Tanggal Acara (Terdekat)';
   String? _errorMessage;
   final _searchController = TextEditingController();
 
@@ -145,7 +145,7 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
                         end: Alignment.bottomRight,
                         colors: [
                           AppTheme.primary,
-                          AppTheme.primary.withOpacity(0.8),
+                          AppTheme.primary.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -200,7 +200,9 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
                           indicatorColor: Colors.white,
                           indicatorWeight: 3,
                           labelColor: Colors.white,
-                          unselectedLabelColor: Colors.white.withOpacity(0.6),
+                          unselectedLabelColor: Colors.white.withValues(
+                            alpha: 0.6,
+                          ),
                           labelStyle: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -331,7 +333,7 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
         borderRadius: AppTheme.radiusLarge,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -382,7 +384,7 @@ class _AdminAcaraScreenState extends State<AdminAcaraScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
+                          color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(

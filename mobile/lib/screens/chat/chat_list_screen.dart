@@ -184,7 +184,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                       end: Alignment.bottomRight,
                       colors: [
                         AppTheme.primary,
-                        AppTheme.primary.withOpacity(0.8),
+                        AppTheme.primary.withValues(alpha: 0.8),
                       ],
                     ),
                   ),
@@ -198,7 +198,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                       indicatorColor: Colors.white,
                       indicatorWeight: 3,
                       labelColor: Colors.white,
-                      unselectedLabelColor: Colors.white.withOpacity(0.6),
+                      unselectedLabelColor: Colors.white.withValues(alpha: 0.6),
                       labelStyle: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -278,7 +278,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -294,14 +294,14 @@ class _ChatListScreenState extends State<ChatListScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppTheme.primary.withOpacity(0.2),
+                      color: AppTheme.primary.withValues(alpha: 0.2),
                       width: 2,
                     ),
                   ),
                   child: CircleAvatar(
                     radius: 24,
                     backgroundColor: isDefault
-                        ? AppTheme.primary.withOpacity(0.1)
+                        ? AppTheme.primary.withValues(alpha: 0.1)
                         : Colors.grey.shade100,
                     child: Icon(
                       isDefault ? Icons.apartment : Icons.group,
@@ -408,7 +408,7 @@ class _ChatListScreenState extends State<ChatListScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),

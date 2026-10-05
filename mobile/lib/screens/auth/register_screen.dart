@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'Akun Anda berhasil dibuat. Silakan masuk untuk melanjutkan.',
           confirmText: 'Selesai',
         );
-        if (context.mounted) {
+        if (mounted) {
           Navigator.pop(context); // back to login
         }
       } else {

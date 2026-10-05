@@ -62,7 +62,8 @@ class _CreateWheelScreenState extends State<CreateWheelScreen> {
       finalMinutes = customHours * 60;
     }
     final untilDate = DateTime.now().add(Duration(minutes: finalMinutes));
-    final dashboardUntil = "${untilDate.year.toString().padLeft(4, '0')}-${untilDate.month.toString().padLeft(2, '0')}-${untilDate.day.toString().padLeft(2, '0')} ${untilDate.hour.toString().padLeft(2, '0')}:${untilDate.minute.toString().padLeft(2, '0')}:${untilDate.second.toString().padLeft(2, '0')}";
+    final dashboardUntil =
+        "${untilDate.year.toString().padLeft(4, '0')}-${untilDate.month.toString().padLeft(2, '0')}-${untilDate.day.toString().padLeft(2, '0')} ${untilDate.hour.toString().padLeft(2, '0')}:${untilDate.minute.toString().padLeft(2, '0')}:${untilDate.second.toString().padLeft(2, '0')}";
 
     final result = await WheelService.createSession(
       title: title,
@@ -225,7 +226,7 @@ class _CreateWheelScreenState extends State<CreateWheelScreen> {
                     ),
                     value: _removeWinner,
                     contentPadding: EdgeInsets.zero,
-                    activeColor: AppTheme.primary,
+                    activeThumbColor: AppTheme.primary,
                     onChanged: (val) => setState(() => _removeWinner = val),
                   ),
                   const Divider(height: 24),
@@ -239,10 +240,14 @@ class _CreateWheelScreenState extends State<CreateWheelScreen> {
                           DropdownMenuItem(value: 30, child: Text('30 Menit')),
                           DropdownMenuItem(value: 60, child: Text('1 Jam')),
                           DropdownMenuItem(value: 180, child: Text('3 Jam')),
-                          DropdownMenuItem(value: -1, child: Text('Custom (Jam)')),
+                          DropdownMenuItem(
+                            value: -1,
+                            child: Text('Custom (Jam)'),
+                          ),
                         ],
                         onChanged: (val) {
-                          if (val != null) setState(() => _dashboardDurationMinutes = val);
+                          if (val != null)
+                            setState(() => _dashboardDurationMinutes = val);
                         },
                       ),
                     ],
@@ -254,7 +259,8 @@ class _CreateWheelScreenState extends State<CreateWheelScreen> {
                       label: 'Jumlah Jam',
                       keyboardType: TextInputType.number,
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Wajib diisi';
+                        if (value == null || value.isEmpty)
+                          return 'Wajib diisi';
                         return null;
                       },
                     ),

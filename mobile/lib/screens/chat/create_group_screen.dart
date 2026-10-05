@@ -126,7 +126,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                         onChanged: (bool? value) {
                           setState(() {
                             if (value == true) {
-                              _selectedUserIds.add(user.id!);
+                              _selectedUserIds.add(user.id);
                             } else {
                               _selectedUserIds.remove(user.id);
                             }

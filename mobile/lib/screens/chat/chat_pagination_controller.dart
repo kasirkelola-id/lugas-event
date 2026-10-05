@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class ChatPaginationController {
   List<Map<String, dynamic>> privateContacts = [];
   final int contactsPageSize = 50;

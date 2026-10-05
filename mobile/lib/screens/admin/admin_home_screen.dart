@@ -5,8 +5,6 @@ import '../../services/dashboard_service.dart';
 import '../../models/user_model.dart';
 import '../../models/dashboard_summary_model.dart';
 import 'package:mobile/screens/auth/login_screen.dart';
-import '../anggota/attendance_geofence_screen.dart';
-import '../shared/user_pengumuman_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/custom_loading_indicator.dart';
@@ -24,7 +22,6 @@ class AdminHomeScreen extends StatefulWidget {
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   UserModel? _user;
   DashboardSummary? _summary;
-  DateTime _lastRefreshTime = DateTime.now();
 
   bool _isLoading = true;
   bool _isError = false;
@@ -86,7 +83,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       setState(() {
         _user = userResult['user'] as UserModel;
         _summary = summaryResult['summary'] as DashboardSummary;
-        _lastRefreshTime = DateTime.now();
         _isLoading = false;
       });
     } catch (e) {
@@ -199,7 +195,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         children: [
           CircleAvatar(
             radius: 32,
-            backgroundColor: AppTheme.primary.withOpacity(0.1),
+            backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
             child: Text(
               _user!.namaPanggilan.isNotEmpty
                   ? _user!.namaPanggilan.substring(0, 1).toUpperCase()
@@ -245,7 +241,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
         elevation: 2,
-        shadowColor: AppTheme.primary.withOpacity(0.1),
+        shadowColor: AppTheme.primary.withValues(alpha: 0.1),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -259,7 +255,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppTheme.success.withOpacity(0.1),
+                          color: AppTheme.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(
@@ -313,7 +309,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
+                            color: Colors.green.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -357,7 +353,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                         Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.red.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -493,7 +489,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

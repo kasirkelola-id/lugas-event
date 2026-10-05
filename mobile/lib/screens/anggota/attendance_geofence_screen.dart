@@ -94,7 +94,9 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
       }
 
       _currentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
 
       if (_currentPosition!.isMocked) {
@@ -251,7 +253,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
         borderRadius: AppTheme.radiusLarge,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -262,7 +264,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(iconData, color: accentColor, size: 28),
@@ -339,7 +341,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                             end: Alignment.bottomRight,
                             colors: [
                               AppTheme.primary,
-                              AppTheme.primary.withOpacity(0.8),
+                              AppTheme.primary.withValues(alpha: 0.8),
                             ],
                           ),
                         ),
@@ -456,7 +458,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
         borderRadius: AppTheme.radiusLarge,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -476,7 +478,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
+                        color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: AppTheme.radiusMedium,
                       ),
                       child: const Icon(
@@ -521,7 +523,7 @@ class _AttendanceGeofenceScreenState extends State<AttendanceGeofenceScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: isCheckedIn
-                        ? AppTheme.success.withOpacity(0.1)
+                        ? AppTheme.success.withValues(alpha: 0.1)
                         : Colors.grey.shade50,
                     borderRadius: AppTheme.radiusMedium,
                   ),

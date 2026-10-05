@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class ApiConfig {
   static const String baseUrl = 'https://kartar.kelolakasir.id/api';
 
