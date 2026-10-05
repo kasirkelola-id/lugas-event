@@ -121,13 +121,10 @@ class ProfileController extends BaseApiController
 
         // Handle Delete Photo
         if (strtolower($this->request->getMethod()) === 'delete') {
-            $userModel = new UserModel();
-            $user = $userModel->find($userId);
-
-            // Delete old photo safely ONLY if DB update is successful
-            $oldPath = $user['profile_photo'] ?? null;
-            if ($userModel->update($userId, ['profile_photo' => null])) {
-                $this->safeDeleteOldPhoto($oldPath);
+            try {
+                \App\Services\ManagedImageService::change('users', (int)$userId, ['profile_photo' => null]);
+            } catch (\Throwable $error) {
+                return $this->sendError('Gagal memperbarui database foto profil', null, 500);
             }
 
             return $this->sendSuccess('Foto profil berhasil dihapus', null);
@@ -158,20 +155,10 @@ class ProfileController extends BaseApiController
             return $this->sendError('Gambar tidak dapat diproses. Silakan coba gambar lain.', null, 422);
         }
 
-        $userModel = new UserModel();
-        $user = $userModel->find($userId);
-        $oldPath = $user['profile_photo'] ?? null;
-
-        // Update DB first
-        if ($userModel->update($userId, ['profile_photo' => $photoPath])) {
-            // DB success, delete old photo safely
-            $this->safeDeleteOldPhoto($oldPath);
-        } else {
-            // DB failure, clean up the newly generated file
-            $newFullPath = FCPATH . $photoPath;
-            if (file_exists($newFullPath)) {
-                @unlink($newFullPath);
-            }
+        try {
+            \App\Services\ManagedImageService::change('users', (int)$userId, ['profile_photo' => $photoPath]);
+        } catch (\Throwable $error) {
+            \App\Services\ManagedImageService::retire($photoPath);
             return $this->sendError('Gagal memperbarui database foto profil', null, 500);
         }
 
@@ -180,17 +167,4 @@ class ProfileController extends BaseApiController
         ]);
     }
 
-    private function safeDeleteOldPhoto(?string $path)
-    {
-        if (empty($path)) return;
-
-        // Ensure it's in the managed uploads directory and doesn't have directory traversal
-        if (strpos($path, 'uploads/users/profile/') !== 0) return;
-        if (strpos($path, '..') !== false) return;
-
-        $fullPath = FCPATH . $path;
-        if (file_exists($fullPath)) {
-            @unlink($fullPath);
-        }
-    }
 }

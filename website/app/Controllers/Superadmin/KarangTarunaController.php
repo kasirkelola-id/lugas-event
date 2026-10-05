@@ -49,17 +49,12 @@ class KarangTarunaController extends BaseController
             'logo_path'       => $logoPath,
         ];
 
-        $ktModel->insert($data);
-        $ktId = $ktModel->getInsertID();
-        
-        // Buat default chat room untuk Karang Taruna ini
-        $roomModel = new \App\Models\ChatRoomModel();
-        $roomModel->insert([
-            'karang_taruna_id' => $ktId,
-            'name' => 'Forum ' . $data['nama_organisasi'],
-            'type' => 'default',
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
+        try {
+            \App\Services\ManagedImageService::createOrganization($data);
+        } catch (\Throwable $error) {
+            \App\Services\ManagedImageService::retire($logoPath);
+            return redirect()->back()->with('error', 'Karang Taruna gagal disimpan.');
+        }
 
         return redirect()->to('/superadmin/karang_taruna')->with('success', 'Karang Taruna berhasil ditambahkan dengan PIN: ' . $kode_pin);
     }
@@ -91,18 +86,15 @@ class KarangTarunaController extends BaseController
         
         if ($logoPath !== null) {
             $data['logo_path'] = $logoPath;
-            // Delete old logo if exists
-            if (!empty($kt['logo_path']) && file_exists(FCPATH . $kt['logo_path'])) {
-                @unlink(FCPATH . $kt['logo_path']);
-            }
-        } else if ($this->request->getPost('remove_logo') == '1') {
+        } elseif ($this->request->getPost('remove_logo') == '1') {
             $data['logo_path'] = null;
-            if (!empty($kt['logo_path']) && file_exists(FCPATH . $kt['logo_path'])) {
-                @unlink(FCPATH . $kt['logo_path']);
-            }
         }
-
-        $ktModel->update($id, $data);
+        try {
+            \App\Services\ManagedImageService::change('karang_taruna', (int)$id, $data);
+        } catch (\Throwable $error) {
+            \App\Services\ManagedImageService::retire($logoPath);
+            return redirect()->back()->with('error', 'Karang Taruna gagal diperbarui.');
+        }
 
         return redirect()->to('/superadmin/karang_taruna')->with('success', 'Data Karang Taruna berhasil diperbarui');
     }
@@ -112,10 +104,11 @@ class KarangTarunaController extends BaseController
         $ktModel = new KarangTarunaModel();
         $kt = $ktModel->find($id);
         if ($kt) {
-            if (!empty($kt['logo_path']) && file_exists(FCPATH . $kt['logo_path'])) {
-                @unlink(FCPATH . $kt['logo_path']);
+            try {
+                \App\Services\ManagedImageService::change('karang_taruna', (int)$id, [], true);
+            } catch (\Throwable $error) {
+                return redirect()->back()->with('error', 'Karang Taruna gagal dihapus.');
             }
-            $ktModel->delete($id);
         }
 
         return redirect()->to('/superadmin/karang_taruna')->with('success', 'Karang Taruna berhasil dihapus');
