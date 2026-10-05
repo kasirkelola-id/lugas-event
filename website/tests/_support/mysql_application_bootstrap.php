@@ -9,7 +9,7 @@ if (!$schema || !preg_match('/\Akartar_batch4_test_[a-f0-9]{16}\z/', $schema)) {
     throw new RuntimeException('A parent disposable schema is required');
 }
 putenv('FCM_MOCK=true');
-require dirname(__DIR__, 2) . '/vendor/codeigniter4/framework/system/Test/bootstrap.php';
+require __DIR__ . '/testing_bootstrap.php';
 $configuration = \Tests\Support\DisposableMySQL::configuration($schema);
 $config = config(\Config\Database::class);
 $config->tests = $configuration;

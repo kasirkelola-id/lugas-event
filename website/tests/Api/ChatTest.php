@@ -411,8 +411,8 @@ class ChatTest extends CIUnitTestCase
         $first = $service->deleteExpired('2026-09-12 10:00:00', 2);
         $second = $service->deleteExpired('2026-09-12 10:00:00', 2);
 
-        $this->assertSame(['deleted' => 2, 'batches' => 1], $first);
-        $this->assertSame(['deleted' => 0, 'batches' => 0], $second);
+        $this->assertSame(['deleted' => 2, 'batches' => 1, 'bounded_stop' => false, 'busy' => false], $first);
+        $this->assertSame(['deleted' => 0, 'batches' => 0, 'bounded_stop' => false, 'busy' => false], $second);
         $this->assertSame([3, 4], array_column($db->table('chats')->orderBy('id')->get()->getResultArray(), 'id'));
         $this->assertNotNull($db->table('chat_rooms')->where('id', 100)->get()->getRowArray());
         $this->assertNotNull($db->table('chat_room_members')->where(['chat_room_id' => 100, 'user_id' => 10])->get()->getRowArray());

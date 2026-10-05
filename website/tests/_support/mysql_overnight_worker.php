@@ -4,7 +4,7 @@
 if (getenv('CI_ENVIRONMENT') !== 'testing' || getenv('KARTAR_MYSQL_TEST_ENABLE') !== '1') exit(2);
 putenv('FCM_MOCK=true');
 chdir(dirname(__DIR__, 2));
-ob_start(); require 'vendor/codeigniter4/framework/system/Test/bootstrap.php'; ob_end_clean();
+ob_start(); require 'tests/_support/testing_bootstrap.php'; ob_end_clean();
 // Standalone bootstrap lacks the application's normal timezone initialization.
 date_default_timezone_set(config('App')->appTimezone);
 try {
@@ -42,6 +42,13 @@ try {
         $result = ['code' => 200, 'added' => \App\Services\ParticipantBatchService::add(101, 1, [2])];
     } elseif ($mode === 'queue') {
         $result = (new \App\Services\NotificationWorker())->runOne();
+    } elseif ($mode === 'maintenance') {
+        $before = $db->query('SELECT @@session.innodb_lock_wait_timeout AS lock_wait, @@session.max_execution_time AS execution_time')->getRowArray();
+        $dry = (new \App\Services\SessionCleanupService())->run();
+        $sessions = (new \App\Services\SessionCleanupService())->run(true);
+        $chat = (new \App\Services\ChatCleanupService($db))->deleteExpired();
+        $after = $db->query('SELECT @@session.innodb_lock_wait_timeout AS lock_wait, @@session.max_execution_time AS execution_time')->getRowArray();
+        $result = ['dry' => $dry, 'sessions' => $sessions, 'chat' => $chat, 'session_settings_restored' => $before === $after];
     } elseif ($mode === 'spin' || $mode === 'close') {
         $client = new class extends \CodeIgniter\HTTP\CURLRequest {
             public function __construct() {}

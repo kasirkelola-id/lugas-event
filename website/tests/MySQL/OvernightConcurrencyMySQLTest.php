@@ -181,4 +181,27 @@ final class OvernightConcurrencyMySQLTest extends CIUnitTestCase
         $this->assertSame(['karang_taruna_id', 'tanggal', 'created_at', 'id'], array_column($columns, 'Column_name'));
         $this->assertSame(['A', 'D', 'D', 'A'], array_column($columns, 'Collation'));
     }
+
+    public function test_bounded_maintenance_preserves_current_rows_and_restores_session_settings(): void
+    {
+        $db = $this->mysqlDb;
+        $old = gmdate('Y-m-d H:i:s', time() - 40 * 86400);
+        $future = gmdate('Y-m-d H:i:s', time() + 86400);
+        foreach ([$old, $future] as $i => $expiry) {
+            $db->table('user_tokens')->insert(['user_id' => 2, 'token_hash' => hash('sha256', 'synthetic-' . $i), 'expires_at' => $expiry]);
+            $db->table('user_devices')->insert(['user_id' => 2, 'user_token_id' => $db->insertID(), 'fcm_token' => 'synthetic-' . $i, 'updated_at' => $old]);
+        }
+        foreach ([$old, gmdate('Y-m-d H:i:s')] as $stamp) $db->table('chats')->insert(['karang_taruna_id' => 101,
+            'sender_id' => 1, 'receiver_id' => 2, 'type' => 'private', 'message' => 'Synthetic', 'created_at' => $stamp]);
+        $result = $this->finish($this->start(TESTPATH . '_support/mysql_overnight_worker.php', 'maintenance'))['result'];
+        $this->assertTrue($result['session_settings_restored']);
+        $this->assertSame(0, $result['dry']['tokens_deleted']);
+        $this->assertSame(1, $result['sessions']['tokens_deleted']);
+        $this->assertSame(1, $result['sessions']['devices_deleted']);
+        $this->assertSame(1, $result['chat']['deleted']);
+        $this->assertSame(1, $db->table('user_tokens')->countAllResults());
+        $this->assertSame('synthetic-1', $db->table('user_devices')->get()->getRowArray()['fcm_token']);
+        $this->assertSame(1, $db->table('chats')->countAllResults());
+        $this->saveEvidence('maintenance', $result);
+    }
 }

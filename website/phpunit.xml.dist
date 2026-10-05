@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+         bootstrap="tests/_support/testing_bootstrap.php"
+         backupGlobals="false"
+         beStrictAboutOutputDuringTests="true"
+         colors="true"
+         columns="max"
+         failOnRisky="true"
+         failOnWarning="true"
+         cacheDirectory="build/.phpunit.cache">
+    <testsuites>
+        <testsuite name="App">
+            <directory>./tests</directory>
+            <exclude>./tests/_support</exclude>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">./app</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">./app/Views</directory>
+            <file>./app/Config/Routes.php</file>
+        </exclude>
+    </source>
+    <php>
+        <server name="app.baseURL" value="http://localhost:8080/"/>
+        <env name="CODEIGNITER_SCREAM_DEPRECATIONS" value="1"/>
+        <env name="CI_ENVIRONMENT" value="testing"/>
+    </php>
+</phpunit>

@@ -22,7 +22,8 @@ class ChatCleanupCommand extends BaseCommand
         try {
             $result = (new ChatCleanupService())->deleteExpired($cutoff);
             $duration = number_format(microtime(true) - $startedAt, 3);
-            CLI::write("Cleanup completed. Deleted {$result['deleted']} rows in {$result['batches']} batches ({$duration}s).", 'green');
+            $state = $result['busy'] ? 'busy; no work' : ($result['bounded_stop'] ? 'bounded run; schedule next pass' : 'completed');
+            CLI::write("Cleanup {$state}. Deleted {$result['deleted']} rows in {$result['batches']} batches ({$duration}s).", 'green');
 
             return EXIT_SUCCESS;
         } catch (\Throwable $error) {

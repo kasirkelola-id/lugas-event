@@ -6,7 +6,7 @@ $tenants = filter_var($argv[1] ?? '', FILTER_VALIDATE_INT);
 if (!in_array($tenants, [10, 100], true)) exit(2);
 putenv('FCM_MOCK=true');
 chdir(dirname(__DIR__, 2));
-ob_start(); require 'vendor/codeigniter4/framework/system/Test/bootstrap.php'; ob_end_clean();
+ob_start(); require 'tests/_support/testing_bootstrap.php'; ob_end_clean();
 date_default_timezone_set(config('App')->appTimezone);
 $fixture = null;
 $db = null;
