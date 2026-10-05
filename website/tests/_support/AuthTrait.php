@@ -85,6 +85,8 @@ trait AuthTrait
             'karang_taruna_id' => $user['karang_taruna_id'],
             'user_id' => $user['id'],
             'token_hash' => $tokenHash,
+            'superadmin_id' => $user['superadmin_id'] ?? null,
+            'credential_version' => $user['credential_version'] ?? null,
             'device_name' => 'TestUnit',
             'ip_address' => '127.0.0.1',
             'user_agent' => 'PHPUnit',

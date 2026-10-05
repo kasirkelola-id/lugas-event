@@ -16,6 +16,7 @@ class WebCsrfCredentialTest extends \Tests\Support\BaseTest
     {
         \Config\Services::resetSingle('security');
         return ['is_superadmin_logged_in' => $authorized, 'superadmin_id' => 1,
+            'superadmin_credential_version' => hash('sha256', (string)($this->db->table('superadmins')->where('id', 1)->get()->getRowArray()['password'] ?? '')),
             'superadmin_nama_lengkap' => 'Synthetic Admin', 'csrf_test_name' => str_repeat('a', 64)];
     }
 

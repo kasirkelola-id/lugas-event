@@ -78,7 +78,7 @@ class ProfileController extends BaseApiController
     public function changePassword()
     {
         $userId = AuthService::getGlobalUserId();
-        if ($userId === null) {
+        if (!$userId || $userId < 1) {
             return $this->sendError('Unauthorized', null, 401);
         }
 
@@ -102,10 +102,8 @@ class ProfileController extends BaseApiController
             return $this->sendError('Validasi gagal', ['new_password' => 'Gunakan password baru minimal 12 karakter, maksimal 72 byte, berbeda dari username/default/password sebelumnya.'], 422);
         }
 
-        if (!$userModel->update($userId, [
-            'password' => password_hash($rawInput['new_password'], PASSWORD_BCRYPT),
-            'password_must_change' => 0
-        ])) {
+        if (!\App\Services\CredentialSessionService::replace((int)$userId, $user['password'],
+            password_hash($rawInput['new_password'], PASSWORD_BCRYPT), false, (int)AuthService::getToken()['id'])) {
             return $this->sendError('Gagal mengubah password.', null, 500);
         }
 

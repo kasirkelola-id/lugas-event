@@ -21,6 +21,12 @@ class AppVersionTest extends BaseTest
     private function csrfSession(array $session): self
     {
         \Config\Services::resetSingle('security');
+        if (!empty($session['is_superadmin_logged_in'])) {
+            $admin = $this->db->table('superadmins')->where('id', 1)->get()->getRowArray();
+            $hash = $admin['password'] ?? password_hash('private-admin-passphrase', PASSWORD_BCRYPT);
+            if (!$admin) $this->db->table('superadmins')->insert(['id' => 1, 'username' => 'synthetic_admin', 'nama_lengkap' => 'Synthetic Admin', 'password' => $hash]);
+            $session['superadmin_credential_version'] = hash('sha256', $hash);
+        }
         return $this->withSession($session + ['csrf_test_name' => str_repeat('c', 64)])
             ->withHeaders(['X-CSRF-TOKEN' => str_repeat('c', 64)]);
     }

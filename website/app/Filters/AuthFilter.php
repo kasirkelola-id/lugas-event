@@ -48,12 +48,16 @@ class AuthFilter implements FilterInterface
 
         if (empty($tokenData['user_id']) || $tokenData['user_id'] == 0) {
             // It's a Superadmin
+            $admin = (new \App\Models\SuperadminModel())->find((int)($tokenData['superadmin_id'] ?? 0));
+            if (!$admin || !hash_equals(hash('sha256', $admin['password']), (string)($tokenData['credential_version'] ?? ''))) {
+                return Services::response()->setStatusCode(401)->setJSON(['status' => false, 'message' => 'Unauthenticated']);
+            }
             $user = [
                 'id' => 0,
                 'karang_taruna_id' => $tokenData['karang_taruna_id'],
-                'nama_lengkap' => 'Superadmin',
+                'nama_lengkap' => $admin['nama_lengkap'],
                 'nama_panggilan' => 'Superadmin',
-                'username' => 'superadmin',
+                'username' => $admin['username'],
                 'no_whatsapp' => '-',
                 'rt' => 1,
                 'role_level' => 'superadmin',

@@ -365,10 +365,8 @@ class UserController extends BaseApiController
         $temporaryPassword = \App\Services\CredentialPolicy::temporaryPassword();
 
         // Update Exact Global User password
-        if (!$userModel->update($user['id'], [
-            'password' => password_hash($temporaryPassword, PASSWORD_BCRYPT),
-            'password_must_change' => 1
-        ])) {
+        if (!\App\Services\CredentialSessionService::replace((int)$user['id'], $user['password'],
+            password_hash($temporaryPassword, PASSWORD_BCRYPT), true)) {
             return $this->sendError('Gagal mereset password.', null, 500);
         }
 

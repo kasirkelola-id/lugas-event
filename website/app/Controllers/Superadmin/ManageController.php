@@ -152,10 +152,9 @@ class ManageController extends BaseController
         $temporaryPassword = \App\Services\CredentialPolicy::temporaryPassword();
 
         $userModel = new UserModel();
-        if (!$userModel->update($user_id, [
-            'password' => password_hash($temporaryPassword, PASSWORD_BCRYPT),
-            'password_must_change' => 1
-        ])) {
+        $target = $userModel->find($user_id);
+        if (!$target || !\App\Services\CredentialSessionService::replace((int)$user_id, $target['password'],
+            password_hash($temporaryPassword, PASSWORD_BCRYPT), true)) {
             return redirect()->back()->with('error', 'Gagal mereset password.');
         }
 

@@ -28,6 +28,7 @@ class AuthController extends BaseController
             session()->regenerate(true);
             $sessionData = [
                 'superadmin_id'           => $user['id'],
+                'superadmin_credential_version' => hash('sha256', $user['password']),
                 'superadmin_username'     => $user['username'],
                 'superadmin_nama_lengkap' => $user['nama_lengkap'],
                 'is_superadmin_logged_in' => true,
@@ -41,7 +42,7 @@ class AuthController extends BaseController
 
     public function logout()
     {
-        session()->remove(['is_superadmin_logged_in', 'superadmin_id', 'superadmin_username', 'superadmin_nama_lengkap']);
+        session()->remove(['is_superadmin_logged_in', 'superadmin_id', 'superadmin_username', 'superadmin_nama_lengkap', 'superadmin_credential_version']);
         session()->destroy();
         return redirect()->to('/superadmin/login');
     }

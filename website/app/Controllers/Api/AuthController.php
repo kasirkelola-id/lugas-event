@@ -113,6 +113,8 @@ class AuthController extends BaseApiController
         $tokenModel->insert([
             'karang_taruna_id' => $karangTarunaId,
             'user_id'          => $userId,
+            'superadmin_id'    => $isSuperAdmin ? $superadmin['id'] : null,
+            'credential_version' => $isSuperAdmin ? hash('sha256', $superadmin['password']) : null,
             'token_hash'       => $tokenHash,
             'expires_at'       => $expiresAt,
             'created_at'       => date('Y-m-d H:i:s'),

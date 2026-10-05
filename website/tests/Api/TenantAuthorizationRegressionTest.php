@@ -158,8 +158,12 @@ class TenantAuthorizationRegressionTest extends \Tests\Support\BaseTest
     {
         $this->createTestUser(101);
         $token = bin2hex(random_bytes(32));
+        $hash = password_hash('private-admin-passphrase', PASSWORD_BCRYPT);
+        $this->db->table('superadmins')->insert(['username' => 'synthetic_admin', 'nama_lengkap' => 'Synthetic Admin', 'password' => $hash]);
+        $adminId = $this->db->insertID();
         $this->db->table('user_tokens')->insert([
             'user_id' => null, 'karang_taruna_id' => 101,
+            'superadmin_id' => $adminId, 'credential_version' => hash('sha256', $hash),
             'token_hash' => hash('sha256', $token),
             'expires_at' => date('Y-m-d H:i:s', time() + 3600),
         ]);

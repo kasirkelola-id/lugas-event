@@ -48,7 +48,10 @@ class MembershipApprovalTest extends \Tests\Support\BaseTest
 
         foreach ($roles as $role) {
             if ($role === 'superadmin') {
-                $users[$role] = ['id' => null, 'karang_taruna_id' => $tenantId, 'role_level' => 'superadmin'];
+                $hash = password_hash('private-admin-passphrase', PASSWORD_BCRYPT);
+                $adminId = (new \App\Models\SuperadminModel())->insert(['username' => 'synthetic_admin', 'nama_lengkap' => 'Synthetic Admin', 'password' => $hash]);
+                $users[$role] = ['id' => null, 'karang_taruna_id' => $tenantId, 'role_level' => 'superadmin',
+                    'superadmin_id' => $adminId, 'credential_version' => hash('sha256', $hash)];
                 continue;
             }
 

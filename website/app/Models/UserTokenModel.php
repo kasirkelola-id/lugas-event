@@ -18,6 +18,8 @@ class UserTokenModel extends Model
         'token_hash',
         'expires_at',
         'revoked_at',
+        'superadmin_id',
+        'credential_version',
     ];
 
     protected bool $allowEmptyInserts = false;
