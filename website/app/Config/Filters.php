@@ -5,7 +5,6 @@ namespace Config;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
-use CodeIgniter\Filters\DebugToolbar;
 use CodeIgniter\Filters\ForceHTTPS;
 use CodeIgniter\Filters\Honeypot;
 use CodeIgniter\Filters\InvalidChars;
@@ -28,7 +27,7 @@ class Filters extends BaseFilters
         'auth'          => \App\Filters\AuthFilter::class,
         'superadmin'    => \App\Filters\SuperadminFilter::class,
         'csrf'          => CSRF::class,
-        'toolbar'       => DebugToolbar::class,
+        'toolbar'       => \App\Filters\CredentialSafeToolbar::class,
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
@@ -109,5 +108,7 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'csrf' => ['before' => ['/', 'superadmin', 'superadmin/*']],
+    ];
 }

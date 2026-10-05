@@ -153,16 +153,12 @@ class AuthFilter implements FilterInterface
         // Force password change check
         if ((int)($user['password_must_change'] ?? 0) === 1) {
             // Allow only specific paths
-            $allowedPaths = ['api/me', 'api/logout', 'api/profile/password'];
-            $currentPath = $request->getUri()->getPath();
-            $isAllowed = false;
-            foreach ($allowedPaths as $path) {
-                if (preg_match('#' . preg_quote($path, '#') . '#i', $currentPath)) {
-                    $isAllowed = true;
-                    break;
-                }
+            $allowedPaths = ['api/me' => ['GET'], 'api/logout' => ['POST'], 'api/profile/password' => ['POST', 'PATCH']];
+            $currentPath = ltrim($request->getUri()->getPath(), '/');
+            if (strpos($currentPath, 'index.php/') === 0) {
+                $currentPath = substr($currentPath, 10);
             }
-
+            $isAllowed = in_array(strtoupper($request->getMethod()), $allowedPaths[$currentPath] ?? [], true);
             if (!$isAllowed) {
                 return Services::response()
                     ->setJSON(['status' => false, 'message' => 'Ganti password diperlukan'])

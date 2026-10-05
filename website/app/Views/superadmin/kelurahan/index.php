@@ -41,7 +41,9 @@
                 <span class="navbar-text me-4">
                     <i class="bi bi-person-circle me-1"></i> Halo, <?= session()->get('superadmin_nama_lengkap') ?>
                 </span>
-                <a href="/superadmin/logout" class="btn btn-sm btn-outline-light px-3">Logout <i class="bi bi-box-arrow-right ms-1"></i></a>
+                <form action="/superadmin/logout" method="post" class="d-inline">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-outline-light px-3">Logout <i class="bi bi-box-arrow-right ms-1"></i></button></form>
             </div>
         </div>
     </nav>
@@ -78,9 +80,11 @@
                                 <button class="btn btn-sm btn-outline-primary me-2 btn-edit" data-id="<?= $k['id'] ?>" data-nama="<?= esc($k['nama']) ?>" data-bs-toggle="modal" data-bs-target="#editKelurahanModal">
                                     <i class="bi bi-pencil"></i> Edit
                                 </button>
-                                <a href="/superadmin/kelurahan/delete/<?= $k['id'] ?>" class="btn btn-sm btn-outline-danger btn-delete">
+                                <form action="/superadmin/kelurahan/delete/<?= $k['id'] ?>" method="post" class="d-inline">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger btn-delete">
                                     <i class="bi bi-trash"></i>
-                                </a>
+                                </button></form>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -99,6 +103,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="/superadmin/kelurahan/store" method="POST">
+                    <?= csrf_field() ?>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nama Kelurahan / Desa</label>
@@ -123,6 +128,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="" method="POST" id="formEdit">
+                    <?= csrf_field() ?>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Nama Kelurahan / Desa</label>
@@ -160,7 +166,7 @@
 
             $('.btn-delete').click(function(e) {
                 e.preventDefault();
-                const url = $(this).attr('href');
+                const form = this.closest('form');
                 Swal.fire({
                     title: 'Hapus Kelurahan?',
                     text: "Data yang dihapus tidak dapat dikembalikan!",
@@ -172,7 +178,7 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = url;
+                        form.requestSubmit();
                     }
                 });
             });

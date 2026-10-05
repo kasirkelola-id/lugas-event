@@ -28,7 +28,7 @@
         confirmButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
-                const href = this.getAttribute('href');
+                const form = this.closest('form');
                 const message = this.getAttribute('data-confirm-message') || 'Yakin ingin melanjutkan aksi ini?';
                 
                 Swal.fire({
@@ -42,9 +42,7 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        if(href) {
-                            window.location.href = href;
-                        }
+                        if (form) form.requestSubmit();
                     }
                 });
             });

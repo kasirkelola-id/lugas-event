@@ -28,12 +28,21 @@ class ApiClient {
     return headers;
   }
 
-  static void _logRequest(
+  static bool _isCredentialUrl(String url) => RegExp(
+    r'/(?:login|register|profile/password|users(?:/\d+/reset-password)?)$',
+  ).hasMatch(Uri.tryParse(url)?.path ?? '');
+
+  @visibleForTesting
+  static void logRequest(
     String method,
     String url,
     Map<String, String> headers, [
     String? body,
   ]) {
+    if (_isCredentialUrl(url)) {
+      if (kDebugMode) debugPrint('Credential request: $method');
+      return;
+    }
     if (kDebugMode) {
       final safeHeaders = Map<String, String>.from(headers);
       if (safeHeaders.containsKey('Authorization')) {
@@ -74,12 +83,17 @@ class ApiClient {
     }
   }
 
-  static void _logResponse(
+  @visibleForTesting
+  static void logResponse(
     String method,
     String url,
     int statusCode,
     String body,
   ) {
+    if (_isCredentialUrl(url)) {
+      if (kDebugMode) debugPrint('Credential response: $statusCode');
+      return;
+    }
     if (kDebugMode) {
       // Body is not redacted usually for responses, unless response returns token/password.
       // Lugas API returns token on login. We'll redact token from response just in case.
@@ -114,7 +128,12 @@ class ApiClient {
     }
   }
 
-  static void _logException(String url, dynamic e) {
+  @visibleForTesting
+  static void logException(String url, dynamic e) {
+    if (_isCredentialUrl(url)) {
+      if (kDebugMode) debugPrint('Credential transport failed');
+      return;
+    }
     if (kDebugMode) {
       debugPrint('\n========== [API EXCEPTION] ========');
       debugPrint('URL: $url');
@@ -132,20 +151,20 @@ class ApiClient {
   }) async {
     final fullUrl = '${ApiConfig.baseUrl}$endpoint';
 
-    _logRequest(method, fullUrl, headers ?? {}, body);
+    logRequest(method, fullUrl, headers ?? {}, body);
 
     try {
       final response = await requestFunc().timeout(_timeout);
-      _logResponse(method, fullUrl, response.statusCode, response.body);
+      logResponse(method, fullUrl, response.statusCode, response.body);
       return response;
     } on TimeoutException catch (e) {
-      _logException(fullUrl, e);
+      logException(fullUrl, e);
       return http.Response(
         jsonEncode({'status': false, 'message': 'Request timeout'}),
         408,
       );
     } on SocketException catch (e) {
-      _logException(fullUrl, e);
+      logException(fullUrl, e);
       return http.Response(
         jsonEncode({
           'status': false,
@@ -154,7 +173,7 @@ class ApiClient {
         503,
       );
     } catch (e) {
-      _logException(fullUrl, e);
+      logException(fullUrl, e);
       return http.Response(
         jsonEncode({
           'status': false,

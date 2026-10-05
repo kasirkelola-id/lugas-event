@@ -2,7 +2,9 @@
 
 Audit date: **2026-10-05, Asia/Bangkok**. Repository: `D:\project\lugas`. Audited HEAD: `7f5986c` (`chore: version bump to 1.0.2+3 and track tools`).
 
-**Latest remediation update — Batch 4.1, 2026-10-05:** Real disposable **MySQL 8.0.46**, bound to **127.0.0.1:3308**, passed all six MySQL cases (**99 assertions, no failures/errors/skips**) plus two existing application cases. **SEC-08: RESOLVED IN WORKTREE — NOT DEPLOYED. REL-01: RESOLVED LOCALLY — PRODUCTION SCHEMA STILL UNVERIFIED. REL-03: RESOLVED IN WORKTREE — NOT DEPLOYED.** Open security counts are **0 CRITICAL, 5 HIGH, 8 MEDIUM, 2 LOW**; only SEC-08 was removed from the open security registry. Backend/Jest/Flutter regressions pass; Flutter analysis has zero errors and the unchanged 16 warnings/158 infos. Production remains **NOT READY**. MySQL proof permits next-batch review, but Batch 5 was not started. HEAD remains `ad4ff37`; no commit, push or deployment. Earlier ledgers remain historical snapshots; the appended Batch 4.1 ledger supersedes their unproven local MySQL status.
+**Latest remediation update — Batch 5, 2026-10-05:** **SEC-05 and SEC-06: RESOLVED IN WORKTREE — NOT DEPLOYED.** Session CSRF protects browser forms; eight GET mutations became POST. Creation/reset uses independent random credentials with enforced password change and immediate response-only delivery. Known historical defaults/username passwords cannot mint production sessions; demo seeding is testing-only. Open counts: **0 CRITICAL, 3 HIGH, 8 MEDIUM, 2 LOW**. SEC-12 remains open. Full PHPUnit **306 tests /1,766 assertions /0 failures /0 errors /7 skips**, Jest **51 PASS**, Flutter **64 PASS**, analysis **0 errors /16 warnings /152 infos**. Production remains **NOT READY**. HEAD is the existing local checkpoint `ceb64cb`; Batch5 is uncommitted/unstaged. No push or deployment. The appended ledger discloses the existing announcement-create/legacy-view limitations and required private privileged provisioning before rollout.
+
+**Historical remediation update — Batch 4.1, 2026-10-05:** Real disposable **MySQL 8.0.46**, bound to **127.0.0.1:3308**, passed all six MySQL cases (**99 assertions, no failures/errors/skips**) plus two existing application cases. **SEC-08: RESOLVED IN WORKTREE — NOT DEPLOYED. REL-01: RESOLVED LOCALLY — PRODUCTION SCHEMA STILL UNVERIFIED. REL-03: RESOLVED IN WORKTREE — NOT DEPLOYED.** Open security counts are **0 CRITICAL, 5 HIGH, 8 MEDIUM, 2 LOW**; only SEC-08 was removed from the open security registry. Backend/Jest/Flutter regressions pass; Flutter analysis has zero errors and the unchanged 16 warnings/158 infos. Production remains **NOT READY**. MySQL proof permits next-batch review, but Batch 5 was not started. HEAD remains `ad4ff37`; no commit, push or deployment. Earlier ledgers remain historical snapshots; the appended Batch 4.1 ledger supersedes their unproven local MySQL status.
 
 **Historical remediation update — Batch 3, 2026-10-05:** SEC-04 (**LEGACY SERVICE RETIRED**) and SEC-07 (**Engine.IO 6.6.9 → 6.6.10**) are **RESOLVED IN WORKTREE — NOT DEPLOYED**. Current open worktree registry: **0 CRITICAL, 6 HIGH, 8 MEDIUM, 2 LOW**. SEC-12 remains open; zero critical worktree findings does not establish production readiness. Runtime npm audit:0 vulnerabilities; dev-only brace-expansion remains1 high package family. Production is **NOT READY**; ready for next remediation batch review: **YES**. Original and earlier remediation evidence are preserved; the latest ledger is appended in section29. Production runtime/deployed dependencies remain unverified.
 
@@ -433,8 +435,8 @@ Canonical security registry; severity reflects source/reproduced scope, with dep
 | SEC-02 | CRITICAL, historical | Private socket user room lacks tenant namespace; original Node lines 123,365–366; reproduced. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch 2 | One tenant+user room helper, authoritative private sender/receiver delivery, eligible recipients, Flutter tenant/context checks, safe switch/reconnect and multi-device regressions; historical exploit preserved below |
 | SEC-03 | CRITICAL, historical | Middleware accepts pending/rejected active membership with other tenant token; reproduced. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch 1 | AuthFilter requires eligible membership before establishing tenant context; internal socket-auth inherits it. Independent recipient/discovery checks remain later work |
 | SEC-04 | CRITICAL, historical/latent | Legacy `App\Libraries\ChatServer::onMessage` trusted user_id/tenant without token and logged message bodies. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch3: **LEGACY SERVICE RETIRED** | Handler removed; command is fail-closed with exit1; Ratchet dependency removed. No active app-client/startup reference found; production runtime still UNVERIFIED |
-| SEC-05 | HIGH | CSRF filter off; superadmin DELETE/reset/status/approval via GET | Enable web CSRF, convert mutations to POST/DELETE, require tokens; cross-site/session regression |
-| SEC-06 | HIGH | Created password=username with no forced change (reproduced); seeded admin default, shared reset secret, six-character password policy | Random single-use reset/invitation, forced change; eliminate production defaults, check ownership policy; no credentials printed |
+| SEC-05 | HIGH, resolved in worktree | Historical CSRF-off/GET mutation defect. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch5 | Session framework CSRF; eight GET mutations become POST; all16 missing-token actions blocked, unchanged cross-site row/session snapshots; existing announcement-create schema failure disclosed |
+| SEC-06 | HIGH, resolved in worktree | Historical username passwords, shared reset/defaults and inconsistent forced change. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch5 | Independent random temporary credentials, bcrypt, flag1/exact endpoint restrictions, response-only delivery,12-character/72-byte policy; production default login gate/test-only seeder. SEC-12 remains open; private privileged provisioning required |
 | SEC-07 | HIGH, historical | Installed/locked runtime engine.io6.6.9 had unauthenticated transport-upgrade DoS. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch3 | Engine.IO6.6.10 targeted override under unchanged Socket.IO4.8.3; only Engine.IO npm lock entry changes; runtime audit0; polling/upgrade and full security regression pass |
 | SEC-08 | HIGH, resolved in worktree | Historical autocommit stock/loan defect. **RESOLVED IN WORKTREE — NOT DEPLOYED**, Batch 4.1: existing scoped transaction/checked writes passed real MySQL approval/return/decision races and forced rollback | MySQL 8.0.46; InnoDB; one last-stock approval; one return increment; one opposing decision; rollback with no notification. Open HIGH count reduced only for SEC-08 |
 | SEC-09 | HIGH | Most API mutations/registration/uploads lack rate controls; unbounded arrays and socket join/auth bursts | User/IP limits and caps; test multiple connections, payload boundaries and saturation rejection |
@@ -1325,3 +1327,125 @@ Cleanup: harness-owned databases were dropped after each case. Before shutdown, 
 | PRODUCTION READY | **NO** |
 
 Git hygiene: status/name-status/stat/check reviewed; nothing staged, HEAD still **ad4ff37**. Worktree includes the already-present Batch 4 changes; Batch 4.1 adds only test/evidence/documentation completions, including `tests/_support/mysql_application_bootstrap.php`. Nineteen total changed/new paths across Batch 4/4.1; tracked diff statistics exclude new files. Historical migrations, forward migration, application runtime, dependency manifests/locks, both tools directories and Node/mobile source were not modified by Batch 4.1. **No commit. No push. No deployment. Await review.**
+
+### Remediation Batch 5 — Web CSRF + Credential Hardening — 2026-10-05, Asia/Bangkok
+
+**MEASURED: SEC-05 and SEC-06 RESOLVED IN WORKTREE — NOT DEPLOYED.** Security registry **0 critical / 3 high / 8 medium / 2 low**. Only these two HIGH findings close here. SEC-12 remains open: reset/change does not revoke other bearer tokens, and existing browser sessions/virtual superadmin tokens are not retroactively invalidated. SEC-09/10/11/14, the wider SEC-16 logging finding, reliability/performance registries and capacity claims are unchanged. Production remains **NOT READY**. Base HEAD is the reviewed local Batch 4/4.1 checkpoint **ceb64cb**, parent **ad4ff37**; neither commit was modified. Batch 5 is uncommitted, unstaged and awaiting review. No production connection, migration, SSH, commit, push, deployment, MySQL runtime restart or dependency resolution occurred.
+
+The complete canonical audit was read before remediation. `Routes.php` and every `Superadmin` controller were inspected; auto-routing stays disabled. All session-authenticated management lives under `superadmin`; `/` and login are browser login surfaces. The mobile/API routes use bearer authentication, not browser session authority. Event/cash web administration is read-only; no web event/cash mutation route exists. The event-create modal is an existing unimplemented placeholder, with a token added to its form; it does not establish a working event-create endpoint.
+
+Exact browser route/controller inventory follows. Controller names are relative to `App\Controllers\Superadmin`; `(:num)` captures are passed in order. Before: **20 GET routes (12 read-only, 8 unsafe) + 8 POST routes**. After: **12 read-only GET + 16 POST**, **zero GET business/auth mutations**. CSRF hash generation on GET is normal session security bookkeeping.
+
+| Method / exact route after remediation | Controller / method | Classification / prior method |
+|---|---|---|
+| GET `/` | AuthController::login | READ-ONLY GET |
+| GET `superadmin/login` | AuthController::login | READ-ONLY GET |
+| POST `superadmin/login` | AuthController::processLogin | MUTATION POST, unchanged method |
+| POST `superadmin/logout` | AuthController::logout | MUTATION POST, formerly unsafe GET |
+| GET `superadmin/dashboard` | DashboardController::index | READ-ONLY GET |
+| GET `superadmin/settings` | SettingController::index | READ-ONLY GET |
+| POST `superadmin/settings` | SettingController::update | MUTATION POST, unchanged method |
+| GET `superadmin/kelurahan` | KelurahanController::index | READ-ONLY GET |
+| POST `superadmin/kelurahan/store` | KelurahanController::store | MUTATION POST, unchanged method |
+| POST `superadmin/kelurahan/update/(:num)` | KelurahanController::update/$1 | MUTATION POST, unchanged method |
+| POST `superadmin/kelurahan/delete/(:num)` | KelurahanController::delete/$1 | MUTATION POST, formerly unsafe GET |
+| GET `superadmin/karang_taruna` | KarangTarunaController::index | READ-ONLY GET |
+| POST `superadmin/karang_taruna/create` | KarangTarunaController::create | MUTATION POST, unchanged method |
+| POST `superadmin/karang_taruna/update/(:num)` | KarangTarunaController::update/$1 | MUTATION POST, unchanged method |
+| POST `superadmin/karang_taruna/delete/(:num)` | KarangTarunaController::delete/$1 | MUTATION POST, formerly unsafe GET |
+| GET `superadmin/karang_taruna/(:num)/users` | KarangTarunaController::users/$1 | READ-ONLY GET, legacy route retained |
+| GET `superadmin/manage/(:num)` | ManageController::dashboard/$1 | READ-ONLY GET |
+| GET `superadmin/manage/(:num)/users` | ManageController::users/$1 | READ-ONLY GET |
+| POST `superadmin/manage/(:num)/users/(:num)/role` | ManageController::updateUserRole/$1/$2 | MUTATION POST, unchanged method |
+| POST `superadmin/manage/(:num)/users/(:num)/status` | ManageController::toggleUserStatus/$1/$2 | MUTATION POST, formerly unsafe GET |
+| POST `superadmin/manage/(:num)/users/(:num)/reset-password` | ManageController::resetPassword/$1/$2 | MUTATION POST, formerly unsafe GET |
+| POST `superadmin/manage/(:num)/users/approve/(:num)` | ManageController::approveUser/$1/$2 | MUTATION POST, formerly unsafe GET |
+| POST `superadmin/manage/(:num)/users/reject/(:num)` | ManageController::rejectUser/$1/$2 | MUTATION POST, formerly unsafe GET |
+| GET `superadmin/manage/(:num)/events` | ManageController::events/$1 | READ-ONLY GET |
+| GET `superadmin/manage/(:num)/pengumuman` | ManageController::pengumuman/$1 | READ-ONLY GET |
+| POST `superadmin/manage/(:num)/pengumuman/create` | ManageController::createPengumuman/$1 | MUTATION POST, unchanged method; existing schema defect below |
+| POST `superadmin/manage/(:num)/pengumuman/delete/(:num)` | ManageController::deletePengumuman/$1/$2 | MUTATION POST, formerly unsafe GET |
+| GET `superadmin/manage/(:num)/kas` | ManageController::kas/$1 | READ-ONLY GET |
+
+Framework CSRF is enabled through URI-scoped before filters for `/`, `superadmin` and `superadmin/*`, using CodeIgniter **session** protection and its normal token name/header/hash regeneration. No bearer/internal/public-version CSRF requirement was introduced. Existing SuperadminFilter still supplies management authorization. POST login is public but credential-checked; logout only destroys the calling browser session. Missing/incorrect tokens throw403 in testing (production retains framework redirect-on-failure behavior); either path stops the controller before mutation. Valid tokens from another session fail. Authorized header tokens succeed and rotate. Normal, inline and modal forms carry `csrf_field()`; confirmation JavaScript submits their POST forms through `requestSubmit()`. No separate token system or browser AJAX mutation transport was added. Login regenerates the session ID; logout explicitly clears its auth fields before the existing session destroy.
+
+**Red tests first:** before runtime edits, the existing password characterization was changed to safe expectations and a cross-site GET status test was added. Old code produced **2 tests / 5 assertions / 2 failures / 0 errors**: username authenticated the newly created account, and a request with an attacker Origin/Referer changed membership status1→0. `red.log/xml` retain this evidence. The same safe expectations now pass. The expanded GET tests verify exact row-array equality across seven relevant tables and preserve the browser auth flag, in addition to observing404; this is not merely a missing-route assertion.
+
+| Credential flow | Before | After / delivery / session semantics |
+|---|---|---|
+| API manager `POST api/users` | Password=username; flag0; client password input ignored | 18 cryptographic random bytes → 24 URL-safe characters (**144 bits**), bcrypt immediately, flag1; `data.username` and `data.temporary_password` delivered only in successful201, `Cache-Control: no-store`; Flutter create dialog displays them separately and no longer asks for an ignored password |
+| Membership creation/approval | Links global identity; no separate credential | Remains a link/approval of existing identity; does not generate or expose a password |
+| Public registration | User-selected password, minimum6 | User-selected private password under new policy; bcrypt; flag0 because already personally chosen; membership still pending; no password in response |
+| API admin reset | Reused global plaintext setting | Fresh independent random credential, bcrypt, flag1, successful response only/no-store; existing permission/tenant/global-identity checks retained |
+| Web superadmin reset | Reused global setting, plaintext in success flash/session | Fresh random credential, bcrypt, flag1; direct no-store HTML response shows username/password once; no flash/session storage; subsequent list does not expose it |
+| Self change | Minimum6; cleared flag; no other-token revocation | Validates new private password and confirmation, refuses same current credential, hashes before checked write, clears flag only on success; existing token semantics retained |
+| Historical privileged migration | Fixed usable superadmin credential | Historical migration unchanged; both browser and API login call the same runtime policy which rejects the known historical seeded/shared constants and password=username outside testing |
+| UserSeeder demo admin/pengelola | Callable outside testing with fixed defaults | Guard throws before any write unless ENVIRONMENT=testing; real testing seeder remains usable; fixed hashes still cannot authenticate through production policy |
+| Tenant creation | Organization + default chat room, no user password | Unchanged; no tenant bootstrap privileged credential is issued |
+| Dummy/system and test fixtures | Empty-password dummy user; synthetic test passwords | Historical dummy migration already testing+SQLite-only, empty hash not authenticatable; AuthTrait/test defaults remain testing fixtures. Diagnostic tools were not run or modified |
+
+Temporary credentials are **displayed once per successful creation/reset response**, not invitation tokens or server-enforced one-use passwords. They may authenticate until the user changes them; the account is restricted during that time. Losing the response requires another authorized reset, which replaces the credential. No plaintext temporary credential is persisted. Legacy `temporary_reset_password` settings rows are left unchanged as historical data, ignored by both reset paths and excluded from the web settings display; the web settings handler no longer accepts/writes that field. This does not claim old plaintext settings were erased from an existing database. Invitations/reset links and a secure removal of retired settings data are future work.
+
+**Password policy:** minimum **12 Unicode characters**, maximum **72 UTF-8 bytes** (bcrypt limit), no required uppercase/symbol composition. New registration/change rejects username and known default values; change also rejects the current password. Flutter validates the same length/byte/default rules. Existing ordinary short passwords still authenticate. The specific legacy defaults and username passwords are intentionally denied outside testing, regardless of account privilege: such identities require a private credential reset before rollout. Strong preconfigured superadmin hashes continue to authenticate. This is the chosen minimal forward-safe mitigation; **no historical migration edit or new production migration**. Operators must provision a private privileged credential before enabling these changes; no bootstrap secret was requested, fetched, logged or embedded. Existing sessions/tokens are not retroactively disabled (SEC-12).
+
+AuthFilter now compares **exact normalized paths and methods**, fixing the previous substring match that inadvertently allowed `api/memberships` via `api/me`. Flag1 permits only GET `api/me`, POST/PATCH `api/profile/password`, and POST `api/logout`, subject to existing identity/membership checks. Normal tenant, membership discovery, profile edits and FCM registration are blocked. Change clears flag0 and normal access resumes with the existing token; this explicitly demonstrates that other-token revocation has not been added.
+
+Touched server credential paths do not log passwords, request bodies, sessions or tokens. The route-scoped `CredentialSafeToolbar` replaces the toolbar alias and prevents its raw POST/header/session/view-variable collection on browser session pages and the touched API credential/me/logout paths, even with CI_DEBUG enabled. Tests prove these paths never reach toolbar preparation/storage, while unrelated paths retain normal toolbar behavior. Tests capture **all logger calls/context** while creating, resetting, logging in and changing passwords, and scan every testing DB table plus session and subsequent lists for the issued secrets. Flutter debug request/response/error/exception logging emits only method/status/general failure for the touched credential URLs, including malformed non-JSON failures. This closes the temporary-response leak introduced by adding credential delivery; it does not close the wider SEC-16 finding. No real secret appears in the ledger/evidence; all inputs are synthetic.
+
+**Existing limitation discovered during the web matrix:** `ManageController::createPengumuman` supplies `penulis_id`, while the migrated `pengumuman` table requires `dibuat_oleh`. A valid authorized CSRF request reaches the controller but fails that NOT NULL write. The test records this existing separate schema defect and unchanged rows; it does **not** claim successful announcement creation. The other fifteen POST actions complete their intended authorized behavior. No announcement author/schema fix was introduced. The legacy `karang_taruna/(:num)/users` route also still refers to its existing missing view; it is classified read-only, not claimed as a working rendered page. These limitations do not authorize unsafe GET or missing-token writes.
+
+| Mandatory matrix | Evidence / result |
+|---|---|
+| 1,5 GET / cross-site state preservation | Eight former GET URLs404; exact before/after rows and browser auth state preserved; original cross-site status case also passes |
+| 2 POST without CSRF | All16 actions blocked before mutation, including login/logout; attacker Origin simulated |
+| 3 Valid token + authorized | All16 reach intended controller;15 successful actions, existing announcement schema failure preserved/disclosed |
+| 4 Valid token + unauthorized | Management denied, row snapshots unchanged; public login still requires correct credentials |
+| 6 Bearer/internal/public regressions | API create/update without browser token pass; public app-version passes; existing internal socket/auth/guard cases pass in full backend |
+| 7–10 Manager creation | Password differs from username,24 characters, distinct equivalent account credential, bcrypt matches issued value; actual login succeeds, flag1 |
+| 11–14 Forced change | Tenant/membership/profile/FCM blocked; me allowed; valid private change200; hash verified/flag0; inventory/me access200 afterward |
+| 15–17 Reset | Fresh value differs from username/old/shared value; repeat reset replaces previous hash; flag1; API and web reset paths proven |
+| 18 No persisted/logged plaintext | Every disposable test table/session/logger context scanned; subsequent web/API user list has no credential; Flutter debug log tests exclude synthetic passwords/tokens |
+| 19 Production default unavailable | Actual isolated child PHP defines ENVIRONMENT=production: default denied, private credential accepted; no app bootstrap, .env, DB or network |
+| 20 Test-only seeding | Production child invokes actual UserSeeder and guard rejects before writes; real testing seeder works; test hashes denied under production policy |
+
+New backend cases: `WebCsrfCredentialTest` **60** and `CredentialHardeningTest` **16**, plus the converted SEC-06 audit expectation and existing identity/settings tests updated for random credentials and real CSRF. The browser form regression renders nine existing pages and checks each form for its token and absence of mutation links. Standalone production-policy probe lives in `tests/_support/production_credential_probe.php`. Eight new Flutter cases cover credential logging and Unicode/bcrypt policy boundaries. Initial fixture/API mistakes (announcement field/timestamp, test response accessor, seeder accessor, lint relative paths) were corrected before the final results; the pre-existing announcement NOT NULL defect was preserved explicitly rather than hidden by a successful-write claim.
+
+| Final verification | Tests / passed | Assertions | Failures | Errors | Skipped |
+|---|---:|---:|---:|---:|---:|
+| Targeted backend, credential/web + existing auth/tenant/schema/settings guards | **126 /126** | **791** | **0** | **0** | **0** |
+| Full backend PHPUnit | **306 /299** | **1,766** | **0** | **0** | **7** |
+| Full Node Jest | **51 /51**,5 suites | Not emitted | **0** | **0** | **0** |
+| Full Flutter | **64 /64** | Not emitted | **0** | **0** | **0** |
+| Flutter analyze |168 existing issues | — | — | **0** | — |
+| PHP syntax |28 changed/new PHP files | — | **0** | **0** | — |
+| Final rendered-form check after whitespace review |1 /1 |47 |0 |0 |0 |
+
+Full backend elapsed33.543s/30MiB; targeted18.526s/24MiB; Jest4.979s; Flutter7s. The seven backend skips remain six opt-in MySQL cases plus the existing remote-IP CLI case. Batch4.1 real MySQL evidence remains canonical; no MySQL runtime recreation was needed for this batch. Analyzer exits1 with **16 warnings /152 infos /0 errors**; six infos disappeared as a consequence of replacing old password validators, no unrelated analyzer cleanup. This is not an issue-free analyzer run.
+
+Commands retained testing/FCM mocks and the existing request guards, Jest mocked SQL/PHP/FCM and loopback fixtures, Flutter `--no-pub` tests/analyze. **17 Flutter guard summaries** all report **production_attempts=0 / transport_attempts=0 / external_successful_requests=0**. Backend logger probes do not replace its cURL transport guard. Node full suite passes the existing network isolation cases. **Unexpected production application/test requests:0.** No Firebase delivery or setup download occurred. This is guard evidence, not packet capture.
+
+Evidence outside repository:
+`C:\Users\lenovo\AppData\Local\Temp\kartar-batch5-7ca55df64dce413d8b199ddb5276bcea`
+
+Artifacts: `red.log/xml`, `targeted.log/xml`, `backend.log/xml`, `node.log/json`, `flutter.log`, `analyze.log`, `mobile-targeted.log`, `forms-final.log`, initial-attempt logs, classified `scope-manifest.txt` and complete reviewed `final.diff`. Tests/log probes use only synthetic inputs; issued random credentials are checked in memory and not printed into evidence. TEMP evidence/scripts are outside Git scope.
+
+| Security registry | Before Batch5 | After Batch5 |
+|---|---:|---:|
+| Critical |0 |**0** |
+| High |5 |**3** |
+| Medium |8 |**8** |
+| Low |2 |**2** |
+
+Git scope: browser config/routes/forms, credential policy/API/web/seeder/forced-change guard, narrow mobile credential UX/policy/logging, corresponding tests and canonical audit only. Both `website/tools` and `chat-server/tools`, historical/forward migrations, inventory runtime, dependency manifests/locks and Node source are unchanged. Nothing staged; HEAD remains **ceb64cb**. Status/name-status/stat/full diff reviewed and `git diff --check` **PASS**. No commit, push or deployment.
+
+| Final gate | Result |
+|---|---|
+| SEC-05 CLOSED / NO GET MUTATIONS / SESSION CSRF |**PASS — RESOLVED IN WORKTREE, NOT DEPLOYED** |
+| BEARER API REGRESSION |**PASS** |
+| SEC-06 CLOSED / NO PREDICTABLE CREATED PASSWORD |**PASS — RESOLVED IN WORKTREE, NOT DEPLOYED** |
+| FORCED PASSWORD CHANGE / DEFAULT PRIVILEGED CREDENTIAL SAFE |**PASS locally**, private privileged provisioning required before rollout; existing sessions/tokens remain SEC-12 |
+| FULL BACKEND / FULL NODE / FULL FLUTTER |**PASS**; skips and analyzer warnings/infos disclosed |
+| TEST NETWORK ISOLATION / git diff --check |**PASS** |
+| READY FOR NEXT BATCH |**YES, subject to review**; existing announcement/legacy-view limitation retained |
+| PRODUCTION READY / DEPLOYED |**NO / NO** |
+| COMMIT / PUSH |**NOT ATTEMPTED / NOT ATTEMPTED** |

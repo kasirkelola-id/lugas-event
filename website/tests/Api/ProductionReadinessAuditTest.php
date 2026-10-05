@@ -54,7 +54,7 @@ class ProductionReadinessAuditTest extends \Tests\Support\BaseTest
         $result->assertStatus(201);
     }
 
-    public function testAuditCreatedUserHasPredictablePasswordWithoutForcedChange(): void
+    public function testAuditCreatedUserRequiresUnpredictablePasswordAndForcedChange(): void
     {
         // SQLite migration compatibility suppresses DDL errors but leaves transaction
         // status dirty. Reset test setup state before exercising a transactional API.
@@ -66,7 +66,7 @@ class ProductionReadinessAuditTest extends \Tests\Support\BaseTest
                 'no_whatsapp' => '08000000000', 'rt' => 1]);
         $this->assertEquals(201, $result->response()->getStatusCode(), $result->getJSON());
         $created = $this->db->table('users')->where('username', 'audit_new')->get()->getRowArray();
-        $this->assertTrue(password_verify('audit_new', $created['password']));
-        $this->assertEquals(0, $created['password_must_change']);
+        $this->assertFalse(password_verify('audit_new', $created['password']));
+        $this->assertEquals(1, $created['password_must_change']);
     }
 }

@@ -117,7 +117,9 @@
                 <span class="navbar-text me-4">
                     <i class="bi bi-person-circle me-1"></i> Halo, <?= session()->get('superadmin_nama_lengkap') ?>
                 </span>
-                <a href="/superadmin/logout" class="btn btn-sm btn-custom-outline px-3">Logout <i class="bi bi-box-arrow-right ms-1"></i></a>
+                <form action="/superadmin/logout" method="post" class="d-inline">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-custom-outline px-3">Logout <i class="bi bi-box-arrow-right ms-1"></i></button></form>
             </div>
         </div>
     </nav>
@@ -197,7 +199,9 @@
                                     <td class="text-end px-4">
                                         <a href="/superadmin/manage/<?= $kt['id'] ?>" class="btn btn-sm btn-primary me-1" title="Kelola Data"><i class="bi bi-gear-fill"></i> Kelola</a>
                                         <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal<?= $kt['id'] ?>" title="Edit"><i class="bi bi-pencil"></i></button>
-                                        <a href="/superadmin/karang_taruna/delete/<?= $kt['id'] ?>" class="btn btn-sm btn-outline-danger ms-1 confirm-action" data-confirm-message="Yakin ingin menghapus data ini?" title="Hapus"><i class="bi bi-trash"></i></a>
+                                        <form action="/superadmin/karang_taruna/delete/<?= $kt['id'] ?>" method="post" class="d-inline">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger ms-1 confirm-action" data-confirm-message="Yakin ingin menghapus data ini?" title="Hapus"><i class="bi bi-trash"></i></button></form>
                                     </td>
                                 </tr>
 

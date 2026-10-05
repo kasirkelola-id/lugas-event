@@ -59,7 +59,7 @@ class AuthService {
         'code': data['code'],
       };
     } catch (e) {
-      return {'success': false, 'message': 'Terjadi kesalahan jaringan: $e'};
+      return {'success': false, 'message': 'Terjadi kesalahan jaringan'};
     }
   }
 

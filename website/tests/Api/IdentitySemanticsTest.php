@@ -107,13 +107,13 @@ class IdentitySemanticsTest extends \Tests\Support\BaseTest
         $resReset->assertStatus(200);
         // The data is inside 'data' key
         $json = json_decode($resReset->getJSON(), true);
-        $this->assertEquals('kartarjosjis', $json['data']['temporary_password']);
+        $this->assertNotEquals('kartarjosjis', $json['data']['temporary_password']);
 
         // Verify A was reset
         $userModel = new UserModel();
         $dbAndiA = $userModel->find($andiA['id']);
         $this->assertEquals(1, $dbAndiA['password_must_change']);
-        $this->assertTrue(password_verify('kartarjosjis', $dbAndiA['password']));
+        $this->assertTrue(password_verify($json['data']['temporary_password'], $dbAndiA['password']));
 
         // Verify B was untouched
         $dbAndiB = $userModel->find($andiB['id']);

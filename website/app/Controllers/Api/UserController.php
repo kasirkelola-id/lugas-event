@@ -155,11 +155,13 @@ class UserController extends BaseApiController
             return $this->sendError('Username sudah terdaftar', ['username' => 'Akun dengan username ini sudah ada di Karang Taruna Anda.'], 409);
         }
 
+        $temporaryPassword = \App\Services\CredentialPolicy::temporaryPassword();
         $userData = [
             'nama_lengkap'   => $rawInput['nama_lengkap'],
             'nama_panggilan' => $rawInput['nama_panggilan'],
             'username'       => $rawInput['username'],
-            'password'       => password_hash($rawInput['username'], PASSWORD_BCRYPT),
+            'password'       => password_hash($temporaryPassword, PASSWORD_BCRYPT),
+            'password_must_change' => 1,
             'no_whatsapp'    => $rawInput['no_whatsapp'] ?? null,
             'rt'             => (int)($rawInput['rt'] ?? 1),
             'status_aktif'   => 1
@@ -192,6 +194,8 @@ class UserController extends BaseApiController
 
         $userData['id'] = $userId;
         unset($userData['password']);
+        $userData['temporary_password'] = $temporaryPassword;
+        $this->response->setHeader('Cache-Control', 'no-store');
 
         return $this->sendSuccess('Pengguna berhasil dibuat', $userData, 201);
     }
@@ -358,21 +362,17 @@ class UserController extends BaseApiController
             return $this->sendError('Forbidden: Tidak dapat mereset password ketua', null, 403);
         }
 
-        $settingModel = new \App\Models\SettingModel();
-        $tempPassSetting = $settingModel->where('karang_taruna_id', 0)->where('setting_key', 'temporary_reset_password')->first();
-
-        if (!$tempPassSetting || empty(trim($tempPassSetting['setting_value']))) {
-            return $this->sendError('Sistem error', ['message' => 'Password sementara global belum dikonfigurasi oleh Superadmin.'], 500);
-        }
-
-        $temporaryPassword = trim($tempPassSetting['setting_value']);
+        $temporaryPassword = \App\Services\CredentialPolicy::temporaryPassword();
 
         // Update Exact Global User password
-        $userModel->update($user['id'], [
+        if (!$userModel->update($user['id'], [
             'password' => password_hash($temporaryPassword, PASSWORD_BCRYPT),
             'password_must_change' => 1
-        ]);
+        ])) {
+            return $this->sendError('Gagal mereset password.', null, 500);
+        }
 
+        $this->response->setHeader('Cache-Control', 'no-store');
         return $this->sendSuccess('Password berhasil direset.', ['temporary_password' => $temporaryPassword]);
     }
 

@@ -24,7 +24,8 @@ class AuthController extends BaseController
         $superadminModel = new SuperadminModel();
         $user = $superadminModel->where('username', $username)->first();
 
-        if ($user && password_verify($password, $user['password'])) {
+        if ($user && \App\Services\CredentialPolicy::verify((string) $password, $user)) {
+            session()->regenerate(true);
             $sessionData = [
                 'superadmin_id'           => $user['id'],
                 'superadmin_username'     => $user['username'],
@@ -40,6 +41,7 @@ class AuthController extends BaseController
 
     public function logout()
     {
+        session()->remove(['is_superadmin_logged_in', 'superadmin_id', 'superadmin_username', 'superadmin_nama_lengkap']);
         session()->destroy();
         return redirect()->to('/superadmin/login');
     }

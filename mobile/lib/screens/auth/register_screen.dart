@@ -1,3 +1,4 @@
+import '../../core/security/password_policy.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
@@ -56,6 +57,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {
         _isLoading = false;
         _errorMessage = 'Konfirmasi password tidak sama';
+      });
+      return;
+    }
+
+    final policyError = PasswordPolicy.validate(password);
+    if (policyError != null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = policyError;
       });
       return;
     }

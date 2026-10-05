@@ -104,7 +104,9 @@
                 <span class="navbar-text me-4">
                     <i class="bi bi-person-circle me-1"></i> Halo, <?= session()->get('superadmin_nama_lengkap') ?>
                 </span>
-                <a href="/superadmin/logout" class="btn btn-sm btn-custom-outline px-3">Logout <i class="bi bi-box-arrow-right ms-1"></i></a>
+                <form action="/superadmin/logout" method="post" class="d-inline">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-sm btn-custom-outline px-3">Logout <i class="bi bi-box-arrow-right ms-1"></i></button></form>
             </div>
         </div>
     </nav>

@@ -69,6 +69,7 @@ Manajemen Event
 <div class="modal fade" id="addEventModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <form action="#" method="post" class="w-100">
+        <?= csrf_field() ?>
         <div class="modal-content border-0 shadow">
           <div class="modal-header bg-light border-0">
             <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2 text-primary"></i>Tambah Event Baru</h5>

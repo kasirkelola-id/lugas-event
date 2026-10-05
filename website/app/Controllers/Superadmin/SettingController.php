@@ -19,6 +19,9 @@ class SettingController extends BaseController
         ];
         
         foreach ($settings as $setting) {
+            if ($setting['setting_key'] === 'temporary_reset_password') {
+                continue; // Deprecated shared credential is never displayed again.
+            }
             $data['settings'][$setting['setting_key']] = $setting['setting_value'];
         }
 
@@ -29,19 +32,6 @@ class SettingController extends BaseController
     {
         $settingModel = new SettingModel();
         $input = $this->request->getPost();
-
-        if (isset($input['temporary_reset_password']) && strlen(trim($input['temporary_reset_password'])) > 0) {
-            if (strlen(trim($input['temporary_reset_password'])) < 8) {
-                return redirect()->back()->with('error', 'Password sementara harus minimal 8 karakter.');
-            }
-            
-            $existing = $settingModel->where('karang_taruna_id', 0)->where('setting_key', 'temporary_reset_password')->first();
-            if ($existing) {
-                $settingModel->where('karang_taruna_id', 0)->where('setting_key', 'temporary_reset_password')->set(['setting_value' => trim($input['temporary_reset_password'])])->update();
-            } else {
-                $settingModel->insert(['karang_taruna_id' => 0, 'setting_key' => 'temporary_reset_password', 'setting_value' => trim($input['temporary_reset_password']), 'description' => 'Password reset sementara global']);
-            }
-        }
 
         // Process Android App Update settings
         $appUpdateKeys = [

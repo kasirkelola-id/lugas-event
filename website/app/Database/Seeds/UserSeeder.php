@@ -8,6 +8,7 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
+        \App\Services\CredentialPolicy::requireTestingSeeds();
         $data = [
             [
                 'nama_lengkap'   => 'Administrator Pengelola',

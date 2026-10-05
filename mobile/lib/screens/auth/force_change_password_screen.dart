@@ -1,3 +1,4 @@
+import '../../core/security/password_policy.dart';
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
@@ -44,11 +45,12 @@ class _ForceChangePasswordScreenState extends State<ForceChangePasswordScreen> {
       return;
     }
 
-    if (newPass == 'lugasjosjis') {
-      setState(
-        () => _errorMessage =
-            'Tidak boleh menggunakan password default sementara',
-      );
+    final policyError = PasswordPolicy.validate(newPass);
+    if (policyError != null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = policyError;
+      });
       return;
     }
 

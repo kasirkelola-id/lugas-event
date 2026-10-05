@@ -17,6 +17,13 @@ class AppVersionTest extends BaseTest
     protected $migrateOnce = true;
     protected $refresh = false;
     protected $namespace = 'App';
+
+    private function csrfSession(array $session): self
+    {
+        \Config\Services::resetSingle('security');
+        return $this->withSession($session + ['csrf_test_name' => str_repeat('c', 64)])
+            ->withHeaders(['X-CSRF-TOKEN' => str_repeat('c', 64)]);
+    }
     
     protected function setUp(): void
     {
@@ -82,7 +89,7 @@ class AppVersionTest extends BaseTest
             'superadmin_username' => 'superadmin'
         ];
         
-        $result = $this->withSession($superadmin)->post('superadmin/settings', [
+        $result = $this->csrfSession($superadmin)->post('superadmin/settings', [
             'android_update_enabled' => 'true',
             'android_version_name' => '2.0',
             'android_version_code' => '20',
@@ -106,7 +113,7 @@ class AppVersionTest extends BaseTest
         ];
         
         // Enabled tapi URL kosong
-        $result = $this->withSession($superadmin)->post('superadmin/settings', [
+        $result = $this->csrfSession($superadmin)->post('superadmin/settings', [
             'android_update_enabled' => 'true',
             'android_version_name' => '2.0',
             'android_version_code' => '20',
@@ -117,7 +124,7 @@ class AppVersionTest extends BaseTest
         $this->assertStringContainsString('Link Download APK wajib diisi', session('error'));
         
         // Enabled tapi URL tidak valid
-        $result = $this->withSession($superadmin)->post('superadmin/settings', [
+        $result = $this->csrfSession($superadmin)->post('superadmin/settings', [
             'android_update_enabled' => 'true',
             'android_version_name' => '2.0',
             'android_version_code' => '20',
@@ -128,7 +135,7 @@ class AppVersionTest extends BaseTest
         $this->assertStringContainsString('wajib diisi URL valid', session('error'));
         
         // Enabled tapi version code string/invalid
-        $result = $this->withSession($superadmin)->post('superadmin/settings', [
+        $result = $this->csrfSession($superadmin)->post('superadmin/settings', [
             'android_update_enabled' => 'true',
             'android_version_name' => '2.0',
             'android_version_code' => '-5', // ERROR!

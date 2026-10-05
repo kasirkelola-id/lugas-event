@@ -149,22 +149,21 @@ class ManageController extends BaseController
             return redirect()->back()->with('error', 'Pengguna tidak ditemukan di Karang Taruna ini.');
         }
 
-        $settingModel = new \App\Models\SettingModel();
-        $tempPassSetting = $settingModel->where('karang_taruna_id', 0)->where('setting_key', 'temporary_reset_password')->first();
-        
-        if (!$tempPassSetting || empty(trim($tempPassSetting['setting_value']))) {
-            return redirect()->back()->with('error', 'Password sementara global belum dikonfigurasi. Silakan periksa menu Pengaturan.');
-        }
-
-        $temporaryPassword = trim($tempPassSetting['setting_value']);
+        $temporaryPassword = \App\Services\CredentialPolicy::temporaryPassword();
 
         $userModel = new UserModel();
-        $userModel->update($user_id, [
+        if (!$userModel->update($user_id, [
             'password' => password_hash($temporaryPassword, PASSWORD_BCRYPT),
             'password_must_change' => 1
-        ]);
+        ])) {
+            return redirect()->back()->with('error', 'Gagal mereset password.');
+        }
 
-        return redirect()->to("/superadmin/manage/{$kt_id}/users")->with('success', "Password pengguna berhasil direset menjadi: {$temporaryPassword}");
+        return $this->response->setHeader('Cache-Control', 'no-store')->setBody(view('superadmin/temporary_credential', [
+            'username' => $membership['username'],
+            'temporary_password' => $temporaryPassword,
+            'return_url' => "/superadmin/manage/{$kt_id}/users",
+        ]));
     }
 
     public function approveUser($kt_id, $membership_id)

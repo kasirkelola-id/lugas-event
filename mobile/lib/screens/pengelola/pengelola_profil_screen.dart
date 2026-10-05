@@ -1,3 +1,4 @@
+import '../../core/security/password_policy.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
@@ -409,11 +410,7 @@ class _PengelolaProfilScreenState extends State<PengelolaProfilScreen> {
                           ),
                           obscureText: obscureNew,
                           validator: (value) {
-                            if (value == null || value.length < 6)
-                              return 'Minimal 6 karakter';
-                            if (value == 'lugasjosjis')
-                              return 'Tidak boleh gunakan password bawaan';
-                            return null;
+                            return PasswordPolicy.validate(value);
                           },
                         ),
                         const SizedBox(height: 16),

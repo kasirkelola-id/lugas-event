@@ -126,7 +126,7 @@ $routes->get('/', '\App\Controllers\Superadmin\AuthController::login');
 $routes->group('superadmin', ['namespace' => 'App\Controllers\Superadmin'], function ($routes) {
     $routes->get('login', 'AuthController::login');
     $routes->post('login', 'AuthController::processLogin');
-    $routes->get('logout', 'AuthController::logout');
+    $routes->post('logout', 'AuthController::logout');
     
     $routes->group('', ['filter' => 'superadmin'], function ($routes) {
         $routes->get('dashboard', 'DashboardController::index');
@@ -136,26 +136,26 @@ $routes->group('superadmin', ['namespace' => 'App\Controllers\Superadmin'], func
         $routes->get('kelurahan', 'KelurahanController::index');
         $routes->post('kelurahan/store', 'KelurahanController::store');
         $routes->post('kelurahan/update/(:num)', 'KelurahanController::update/$1');
-        $routes->get('kelurahan/delete/(:num)', 'KelurahanController::delete/$1');
+        $routes->post('kelurahan/delete/(:num)', 'KelurahanController::delete/$1');
         
         $routes->get('karang_taruna', 'KarangTarunaController::index');
         $routes->post('karang_taruna/create', 'KarangTarunaController::create');
         $routes->post('karang_taruna/update/(:num)', 'KarangTarunaController::update/$1');
-        $routes->get('karang_taruna/delete/(:num)', 'KarangTarunaController::delete/$1');
+        $routes->post('karang_taruna/delete/(:num)', 'KarangTarunaController::delete/$1');
         $routes->get('karang_taruna/(:num)/users', 'KarangTarunaController::users/$1');
         
         // Manage per Karang Taruna
         $routes->get('manage/(:num)', 'ManageController::dashboard/$1');
         $routes->get('manage/(:num)/users', 'ManageController::users/$1');
         $routes->post('manage/(:num)/users/(:num)/role', 'ManageController::updateUserRole/$1/$2');
-        $routes->get('manage/(:num)/users/(:num)/status', 'ManageController::toggleUserStatus/$1/$2');
-        $routes->get('manage/(:num)/users/(:num)/reset-password', 'ManageController::resetPassword/$1/$2');
-        $routes->get('manage/(:num)/users/approve/(:num)', 'ManageController::approveUser/$1/$2');
-        $routes->get('manage/(:num)/users/reject/(:num)', 'ManageController::rejectUser/$1/$2');
+        $routes->post('manage/(:num)/users/(:num)/status', 'ManageController::toggleUserStatus/$1/$2');
+        $routes->post('manage/(:num)/users/(:num)/reset-password', 'ManageController::resetPassword/$1/$2');
+        $routes->post('manage/(:num)/users/approve/(:num)', 'ManageController::approveUser/$1/$2');
+        $routes->post('manage/(:num)/users/reject/(:num)', 'ManageController::rejectUser/$1/$2');
         $routes->get('manage/(:num)/events', 'ManageController::events/$1');
         $routes->get('manage/(:num)/pengumuman', 'ManageController::pengumuman/$1');
         $routes->post('manage/(:num)/pengumuman/create', 'ManageController::createPengumuman/$1');
-        $routes->get('manage/(:num)/pengumuman/delete/(:num)', 'ManageController::deletePengumuman/$1/$2');
+        $routes->post('manage/(:num)/pengumuman/delete/(:num)', 'ManageController::deletePengumuman/$1/$2');
         
         $routes->get('manage/(:num)/kas', 'ManageController::kas/$1');
     });

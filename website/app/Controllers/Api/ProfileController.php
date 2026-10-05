@@ -85,7 +85,7 @@ class ProfileController extends BaseApiController
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
 
         $rules = [
-            'new_password' => 'required|min_length[6]',
+            'new_password' => 'required|min_length[12]|max_length[72]',
             'confirm_password' => 'required|matches[new_password]'
         ];
 
@@ -93,16 +93,21 @@ class ProfileController extends BaseApiController
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
 
-        if ($rawInput['new_password'] === 'lugasjosjis') {
-             return $this->sendError('Validasi gagal', ['new_password' => 'Tidak boleh menggunakan password default.'], 422);
+        $userModel = new UserModel();
+        $user = $userModel->find($userId);
+        if (!\App\Services\CredentialPolicy::validNewPassword($rawInput['new_password'])
+            || $rawInput['new_password'] === $user['username']
+            || $rawInput['new_password'] === AuthService::getUser()['username']
+            || password_verify($rawInput['new_password'], $user['password'])) {
+            return $this->sendError('Validasi gagal', ['new_password' => 'Gunakan password baru minimal 12 karakter, maksimal 72 byte, berbeda dari username/default/password sebelumnya.'], 422);
         }
 
-        $userModel = new UserModel();
-
-        $userModel->update($userId, [
+        if (!$userModel->update($userId, [
             'password' => password_hash($rawInput['new_password'], PASSWORD_BCRYPT),
             'password_must_change' => 0
-        ]);
+        ])) {
+            return $this->sendError('Gagal mengubah password.', null, 500);
+        }
 
         return $this->sendSuccess('Password berhasil diubah');
     }

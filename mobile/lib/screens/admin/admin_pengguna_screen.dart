@@ -34,7 +34,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   final _namaLengkapController = TextEditingController();
   final _namaPanggilanController = TextEditingController();
   final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _whatsappController = TextEditingController();
   final _rtController = TextEditingController();
   String _selectedRole = 'pengelola';
@@ -52,7 +51,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     _namaLengkapController.dispose();
     _namaPanggilanController.dispose();
     _usernameController.dispose();
-    _passwordController.dispose();
     _whatsappController.dispose();
     _rtController.dispose();
     super.dispose();
@@ -109,7 +107,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
       _namaLengkapController.clear();
       _namaPanggilanController.clear();
       _usernameController.clear();
-      _passwordController.clear();
       _whatsappController.clear();
       _rtController.text = '1';
       _selectedRole = 'pengelola';
@@ -176,14 +173,8 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                               : null,
                         ),
                         if (!isEditing)
-                          CustomTextField(
-                            controller: _passwordController,
-                            label: 'Password',
-                            obscureText: true,
-                            validator: (value) =>
-                                value == null || value.length < 6
-                                ? 'Password min. 6 karakter'
-                                : null,
+                          const Text(
+                            'Password sementara dibuat otomatis dan wajib diganti setelah login.',
                           ),
                         if (!isEditing)
                           DropdownButtonFormField<String>(
@@ -261,7 +252,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                                       data,
                                     );
                                   } else {
-                                    data['password'] = _passwordController.text;
                                     data['role_level'] = _selectedRole;
                                     result = await UserService.createUser(data);
                                   }
@@ -276,6 +266,34 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                                             : 'Pengguna berhasil dibuat',
                                       );
                                       _triggerRefresh();
+                                      if (!isEditing && mounted) {
+                                        final created =
+                                            result['data']
+                                                as Map<String, dynamic>;
+                                        await AppDialog.showResult(
+                                          context: this.context,
+                                          title: 'Kredensial Pengguna Baru',
+                                          type: DialogType.success,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                'Username: ${created['username']}',
+                                              ),
+                                              const Text(
+                                                'Password sementara (ditampilkan sekali):',
+                                              ),
+                                              SelectableText(
+                                                created['temporary_password']
+                                                    as String,
+                                              ),
+                                              const Text(
+                                                'Berikan kepada pengguna. Password wajib diganti setelah login.',
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }
                                     }
                                   } else {
                                     setStateDialog(

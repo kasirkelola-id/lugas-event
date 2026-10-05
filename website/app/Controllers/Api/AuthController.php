@@ -71,12 +71,12 @@ class AuthController extends BaseApiController
         $isSuperAdmin = false;
         $superadmin = null;
 
-        if (!$user || !password_verify($password, (string)($user['password'] ?? ''))) {
+        if (!$user || !\App\Services\CredentialPolicy::verify((string) $password, $user)) {
             // Check if it's a superadmin
             $db = \Config\Database::connect();
             $superadmin = $db->table('superadmins')->where('username', $username)->get()->getRowArray();
 
-            if (!$superadmin || !password_verify($password, (string)($superadmin['password'] ?? ''))) {
+            if (!$superadmin || !\App\Services\CredentialPolicy::verify((string) $password, $superadmin)) {
                 return $this->sendError('Username atau password salah.', null, 401);
             }
 
@@ -223,7 +223,7 @@ class AuthController extends BaseApiController
             'nama_lengkap'     => 'required|max_length[255]',
             'nama_panggilan'   => 'required|max_length[100]',
             'username'         => 'required',
-            'password'         => 'required|min_length[6]',
+            'password'         => 'required|min_length[12]|max_length[72]',
             'confirm_password' => 'required|matches[password]',
             'no_whatsapp'      => 'required|max_length[20]',
             'rt'               => 'permit_empty|in_list[1,2,3,4]',
@@ -234,6 +234,11 @@ class AuthController extends BaseApiController
 
         if (!$this->validateData($rawInput, $rules)) {
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
+        }
+
+        if (!\App\Services\CredentialPolicy::validNewPassword($rawInput['password'])
+            || $rawInput['password'] === $rawInput['username']) {
+            return $this->sendError('Validasi gagal', ['password' => 'Gunakan password pribadi minimal 12 karakter, maksimal 72 byte, berbeda dari username/default.'], 422);
         }
 
         $memberModel = new \App\Models\OrganizationMemberModel();

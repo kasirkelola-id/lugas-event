@@ -58,19 +58,27 @@ Manajemen Pengguna
                             </td>
                             <td class="text-end px-4">
                                 <?php if($user['approval_status'] === 'pending'): ?>
-                                    <a href="/superadmin/manage/<?= $kt['id'] ?>/users/approve/<?= $user['membership_id'] ?>" class="btn btn-sm btn-success me-1 confirm-action" data-confirm-message="Yakin ingin menyetujui pengguna ini?" title="Setujui">
+                                    <form action="/superadmin/manage/<?= $kt['id'] ?>/users/approve/<?= $user['membership_id'] ?>" method="post" class="d-inline">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-success me-1 confirm-action" data-confirm-message="Yakin ingin menyetujui pengguna ini?" title="Setujui">
                                         <i class="bi bi-check-circle"></i> Setujui
-                                    </a>
-                                    <a href="/superadmin/manage/<?= $kt['id'] ?>/users/reject/<?= $user['membership_id'] ?>" class="btn btn-sm btn-danger me-1 confirm-action" data-confirm-message="Yakin ingin menolak pengguna ini?" title="Tolak">
+                                    </button></form>
+                                    <form action="/superadmin/manage/<?= $kt['id'] ?>/users/reject/<?= $user['membership_id'] ?>" method="post" class="d-inline">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-danger me-1 confirm-action" data-confirm-message="Yakin ingin menolak pengguna ini?" title="Tolak">
                                         <i class="bi bi-x-circle"></i> Tolak
-                                    </a>
+                                    </button></form>
                                 <?php else: ?>
-                                    <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/status" class="btn btn-sm <?= $user['status_aktif'] == 1 ? 'btn-outline-danger' : 'btn-outline-success' ?> me-1 confirm-action" data-confirm-message="Yakin ingin <?= $user['status_aktif'] == 1 ? 'menonaktifkan' : 'mengaktifkan' ?> pengguna ini?" title="<?= $user['status_aktif'] == 1 ? 'Nonaktifkan' : 'Aktifkan' ?>">
+                                    <form action="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/status" method="post" class="d-inline">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm <?= $user['status_aktif'] == 1 ? 'btn-outline-danger' : 'btn-outline-success' ?> me-1 confirm-action" data-confirm-message="Yakin ingin <?= $user['status_aktif'] == 1 ? 'menonaktifkan' : 'mengaktifkan' ?> pengguna ini?" title="<?= $user['status_aktif'] == 1 ? 'Nonaktifkan' : 'Aktifkan' ?>">
                                         <i class="bi <?= $user['status_aktif'] == 1 ? 'bi-person-x' : 'bi-person-check' ?>"></i> 
-                                    </a>
-                                    <a href="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/reset-password" class="btn btn-sm btn-outline-warning me-1 confirm-action" data-confirm-message="Yakin ingin mereset password pengguna ini? Pengguna akan diminta mengubah password pada saat login berikutnya." title="Reset Password">
+                                    </button></form>
+                                    <form action="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/reset-password" method="post" class="d-inline">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-outline-warning me-1 confirm-action" data-confirm-message="Yakin ingin mereset password pengguna ini? Pengguna akan diminta mengubah password pada saat login berikutnya." title="Reset Password">
                                         <i class="bi bi-key"></i> 
-                                    </a>
+                                    </button></form>
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#roleModal<?= $user['id'] ?>">
                                         <i class="bi bi-pencil-square"></i> Ubah Role
                                     </button>
@@ -85,6 +93,7 @@ Manajemen Pengguna
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
                                             <form action="/superadmin/manage/<?= $kt['id'] ?>/users/<?= $user['id'] ?>/role" method="post">
+                                                <?= csrf_field() ?>
                                                 <div class="modal-body">
                                                     <p>Pilih jabatan baru untuk <strong><?= esc($user['nama_lengkap']) ?></strong>:</p>
                                                     <select class="form-select" name="role_level" required>
