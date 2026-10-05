@@ -135,8 +135,14 @@ class VotingController extends BaseApiController
         }
 
         $options = $rawInput['options'] ?? null;
-        if (!is_array($options) || count($options) < 2) {
+        if (!is_array($options) || count($options) < 2 || count($options) > 50) {
             return $this->sendError('Validasi gagal', ['options' => 'Minimal 2 pilihan (options) harus diberikan'], 422);
+        }
+        foreach ($options as $option) {
+            $label = is_array($option) ? ($option['option_name'] ?? null) : $option;
+            if (!is_string($label) || trim($label) === '' || mb_strlen($label) > 255) {
+                return $this->sendError('Pilihan harus berupa teks 1-255 karakter', null, 422);
+            }
         }
 
         $db = \Config\Database::connect();

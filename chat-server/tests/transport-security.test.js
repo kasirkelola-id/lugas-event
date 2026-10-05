@@ -10,7 +10,7 @@ Object.assign(process.env, {
   INTERNAL_API_URL:'http://127.0.0.1/api/internal/socket-auth'
 });
 global.fetch = jest.fn();
-const {server,io,pool,privateUserRoom} = require('../server');
+const {server,io,pool,privateUserRoom,abuse} = require('../server');
 let clients, sequence;
 const pause = () => new Promise(resolve => setTimeout(resolve,30));
 function once(emitter,name) {
@@ -39,6 +39,7 @@ async function connect(user,tenant,mode) {
 beforeAll(done => {server.listen(0,'127.0.0.1',done);});
 afterAll(async () => {io.close();server.close();await pool.end();});
 beforeEach(() => {
+  abuse.clear();
   clients=[];sequence=0;jest.clearAllMocks();
   global.fetch.mockImplementation(async (url,options) => {
     expect(url).toMatch(/^http:\/\/127\.0\.0\.1\/api\/internal\/(socket-auth|chat-notification)$/);

@@ -7,7 +7,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->group('api', function ($routes) {
     $routes->post('tenant/verify-pin', 'Api\AuthController::validatePin', ['filter' => 'ratelimit:10,60']);
     $routes->post('login', 'Api\AuthController::login', ['filter' => 'ratelimit:5,60']);
-    $routes->post('register', 'Api\AuthController::register');
+    $routes->post('register', 'Api\AuthController::register', ['filter' => 'abuse']);
     $routes->post('logout', 'Api\AuthController::logout', ['filter' => 'auth']);
     $routes->get('me', 'Api\AuthController::me', ['filter' => 'auth']);
     $routes->post('fcm-token', 'Api\AuthController::updateFcmToken', ['filter' => 'auth']);
@@ -125,10 +125,10 @@ $routes->get('/', '\App\Controllers\Superadmin\AuthController::login');
 
 $routes->group('superadmin', ['namespace' => 'App\Controllers\Superadmin'], function ($routes) {
     $routes->get('login', 'AuthController::login');
-    $routes->post('login', 'AuthController::processLogin');
+    $routes->post('login', 'AuthController::processLogin', ['filter' => 'ratelimit:5,60']);
     $routes->post('logout', 'AuthController::logout');
     
-    $routes->group('', ['filter' => 'superadmin'], function ($routes) {
+    $routes->group('', ['filter' => ['superadmin', 'abuse']], function ($routes) {
         $routes->get('dashboard', 'DashboardController::index');
         $routes->get('settings', 'SettingController::index');
         $routes->post('settings', 'SettingController::update');

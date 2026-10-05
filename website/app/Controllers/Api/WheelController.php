@@ -60,6 +60,10 @@ class WheelController extends ResourceController
         $duration = (int)($this->request->getVar('spin_duration_seconds') ?? 10);
         $removeWinner = !empty($this->request->getVar('remove_winner_after_spin')) ? 1 : 0;
         $items = $this->request->getVar('items') ?? [];
+        if (!is_array($items) || count($items) > 1000 || $duration > 120
+            || !in_array($sourceType, ['members', 'custom'], true)) {
+            return $this->fail('Maksimal 1000 peserta dan durasi 10-120 detik', 422);
+        }
 
         if ($duration < 10) {
             return $this->failValidationErrors('Durasi putaran minimal 10 detik');
@@ -67,6 +71,12 @@ class WheelController extends ResourceController
 
         if (count($items) < 2 && $sourceType === 'custom') {
             return $this->failValidationErrors('Minimal 2 kandidat diperlukan');
+        }
+        foreach ($items as $item) {
+            if (($sourceType === 'custom' && (!is_string($item) || trim($item) === '' || mb_strlen($item) > 255))
+                || ($sourceType === 'members' && (!is_scalar($item) || !ctype_digit((string)$item) || (int)$item < 1))) {
+                return $this->fail('Kandidat tidak valid', 422);
+            }
         }
 
         // Begin Transaction
@@ -129,7 +139,11 @@ class WheelController extends ResourceController
                 $builder->whereIn('organization_members.user_id', $items);
             }
 
-            $activeMembers = $builder->get()->getResultArray();
+            $activeMembers = $builder->limit(1001)->get()->getResultArray();
+            if (count($activeMembers) > 1000) {
+                $db->transRollback();
+                return $this->fail('Pilih maksimal 1000 kandidat', 422);
+            }
 
             if (count($activeMembers) < 2) {
                 $db->transRollback();

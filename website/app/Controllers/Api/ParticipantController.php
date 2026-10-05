@@ -78,6 +78,9 @@ class ParticipantController extends BaseApiController
         }
 
         $userIds = $rawInput['user_ids'];
+        if (count($userIds) > 100 || array_filter($userIds, static fn($id) => !is_scalar($id) || !ctype_digit((string)$id) || (int)$id < 1)) {
+            return $this->sendError('Daftar peserta maksimal 100 ID valid', null, 422);
+        }
         $participantModel = new EventParticipantModel();
         $memberModel = new \App\Models\OrganizationMemberModel();
         $tenantId = AuthService::getTenantId();

@@ -63,6 +63,9 @@ class ChatController extends BaseApiController
             return $this->sendError('Anggota grup harus berupa daftar', null, 400);
         }
         $memberIds = $memberIds ?? [];
+        if (count($memberIds) > self::MAX_CUSTOM_ROOM_MEMBERS) {
+            return $this->sendError('Jumlah anggota grup melebihi batas 100', null, 422);
+        }
         foreach ($memberIds as $memberId) {
             if (!is_int($memberId) && !(is_string($memberId) && ctype_digit($memberId))) {
                 return $this->sendError('ID anggota grup tidak valid', null, 400);

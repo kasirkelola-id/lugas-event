@@ -178,6 +178,7 @@ class AuthFilter implements FilterInterface
 
         \App\Services\AuthService::setUser($user);
         \App\Services\AuthService::setToken($tokenData);
+        return (new \App\Filters\AbuseFilter())->before($request);
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)

@@ -27,7 +27,7 @@ process.env.DB_NAME = 'test';
 process.env.INTERNAL_API_SECRET = 'secret';
 process.env.INTERNAL_API_URL = 'http://localhost/api';
 
-const { server, io, pool, boundedConnectionLimit } = require('../server');
+const { server, io, pool, boundedConnectionLimit, abuse } = require('../server');
 
 describe('Socket.IO Chat Integration', () => {
   let clientSocket;
@@ -49,6 +49,7 @@ describe('Socket.IO Chat Integration', () => {
   });
 
   beforeEach(() => {
+    abuse.clear();
     jest.clearAllMocks();
   });
 

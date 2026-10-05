@@ -9,7 +9,7 @@ Object.assign(process.env, {
   INTERNAL_API_URL: 'http://127.0.0.1/api/internal/socket-auth'
 });
 global.fetch = jest.fn();
-const { server, io, pool, privateUserRoom, renewAuthorization, AUTH_LEASE_MS } = require('../server');
+const { server, io, pool, privateUserRoom, renewAuthorization, AUTH_LEASE_MS, abuse } = require('../server');
 let clients, insertId, identities, eligibility;
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 function event(socket, name) {
@@ -45,6 +45,7 @@ async function send(socket, extra = {}) {
 beforeAll(done => { server.listen(0, '127.0.0.1', done); });
 afterAll(async () => { io.close(); server.close(); await pool.end(); });
 beforeEach(() => {
+  abuse.clear();
   clients = []; insertId = 0; identities = new Map(); eligibility = new Map();
   jest.clearAllMocks();
   global.fetch.mockImplementation(async (url, options) => {
@@ -79,6 +80,65 @@ beforeEach(() => {
   });
 });
 afterEach(async () => { clients.forEach(socket => socket.disconnect()); await delay(10); });
+
+test('message quota is shared across two devices and tenant contexts', async () => {
+  const one = await connect(10, 101);
+  const two = await connect(10, 102);
+  for (let i = 0; i < 5; i++) await send(i % 2 ? two : one);
+  const rejected = event(two, 'error');
+  two.emit('send_message', { type: 'private', receiver_id: 20, message: 'Synthetic' });
+  expect((await rejected).message).toBe('RATE_LIMITED');
+  expect(insertId).toBe(5);
+});
+
+test('join in-flight guard stops query multiplication', async () => {
+  const socket = await connect(10, 101);
+  const original = pool.execute.getMockImplementation();
+  let release;
+  pool.execute.mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+  socket.emit('join_room', { room_id: 1 });
+  await delay(20);
+  const rejected = event(socket, 'error');
+  socket.emit('join_room', { room_id: 2 });
+  expect((await rejected).message).toBe('RATE_LIMITED');
+  expect(pool.execute).toHaveBeenCalledTimes(1);
+  const joined = event(socket, 'room_joined');
+  pool.execute.mockImplementation(original);
+  release([[{ id: 1, type: 'default' }]]);
+  expect((await joined).room_id).toBe(1);
+});
+
+test('authentication is single-flight and disconnect aborts upstream work', async () => {
+  let upstreamSignal;
+  global.fetch.mockImplementationOnce((url, options) => new Promise((resolve, reject) => {
+    upstreamSignal = options.signal;
+    options.signal.addEventListener('abort', () => reject(new Error('Synthetic abort')), { once: true });
+  }));
+  const socket = ioc(`http://127.0.0.1:${server.address().port}`, { transports: ['websocket'], autoConnect: false, reconnection: false });
+  clients.push(socket);
+  socket.on('connect', () => socket.emit('auth', { token: 'pending', tenant_id: 101 }));
+  socket.connect();
+  await delay(30);
+  expect(upstreamSignal).toBeDefined();
+  const denied = event(socket, 'auth_error');
+  socket.emit('auth', { token: 'pending', tenant_id: 101 });
+  expect((await denied).message).toBe('Socket is already authenticated');
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+  socket.disconnect();
+  await delay(30);
+  expect(upstreamSignal.aborted).toBe(true);
+});
+
+test('sixth socket for one global user is rejected across tenants', async () => {
+  for (let i = 0; i < 5; i++) await connect(10, i % 2 ? 102 : 101);
+  identities.set('sixth', { user_id: 10, karang_taruna_id: 101 });
+  const socket = ioc(`http://127.0.0.1:${server.address().port}`, { transports: ['websocket'], autoConnect: false, reconnection: false });
+  clients.push(socket);
+  socket.on('connect', () => socket.emit('auth', { token: 'sixth', tenant_id: 101 }));
+  const denied = event(socket, 'auth_error');
+  socket.connect();
+  expect((await denied).message).toBe('Authentication failed');
+});
 
 test('same identities in A/B and multiple devices: only A sender/receiver devices receive A', async () => {
   const sockets = [];

@@ -14,10 +14,12 @@ const http = require('http');
 const { Server } = require('socket.io');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const { WindowLimiter } = require('./abuse');
+const abuse = new WindowLimiter();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '64kb' }));
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -43,7 +45,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: boundedConnectionLimit(process.env.DB_CONNECTION_LIMIT),
-  queueLimit: 0
+  queueLimit: 100
 });
 
 // To track online users: map[socket.id] = { userId, karangTarunaId, role, permissions }
@@ -51,6 +53,12 @@ const onlineUsers = new Map();
 
 // Rate limit tracking: map[socket.id] = { lastMessageTime, count }
 const rateLimits = new Map();
+const pendingAuth = new Map();
+io.use((socket, next) => {
+  // Use the transport address; never trust a client-supplied forwarded header.
+  if (!abuse.consume(`connect:${socket.handshake.address}`, 120, 60000)) return next(new Error('RATE_LIMITED'));
+  next();
+});
 
 const AUTH_LEASE_MS = 60000;
 function privateUserRoom(tenantId, userId) {
@@ -152,17 +160,32 @@ io.on('connection', (socket) => {
     const token = data.token;
     const karangTarunaId = data.tenant_id;
 
-    if (!token || !karangTarunaId) {
+    if (typeof token !== 'string' || token.length > 512 || token.length === 0
+        || !Number.isSafeInteger(Number(karangTarunaId)) || Number(karangTarunaId) < 1) {
       return socket.emit('auth_error', { message: 'Missing token or tenant_id' });
     }
 
     socket.authenticating = true;
+    const authAddress = socket.handshake.address;
+    if ((pendingAuth.get(authAddress) || 0) >= 5
+        || [...pendingAuth.values()].reduce((sum, count) => sum + count, 0) >= 50
+        || !abuse.consume(`auth:${authAddress}`, 60, 60000)) {
+      socket.authenticating = false;
+      socket.emit('auth_error', { message: 'RATE_LIMITED' });
+      return socket.disconnect(true);
+    }
+    const authController = new AbortController();
+    const authDeadline = setTimeout(() => authController.abort(), 5000);
+    const abortAuth = () => authController.abort();
+    socket.once('disconnect', abortAuth);
+    pendingAuth.set(authAddress, (pendingAuth.get(authAddress) || 0) + 1);
     try {
       // Call Internal API
       const apiUrl = process.env.INTERNAL_API_URL;
       const secret = process.env.INTERNAL_API_SECRET;
 
       const response = await fetch(apiUrl, {
+        signal: authController.signal,
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -183,6 +206,9 @@ io.on('connection', (socket) => {
         throw new Error('Authentication tenant mismatch');
       }
       if (!socket.connected) return;
+      if ([...onlineUsers.values()].filter(info => info.userId === user.user_id).length >= 5) {
+        throw new Error('Socket quota exceeded');
+      }
 
       socket.userId = user.user_id;
       socket.karangTarunaId = user.karang_taruna_id;
@@ -215,6 +241,10 @@ io.on('connection', (socket) => {
       socket.emit('auth_error', { message: 'Authentication failed' });
       socket.disconnect();
     } finally {
+      clearTimeout(authDeadline);
+      socket.off('disconnect', abortAuth);
+      const pending = (pendingAuth.get(authAddress) || 1) - 1;
+      if (pending) pendingAuth.set(authAddress, pending); else pendingAuth.delete(authAddress);
       socket.authenticating = false;
     }
   });
@@ -224,10 +254,13 @@ io.on('connection', (socket) => {
     if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
 
     const roomId = data && data.room_id;
-    if (!roomId) return;
-    if (!await currentAuthorization(socket)) return;
-
+    if (!Number.isSafeInteger(Number(roomId)) || Number(roomId) < 1) return socket.emit('error', { message: 'Invalid room' });
+    if (socket.joining || socket.rooms.size >= 53 || !abuse.consume(`join:${socket.userId}`, 30, 60000)) {
+      return socket.emit('error', { message: 'RATE_LIMITED' });
+    }
+    socket.joining = true;
     try {
+      if (!await currentAuthorization(socket)) return;
       // Validate room existence and tenant match
       const [rooms] = await pool.execute(
         `SELECT * FROM chat_rooms WHERE id = ? AND karang_taruna_id = ?`,
@@ -266,7 +299,7 @@ io.on('connection', (socket) => {
       console.log(`User ${socket.userId} joined room ${roomName}`);
     } catch (error) {
       console.error('Error joining room');
-    }
+    } finally { socket.joining = false; }
   });
 
   // Handle incoming messages
@@ -288,6 +321,9 @@ io.on('connection', (socket) => {
       rateData.lastMessageTime = now;
     }
     rateLimits.set(socket.id, rateData);
+    if (!abuse.consume(`message:${socket.userId}`, 5, 1000)) {
+      return socket.emit('error', { message: 'RATE_LIMITED' });
+    }
 
     // Share the receiving authorization lease with the send path.
     const userInfo = onlineUsers.get(socket.id);
@@ -444,15 +480,21 @@ io.on('connection', (socket) => {
     if (!socket.userId || !socket.karangTarunaId) return socket.emit('auth_error', { message: 'Not authenticated' });
 
     const sessionId = data && data.session_id;
-    if (!sessionId) return;
-    if (!await currentAuthorization(socket)) return;
+    if (!Number.isSafeInteger(Number(sessionId)) || Number(sessionId) < 1) return socket.emit('error', { message: 'Invalid session' });
+    if (socket.joining || socket.rooms.size >= 53 || !abuse.consume(`join:${socket.userId}`, 30, 60000)) {
+      return socket.emit('error', { message: 'RATE_LIMITED' });
+    }
+    socket.joining = true;
+    try {
+      if (!await currentAuthorization(socket)) return;
 
     // Since session IDs are unique globally and we validate tenant id in PHP API,
     // we can just use wheel_session_${sessionId}.
-    const roomName = `wheel_session_${socket.karangTarunaId}_${sessionId}`;
-    socket.join(roomName);
-    socket.emit('wheel_joined', { session_id: sessionId });
-    console.log(`User ${socket.userId} joined wheel session ${sessionId}`);
+      const roomName = `wheel_session_${socket.karangTarunaId}_${sessionId}`;
+      socket.join(roomName);
+      socket.emit('wheel_joined', { session_id: sessionId });
+      console.log(`User ${socket.userId} joined wheel session ${sessionId}`);
+    } finally { socket.joining = false; }
   });
 });
 
@@ -484,7 +526,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = { server, io, pool, boundedConnectionLimit, privateUserRoom, renewAuthorization, AUTH_LEASE_MS };
+module.exports = { server, io, pool, boundedConnectionLimit, privateUserRoom, renewAuthorization, AUTH_LEASE_MS, abuse };
 
 function _triggerChatNotification(chatId) {
   const apiUrl = process.env.INTERNAL_API_URL.replace('socket-auth', 'chat-notification');

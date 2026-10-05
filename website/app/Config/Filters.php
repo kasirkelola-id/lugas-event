@@ -36,6 +36,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'ratelimit'     => \App\Filters\RateLimitFilter::class,
+        'abuse'         => \App\Filters\AbuseFilter::class,
     ];
 
     /**
