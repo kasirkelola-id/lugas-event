@@ -107,9 +107,6 @@ $routes->group('api', function ($routes) {
     $routes->patch('users/(:num)/role', 'Api\UserController::changeRole/$1', ['filter' => 'auth']);
     $routes->post('users/(:num)/reset-password', 'Api\UserController::resetPassword/$1', ['filter' => 'auth']);
 
-    // Temporary Migration Endpoints - DISABLED FOR PRODUCTION
-    // $routes->get('system/migrate/status', 'Api\MigrateController::status');
-    // $routes->get('system/migrate/run', 'Api\MigrateController::run');
 
     // Internal API
     $routes->post('internal/socket-auth', 'Api\InternalApiController::socketAuth', ['filter' => 'auth']);

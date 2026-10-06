@@ -1946,3 +1946,61 @@ Evidence outside Git: `C:/Users/lenovo/AppData/Local/Temp/kartar-secret-clearanc
 | Push / deployment / production SSH / database | NOT ATTEMPTED / NO / NO / NO |
 
 Stop for review. Existing SEC11/SEC19 operator prerequisites remain; no independent credential clearance or history cleanup is claimed.
+
+
+### Secret clearance Phase 2 - obsolete diagnostic and HTTP migration retirement - 2026-10-06, Asia/Bangkok
+
+**PROPOSED SOURCE CLEANUP PASS; NO CHECKPOINT: REQUIRED NPM AUDIT FAIL. HISTORICAL CLEARANCE BLOCKED.** Baseline HEAD `7b2a67a`, clean main ahead30 of cached origin/main. Six Phase2 paths only: delete `test_auth.php` and `website/app/Controllers/Api/MigrateController.php`; remove their two obsolete commented routes from `website/app/Config/Routes.php`; add `website/tests/LegacyCredentialRetirementTest.php` and its isolated CLI probe; append this ledger. Both tools directories, dependency manifests/locks, historical/forward migrations and other application runtime remain unchanged. No push, production request/database/SSH, deployment, history rewrite or MySQL runtime restart.
+
+| Path | History / purpose / decision |
+|---|---|
+| test_auth.php | Introduced `dee625cb3e966cb766e7dbedad5a08d46eb83e04`; no later changes before Phase2; embedded login/password-change values present from introduction and unchanged. Obsolete manual cURL diagnostic, no current first-party caller/reference outside historical audit. DELETED rather than preserving an unsupported credential-sensitive convenience entrypoint. |
+| website/app/Controllers/Api/MigrateController.php | Introduced `3386fe7ecbde03b8c23d6530e21afb3cd3e0c9b1`; no later changes before Phase2; fixed secret present from introduction and unchanged. Legacy GET-query shared-secret gate for HTTP command wrappers around migration status/run. No current legitimate deployment/test caller; only two commented route references. DELETED with those comments. |
+
+Introduction commits are reachable from current main and cached origin/main. Each of the three distinct removed credential values remains **POTENTIALLY EXPOSED - STATUS UNKNOWN; PRIVATE ROTATION/REVOCATION REQUIRED**. There is no independently verified synthetic provenance, encoded/verifiable expiry or operator revocation evidence. No value was sent, printed, persisted in evidence, copied into tests or validated against any server. Existing Phase1 historical bearer exposure also remains UNKNOWN. Cached origin/main is a local reference, not freshly verified GitHub state; no fetch occurred.
+
+Before cleanup, red tests produced **3 tests /5 assertions /2 failures /0 errors**: obsolete diagnostic/controller files still existed. After cleanup, route collection checks every configured HTTP method, verifies auto-routing false, absence of legacy system/migrate routes/handlers and absence of the controller file/class. Entire tracked-source reference search found no remaining first-party runtime caller; regression guard references are checks, not callers. `Config/Routing.php` remains autoRoute=false. Historical audit references are retained as historical records.
+
+Normal CLI migration infrastructure is retained. A guarded isolated testing-bootstrap child executes the real CodeIgniter `migrate -n App -g tests` command path, first requiring SQLite `:memory:` and the tests group. The complete App chain finishes with **62 history rows**, users and notification_jobs present. This exercises the same command implementation used by `php spark migrate`, without application MySQL adoption or a production shell/DB. Existing SafeMigrationRunner production policy probe still proves destructive historical up/down blocked and forward execution allowed. No migration file or service implementation was changed.
+
+Test development retained initial failed attempts: an autoload-enabled class-existence check hit an ignored generated Composer classmap pointing to the removed controller; the guard now checks absent source and nonloaded class without invoking stale autoload. The CLI command writes status directly to stdout, so its child result parser now separates completion text from sanitized JSON. Final targeted and backend runs below pass; those initial errors are not final proof.
+
+| Final local verification | Result |
+|---|---|
+| Targeted retirement/diagnostic/migration security | 5 tests /280 assertions /0 failures/errors/skips |
+| Full backend canonical phpunit.xml.dist | 456 tests /439 passed /3,087 assertions /0 failures /0 errors /17 skipped;48.044s,36MiB |
+| Full Node | 75 passed /0 failed;9 suites |
+| Full Flutter --no-pub | 93 passed /0 failed |
+| Analyzer --no-pub | 0 errors /0 warnings /70 infos;exit1 |
+| Composer strict validation / audit | PASS /0 advisories |
+| Full npm audit | **FAIL:20 affected packages,1 critical/19 moderate** |
+| npm audit --omit=dev | **FAIL:1 critical runtime vulnerability** |
+| Unexpected production application requests | 0;23 Flutter guard summaries all counters0, backend/Node isolation cases pass |
+
+The npm registry reports critical `proxy-addr` IPv4-mapped IPv6 trust-subnet IP-spoofing advisory `GHSA-jqcg-44mw-7w3h` and moderate `sprintf-js` unbounded-precision denial-of-service advisory `GHSA-hp3w-g68c-fv3c`, with transitive development package findings. Full counts are affected-package counts, not twenty independent advisories. Official registry `https://registry.npmjs.org/` was used. This fresh result supersedes older clean audit snapshots as a current dependency gate; no dependency repair or manifest/lock modification was silently added. Required vulnerabilities=0 fails, so **NO COMMIT** is created. Intentional registry audit traffic is not an application production request; no Firebase delivery occurred. Guards are evidence, not packet capture.
+
+Whole-source sanitized scan covers all tracked paths including retained tools blobs as data, never executing tools, and reviews a prospective staged tree including both new tests. It checks literal/dynamic bearer separation, private keys, AWS/GitHub/JWT/raw API/FCM credentials, tracked .env, password/secret assignments, DB/keystore/temporary credential contexts. Expanded short-literal review distinguishes commented database examples, public CSRF field names, validation rules and isolated fixtures; public Firebase client identifiers are not service-account private keys. **Proposed tree unsafe/unverified literals=0; private keys=0; tracked .env=0.** No additional credible credential finding was identified. This is an obvious-pattern scan, not a universal secret guarantee.
+
+**Important HEAD distinction:** cleanup remains uncommitted because the required npm audit gate failed. Actual tracked HEAD is still `7b2a67a`: its two Phase2 files still contain **3 unsafe/unverified literals**, so actual **CURRENT TRACKED HEAD SCAN / CURRENT SOURCE CLEARANCE remain FAIL**, while the reviewed proposed index/working-source cleanup scans PASS. No historical clearance follows from deletion. Both current main and cached origin/main histories retain the material; history rewritten:NO. Phase2 changes were explicitly staged for sanitized review/tree scan, then unstaged and retained for manual review. No unrelated files staged or committed.
+
+Evidence outside Git: `C:/Users/lenovo/AppData/Local/Temp/kartar-secret-phase2-deb0611d5d4345c7a00519bd8c3aa95c`. Sanitized history/expanded-scan metadata, red and initial attempts, targeted/full XML/log/JSON, CLI proof, Composer validation/audits, full/runtime npm audit results, proposed-tree and actual-HEAD scans, sanitized full cached diff and final Git state are retained. Removed-file diff lines are redacted before evidence/output; no credential values are included. Backend skips remain sixteen opt-in MySQL cases plus existing remote-IP CLI case. Prior real MySQL evidence remains applicable; no MySQL service was recreated.
+
+| Final gate | Result |
+|---|---|
+| Obsolete diagnostic credentials / fixed migration secret removed from proposed source | PASS /PASS |
+| Legacy HTTP migration surface retired / CLI migration proof | PASS /PASS locally |
+| Proposed source scan / actual tracked HEAD scan | PASS zero literals /FAIL three literals, uncommitted |
+| Full tests / required analyzer baseline | PASS /PASS |
+| Dependency vulnerabilities=0 | FAIL;20 full,1 runtime critical |
+| Diff checks / six-path scope | PASS /PASS |
+| Historical credential clearance / private rotation required | BLOCKED /YES; status UNKNOWN |
+| Local checkpoint | NOT CREATED:required dependency gate failed; HEAD7b2a67a, Phase2 changes retained unstaged |
+| Ready to push / controlled staging / production ready | NO /NO /NO |
+| Push / deployment / history rewrite | NOT ATTEMPTED /NO /NO |
+
+Stop for manual review. Dependency remediation and privately evidenced revocation/rotation are required before clearance; no credentials were remotely tested.
+
+
+### Phase 2 independent source checkpoint - 2026-10-06, Asia/Bangkok
+
+User explicitly authorized preserving the reviewed six-path credential retirement independently of the NEW INDEPENDENT DEPENDENCY BLOCKER. Previous Phase2 no-checkpoint status is a historical snapshot, superseded by this local checkpoint. Proposed tree scan zero unsafe literals/private keys/tracked .env; targeted5/280, backend456/3087 zero failures/errors17 skips, Node75/Flutter93 PASS, analyzer0 errors/0 warnings70 infos, Composer validation/audit PASS, diff checks PASS and unexpected production requests0 remain measured evidence on this unchanged patch. Six explicit paths only, sanitized full cached review; no dependency changes in this source checkpoint. Actual tracked-HEAD scan is verified after commit outside Git. Historical material remains UNKNOWN, requiring private rotation/revocation; no push/staging clearance, deployment, remote credential validation or history rewrite.
