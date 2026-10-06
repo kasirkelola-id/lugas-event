@@ -1,13 +1,14 @@
 'use strict';
 
 // A trusted job supplies only a row ID; destinations/content come from the DB.
-async function fanoutChat(pool, io, chatId, currentAuthorization, privateUserRoom, eligibleMember) {
-  const [rows] = await pool.execute(
+async function fanoutChat(pool, io, chatId, currentAuthorization, privateUserRoom, eligibleMember, persistedPayload = null) {
+  // Socket sends already read their canonical committed row before ACK.
+  const [rows] = persistedPayload ? [[persistedPayload]] : await pool.execute(
     `SELECT c.*, u.nama_lengkap, m.role_level, DATE_FORMAT(c.created_at, '%Y-%m-%dT%TZ') AS created_at_iso
      FROM chats c JOIN users u ON u.id = c.sender_id
      JOIN organization_members m ON m.user_id = c.sender_id AND m.karang_taruna_id = c.karang_taruna_id WHERE c.id = ?`, [chatId]);
   const row = rows[0];
-  if (!row || !row.created_at_iso) return false;
+  if (!row || !(row.created_at_iso || row.created_at)) return false;
   const tenant = Number(row.karang_taruna_id);
   const candidates = new Set();
   let allowed = null;
@@ -29,7 +30,7 @@ async function fanoutChat(pool, io, chatId, currentAuthorization, privateUserRoo
     }
     for (const id of io.sockets.adapter.rooms.get(`room_${row.chat_room_id}`) || []) candidates.add(id);
   } else return false;
-  const payload = { ...row, created_at: row.created_at_iso, sender_photo_url: null };
+  const payload = { ...row, created_at: row.created_at_iso || row.created_at, sender_photo_url: row.sender_photo_url ?? null };
   delete payload.created_at_iso;
   for (const id of candidates) {
     const socket = io.sockets.sockets.get(id);

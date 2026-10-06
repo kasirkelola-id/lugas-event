@@ -115,7 +115,14 @@ async function renewAuthorization(socket) {
   // Expired authorization cannot receive while PHP is slow or unavailable.
   for (const room of rooms) socket.leave(room);
   const controller = new AbortController();
-  const deadline = setTimeout(() => controller.abort(), 5000);
+  const deadline = setTimeout(() => {
+    controller.abort();
+    // The deadline also covers room SQL after the upstream response completes.
+    if (socket.connected && onlineUsers.get(socket.id) === info) {
+      socket.emit('auth_error', { message: 'Session revalidation failed, please reconnect' });
+      socket.disconnect(true);
+    }
+  }, 5000);
   socket.authorizationRenewal = (async () => {
     try {
       const response = await fetch(process.env.INTERNAL_API_URL, {
@@ -135,8 +142,30 @@ async function renewAuthorization(socket) {
       if (!socket.connected || onlineUsers.get(socket.id) !== info) return false;
       socket.permissions = info.permissions = user.permissions;
       socket.profilePhotoUrl = info.profilePhotoUrl = user.profile_photo_url;
+      const authorizedRooms = [];
+      for (const room of rooms) {
+        if (!socket.connected || onlineUsers.get(socket.id) !== info) return false;
+        const chatRoom = /^room_([1-9][0-9]*)$/.exec(room);
+        if (chatRoom) {
+          const [currentRooms] = await pool.execute(
+            'SELECT * FROM chat_rooms WHERE id = ? AND karang_taruna_id = ?',
+            [Number(chatRoom[1]), info.karangTarunaId]
+          );
+          if (!socket.connected || onlineUsers.get(socket.id) !== info) return false;
+          if (!currentRooms[0]) continue;
+          if (currentRooms[0].type === 'custom') {
+            const [members] = await pool.execute(
+              'SELECT * FROM chat_room_members WHERE chat_room_id = ? AND user_id = ?',
+              [Number(chatRoom[1]), info.userId]
+            );
+            if (!members.length) continue;
+          }
+        }
+        if (!socket.connected || onlineUsers.get(socket.id) !== info) return false;
+        authorizedRooms.push(room);
+      }
       info.authTime = Date.now();
-      for (const room of rooms) socket.join(room);
+      for (const room of authorizedRooms) socket.join(room);
       scheduleAuthorizationRenewal(socket);
       return true;
     } catch (_) {
@@ -291,11 +320,9 @@ io.on('connection', (socket) => {
       const room = rooms[0];
 
       // Check active membership globally for this tenant
-      const [activeMembers] = await pool.execute(
-        `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
-        [socket.userId, socket.karangTarunaId]
-      );
-      if (activeMembers.length === 0) return socket.emit('error', { message: 'You are not an active member of this tenant' });
+      if (!await eligibleMember(socket.userId, socket.karangTarunaId)) {
+        return socket.emit('error', { message: 'You are not an active member of this tenant' });
+      }
 
       // Validate membership if custom room
       if (room.type === 'custom') {
@@ -395,11 +422,9 @@ io.on('connection', (socket) => {
         if (rooms.length === 0) return deny('Room not found or belongs to another tenant');
 
         // Check active membership globally for this tenant
-        const [activeMembers] = await pool.execute(
-          `SELECT * FROM organization_members WHERE user_id = ? AND karang_taruna_id = ? AND status_aktif = 1`,
-          [socket.userId, socket.karangTarunaId]
-        );
-        if (activeMembers.length === 0) return deny('You are not an active member of this tenant');
+        if (!await eligibleMember(socket.userId, socket.karangTarunaId)) {
+          return deny('You are not an active member of this tenant');
+        }
 
         if (rooms[0].type === 'custom') {
           const [members] = await pool.execute(
@@ -432,7 +457,8 @@ io.on('connection', (socket) => {
         if (typeof ack === 'function') ack({ success: true, message: chatPayload, duplicate: !persisted.created });
         if (!persisted.created) return;
 
-        io.to(roomName).emit('new_message', chatPayload);
+        // Apply the same current recipient checks as durable REST/job fanout.
+        await fanoutChat(pool, io, chatId, currentAuthorization, privateUserRoom, eligibleMember, chatPayload);
 
         // The committed INSERT trigger owns the durable notification job.
       } else if (type === 'private') {

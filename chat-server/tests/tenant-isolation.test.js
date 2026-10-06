@@ -59,6 +59,7 @@ beforeEach(() => {
     }) };
   });
   pool.execute.mockImplementation(async (sql, params) => {
+    if (sql.includes('SELECT r.user_id')) return [[{ user_id: 10 }, { user_id: 20 }, { user_id: 30 }]];
     if (sql.includes('organization_members')) {
       if (sql.includes('JOIN users')) {
         expect(sql).toContain("om.approval_status = 'approved'");
@@ -209,6 +210,79 @@ test.each([7,8])('custom/default group %i delivery remains scoped and functional
   const received = track([sender,receiver,outsider]);
   await send(sender,{ type:'group',chat_room_id:room });
   expect(received.map(rows => rows.length)).toEqual([1,1,0]);
+});
+
+test('removed custom-room receiver gets no direct broadcast while remaining devices receive', async () => {
+  const sender = await connect(10, 101);
+  const receiver = await connect(20, 101);
+  const peer = await connect(30, 101);
+  for (const socket of [sender, receiver, peer]) {
+    const joined = event(socket, 'room_joined');
+    socket.emit('join_room', { room_id: 7 }); await joined;
+  }
+  const original = pool.execute.getMockImplementation();
+  pool.execute.mockImplementation((sql, args) => {
+    if (sql.includes('SELECT r.user_id')) return [[{ user_id: 10 }, { user_id: 30 }]];
+    return original(sql, args);
+  });
+  const received = track([sender, receiver, peer]);
+  await send(sender, { type: 'group', chat_room_id: 7 });
+  expect(received.map(rows => rows.length)).toEqual([1, 0, 1]);
+});
+
+test('renewal rechecks custom-room access and preserves only currently authorized rooms', async () => {
+  const receiver = await connect(20, 101);
+  for (const room of [7, 8]) {
+    const joined = event(receiver, 'room_joined');
+    receiver.emit('join_room', { room_id: room }); await joined;
+  }
+  const original = pool.execute.getMockImplementation();
+  pool.execute.mockImplementation((sql, args) => {
+    if (sql.includes('chat_room_members')) return [[]];
+    return original(sql, args);
+  });
+  const socket = io.sockets.sockets.get(receiver.id);
+  expect(await renewAuthorization(socket)).toBe(true);
+  expect(socket.rooms.has('room_7')).toBe(false);
+  expect(socket.rooms.has('room_8')).toBe(true);
+  expect(socket.rooms.has(privateUserRoom(101, 20))).toBe(true);
+});
+
+test('pending group sender is denied even before the bearer lease expires', async () => {
+  const sender = await connect(10, 101);
+  const joined = event(sender, 'room_joined');
+  sender.emit('join_room', { room_id: 8 }); await joined;
+  eligibility.set('10:101', { approval: 'pending', member: 1, user: 1, tenant: 1 });
+  const rejected = event(sender, 'error');
+  sender.emit('send_message', { type: 'group', chat_room_id: 8, message: 'Synthetic' });
+  expect((await rejected).message).toBe('You are not an active member of this tenant');
+  expect(insertId).toBe(0);
+});
+
+test('stalled room revalidation keeps delivery suspended and its deadline disconnects', async () => {
+  const receiver = await connect(20, 101);
+  const joined = event(receiver, 'room_joined');
+  receiver.emit('join_room', { room_id: 7 }); await joined;
+  const socket = io.sockets.sockets.get(receiver.id);
+  let release, markStarted;
+  const started = new Promise(resolve => { markStarted = resolve; });
+  pool.execute.mockImplementationOnce(() => new Promise(resolve => {
+    release = resolve; markStarted();
+  }));
+  const timers = jest.spyOn(global, 'setTimeout');
+  try {
+    const renewal = renewAuthorization(socket);
+    await started;
+    const suspended = socket.rooms.size === 1 && socket.rooms.has(socket.id);
+    timers.mock.calls.find(([, ms]) => ms === 5000)[0]();
+    const disconnected = !socket.connected;
+    release([[{ id: 7, type: 'custom', karang_taruna_id: 101 }]]);
+    const renewed = await renewal;
+    expect(suspended).toBe(true);
+    expect(disconnected).toBe(true);
+    expect(renewed).toBe(false);
+    expect(socket.rooms.size).toBe(0);
+  } finally { timers.mockRestore(); }
 });
 test('wheel endpoint and tenant broadcasts retain their tenant rooms', async () => {
   const a = await connect(20,101), b = await connect(20,102);
