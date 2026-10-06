@@ -2058,3 +2058,130 @@ Historical material from test_form.php/test_request.php/test_auth.php/MigrateCon
 | Push /deployment /history rewrite | NOT ATTEMPTED /NO /NO |
 
 Two separate local checkpoints only; final dependency hash/clean status verified after commit. Stop for manual review.
+
+### Historical Credential Clearance Preparation - 2026-10-06, Asia/Bangkok
+
+**SOURCE/AUTHORITY MAPPING COMPLETE; PRIVATE OPERATOR RUNBOOK PREPARED, NOT EXECUTED. HISTORICAL CLEARANCE STILL BLOCKED.** Start HEAD `30ab778`, clean main ahead32 of cached origin/main. Documentation-only checkpoint: this audit is the only changed file. No runtime/test/migration/dependency change, production SQL/DB/SSH, account reset, credential transmission, push, deployment or history rewrite. Source fingerprints below are the first12 hex of SHA-256, not usable credential values or complete stored hashes.
+
+**Latest push recommendation supersedes earlier blanket push blocks:** ALLOW CLEAN REMEDIATION PUSH from the credential-exposure perspective, conditional on the owner confirming the same repository/access/visibility and unchanged remote history. This is a recommendation only; actual push remains explicitly unauthorized/NOT ATTEMPTED. Rotation remains urgent independently; controlled staging/production remains NOT CLEARED.
+
+Historical extraction/deduplication found **five distinct values**, not one per file. Historical scripts show intended requests, not evidence that they ran successfully, changed passwords, or belonged to a particular privileged account. Historical login username is deliberately not published; real identity/role must be resolved privately from authoritative records. The three diagnostics were introduced in `dee625cb`; controller in `3386fe7`. Both introducing commits remain reachable from current main and cached origin/main. Later changes only harden the first two scripts (`7b2a67a`) or remove the latter two (`fb8ded1`). No historic value change was identified before cleanup.
+
+| ID / short fingerprint | Class and historical contexts | Current capability / private action |
+|---|---|---|
+| HCRED-01 `0b8f0ba9defc` | SAME opaque bearer in test_form.php and test_request.php | DATA-DEPENDENT. Ordinary user token can remain valid if its SHA-256 row is present, unexpired and not revoked. Unbound legacy privileged token is invalid under current binding checks. Privately identify its row/owner; revoke token, preferably all owner sessions if scope uncertain. |
+| HCRED-02 `8121547a497b` | SAME old-password input in test_form.php/test_request.php | Exact match to current known-default deny-list, established in memory. DEFINITELY INVALID for current non-testing API/browser password login, even with a matching bcrypt hash. This is policy invalidation, not evidence of production rollout, expiry, rotation or revocation. It does not invalidate previously issued bearer sessions. Rotate any affected default-hash account if present or legacy runtime remains. |
+| HCRED-03 `c822a0abf4ef` | SAME new/confirmation password in form/request and login/old password in test_auth.php | Not a current deny-list value; differs from the historical login username. DATA-DEPENDENT: can authenticate a users/superadmins account still carrying its corresponding bcrypt hash and meeting login conditions. Successful historical persistence is unproven. Privately resolve affected identities, rotate to a different private credential and revoke all sessions. |
+| HCRED-04 `7d485f466959` | SAME new/confirmation password in test_auth.php | Not a current deny-list value or historical login username. DATA-DEPENDENT if it was persisted/reused as an account password. Same private rotation/session revocation policy as HCRED-03. |
+| HCRED-05 `4f06f5b10d5b` | Legacy migration shared secret in MigrateController.php | NO CURRENT DEDICATED AUTHENTICATION SURFACE. Controller/file deleted, comments removed, auto-routing false, no caller or identical-literal consumer anywhere in tracked source. CLI migrate/status do not use it. No rotation needed for this retired surface; any external/private configuration reuse must be inventoried and rotated privately. |
+
+All five historical revocation/provenance records remain UNKNOWN: none is declared SYNTHETIC, EXPIRED or REVOKED without independent evidence. HCRED-02 policy denial and HCRED-05 absent surface establish current-code non-usability in the stated scope; neither establishes that production runs this code. Actual deployment/database state remains unverified. Git age plus the normal30-day issuance lifetime cannot prove an opaque token's individual expiry.
+
+#### Source authentication and storage map
+
+- HCRED-05 originally gated registered GET `api/system/migrate/status` and `api/system/migrate/run` at introduction `3386fe7`: strict equality of query parameter `secret` to a controller constant, no database credential lookup/account binding. Commands were `migrate:status` and `migrate` under the application's configured DB privileges; possession could authorize schema migration on a deployment exposing that revision. Cached origin/main has those routes commented, current HEAD has neither route nor controller. Historical deployment/execution and DB changes are unverified; retirement does not erase that former authority or possible external reuse.
+
+- `UserTokenModel` stores SHA-256 of plaintext bearer in `user_tokens.token_hash`, unique VARCHAR255 (actual digest64 hex), with integer PK id, nullable global user_id, legacy tenant karang_taruna_id, expires_at/created_at DATETIME and nullable revoked_at. AuthFilter hashes the received bearer, looks up exact digest, rejects missing row, non-NULL revoked_at or expires_at earlier than the runtime clock. Hard-deleted rows also cannot match; soft deletes are disabled. This lookup/expiry/revocation model existed at introduction and cached origin/main.
+- Ordinary bearer: user_id>0 identifies global users.id; active global identity and approved active organization_members/organization checks govern business access. Tenant/role authority comes from eligible memberships/RBAC, not the old users tenant/role fields. Flag1 allows only me/password-change/logout. Cleanup-only bearer endpoints can still revoke its own device/token after account/tenant deactivation: disabling an account is not equivalent to revoking its bearer. A valid historical ordinary bearer is not invalidated merely by new migration dates or absence of credential_version.
+- Migration000002 adds nullable user_tokens.superadmin_id and credential_version without backfill. For NULL/zero user_id, current AuthFilter requires an actual superadmins row and credential_version equal to SHA-256 of its current stored bcrypt password hash. Old unbound privileged tokens fail even if unexpired. Newly bound privileged bearers and browser superadmin_credential_version become invalid after that stored hash changes. This is a derived64-character digest, **not an incrementing version counter**; there is no users.credential_version field to increment. Negative/virtual API superadmin IDs and user_id0 are not authoritative database account IDs.
+- Migration000003 adds nullable user_devices.user_token_id without guessed backfill. It does not revoke ordinary bearer tokens. NotificationService joins device to matching user_tokens/user identity and checks token expiry/revocation, account/membership/tenant eligibility; unbound legacy devices are suppressed until registration. BearerLogoutService transactionally marks the calling row revoked and removes its bound devices. It does not revoke other owner sessions.
+- Password hashes live in users.password or superadmins.password (bcrypt), never a SHA-256 password search key. API login resolves organization_members.username/tenant to global users, verifies password policy/hash and approval/activity, then falls back to superadmins.username with that policy. Browser login also uses the policy for superadmins. Unknown historical username does not prove platform-admin or tenant role. Existing ordinary short passwords can still authenticate; the new-password12-character/72-byte rule alone does not invalidate old passwords. Source equality proves HCRED-02 is denied before hash verification outside testing; HCRED-03/04 are not denied merely for being historical literals.
+- CredentialSessionService replaces users.password/password_must_change with checked compare-and-swap and revokes global-user bearer rows in the same transaction. Authorized API/browser admin reset revokes **all** target user tokens and issues a fresh temporary credential/flag1. Self-change keeps the calling token and revokes others; therefore self-change alone is insufficient incident clearance. Ordinary AuthFilter has no password-hash version binding: direct password SQL without token revocation leaves existing ordinary bearers valid. Superadmin hash replacement invalidates browser/bound-bearer versions, but old-password login remains possible if an operator merely rehashes the same exposed plaintext; choose a genuinely different credential.
+- ProfileController currently authorizes a user password change by its valid bearer and validates new/confirmation input; historical old_password payload is not a separate current authorization check. HCRED-01 can therefore authorize a permitted self-change if it remains an eligible ordinary bearer. A virtual superadmin is rejected by this user-profile password-change endpoint; no superadmin password-reset API is inferred.
+
+Schema above is confirmed from tracked models/migrations and prior local migration proof, **not production DDL**. Operator must privately establish deployed code, schema/history, writable DB authority and all service instances before applying templates. No historical migration replay or automated production migration is proposed.
+
+#### Operator runbook - prepared only
+
+1. Obtain separately authorized operator access/maintenance window and recoverable backup. Confirm actual deployed revision, non-testing environment, migration history, columns, InnoDB/transaction support, clocks/timezones and all login/token-issuing workers. Use schema-only SHOW COLUMNS/SHOW CREATE privately; do not fetch credentials into terminal grids, chat or general logs. If binding columns are absent, stop and design a baseline-specific plan rather than blindly applying these current-schema templates.
+2. Resolve owner IDs privately. For HCRED-01, derive the full SHA-256 in protected memory from privately supplied material; its first12 must match the report, but the12-character fingerprint is **not** an authoritative SQL selector. Query with full digest as a bound private parameter and return only IDs/status metadata. An ordinary user_id selects global users and all associated tenants. A bound superadmin_id selects superadmins. Unbound old privileged tokens cannot be assigned to an individual admin by guessing; broader revocation of the legacy unbound class requires separate platform-owner authorization. For passwords, bcrypt is salted: do not compare SHA-256 of plaintext to users.password. Locate the historical account privately, use protected in-memory hash comparison if necessary, and inventory reuse without searching plaintext production logs.
+3. Quiesce and drain relevant login/session/token issuers and credential/device writers across instances before clearance. Source login verifies credentials and inserts tokens in separate operations; ordinary tokens are not password-version-bound. A credential/revocation transaction alone must not be assumed to cover a racing login that already verified the old password. Keep issuers paused through rotation, revocation and verification; reopen only with fresh private credentials.
+4. Generate a different private password meeting current policy, bcrypt locally/in protected trusted administration memory, never echo plaintext or full hash. Prefer authorized admin-reset machinery for ordinary users when the reviewed runtime is deployed; do not copy its once-displayed response into evidence. Revoke all owner sessions, not just the current self-change/logout token. For superadmins use approved protected provisioning plus explicit session revocation; no existing superadmin reset endpoint is assumed. Do not run the retired diagnostics with historical credentials.
+5. Execute reviewed parameter-bound templates only after approval/preflight; assert expected owner and exactly one credential replacement, appropriate affected-row counts and transaction status, otherwise ROLLBACK. Record IDs/counts/timestamps and the short fingerprint, never complete token/password hashes. Then verify row-based revocation/current binding state without trying old credentials against any endpoint. New-credential validation may be separately approved; no old-secret endpoint probe is recommended.
+6. Remove affected device bindings, account for existing Node authorization leases (60s renewal plus5s upstream deadline) or disconnect affected sockets through separately approved operations. No instantaneous global socket revocation or recall of already delivered provider messages is claimed. Verify no racing session appeared before resuming issuers. Preserve independently reviewed evidence and retire/review any private environment reuse of HCRED-05.
+
+The following are **nonexecuted prepared-statement templates**, not paste-ready mysql CLI commands. Named placeholders require secure typed binding; full digests/hashes stay in private process memory, never shell arguments/query logs. Table/column names assume verified current source schema.
+
+```sql
+-- Identification only; never return the stored token_hash/password/version.
+SELECT id, user_id, superadmin_id, karang_taruna_id, expires_at, revoked_at
+FROM user_tokens WHERE token_hash = :TOKEN_SHA256_PRIVATE;
+
+-- Specific bearer containment, after authoritative ID/owner review.
+START TRANSACTION;
+SELECT id, user_id, superadmin_id, revoked_at
+FROM user_tokens WHERE id = :AFFECTED_TOKEN_ID FOR UPDATE;
+UPDATE user_tokens
+SET revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP)
+WHERE id = :AFFECTED_TOKEN_ID;
+DELETE FROM user_devices WHERE user_token_id = :AFFECTED_TOKEN_ID;
+-- COMMIT only after operator assertions; otherwise ROLLBACK.
+```
+
+```sql
+-- Conservative ordinary/global-user rotation, all tenants; issuers drained.
+START TRANSACTION;
+SELECT id, status_aktif, password_must_change
+FROM users WHERE id = :AFFECTED_GLOBAL_USER_ID FOR UPDATE;
+UPDATE users SET password = :NEW_BCRYPT_HASH_PRIVATE, password_must_change = 1
+WHERE id = :AFFECTED_GLOBAL_USER_ID AND password = :EXPECTED_BCRYPT_HASH_PRIVATE;
+-- Require exactly one updated credential row before continuing.
+UPDATE user_tokens SET revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP)
+WHERE user_id = :AFFECTED_GLOBAL_USER_ID;
+DELETE FROM user_devices WHERE user_id = :AFFECTED_GLOBAL_USER_ID_AS_TEXT;
+-- COMMIT only on reviewed counts/status; otherwise ROLLBACK.
+```
+
+```sql
+-- Platform-admin rotation uses real superadmins.id, not virtual/negative IDs.
+START TRANSACTION;
+SELECT id FROM superadmins WHERE id = :AFFECTED_SUPERADMIN_ID FOR UPDATE;
+UPDATE superadmins SET password = :NEW_BCRYPT_HASH_PRIVATE
+WHERE id = :AFFECTED_SUPERADMIN_ID AND password = :EXPECTED_BCRYPT_HASH_PRIVATE;
+-- Require exactly one update. Browser and bound bearer version checks now fail.
+UPDATE user_tokens SET revoked_at = COALESCE(revoked_at, CURRENT_TIMESTAMP)
+WHERE superadmin_id = :AFFECTED_SUPERADMIN_ID;
+DELETE d FROM user_devices d JOIN user_tokens t ON t.id = d.user_token_id
+WHERE t.superadmin_id = :AFFECTED_SUPERADMIN_ID;
+-- Legacy unbound privileged rows require separately approved reviewed ID scope.
+-- COMMIT only on reviewed counts/status; otherwise ROLLBACK.
+```
+
+No standalone credential_version increment, guessed user/admin mapping, blanket account reset or secret-file replacement is prescribed. Password row selection/expected hash retrieval must be handled by a protected operator helper without displaying full hashes. Preserve revoked_at rows for incident evidence rather than unnecessarily deleting token/domain rows. HCRED-05 requires no rotation for the removed HTTP migration surface; any reuse outside tracked source remains operator-dependent. Production DB/deployment evidence is required to clear HCRED-01/03/04 and determine affected HCRED-02 accounts, not to prove the source-level deny/retirement facts.
+
+#### Push and history decision
+
+**Recommendation: ALLOW CLEAN REMEDIATION PUSH**, assuming same repository, unchanged visibility/access policy and remote history consistent with cached origin/main. Pushing reviewed cleanup replaces the remote HEAD's embedded diagnostic credentials with fail-closed/retired source and therefore reduces straightforward HEAD exposure. All five historical values already exist in cached origin/main; normal clean remediation does not publish a previously unknown value to that same repository. This is security reasoning, not an execution approval or a declaration that unknown credentials are safe.
+
+An in-memory scan of **908 newly reachable Git objects** in origin/main..30ab778 found historical-value matches in five blobs only, all HCRED-02: existing blocked-default policy/mobile validators and guarded testing seeder/tests. HCRED-01/03/04/05 did not occur in newly reachable blobs. These known-default references are deliberate non-production authentication fixtures/rejection rules, not new private credential issuance. This complements the current-HEAD obvious-secret scan; it does not claim a universal secret scan of every possible value/encoding.
+
+Cached origin/main is not freshly fetched. The owner must privately confirm the remote was not purged/replaced and repository visibility will not widen; if those assumptions fail, do not reintroduce old objects and reconsider publication. Repo visibility/collaborator/fork counts are UNKNOWN from local source. Local refs contain main and origin/main, no local tags; remote branches/tags beyond cached refs are not inventoried. No GitHub connectivity or permission conclusion is inferred. Historical credentials remain UNKNOWN and rotation remains urgent, but under the stated same-repository assumptions it is not logically necessary to delay clean HEAD remediation solely because already-exposed history remains.
+
+**History rewrite: POLICY-DEPENDENT, not required merely to invalidate authentication.** Privately rotate/revoke potentially valid material first; current-source removal plus rotation closes the authentication risk without a rewrite. Organizational confidentiality/retention policy may still require separately authorized coordinated purging of branches/tags/PR caches/forks/clones. Rewriting alone does not neutralize copied credentials and can recontaminate remote history if collaborators push old clones. [GitHub's primary guidance](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository) prioritizes revocation/rotation and explains why a subsequent history rewrite may be unnecessary and requires coordination.
+
+Recommended order: privately contain/rotate unknown credentials urgently while reviewing a same-repository clean remediation push; publish cleanup only under a separate explicit push authorization; verify deployed code/schema/bindings and sanitized revocation evidence before staging clearance; then decide whether policy requires a separately coordinated history purge. Clean remediation publication and credential rotation are distinct controls and can proceed in parallel. No history rewrite command or force operation is prepared/executed here.
+
+#### Local proof and operator evidence
+
+No runtime/test changes were needed. Existing isolated cases were rerun: retirement/diagnostic/CredentialHardening/SessionRevocation **27 tests/613 assertions/0 failures/errors**; invalid-token/logout/NotificationEligibility **10 tests/68 assertions/0 failures/errors**. These prove absent migration controller/no auto-route/CLI migration viability, default-policy rejection using pre-existing isolated fixtures, revoked/unknown token denial, privileged credential-version mismatch/browser logout, unbound privileged token rejection, self-change keeper versus reset-all semantics, rollback on revocation failure and revoked/expired/unbound push-binding suppression. Source equality identifies HCRED-02's deny-list match; no historical account was reconstructed or authenticated, and no historical bearer/password was submitted to an endpoint. No new test fixture or credential literal was introduced. Prior full regression/runtime audit evidence remains canonical for unchanged runtime; tests retained testing/FCM mocks and backend transport guards. Unexpected production application requests0; no MySQL/runtime recreation, real Firebase delivery or production SQL. GitHub documentation retrieval was intentional research I/O, not an application production request.
+
+Evidence root: `C:/Users/lenovo/AppData/Local/Temp/kartar-history-prep-1c52fb225faf47f98a6c34fd7fe9d980`. Sanitized five-record inventory/fingerprints, introduction/modifying-commit metadata, current/historical predicate comparisons, absent-controller/same-literal-consumer proof, newly reachable match metadata and local test XML/logs retained. **Inspection incident:** initial policy source output included known-default strings; later offline correlation showed one was HCRED-02. That output was disclosed and stopped; the value is not repeated in this ledger, copied into runbook/evidence or declared private/safe solely because already in source. Subsequent extraction uses in-memory comparison and short fingerprints only. Current source scan and final Git hash/status are verified after this audit-only checkpoint, without a self-referential hash here.
+
+Operator clearance evidence must include protected ticket/approver, environment/deployed revision and migration/DDL confirmation, UTC action time, authoritative account/token IDs or privately retained scope, fingerprint label, pre/post sanitized revocation counts and credential replacement result, issuer-drain/lease handling and independent reviewer. Do not record username/raw credential/full stored hash in shared evidence. Missing token row or expired/revoked status is meaningful only against the actual authoritative deployed stores/instances; do not infer expiry from Git dates. Recheck external reuse and baseline deployments before updating UNKNOWN to independently supported EXPIRED/REVOKED/ROTATED. No such evidence was available/produced here.
+
+| Final gate | Result |
+|---|---|
+| Historical classes/deduplication / current auth surfaces / runbook | PASS /PASS /PASS;five unique records |
+| Current non-testing login denial for HCRED-02 | PROVEN IN SOURCE;production rollout unverified,not revocation proof |
+| Retired migration secret HCRED-05 | NO CURRENT DEDICATED AUTHENTICATION SURFACE;external reuse unverified |
+| HCRED-01/03/04 actual validity / historical clearance | DATA-DEPENDENT /BLOCKED,UNKNOWN |
+| Bearer revocation /password rotation /production data evidence required | YES /YES for potentially affected accounts /YES |
+| Shared migration secret rotation | NO for removed surface;YES if private reuse found |
+| Current HEAD obvious-secret scan | PASS;zero unsafe/unverified literals/private keys/tracked .env |
+| Push recommendation / actual push | ALLOW CLEAN REMEDIATION PUSH under stated same-remote assumptions /NOT ATTEMPTED,not authorized |
+| History rewrite decision / execution | POLICY-DEPENDENT after rotation /NO |
+| Prepared production commands /executed /production access | YES,parameter-bound templates /NO /NO |
+| Audit-only scope /diff checks /local proof | PASS /PASS /37 tests681 assertions PASS |
+| Controlled staging /production ready /deployment | NO /NO /NO |
+
+Stop for manual review. New push recommendation does not release the historical/production operator gates and does not authorize push or deployment.
