@@ -1905,3 +1905,44 @@ Sanitized review evidence outside Git: `C:/Users/lenovo/AppData/Local/Temp/karta
 | PRODUCTION SSH /DATABASE /MIGRATIONS /DEPLOYMENT | NO /NO /NO /NO |
 
 Stop for manual review. Privately resolve the diagnostic credential/history finding and the documented operator prerequisites before requesting a separate staging clearance. No production credential/DB access or deployment was used to test token validity.
+
+
+### Secret clearance - diagnostic source cleanup - 2026-10-06, Asia/Bangkok
+
+**NARROW SOURCE CLEANUP PASS; REPOSITORY SOURCE CLEARANCE FAIL; HISTORICAL CLEARANCE BLOCKED. No push, staging clearance or deployment.** Start HEAD `3c21134`, clean main ahead of the cached origin/main by 29 commits. This checkpoint changes only `test_form.php`, `test_request.php`, `website/tests/DiagnosticCredentialGuardTest.php` and this canonical audit. Both tools directories, application runtime, migrations and dependencies remain unchanged.
+
+Both diagnostics were introduced, including their literal bearer, in `dee625cb3e966cb766e7dbedad5a08d46eb83e04`. That is their only modifying commit before this cleanup; the bearer did not change, and both used the SAME credential. Both paths and the offending commit are present/reachable in current main and cached local `origin/main` (`7f5986c`). No fetch or remote validation was performed, so this describes the local remote-tracking reference. Opaque application-style bearer material has no locally verifiable expiry or revocation evidence: provenance category C (looks like an application bearer), **POTENTIALLY EXPOSED - STATUS UNKNOWN; MUST ROTATE OR REVOKE PRIVATELY**. Localhost and diagnostic names do not establish synthetic provenance. Historical exposure remains reachable; no history rewrite, token transmission or token validity test occurred.
+
+The two scripts now require runtime `KARTAR_DIAGNOSTIC_BEARER`, `KARTAR_DIAGNOSTIC_BASE_URL`, `KARTAR_DIAGNOSTIC_OLD_PASSWORD` and `KARTAR_DIAGNOSTIC_NEW_PASSWORD`; there is no credential or target default and no automatic application .env loading. Operators supply these privately in the invoking process environment, never tracked files. Missing/empty/malformed inputs fail before cURL. CLI-only execution, explicit HTTP(S) URL validation, no userinfo/query/fragment, bounded timeouts, disabled redirects/proxy and loopback classification constrain requests. Remote targets require HTTPS plus explicit `KARTAR_DIAGNOSTIC_ALLOW_REMOTE=1`. Authorization is constructed from runtime input. Only numeric HTTP status is printed; response bodies, transport errors and credentials are not persisted or emitted. Existing embedded password inputs were removed from these two scripts as well.
+
+The guard executes each script with PHP `-n` and in-process cURL stubs, checking six boundaries per script: missing, empty, malformed bearer; missing URL; remote target without opt-in; valid runtime header. Synthetic bearer placeholders are generated during execution, never copied from source/history. All cases make zero network requests; valid requests verify runtime Authorization, finite timeout, no redirects and suppressed response bodies. Targeted run: **1 test / 50 assertions / 0 failures / 0 errors**; repeated after final transport-success check.
+
+Sanitized tracked-source rescan distinguishes runtime headers, isolated fixtures, validation rules and public Firebase client configuration from credential literals. No private key, AWS/GitHub/JWT-shaped secret, FCM private service-account/server key or tracked .env was found by these patterns. **Two additional pre-existing paths prevent full-source clearance:** `test_auth.php` contains fixed login/password-change credentials with unverified provenance; `website/app/Controllers/Api/MigrateController.php` contains a fixed legacy migration secret (route remains disabled). These were not run, validated or modified: they are outside the expressly authorized two-script cleanup. The scan records **three distinct unsafe/unverified literal values across those two paths**; duplicate password occurrences count once. Unreachable legacy routing does not prove a secret harmless. Consequently current HEAD obvious-secret scan and whole-source clearance are **FAIL**, while removal of both targeted embedded bearers is **PASS**. This is an obvious-pattern scan, not proof against every secret format; historical scan evidence is not represented as sanitized history.
+
+| Fresh regression | Result |
+|---|---|
+| Backend canonical phpunit.xml.dist, testing/FCM mock, child GD | 453 tests / 436 passed / 2,861 assertions / 0 failures / 0 errors / 17 skipped |
+| Node full | 75 passed / 0 failed, 9 suites |
+| Flutter --no-pub | 93 passed / 0 failed |
+| Analyzer --no-pub | 0 errors / 0 warnings / 70 infos; exit1 |
+| Composer audit / full npm audit | 0 advisories / 0 vulnerabilities |
+| Network isolation | 23 Flutter guard summaries with all three request counters zero; existing backend/Node guards pass; unexpected production application requests 0 |
+| MySQL | Not restarted; no runtime recreation, schema adoption or production DB access |
+
+Backend elapsed 71.219s. Seventeen skips are sixteen opt-in MySQL cases plus the existing remote-IP CLI case. Registry audit traffic is intentional dependency verification; no Firebase or application production request occurred. Guard evidence is not packet capture.
+
+Evidence outside Git: `C:/Users/lenovo/AppData/Local/Temp/kartar-secret-clearance-31782a3371bf4929abb9ce1cbba930b9`. Metadata-only history JSON, sanitized scan rows, targeted/full logs/XML/JSON, audits and sanitized cached diff are retained. No bearer/password value is stored in these reports; removed source lines are inspected internally and redacted before diff evidence/output. Final tracked-HEAD scan and Git hash/status are recorded after the narrow local checkpoint, without embedding a self-referential hash here.
+
+| Final gate | Result |
+|---|---|
+| Targeted source bearer removal / diagnostics fail closed | PASS / PASS |
+| Full regression / required analyzer baseline / dependency audits | PASS / PASS / PASS |
+| Scope / working and cached diff checks | PASS; four explicit paths only |
+| Narrow local source-cleanup checkpoint | Authorized cleanup only; does not grant repository secret clearance |
+| Current HEAD secret scan / entire current-source clearance | FAIL / FAIL; two additional unverified literal-credential paths |
+| Historical credential clearance / revocation status | BLOCKED / UNKNOWN; private rotation/revocation and separately authorized follow-up required |
+| Reachable main / cached origin/main exposure / history rewritten | YES / YES / NO |
+| Ready to push / controlled staging / production ready | NO / NO / NO |
+| Push / deployment / production SSH / database | NOT ATTEMPTED / NO / NO / NO |
+
+Stop for review. Existing SEC11/SEC19 operator prerequisites remain; no independent credential clearance or history cleanup is claimed.
