@@ -1,5 +1,7 @@
 # KARTAR Production Readiness Audit
 
+**Latest local checkpoints, 2026-10-06:** Phase2 source cleanup committed `fb8ded1`; current source scan zero unsafe literals/private keys/tracked .env. Runtime npm audit PASS after proxy-addr2.0.8; full audit PARTIAL with19 dev-only moderate findings. Backend456/3087 assertions, Node77 and Flutter93 PASS; analyzer0 errors/0 warnings70 infos. Historical clearance remains BLOCKED/UNKNOWN; private rotation required. No push, staging clearance or deployment; production NOT READY. Appended checkpoint ledger supersedes older source/dependency snapshots.
+
 Audit date: **2026-10-05, Asia/Bangkok**. Repository: `D:\project\lugas`. Audited HEAD: `7f5986c` (`chore: version bump to 1.0.2+3 and track tools`).
 
 **Latest source review - Pre-staging, 2026-10-06:** Reviewed `ceb64cb..730358f`, 26 commits / 255 paths. A custom-room recipient/renewal defect was reproduced and repaired locally with four red/green tests; full Node now **75 PASS**. Full backend **452 / 2811 assertions / 0 failures/errors / 17 skips**, Flutter **93 PASS**, analyzer **0 errors / 0 warnings / 70 infos**, MySQL **16 / 260 assertions / 0 failures/errors/skips**, Composer strict validation/audit and npm audit PASS. **NO-COMMITTED-SECRETS GATE FAIL / PUSH NOT ATTEMPTED / CONTROLLED STAGING NOT CLEARED:** pre-existing hardcoded bearer material in `test_form.php` and `test_request.php` has unverified provenance/revocation. Earlier SEC01-22 counts do not include this newly identified HIGH review blocker. See the final pre-staging ledger below; production remains NOT READY and untouched.
@@ -2004,3 +2006,55 @@ Stop for manual review. Dependency remediation and privately evidenced revocatio
 ### Phase 2 independent source checkpoint - 2026-10-06, Asia/Bangkok
 
 User explicitly authorized preserving the reviewed six-path credential retirement independently of the NEW INDEPENDENT DEPENDENCY BLOCKER. Previous Phase2 no-checkpoint status is a historical snapshot, superseded by this local checkpoint. Proposed tree scan zero unsafe literals/private keys/tracked .env; targeted5/280, backend456/3087 zero failures/errors17 skips, Node75/Flutter93 PASS, analyzer0 errors/0 warnings70 infos, Composer validation/audit PASS, diff checks PASS and unexpected production requests0 remain measured evidence on this unchanged patch. Six explicit paths only, sanitized full cached review; no dependency changes in this source checkpoint. Actual tracked-HEAD scan is verified after commit outside Git. Historical material remains UNKNOWN, requiring private rotation/revocation; no push/staging clearance, deployment, remote credential validation or history rewrite.
+
+### Targeted Node dependency security checkpoint - 2026-10-06, Asia/Bangkok
+
+**PHASE2 SOURCE COMMITTED; CURRENT SOURCE CLEAR; RUNTIME AUDIT PASS; FULL DEV AUDIT PARTIAL; HISTORICAL CLEARANCE BLOCKED.** Start HEAD7b2a67a; source checkpoint `fb8ded1`, message `fix(security): retire legacy credential diagnostics`. Worktree was clean before dependency work. Actual committed-HEAD scan covered705 paths:0 unsafe/unverified literals,0 private keys,0 tracked .env. Historical exposure was not cleared.
+
+Dependency scope: `chat-server/package-lock.json`, `chat-server/tests/proxy-trust.test.js`, canonical audit only. Only lock entry `node_modules/proxy-addr` changed:2.0.7 to2.0.8, integrity/resolved URL and published funding metadata. Zero packages added/removed. Package.json unchanged; Express5.2.1, Jest30.5.1, Socket.IO and other packages unchanged. Existing Express range ^2.0.7 permits2.0.8; `npm update proxy-addr --ignore-scripts` repaired the compatible transitive dependency. Latest Express remains5.2.1, so no parent upgrade or override was necessary. Installed runtime chain: chat-server ->express5.2.1 ->proxy-addr2.0.8; no vulnerable runtime copy remains.
+
+The [upstream proxy-addr advisory](https://github.com/advisories/GHSA-jqcg-44mw-7w3h) identifies2.0.8 as fixed. Application trust proxy is unset/default false. Runtime code does not use req.ip/req.ips/X-Forwarded-For as authority or log forwarded client IP; protected health throttling uses req.socket.remoteAddress, socket business quotas use authenticated identity/tenant. No production trust configuration was changed or verified.
+
+Two tests use real Express and the actual configured application, mocked SQL/auth transport, and a fixture-only localhost route. Attacker X-Forwarded-For cannot replace the socket peer; req.ip remains127.0.0.1 and req.ips empty. In-memory library probes reject arbitrary IPv4 peers under short mapped ::ffff:10.0.0.0/8 and broad ::/1 trust subnets, while correct ::ffff:10.0.0.0/104 still accepts10/8 addresses. Final targeted2/2 PASS. Initial test-only listener/callback mistakes are retained; final capture obtains Express before Socket.IO wraps its listener. No fixture route was added to production source.
+
+**DEV-ONLY MODERATE - NO PATCHED UPSTREAM VERSION / COMPATIBLE PARENT REMEDIATION UNAVAILABLE.** Single vulnerable sprintf-js1.0.3 instance, dev=true. All55 exact root-to-leaf paths from npm explain are preserved in `sprintf-exact-paths.json`. Common tail: jest30.5.1 ->@jest/transform30.5.1 ->babel-plugin-istanbul8.0.0 ->@istanbuljs/load-nyc-config1.1.0 ->js-yaml3.15.2 ->argparse1.0.10 ->sprintf-js1.0.3, with Jest core/CLI/runtime/config/reporters/snapshot variants; no runtime-root path.
+
+The [upstream sprintf-js advisory](https://github.com/advisories/GHSA-hp3w-g68c-fv3c) lists <=1.1.3 affected and no patched release. Registry checks: sprintf-js latest1.1.3, Babel plugin8.0.0, nyc loader1.1.0 still requiring js-yaml^3.13.1. Jest patch30.5.2 still requires Babel plugin^8.0.0 and would retain this chain. No compatible removing parent was found. No nonexistent patched override, cross-major YAML replacement, vendor fork or broad upgrade was introduced.
+
+A fresh dedicated TEMP dependency artifact installed with `npm ci --omit=dev --ignore-scripts --no-audit --no-fund`, exit0, physically excludes sprintf-js/Jest and includes Express5.2.1/proxy-addr2.0.8. Runtime source does not import that tooling; production format strings cannot reach it in this artifact. **Deployment must use omit=dev** to preserve exclusion. Actual deployed package inventory remains unverified; no deployment occurred. Developer/CI tooling remains vulnerable and must not process untrusted formatting/configuration input. This residual is open, not fixed.
+
+| Audit | Before | After |
+|---|---|---|
+| Runtime npm | critical1/high0/moderate0/low0 | all0, PASS |
+| Full npm | critical1/high0/moderate19/low0 | critical0/high0/moderate19/low0, PARTIAL, exit1 |
+| Composer strict validate /audit | PASS | PASS /0 advisories |
+
+Nineteen full findings count affected/propagated packages of the remaining dev-only advisory, not nineteen independent advisories. User explicitly permits this dependency checkpoint with runtime audit0 and documented unpatched dev-only residual; full npm audit is not claimed PASS.
+
+| Fresh verification | Result |
+|---|---|
+| Targeted Node /full Node | 2/2 PASS /77/77 PASS,10 suites |
+| Full backend canonical phpunit.xml.dist | 456 tests/439 passed/3087 assertions/0 failures/0 errors/17 skipped;56.912s |
+| Flutter --no-pub | 93 PASS,0 failed |
+| Analyzer --no-pub | 0 errors/0 warnings/70 infos,exit1 |
+| Composer strict validate /audit | PASS /0 advisories |
+| Unexpected production application requests | 0;23 Flutter guard summaries all counters0;backend/Node isolation PASS |
+| Working/cached diff checks /lock scope | PASS /one entry,three explicit files |
+
+Backend skips remain16 opt-in MySQL and existing remote-IP CLI case. No MySQL runtime restart, production DB/SSH, real FCM delivery or packet-capture claim. Registry/package/advisory verification I/O was intentional setup/audit traffic. Tools directories and historical/forward migrations untouched/unrun.
+
+Evidence: `C:/Users/lenovo/AppData/Local/Temp/kartar-deps-c826a3209c8d4069821d994c034c5077`. Before/after audits, graph/exact55 paths, lock comparison, production-install proof, initial/targeted/full logs/XML/JSON, Composer checks, full cached diff and final HEAD scan/Git state retained outside Git. Final tracked-HEAD scan is repeated after dependency commit; final hash is obtained from Git without a self-referential hash in this ledger. No credential values appear in evidence. Automatic approval review rejected one combined documentation/staging command with reason "blocked by policy"; it made no changes. Direct document edits and separately reviewed Git operations completed the authorized work safely.
+
+Historical material from test_form.php/test_request.php/test_auth.php/MigrateController.php remains reachable in main/cached origin/main, status UNKNOWN. Private independently evidenced rotation/revocation/expiry/synthetic provenance is required. No credential validation, history rewrite/amend, push or deployment. SEC11/SEC19 and other operator prerequisites remain.
+
+| Final gate | Result |
+|---|---|
+| Phase2 committed /current source scan | PASS /PASS,zero unsafe literals/private keys/tracked .env |
+| Runtime audit /proxy-addr critical locally closed | PASS /PASS,2.0.8 |
+| Full npm audit | PARTIAL,19 dev-only moderate;permitted exception |
+| Full regression /required analyzer /scope/diff | PASS /PASS /PASS |
+| Historical clearance /private rotation required | BLOCKED /YES,UNKNOWN |
+| Ready to push /controlled staging /production ready | NO /NO /NO |
+| Push /deployment /history rewrite | NOT ATTEMPTED /NO /NO |
+
+Two separate local checkpoints only; final dependency hash/clean status verified after commit. Stop for manual review.
