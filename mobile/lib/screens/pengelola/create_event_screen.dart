@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import '../shared/map_picker_screen.dart';
 import '../../core/theme/app_theme.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class CreateEventScreen extends StatefulWidget {
   const CreateEventScreen({super.key});

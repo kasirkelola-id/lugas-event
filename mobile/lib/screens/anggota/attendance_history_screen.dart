@@ -1,17 +1,17 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/attendance_model.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/empty_state.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class AttendanceHistoryScreen extends StatefulWidget {
   const AttendanceHistoryScreen({super.key});

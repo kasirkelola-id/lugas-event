@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/models/chat_model.dart';
+import 'package:lugas/models/chat_model.dart';
 import 'package:intl/intl.dart';
 
 void main() {

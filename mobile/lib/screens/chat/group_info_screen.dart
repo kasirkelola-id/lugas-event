@@ -3,7 +3,7 @@ import '../../core/theme/app_theme.dart';
 import '../../services/chat_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import '../widgets/common/app_snackbar.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/services/chat_service.dart';
+import 'package:lugas/services/chat_service.dart';
 
 void main() {
   group('ChatService Global Stream', () {

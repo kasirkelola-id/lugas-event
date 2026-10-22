@@ -1,13 +1,13 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/event_model.dart';
 import '../../models/participant_model.dart';
 import '../../services/participant_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
 import 'attendance_list_screen.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import '../widgets/common/app_snackbar.dart';
 

@@ -6,8 +6,8 @@ import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/feedback_dialogs.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
-import 'package:mobile/screens/widgets/common/app_dialog.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/app_dialog.dart';
 import '../widgets/animations/fade_in_slide.dart';
 
 class PengelolaPenggunaScreen extends StatefulWidget {

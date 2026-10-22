@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mobile/services/chat_service.dart';
+import 'package:lugas/services/chat_service.dart';
 import 'chat_tenant_isolation_test.dart' show MemorySocket;
 
 class AckSocket extends MemorySocket {

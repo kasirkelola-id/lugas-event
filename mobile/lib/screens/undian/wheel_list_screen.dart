@@ -1,9 +1,9 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/wheel_model.dart';
 import '../../services/wheel_service.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_error_state.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';

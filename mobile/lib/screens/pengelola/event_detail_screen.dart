@@ -4,12 +4,12 @@ import '../../core/theme/app_theme.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
 import 'edit_event_screen.dart';
 import 'attendance_list_screen.dart';
 
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
-import 'package:mobile/screens/widgets/common/app_dialog.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/app_dialog.dart';
 
 class EventDetailScreen extends StatefulWidget {
   final int eventId;

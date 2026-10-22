@@ -6,8 +6,8 @@ import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/voting_service.dart';
 import '../widgets/common/custom_button.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
-import 'package:mobile/screens/widgets/common/app_dialog.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/app_dialog.dart';
 
 class VotingDetailScreen extends StatefulWidget {
   final int votingId;

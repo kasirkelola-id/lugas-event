@@ -5,8 +5,8 @@ import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mobile/services/logout_retry.dart';
-import 'package:mobile/storage/auth_storage.dart';
+import 'package:lugas/services/logout_retry.dart';
+import 'package:lugas/storage/auth_storage.dart';
 
 class FailedCleanupStorage extends TestFlutterSecureStoragePlatform {
   FailedCleanupStorage() : super({});

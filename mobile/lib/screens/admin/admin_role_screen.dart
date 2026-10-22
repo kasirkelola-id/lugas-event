@@ -4,7 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class AdminRoleScreen extends StatefulWidget {
   const AdminRoleScreen({super.key});

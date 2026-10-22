@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/utils/owned_socket_listeners.dart';
+import 'package:lugas/utils/owned_socket_listeners.dart';
 import 'chat_tenant_isolation_test.dart' show MemorySocket;
 
 void main() {

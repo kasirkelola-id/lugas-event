@@ -8,7 +8,7 @@ import '../pengelola/pengelola_home_screen.dart';
 import '../anggota/anggota_home_screen.dart';
 import '../admin/admin_home_screen.dart';
 import 'login_screen.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../../services/chat_service.dart';
 
 class TenantSelectorScreen extends StatefulWidget {

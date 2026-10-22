@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../models/event_model.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class EditEventScreen extends StatefulWidget {
   final EventModel event;

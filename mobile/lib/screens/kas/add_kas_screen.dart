@@ -5,11 +5,11 @@ import '../../core/theme/app_theme.dart';
 import '../../services/kas_service.dart';
 import '../../services/setting_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/feedback_dialogs.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class AddKasScreen extends StatefulWidget {
   const AddKasScreen({super.key});

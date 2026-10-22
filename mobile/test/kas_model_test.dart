@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/models/kas_model.dart';
+import 'package:lugas/models/kas_model.dart';
 
 void main() {
   group('KasModel Tests', () {

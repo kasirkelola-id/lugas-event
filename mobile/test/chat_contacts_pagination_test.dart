@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/screens/chat/chat_pagination_controller.dart';
+import 'package:lugas/screens/chat/chat_pagination_controller.dart';
 
 List<Map<String, dynamic>> mockResponse(int startId, int count) {
   return List.generate(count, (index) => {

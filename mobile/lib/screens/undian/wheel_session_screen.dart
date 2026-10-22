@@ -1,4 +1,4 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';

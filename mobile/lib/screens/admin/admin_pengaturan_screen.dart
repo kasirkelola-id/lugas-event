@@ -4,7 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/user_model.dart';
 import '../../services/setting_service.dart';
 import '../widgets/app_drawer.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class AdminPengaturanScreen extends StatefulWidget {
   final UserModel? user;

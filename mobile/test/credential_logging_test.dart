@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/core/network/api_client.dart';
+import 'package:lugas/core/network/api_client.dart';
 
 void main() {
   for (final path in [

@@ -5,7 +5,7 @@ import '../../services/report_service.dart';
 import '../../models/user_model.dart';
 import '../../models/report_model.dart';
 import '../widgets/app_drawer.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class AdminLaporanScreen extends StatefulWidget {
   const AdminLaporanScreen({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/core/security/password_policy.dart';
+import 'package:lugas/core/security/password_policy.dart';
 
 void main() {
   test('New passwords need 12 characters without composition rules', () {

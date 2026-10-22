@@ -12,6 +12,20 @@ for (const env of requiredEnvs) {
   }
 }
 
+// Parse allowed origins from comma-separated env variable.
+// Falls back to localhost-only if not configured (fail-closed).
+function parseAllowedOrigins() {
+  const raw = process.env.ALLOWED_ORIGINS;
+  if (!raw || !raw.trim()) {
+    if (!['development', 'test'].includes(process.env.NODE_ENV)) {
+      console.warn('WARNING: ALLOWED_ORIGINS is not set. Defaulting to localhost-only CORS.');
+    }
+    return ['http://localhost', 'http://127.0.0.1'];
+  }
+  return raw.split(',').map(o => o.trim()).filter(Boolean);
+}
+const allowedOrigins = parseAllowedOrigins();
+
 if (!resolveSecret(process.env.INTERNAL_API_SECRET, process.env.NODE_ENV)) {
   console.error('FATAL ERROR: Internal service secret is not configured safely.');
   process.exit(1);
@@ -25,16 +39,33 @@ const cors = require('cors');
 const { WindowLimiter } = require('./abuse');
 const abuse = new WindowLimiter();
 
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (e.g., server-to-server, mobile apps, curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS: Origin '${origin}' is not allowed.`));
+  },
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Internal-Secret'],
+};
+
 const app = express();
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '64kb' }));
 
 const server = http.createServer(app);
 const io = new Server(server, {
   maxHttpBufferSize: 1e6, // 1MB payload limit
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS: Origin '${origin}' is not allowed.`));
+    },
+    methods: ["GET", "POST"],
   }
 });
 

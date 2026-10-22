@@ -6,7 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/feedback_dialogs.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
 import '../pengelola/pengelola_home_screen.dart';
 import '../anggota/anggota_home_screen.dart';
 import '../admin/admin_home_screen.dart';

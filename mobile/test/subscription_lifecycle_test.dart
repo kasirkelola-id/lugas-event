@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/utils/subscription_lifecycle.dart';
+import 'package:lugas/utils/subscription_lifecycle.dart';
 
 void main() {
   test(

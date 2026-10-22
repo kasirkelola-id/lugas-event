@@ -1,4 +1,4 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/inventory_model.dart';
@@ -9,7 +9,7 @@ import '../../services/inventory_service.dart';
 import 'create_inventory_screen.dart';
 import 'loan_request_screen.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import '../widgets/common/app_snackbar.dart';
 import '../widgets/app_drawer.dart';

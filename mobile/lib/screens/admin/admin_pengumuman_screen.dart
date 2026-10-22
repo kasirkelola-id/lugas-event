@@ -1,4 +1,4 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
@@ -10,7 +10,7 @@ import '../widgets/common/custom_button.dart';
 import '../widgets/common/custom_text_field.dart';
 import '../widgets/common/empty_state.dart';
 import '../widgets/common/feedback_dialogs.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../shared/pengumuman_detail_screen.dart';
 
 class AdminPengumumanScreen extends StatefulWidget {

@@ -4,7 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/dashboard_service.dart';
 import '../../models/user_model.dart';
 import '../../models/dashboard_summary_model.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/common/custom_button.dart';
 import '../widgets/common/custom_loading_indicator.dart';

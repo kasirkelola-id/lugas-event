@@ -7,7 +7,7 @@ import '../../models/user_model.dart';
 import '../widgets/app_drawer.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_snackbar.dart';
 import '../widgets/common/app_error_state.dart';
 

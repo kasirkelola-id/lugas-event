@@ -1,4 +1,4 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
@@ -11,7 +11,7 @@ import '../widgets/common/empty_state.dart';
 import '../widgets/common/feedback_dialogs.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import 'add_kas_screen.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class KasScreen extends StatefulWidget {
   final UserModel? user;

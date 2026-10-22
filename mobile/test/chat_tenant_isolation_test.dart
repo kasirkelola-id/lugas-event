@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/models/chat_model.dart';
-import 'package:mobile/services/chat_service.dart';
-import 'package:mobile/storage/auth_storage.dart';
+import 'package:lugas/models/chat_model.dart';
+import 'package:lugas/services/chat_service.dart';
+import 'package:lugas/storage/auth_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:socket_io_client/src/manager.dart';

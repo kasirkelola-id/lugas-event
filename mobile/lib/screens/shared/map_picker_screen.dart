@@ -4,7 +4,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_theme.dart';
 import '../widgets/common/custom_button.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class MapPickerScreen extends StatefulWidget {
   final LatLng? initialLocation;

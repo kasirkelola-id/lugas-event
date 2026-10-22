@@ -1,4 +1,4 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/auth_service.dart';
@@ -7,7 +7,7 @@ import '../../models/user_model.dart';
 import '../../models/event_model.dart';
 import '../widgets/app_drawer.dart';
 import '../pengelola/attendance_list_screen.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/animations/fade_in_slide.dart';
 
 class AdminPesertaScreen extends StatefulWidget {

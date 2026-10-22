@@ -1,4 +1,4 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/voting_model.dart';
@@ -9,7 +9,7 @@ import 'voting_detail_screen.dart';
 import 'create_voting_screen.dart';
 import '../widgets/animations/fade_in_slide.dart';
 import 'package:intl/intl.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/app_drawer.dart';
 
 class VotingListScreen extends StatefulWidget {

@@ -10,7 +10,7 @@ import '../../core/theme/app_theme.dart';
 import 'group_info_screen.dart';
 import 'package:intl/intl.dart';
 
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/common/app_snackbar.dart';
 
 class ChatRoomScreen extends StatefulWidget {

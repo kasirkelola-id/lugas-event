@@ -3,7 +3,7 @@ import '../../services/auth_service.dart';
 import '../../storage/auth_storage.dart';
 import '../../core/theme/app_theme.dart';
 import 'login_screen.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../../main.dart';
 
 class PinScreen extends StatefulWidget {

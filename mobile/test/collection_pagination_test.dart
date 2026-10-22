@@ -4,14 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
-import 'package:mobile/services/event_service.dart';
-import 'package:mobile/services/attendance_service.dart';
-import 'package:mobile/services/announcement_service.dart';
-import 'package:mobile/services/kas_service.dart';
-import 'package:mobile/services/inventory_service.dart';
-import 'package:mobile/services/voting_service.dart';
-import 'package:mobile/services/wheel_service.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/services/event_service.dart';
+import 'package:lugas/services/attendance_service.dart';
+import 'package:lugas/services/announcement_service.dart';
+import 'package:lugas/services/kas_service.dart';
+import 'package:lugas/services/inventory_service.dart';
+import 'package:lugas/services/voting_service.dart';
+import 'package:lugas/services/wheel_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

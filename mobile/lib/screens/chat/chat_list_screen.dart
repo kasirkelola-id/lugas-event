@@ -1,4 +1,4 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../models/chat_model.dart';
@@ -11,7 +11,7 @@ import '../../services/chat_service.dart';
 import '../../services/auth_service.dart';
 import '../../models/chat_room_model.dart';
 import '../../models/user_model.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 import '../widgets/app_drawer.dart';
 import 'chat_pagination_controller.dart';
 

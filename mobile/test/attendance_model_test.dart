@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/models/attendance_model.dart';
+import 'package:lugas/models/attendance_model.dart';
 
 void main() {
   group('AttendanceModel', () {

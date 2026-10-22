@@ -1,12 +1,12 @@
-import 'package:mobile/screens/widgets/common/collection_pager.dart';
+import 'package:lugas/screens/widgets/common/collection_pager.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/attendance_model.dart';
 import '../../models/event_model.dart';
 import '../../services/attendance_service.dart';
 import '../../services/auth_service.dart';
-import 'package:mobile/screens/auth/login_screen.dart';
-import 'package:mobile/screens/widgets/common/custom_loading_indicator.dart';
+import 'package:lugas/screens/auth/login_screen.dart';
+import 'package:lugas/screens/widgets/common/custom_loading_indicator.dart';
 
 class AttendanceListScreen extends StatefulWidget {
   final EventModel event;

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/utils/chat_id_deduplicator.dart';
+import 'package:lugas/utils/chat_id_deduplicator.dart';
 
 void main() {
   group('ChatIdDeduplicator', () {
