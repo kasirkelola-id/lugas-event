@@ -4,9 +4,9 @@
 define('ENVIRONMENT', 'production');
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-$defaultDenied = \App\Services\CredentialPolicy::verify('superadmin123', [
+$defaultAccepted = \App\Services\CredentialPolicy::verify('superadmin123', [
     'username' => 'superadmin', 'password' => password_hash('superadmin123', PASSWORD_BCRYPT),
-]) === false;
+]);
 $privateAccepted = \App\Services\CredentialPolicy::verify('private bootstrap passphrase', [
     'username' => 'superadmin', 'password' => password_hash('private bootstrap passphrase', PASSWORD_BCRYPT),
 ]);
@@ -18,4 +18,4 @@ try {
 } catch (RuntimeException $e) {
     $seedBlocked = $e->getMessage() === 'Demo credentials may only be seeded in testing.';
 }
-echo json_encode(['default_denied' => $defaultDenied, 'private_accepted' => $privateAccepted, 'seed_blocked' => $seedBlocked]);
+echo json_encode(['default_accepted' => $defaultAccepted, 'private_accepted' => $privateAccepted, 'seed_blocked' => $seedBlocked]);

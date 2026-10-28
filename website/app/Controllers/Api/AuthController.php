@@ -76,7 +76,7 @@ class AuthController extends BaseApiController
             $db = \Config\Database::connect();
             $superadmin = $db->table('superadmins')->where('username', $username)->get()->getRowArray();
 
-            if (!$superadmin || !\App\Services\CredentialPolicy::verify((string) $password, $superadmin)) {
+            if (!$superadmin || !\App\Services\SuperadminCredentialPolicy::verify((string) $password, $superadmin)) {
                 return $this->sendError('Username atau password salah.', null, 401);
             }
 
@@ -224,7 +224,7 @@ class AuthController extends BaseApiController
             'nama_lengkap'     => 'required|max_length[255]',
             'nama_panggilan'   => 'required|max_length[100]',
             'username'         => 'required',
-            'password'         => 'required|min_length[12]|max_length[72]',
+            'password'         => 'required|max_length[72]',
             'confirm_password' => 'required|matches[password]',
             'no_whatsapp'      => 'required|max_length[20]',
             'rt'               => 'permit_empty|in_list[1,2,3,4]',
@@ -237,9 +237,8 @@ class AuthController extends BaseApiController
             return $this->sendError('Validasi gagal', $this->validator->getErrors(), 422);
         }
 
-        if (!\App\Services\CredentialPolicy::validNewPassword($rawInput['password'])
-            || $rawInput['password'] === $rawInput['username']) {
-            return $this->sendError('Validasi gagal', ['password' => 'Gunakan password pribadi minimal 12 karakter, maksimal 72 byte, berbeda dari username/default.'], 422);
+        if (!is_string($rawInput['password']) || !\App\Services\CredentialPolicy::validNewPassword($rawInput['password'])) {
+            return $this->sendError('Validasi gagal', ['password' => 'Password wajib diisi, maksimal 72 byte, tanpa byte NUL.'], 422);
         }
 
         $memberModel = new \App\Models\OrganizationMemberModel();
@@ -264,7 +263,7 @@ class AuthController extends BaseApiController
             'nama_lengkap'   => $rawInput['nama_lengkap'],
             'nama_panggilan' => $rawInput['nama_panggilan'],
             'username'       => $rawInput['username'], // Keep globally for now as fallback/legacy
-            'password'       => password_hash($rawInput['password'], PASSWORD_BCRYPT),
+            'password'       => \App\Services\CredentialPolicy::hashNewPassword($rawInput['password']),
             'no_whatsapp'    => $rawInput['no_whatsapp'],
             'rt'             => (int)($rawInput['rt'] ?? 1),
             'status_aktif'   => 1

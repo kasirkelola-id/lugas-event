@@ -2,18 +2,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lugas/core/security/password_policy.dart';
 
 void main() {
-  test('New passwords need 12 characters without composition rules', () {
-    expect(PasswordPolicy.validate('elevenchars'), isNotNull);
-    expect(PasswordPolicy.validate('twelve chars'), isNull);
-    expect(PasswordPolicy.validate('simple personal passphrase'), isNull);
+  test('Passwords may be short or use formerly blocked values', () {
+    for (final value in [
+      'a',
+      'abcd',
+      'abcdef',
+      'abcdefgh',
+      'twelve chars',
+      'superadmin123',
+    ]) {
+      expect(PasswordPolicy.validate(value), isNull);
+    }
+  });
+  test('Empty and NUL inputs are rejected', () {
+    expect(PasswordPolicy.validate(null), isNotNull);
+    expect(PasswordPolicy.validate(''), isNotNull);
+    expect(PasswordPolicy.validate('ab\u0000cd'), isNotNull);
   });
   test('Bcrypt maximum is enforced in UTF-8 bytes', () {
     expect(PasswordPolicy.validate('a' * 72), isNull);
     expect(PasswordPolicy.validate('a' * 73), isNotNull);
-    expect(PasswordPolicy.validate('界' * 24), isNull);
-    expect(PasswordPolicy.validate('界' * 25), isNotNull);
-  });
-  test('Known default password cannot be reused', () {
-    expect(PasswordPolicy.validate('superadmin123'), isNotNull);
+    expect(PasswordPolicy.validate('\u754c' * 24), isNull);
+    expect(PasswordPolicy.validate('\u754c' * 25), isNotNull);
   });
 }

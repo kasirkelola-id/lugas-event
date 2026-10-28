@@ -156,13 +156,16 @@ class UserController extends BaseApiController
             return $this->sendError('Username sudah terdaftar', ['username' => 'Akun dengan username ini sudah ada di Karang Taruna Anda.'], 409);
         }
 
-        $temporaryPassword = \App\Services\CredentialPolicy::temporaryPassword();
+        // Preserve the original username fallback; accept an explicitly chosen password.
+        $chosenPassword = array_key_exists('password', $rawInput) ? $rawInput['password'] : $rawInput['username'];
+        if (!is_string($chosenPassword) || !\App\Services\CredentialPolicy::validNewPassword($chosenPassword)) {
+            return $this->sendError('Validasi gagal', ['password' => 'Password wajib diisi, maksimal 72 byte, tanpa byte NUL.'], 422);
+        }
         $userData = [
             'nama_lengkap'   => $rawInput['nama_lengkap'],
             'nama_panggilan' => $rawInput['nama_panggilan'],
             'username'       => $rawInput['username'],
-            'password'       => password_hash($temporaryPassword, PASSWORD_BCRYPT),
-            'password_must_change' => 1,
+            'password'       => \App\Services\CredentialPolicy::hashNewPassword($chosenPassword),
             'no_whatsapp'    => $rawInput['no_whatsapp'] ?? null,
             'rt'             => (int)($rawInput['rt'] ?? 1),
             'status_aktif'   => 1
@@ -181,7 +184,6 @@ class UserController extends BaseApiController
 
         $userData['id'] = $userId;
         unset($userData['password']);
-        $userData['temporary_password'] = $temporaryPassword;
         $this->response->setHeader('Cache-Control', 'no-store');
 
         return $this->sendSuccess('Pengguna berhasil dibuat', $userData, 201);
@@ -349,16 +351,22 @@ class UserController extends BaseApiController
             return $this->sendError('Forbidden: Tidak dapat mereset password ketua', null, 403);
         }
 
-        $temporaryPassword = \App\Services\CredentialPolicy::temporaryPassword();
+        // Original reset source: use the existing global setting, never overwrite it.
+        $setting = (new \App\Models\SettingModel())->where('karang_taruna_id', 0)
+            ->where('setting_key', 'temporary_reset_password')->first();
+        $temporaryPassword = trim((string)($setting['setting_value'] ?? ''));
+        if (!\App\Services\CredentialPolicy::validNewPassword($temporaryPassword)) {
+            return $this->sendError('Password default belum dikonfigurasi dengan valid.', null, 500);
+        }
 
         // Update Exact Global User password
         if (!\App\Services\CredentialSessionService::replace((int)$user['id'], $user['password'],
-            password_hash($temporaryPassword, PASSWORD_BCRYPT), true)) {
+            \App\Services\CredentialPolicy::hashNewPassword($temporaryPassword), true)) {
             return $this->sendError('Gagal mereset password.', null, 500);
         }
 
         $this->response->setHeader('Cache-Control', 'no-store');
-        return $this->sendSuccess('Password berhasil direset.', ['temporary_password' => $temporaryPassword]);
+        return $this->sendSuccess('Password berhasil direset ke password default.');
     }
 
     public function rolesSummary()

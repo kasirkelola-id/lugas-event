@@ -703,6 +703,7 @@ class _UserListTabState extends State<_UserListTab>
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: 'Reset Password',
+      confirmText: 'Ya, Reset',
       content:
           'Anda yakin ingin mereset password ${user.namaLengkap}? Pengguna akan dipaksa mengganti password pada login berikutnya.',
       isDestructive: true,
@@ -714,40 +715,9 @@ class _UserListTabState extends State<_UserListTab>
 
       if (result['success']) {
         if (!mounted) return;
-        final tempPass = result['temporary_password'] ?? '-';
-        await AppDialog.showResult(
-          context: context,
-          title: 'Password Direset',
-          type: DialogType.success,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Silakan berikan password sementara ini kepada ${user.namaLengkap}:',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: AppTheme.radiusMedium,
-                  border: Border.all(color: AppTheme.primary),
-                ),
-                child: Center(
-                  child: SelectableText(
-                    tempPass,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primary,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        FeedbackDialogs.showSnackbar(
+          context,
+          'Password berhasil direset ke password default.',
         );
         setState(() => _isLoading = false);
       } else {

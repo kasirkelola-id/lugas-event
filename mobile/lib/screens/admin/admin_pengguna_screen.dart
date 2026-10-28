@@ -1,3 +1,4 @@
+import '../../core/security/password_policy.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../../core/theme/app_theme.dart';
@@ -34,6 +35,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
   final _namaLengkapController = TextEditingController();
   final _namaPanggilanController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _whatsappController = TextEditingController();
   final _rtController = TextEditingController();
   String _selectedRole = 'pengelola';
@@ -51,6 +53,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
     _namaLengkapController.dispose();
     _namaPanggilanController.dispose();
     _usernameController.dispose();
+    _passwordController.dispose();
     _whatsappController.dispose();
     _rtController.dispose();
     super.dispose();
@@ -112,6 +115,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
       _selectedRole = 'pengelola';
     }
 
+    _passwordController.clear();
     bool isLoadingSubmit = false;
 
     await showDialog(
@@ -173,8 +177,11 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                               : null,
                         ),
                         if (!isEditing)
-                          const Text(
-                            'Password sementara dibuat otomatis dan wajib diganti setelah login.',
+                          CustomTextField(
+                            controller: _passwordController,
+                            label: 'Password',
+                            obscureText: true,
+                            validator: PasswordPolicy.validate,
                           ),
                         if (!isEditing)
                           DropdownButtonFormField<String>(
@@ -253,6 +260,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                                     );
                                   } else {
                                     data['role_level'] = _selectedRole;
+                                    data['password'] = _passwordController.text;
                                     result = await UserService.createUser(data);
                                   }
 
@@ -268,34 +276,6 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
                                             : 'Pengguna berhasil dibuat',
                                       );
                                       _triggerRefresh();
-                                      if (!isEditing && mounted) {
-                                        final created =
-                                            result['data']
-                                                as Map<String, dynamic>;
-                                        await AppDialog.showResult(
-                                          context: this.context,
-                                          title: 'Kredensial Pengguna Baru',
-                                          type: DialogType.success,
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                'Username: ${created['username']}',
-                                              ),
-                                              const Text(
-                                                'Password sementara (ditampilkan sekali):',
-                                              ),
-                                              SelectableText(
-                                                created['temporary_password']
-                                                    as String,
-                                              ),
-                                              const Text(
-                                                'Berikan kepada pengguna. Password wajib diganti setelah login.',
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }
                                     }
                                   } else {
                                     setStateDialog(
@@ -324,6 +304,7 @@ class _AdminPenggunaScreenState extends State<AdminPenggunaScreen> {
         );
       },
     );
+    _passwordController.clear();
   }
 
   @override
@@ -979,6 +960,7 @@ class _UserListTabState extends State<_UserListTab>
     final confirm = await FeedbackDialogs.showConfirmation(
       context: context,
       title: 'Reset Password',
+      confirmText: 'Ya, Reset',
       content:
           'Anda yakin ingin mereset password ${user.namaLengkap}? Pengguna akan dipaksa mengganti password pada login berikutnya.',
       isDestructive: true,
@@ -990,40 +972,9 @@ class _UserListTabState extends State<_UserListTab>
 
       if (result['success']) {
         if (!mounted) return;
-        final tempPass = result['temporary_password'] ?? '-';
-        await AppDialog.showResult(
-          context: context,
-          title: 'Password Direset',
-          type: DialogType.success,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Silakan berikan password sementara ini kepada ${user.namaLengkap}:',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: AppTheme.radiusMedium,
-                  border: Border.all(color: AppTheme.primary),
-                ),
-                child: Center(
-                  child: SelectableText(
-                    tempPass,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primary,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        FeedbackDialogs.showSnackbar(
+          context,
+          'Password berhasil direset ke password default.',
         );
         setState(() => _isLoading = false);
       } else {

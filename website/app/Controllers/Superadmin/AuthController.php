@@ -24,7 +24,7 @@ class AuthController extends BaseController
         $superadminModel = new SuperadminModel();
         $user = $superadminModel->where('username', $username)->first();
 
-        if ($user && \App\Services\CredentialPolicy::verify((string) $password, $user)) {
+        if ($user && \App\Services\SuperadminCredentialPolicy::verify((string) $password, $user)) {
             session()->regenerate(true);
             $sessionData = [
                 'superadmin_id'           => $user['id'],

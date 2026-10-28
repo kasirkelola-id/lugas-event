@@ -85,7 +85,7 @@ class ProfileController extends BaseApiController
         $rawInput = $this->request->getJSON(true) ?? $this->request->getRawInput();
 
         $rules = [
-            'new_password' => 'required|min_length[12]|max_length[72]',
+            'new_password' => 'required|max_length[72]',
             'confirm_password' => 'required|matches[new_password]'
         ];
 
@@ -95,15 +95,12 @@ class ProfileController extends BaseApiController
 
         $userModel = new UserModel();
         $user = $userModel->find($userId);
-        if (!\App\Services\CredentialPolicy::validNewPassword($rawInput['new_password'])
-            || $rawInput['new_password'] === $user['username']
-            || $rawInput['new_password'] === AuthService::getUser()['username']
-            || password_verify($rawInput['new_password'], $user['password'])) {
-            return $this->sendError('Validasi gagal', ['new_password' => 'Gunakan password baru minimal 12 karakter, maksimal 72 byte, berbeda dari username/default/password sebelumnya.'], 422);
+        if (!is_string($rawInput['new_password']) || !\App\Services\CredentialPolicy::validNewPassword($rawInput['new_password'])) {
+            return $this->sendError('Validasi gagal', ['new_password' => 'Password wajib diisi, maksimal 72 byte, tanpa byte NUL.'], 422);
         }
 
         if (!\App\Services\CredentialSessionService::replace((int)$userId, $user['password'],
-            password_hash($rawInput['new_password'], PASSWORD_BCRYPT), false, (int)AuthService::getToken()['id'])) {
+            \App\Services\CredentialPolicy::hashNewPassword($rawInput['new_password']), false, (int)AuthService::getToken()['id'])) {
             return $this->sendError('Gagal mengubah password.', null, 500);
         }
 

@@ -32,6 +32,7 @@ class WebCsrfCredentialTest extends \Tests\Support\BaseTest
     private function fixtures(): array
     {
         $this->db->resetTransStatus();
+        $this->db->table('settings')->insert(['karang_taruna_id' => 0, 'setting_key' => 'temporary_reset_password', 'setting_value' => 'synthetic-default']);
         $user = $this->createTestUser(101, 'anggota', 'synthetic_member');
         $this->db->table('organization_members')->where('user_id', $user['id'])->update(['approval_status' => 'pending']);
         $member = $this->db->table('organization_members')->where('user_id', $user['id'])->get()->getRowArray();
@@ -88,9 +89,9 @@ class WebCsrfCredentialTest extends \Tests\Support\BaseTest
         $before = $this->snapshot();
         $result = $this->withSession($this->browser())->withHeaders([])->post($path, $params + ['csrf_test_name' => str_repeat('a', 64)]);
         if ($key === 'reset') {
-            $result->assertStatus(200);
+            $result->assertRedirect();
             $this->assertStringContainsString('no-store', $result->response()->getHeaderLine('Cache-Control'));
-            $this->assertStringContainsString('Password sementara:', $result->getBody());
+            $this->assertStringNotContainsString('synthetic-default', $result->getBody());
             $this->assertArrayNotHasKey('temporary_password', $_SESSION);
         } else {
             $result->assertRedirect();
@@ -187,7 +188,7 @@ class WebCsrfCredentialTest extends \Tests\Support\BaseTest
         }
     }
 
-    public function testWebResetDeliversOnceWithoutSessionDatabaseOrLogPlaintext(): void
+    public function testWebResetUsesSettingWithoutExposingItInResponseSessionOrLogs(): void
     {
         [$path] = $this->fixtures()['reset'];
         $messages = [];
@@ -197,14 +198,12 @@ class WebCsrfCredentialTest extends \Tests\Support\BaseTest
         });
         \Config\Services::injectMock('logger', $logger);
         $result = $this->withSession($this->browser())->withHeaders([])->post($path, ['csrf_test_name' => str_repeat('a', 64)]);
-        $result->assertStatus(200);
-        preg_match('#Password sementara: <strong>([^<]+)</strong>#', $result->getBody(), $match);
-        $temp = $match[1];
+        $result->assertRedirect();
+        $temp = 'synthetic-default';
         $row = $this->db->table('users')->where('username', 'synthetic_member')->get()->getRowArray();
-        $this->assertNotSame($row['username'], $temp);
         $this->assertTrue(password_verify($temp, $row['password']));
         $this->assertSame(1, (int) $row['password_must_change']);
-        $this->assertStringNotContainsString($temp, json_encode($this->snapshot()));
+        $this->assertStringNotContainsString($temp, $result->getBody());
         $this->assertStringNotContainsString($temp, json_encode($_SESSION));
         $this->assertStringNotContainsString($temp, json_encode($messages));
         $list = $this->withSession($this->browser())->get('superadmin/manage/101/users');

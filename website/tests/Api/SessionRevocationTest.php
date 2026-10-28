@@ -16,6 +16,7 @@ final class SessionRevocationTest extends BaseTest
     {
         parent::setUp();
         $this->db->resetTransStatus();
+        $this->db->table('settings')->insert(['karang_taruna_id' => 0, 'setting_key' => 'temporary_reset_password', 'setting_value' => 'synthetic-default']);
     }
 
     public function testSelfChangeRevokesOtherDevicesButKeepsCurrentToken(): void
@@ -86,7 +87,7 @@ final class SessionRevocationTest extends BaseTest
         $this->withSession(['is_superadmin_logged_in' => true, 'superadmin_id' => $id,
             'superadmin_credential_version' => hash('sha256', $hash), 'csrf_test_name' => str_repeat('d', 64)])
             ->withHeaders(['X-CSRF-TOKEN' => str_repeat('d', 64)])
-            ->post('superadmin/manage/101/users/' . $user['id'] . '/reset-password')->assertStatus(200);
+            ->post('superadmin/manage/101/users/' . $user['id'] . '/reset-password')->assertRedirect();
         foreach ($tokens as $token) $this->withHeaders($this->getAuthHeaders($token))->get('api/me')->assertStatus(401);
     }
 
