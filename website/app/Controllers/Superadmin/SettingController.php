@@ -19,12 +19,10 @@ class SettingController extends BaseController
         ];
 
         foreach ($settings as $setting) {
-            if ($setting['setting_key'] === 'temporary_reset_password') {
-                continue; // Deprecated shared credential is never displayed again.
-            }
             $data['settings'][$setting['setting_key']] = $setting['setting_value'];
         }
 
+        $this->response->setHeader('Cache-Control', 'no-store');
         return view('superadmin/settings/index', $data);
     }
 
@@ -41,46 +39,80 @@ class SettingController extends BaseController
             'android_release_notes' => 'Catatan rilis update aplikasi'
         ];
 
-        $policy = \App\Services\SettingsPolicy::class;
-        $enabledInput = $input['android_update_enabled'] ?? 'false';
-        if (!in_array($enabledInput, ['true', 'false'], true)) return redirect()->back()->with('error', 'Status update tidak valid.');
-        $updateEnabled = $enabledInput;
-        if (isset($input['android_version_name']) && !$policy::text($input['android_version_name'], 64, $updateEnabled === 'true')) {
-            return redirect()->back()->with('error', 'Versi Terbaru wajib diisi dengan maksimal 64 karakter.');
+        // The account and Android cards are separate forms on the original page.
+        $passwordOnly = array_key_exists('temporary_reset_password', $input)
+            && !array_intersect(array_keys($input), [...array_keys($appUpdateKeys), 'android_update_enabled']);
+        $resetPassword = null;
+        if (array_key_exists('temporary_reset_password', $input)) {
+            if (!is_string($input['temporary_reset_password']) || str_contains($input['temporary_reset_password'], "\0")) {
+                return redirect()->back()->with('error', 'Password default tidak valid.');
+            }
+            $value = trim($input['temporary_reset_password']);
+            // As before, an empty field leaves the existing setting unchanged.
+            if ($value !== '') {
+                if (!\App\Services\CredentialPolicy::validNewPassword($value)) {
+                    return redirect()->back()->with('error', 'Password default maksimal 72 byte, tanpa byte NUL.');
+                }
+                $resetPassword = $value;
+            }
         }
-        if (($updateEnabled === 'true' && !isset($input['android_version_name']))
-            || (isset($input['android_release_notes']) && !$policy::text($input['android_release_notes'], 4096, false))) {
-            return redirect()->back()->with('error', 'Versi atau catatan rilis tidak valid.');
-        }
-        if (($updateEnabled === 'true' || isset($input['android_version_code']))
-            && !$policy::integer($input['android_version_code'] ?? null, 1, 2100000000)) {
-            return redirect()->back()->with('error', 'Version Code wajib diisi angka valid (>= 1).');
-        }
-        $url = $input['android_download_url'] ?? '';
-        if (($updateEnabled === 'true' || $url !== '') && !$policy::trustedDownloadUrl($url)) {
-            return redirect()->back()->with('error', 'Link Download APK wajib diisi URL valid HTTPS pada host tepercaya.');
+
+        if (!$passwordOnly) {
+            $policy = \App\Services\SettingsPolicy::class;
+            $enabledInput = $input['android_update_enabled'] ?? 'false';
+            if (!in_array($enabledInput, ['true', 'false'], true)) return redirect()->back()->with('error', 'Status update tidak valid.');
+            $updateEnabled = $enabledInput;
+            if (isset($input['android_version_name']) && !$policy::text($input['android_version_name'], 64, $updateEnabled === 'true')) {
+                return redirect()->back()->with('error', 'Versi Terbaru wajib diisi dengan maksimal 64 karakter.');
+            }
+            if (($updateEnabled === 'true' && !isset($input['android_version_name']))
+                || (isset($input['android_release_notes']) && !$policy::text($input['android_release_notes'], 4096, false))) {
+                return redirect()->back()->with('error', 'Versi atau catatan rilis tidak valid.');
+            }
+            if (($updateEnabled === 'true' || isset($input['android_version_code']))
+                && !$policy::integer($input['android_version_code'] ?? null, 1, 2100000000)) {
+                return redirect()->back()->with('error', 'Version Code wajib diisi angka valid (>= 1).');
+            }
+            $url = $input['android_download_url'] ?? '';
+            if (($updateEnabled === 'true' || $url !== '') && !$policy::trustedDownloadUrl($url)) {
+                return redirect()->back()->with('error', 'Link Download APK wajib diisi URL valid HTTPS pada host tepercaya.');
+            }
         }
         $db = \Config\Database::connect();
         if (!$db->transBegin()) return redirect()->back()->with('error', 'Pengaturan tidak dapat disimpan.');
         try {
-            foreach ($appUpdateKeys as $key => $desc) {
-                if (isset($input[$key])) {
-                    $val = trim($input[$key]);
-                    $existing = $settingModel->where('karang_taruna_id', 0)->where('setting_key', $key)->first();
-                    if ($existing) {
-                        if (!$settingModel->where('karang_taruna_id', 0)->where('setting_key', $key)->set(['setting_value' => $val])->update()) throw new \RuntimeException('Settings write failed');
-                    } else {
-                        if (!$settingModel->insert(['karang_taruna_id' => 0, 'setting_key' => $key, 'setting_value' => $val, 'description' => $desc])) throw new \RuntimeException('Settings write failed');
-                    }
+            if ($resetPassword !== null) {
+                $existing = $settingModel->where('karang_taruna_id', 0)
+                    ->where('setting_key', 'temporary_reset_password')->first();
+                if ($existing) {
+                    if (!$settingModel->where('karang_taruna_id', 0)->where('setting_key', 'temporary_reset_password')
+                        ->set(['setting_value' => $resetPassword])->update()) throw new \RuntimeException('Settings write failed');
+                } else {
+                    if (!$settingModel->insert(['karang_taruna_id' => 0, 'setting_key' => 'temporary_reset_password',
+                        'setting_value' => $resetPassword, 'description' => 'Password reset sementara global'])) throw new \RuntimeException('Settings write failed');
                 }
             }
 
-            // Save the enabled status
-            $existing = $settingModel->where('karang_taruna_id', 0)->where('setting_key', 'android_update_enabled')->first();
-            if ($existing) {
-                if (!$settingModel->where('karang_taruna_id', 0)->where('setting_key', 'android_update_enabled')->set(['setting_value' => $updateEnabled])->update()) throw new \RuntimeException('Settings write failed');
-            } else {
-                if (!$settingModel->insert(['karang_taruna_id' => 0, 'setting_key' => 'android_update_enabled', 'setting_value' => $updateEnabled, 'description' => 'Status apakah update wajib diaktifkan'])) throw new \RuntimeException('Settings write failed');
+            if (!$passwordOnly) {
+                foreach ($appUpdateKeys as $key => $desc) {
+                    if (isset($input[$key])) {
+                        $val = trim($input[$key]);
+                        $existing = $settingModel->where('karang_taruna_id', 0)->where('setting_key', $key)->first();
+                        if ($existing) {
+                            if (!$settingModel->where('karang_taruna_id', 0)->where('setting_key', $key)->set(['setting_value' => $val])->update()) throw new \RuntimeException('Settings write failed');
+                        } else {
+                            if (!$settingModel->insert(['karang_taruna_id' => 0, 'setting_key' => $key, 'setting_value' => $val, 'description' => $desc])) throw new \RuntimeException('Settings write failed');
+                        }
+                    }
+                }
+
+                // Save the enabled status
+                $existing = $settingModel->where('karang_taruna_id', 0)->where('setting_key', 'android_update_enabled')->first();
+                if ($existing) {
+                    if (!$settingModel->where('karang_taruna_id', 0)->where('setting_key', 'android_update_enabled')->set(['setting_value' => $updateEnabled])->update()) throw new \RuntimeException('Settings write failed');
+                } else {
+                    if (!$settingModel->insert(['karang_taruna_id' => 0, 'setting_key' => 'android_update_enabled', 'setting_value' => $updateEnabled, 'description' => 'Status apakah update wajib diaktifkan'])) throw new \RuntimeException('Settings write failed');
+                }
             }
 
             if (!$db->transStatus() || !$db->transCommit()) throw new \RuntimeException('Settings commit failed');

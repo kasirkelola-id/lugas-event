@@ -114,7 +114,25 @@
             <div class="col-md-8 col-lg-6">
                 <div class="card stat-card mb-4">
                     <h5 class="fw-bold mb-4">Pengaturan Akun</h5>
-<p>Password reset dibuat acak untuk setiap pengguna dan wajib diganti setelah login. Tidak ada password reset bersama.</p>
+                    <form action="/superadmin/settings" method="post">
+                        <?= csrf_field() ?>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Password Sementara (Reset)</label>
+                            <div class="input-group">
+                                <input type="password" id="temp_password" name="temporary_reset_password" class="form-control"
+                                       value="<?= esc($settings['temporary_reset_password'] ?? '') ?>"
+                                       placeholder="Masukkan password default" maxlength="72" autocomplete="off">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Password sementara ini akan digunakan ketika Admin / Ketua mereset password anggotanya. <br>
+                                Pengguna yang login dengan password ini akan dipaksa mengganti passwordnya.
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Simpan Pengaturan Akun</button>
+                    </form>
                 </div>
             </div>
 
@@ -166,6 +184,22 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordInput = document.getElementById('temp_password');
+            const icon = this.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    </script>
 
     <?= $this->include('superadmin/partials/sweetalert') ?>
 </body>
